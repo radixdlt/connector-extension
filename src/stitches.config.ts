@@ -12,6 +12,8 @@ export const {
 } = createStitches({
   theme: {
     colors: {
+      primaryButton: '#003057',
+      white: 'white',
       gray400: 'gainsboro',
       gray500: 'lightgray',
     },
@@ -35,9 +37,9 @@ export const {
       '13xl': '92px',
     },
     radii: {
-      sm: '10%',
-      md: '50%',
-      lg: '80%',
+      sm: '3px',
+      md: '10px',
+      lg: '50%',
     },
     space: {
       0: '2px',
@@ -61,3 +63,10 @@ export const {
     marginX: (value) => ({ marginLeft: value, marginRight: value }),
   },
 })
+
+globalCss({
+  '*': {
+    fontFamily: 'IBM Plex Sans',
+    fontWeight: '400',
+  },
+})()
