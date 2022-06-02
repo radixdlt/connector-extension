@@ -34,6 +34,11 @@ export const {
       '12xl': '84px',
       '13xl': '92px',
     },
+    radii: {
+      sm: '10%',
+      md: '50%',
+      lg: '80%',
+    },
     space: {
       0: '2px',
       xs: '4px',
