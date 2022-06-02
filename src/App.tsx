@@ -1,43 +1,22 @@
 import { useState } from 'react'
-import logo from './logo.svg'
-import './App.css'
+import { styled } from './stitches.config'
+
+const Button = styled('button', {
+  backgroundColor: 'gainsboro',
+  borderRadius: '9999px',
+  fontSize: '13px',
+  padding: '10px 15px',
+  '&:hover': {
+    backgroundColor: 'lightgray',
+  },
+});
 
 function App() {
-  const [count, setCount] = useState(0)
-
   return (
-    <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>Test</p>
-        <p>
-          <button type="button" onClick={() => setCount((count) => count + 1)}>
-            count is: {count}
-          </button>
-        </p>
-        <p>
-          Edit <code>App.tsx</code> and save to test HMR updates.
-        </p>
-        <p>
-          <a
-            className="App-link"
-            href="https://reactjs.org"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Nice!!
-          </a>
-          {' | '}
-          <a
-            className="App-link"
-            href="https://vitejs.dev/guide/features.html"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Vite Docs
-          </a>
-        </p>
-      </header>
+    <div>
+      <Button>
+        hello
+      </Button>
     </div>
   )
 }
