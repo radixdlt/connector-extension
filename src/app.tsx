@@ -1,4 +1,3 @@
-import { useState } from 'react'
 import { styled } from './stitches.config'
 
 const Button = styled('button', {
@@ -9,14 +8,12 @@ const Button = styled('button', {
   '&:hover': {
     backgroundColor: 'lightgray',
   },
-});
+})
 
 function App() {
   return (
     <div>
-      <Button>
-        hello
-      </Button>
+      <Button>hello</Button>
     </div>
   )
 }
