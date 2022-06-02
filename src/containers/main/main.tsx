@@ -1,4 +1,4 @@
-import { styled } from './stitches.config'
+import { styled } from 'stitches.config'
 
 const Button = styled('button', {
   backgroundColor: '$gray500',
@@ -10,7 +10,7 @@ const Button = styled('button', {
   },
 })
 
-function App() {
+function Main() {
   return (
     <div>
       <Button>hello</Button>
@@ -18,4 +18,4 @@ function App() {
   )
 }
 
-export default App
+export default Main
