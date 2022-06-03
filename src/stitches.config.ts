@@ -13,6 +13,7 @@ export const {
   theme: {
     colors: {
       primaryButton: '#003057',
+      primaryButtonHover: '#00ab84',
       white: 'white',
       gray400: 'gainsboro',
       gray500: 'lightgray',

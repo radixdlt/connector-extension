@@ -1,3 +1,3 @@
 import ButtonC from './button'
 
-export const Button = () => <ButtonC>Test</ButtonC>
+export const Button = () => <ButtonC>Buy Radix</ButtonC>

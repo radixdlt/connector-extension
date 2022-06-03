@@ -7,9 +7,10 @@ const Button = styled('button', {
   borderRadius: '$sm',
   fontSize: '$md',
   color: '$white',
-  padding: '$sm $xl',
+  padding: '$md $2xl',
   '&:hover': {
-    backgroundColor: '$gray400',
+    backgroundColor: '$primaryButtonHover',
+    transition: 'color .2s,border-color .2s,background-color .2s',
   },
 })
 
