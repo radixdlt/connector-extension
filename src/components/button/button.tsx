@@ -8,9 +8,26 @@ const Button = styled('button', {
   fontSize: '$md',
   color: '$white',
   padding: '$md $2xl',
+  transition: 'color .2s,border-color .2s,background-color .2s',
   '&:hover': {
     backgroundColor: '$primaryButtonHover',
-    transition: 'color .2s,border-color .2s,background-color .2s',
+  },
+  variants: {
+    size: {
+      small: {
+        padding: '$sm $xl',
+      },
+    },
+    ghost: {
+      true: {
+        backgroundColor: '$white',
+        color: '$primaryText',
+        '&:hover': {
+          backgroundColor: '$ghostButtonHover',
+          color: '$white',
+        },
+      },
+    },
   },
 })
 

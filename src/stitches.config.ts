@@ -1,5 +1,12 @@
 import { createStitches } from '@stitches/react'
 
+const colors = {
+  darkBlue: '#003057',
+  blue: '#052CC0',
+  white: '#fff',
+  green: '#00ab84',
+}
+
 export const {
   styled,
   css,
@@ -12,9 +19,11 @@ export const {
 } = createStitches({
   theme: {
     colors: {
-      primaryButton: '#003057',
-      primaryButtonHover: '#00ab84',
-      white: 'white',
+      primaryButton: colors.darkBlue,
+      primaryText: colors.darkBlue,
+      primaryButtonHover: colors.green,
+      ghostButtonHover: colors.blue,
+      white: colors.white,
       gray400: 'gainsboro',
       gray500: 'lightgray',
     },
