@@ -2,11 +2,11 @@ import { styled } from 'stitches.config'
 
 const Button = styled('button', {
   backgroundColor: '$primaryButton',
-  border: '1px solid $gray400',
+  border: '1px solid $borderColor',
   cursor: 'pointer',
   borderRadius: '$sm',
   fontSize: '$md',
-  color: '$white',
+  color: '$primaryButtonText',
   padding: '$md $2xl',
   transition: 'color .2s,border-color .2s,background-color .2s',
   '&:hover': {
@@ -20,11 +20,11 @@ const Button = styled('button', {
     },
     ghost: {
       true: {
-        backgroundColor: '$white',
-        color: '$primaryText',
+        backgroundColor: '$primaryGhostButton',
+        color: '$primaryGhostButtonText',
         '&:hover': {
-          backgroundColor: '$ghostButtonHover',
-          color: '$white',
+          backgroundColor: '$primaryGhostButtonHover',
+          color: '$primaryGhostButtonHoverText',
         },
       },
     },

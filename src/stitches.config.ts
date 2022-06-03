@@ -5,6 +5,7 @@ const colors = {
   blue: '#052CC0',
   white: '#fff',
   green: '#00ab84',
+  grey: '#f4f5f9',
 }
 
 export const {
@@ -20,12 +21,13 @@ export const {
   theme: {
     colors: {
       primaryButton: colors.darkBlue,
-      primaryText: colors.darkBlue,
       primaryButtonHover: colors.green,
-      ghostButtonHover: colors.blue,
-      white: colors.white,
-      gray400: 'gainsboro',
-      gray500: 'lightgray',
+      primaryButtonText: colors.white,
+      primaryGhostButton: colors.white,
+      primaryGhostButtonText: colors.darkBlue,
+      primaryGhostButtonHover: colors.blue,
+      primaryGhostButtonHoverText: colors.white,
+      borderColor: colors.grey,
     },
     fontSizes: {
       xs: '12px',
