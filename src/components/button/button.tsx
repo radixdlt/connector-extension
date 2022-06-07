@@ -25,6 +25,10 @@ const Button = styled('button', {
         padding: '$sm $xl',
         fontSize: '$sm',
       },
+      iconSmall: {
+        padding: '$xs',
+        fontSize: '0',
+      },
     },
     ghost: {
       true: {

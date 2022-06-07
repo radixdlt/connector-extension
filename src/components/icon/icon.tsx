@@ -16,7 +16,7 @@ interface IconType {
 const Icon = ({ type, color, size }: IconType) => {
   const IconToRender = icons[type]
   return (
-    <Box css={{ color }}>
+    <Box css={{ color, p: '$0' }}>
       <IconToRender fontSize={size} />
     </Box>
   )

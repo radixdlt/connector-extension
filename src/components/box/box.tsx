@@ -3,7 +3,7 @@ import { styled } from 'stitches.config'
 const Box = styled('div', {
   borderWidth: '$sm',
   backgroundColor: 'transparent',
-  padding: '$sm',
+  p: '$sm',
   variants: {
     border: {
       true: {
