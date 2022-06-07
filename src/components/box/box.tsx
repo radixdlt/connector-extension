@@ -5,6 +5,40 @@ const Box = styled('div', {
   backgroundColor: 'transparent',
   p: '$sm',
   variants: {
+    py: {
+      xsmall: {
+        py: '$xs',
+      },
+      small: {
+        py: '$sm',
+      },
+      medium: {
+        py: '$md',
+      },
+      large: {
+        py: '$lg',
+      },
+      none: {
+        py: '$0',
+      },
+    },
+    px: {
+      xsmall: {
+        px: '$xs',
+      },
+      small: {
+        px: '$sm',
+      },
+      medium: {
+        px: '$md',
+      },
+      large: {
+        px: '$lg',
+      },
+      none: {
+        px: '$0',
+      },
+    },
     border: {
       true: {
         borderColor: '$borderColor',
