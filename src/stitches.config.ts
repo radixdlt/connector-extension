@@ -92,6 +92,12 @@ export const {
     bp1: '(min-width: 480px)',
   },
   utils: {
+    p: (value: spaceKeys) => ({
+      paddingTop: value,
+      paddingBottom: value,
+      paddingLeft: value,
+      paddingRight: value,
+    }),
     my: (value: spaceKeys) => ({
       marginTop: value,
       marginBottom: value,
