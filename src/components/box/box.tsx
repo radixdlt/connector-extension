@@ -3,8 +3,34 @@ import { styled } from 'stitches.config'
 const Box = styled('div', {
   borderWidth: '$sm',
   backgroundColor: 'transparent',
-  p: '$sm',
+  py: '$sm',
   variants: {
+    interactive: {
+      true: {
+        cursor: 'pointer',
+        transition: 'color .2s,border-color .2s,background-color .2s',
+        '&:hover': {
+          backgroundColor: '$grey',
+        },
+      },
+    },
+    p: {
+      xsmall: {
+        p: '$xs',
+      },
+      small: {
+        p: '$sm',
+      },
+      medium: {
+        p: '$md',
+      },
+      large: {
+        p: '$lg',
+      },
+      none: {
+        p: '$0',
+      },
+    },
     py: {
       xsmall: {
         py: '$xs',
@@ -57,6 +83,10 @@ const Box = styled('div', {
       },
     },
     items: {
+      start: {
+        display: 'flex',
+        justifyContent: 'flex-start',
+      },
       center: {
         display: 'flex',
         alignItems: 'center',
@@ -75,6 +105,10 @@ const Box = styled('div', {
       },
     },
     justify: {
+      start: {
+        display: 'flex',
+        justifyContent: 'flex-start',
+      },
       center: {
         display: 'flex',
         justifyContent: 'center',

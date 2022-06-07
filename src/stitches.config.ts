@@ -6,6 +6,7 @@ const colors = {
   white: '#fff',
   green: '#00ab84',
   grey: '#f4f5f9',
+  darkGrey: '#6e7781',
   red: 'red',
   orange: 'orange',
 }
@@ -54,6 +55,8 @@ export const {
       primaryGhostButtonHover: colors.blue,
       primaryGhostButtonHoverText: colors.white,
       borderColor: colors.grey,
+      grey: colors.grey,
+      muted: colors.darkGrey,
     },
     fontSizes: {
       xs: '12px',
@@ -80,6 +83,11 @@ export const {
       lg: '50%',
     },
     space,
+    fontWeights: {
+      200: '200',
+      400: '400',
+      600: '600',
+    },
     sizes: {
       1: '100%',
     },
@@ -97,6 +105,9 @@ export const {
       paddingBottom: value,
       paddingLeft: value,
       paddingRight: value,
+    }),
+    pl: (value: spaceKeys) => ({
+      paddingLeft: value,
     }),
     py: (value: spaceKeys) => ({
       paddingTop: value,
@@ -116,6 +127,8 @@ export const {
     }),
     mt: (value: spaceKeys) => ({ marginTop: value }),
     mb: (value: spaceKeys) => ({ marginBottom: value }),
+    ml: (value: spaceKeys) => ({ marginLeft: value }),
+    mr: (value: spaceKeys) => ({ marginRight: value }),
   },
 })
 
