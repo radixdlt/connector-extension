@@ -6,9 +6,9 @@ import QRCode from 'react-qr-code'
 const Main = () => {
   return (
     <Box flex="col">
-      <Box items="center" justify="between">
+      <Box py="small" px="none" items="center" justify="between">
         <img height="18" width="68" src="assets/images/logo.png" />
-        <Button ghost size="iconSmall">
+        <Button border="none" ghost size="iconSmall">
           <Icon color="$secondary" size="small" type="refresh" />
         </Button>
       </Box>
