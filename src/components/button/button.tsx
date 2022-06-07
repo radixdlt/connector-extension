@@ -30,6 +30,11 @@ const Button = styled('button', {
         fontSize: '0',
       },
     },
+    border: {
+      none: {
+        borderWidth: '0',
+      },
+    },
     ghost: {
       true: {
         backgroundColor: '$primaryGhostButton',
