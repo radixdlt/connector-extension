@@ -1,14 +1,17 @@
+import Box from 'components/box'
 import Button from 'components/button'
 import QRCode from 'react-qr-code'
 
-function Main() {
+const Main = () => {
   return (
-    <div>
-      <QRCode size={150} value="z4ncptue" />
-      <Button css={{ my: '$sm' }} size="small">
+    <Box flex="col">
+      <Box border>
+        <QRCode size={150} value="z4ncptue" />
+      </Box>
+      <Button css={{ mt: '$sm' }} size="small">
         Connect
       </Button>
-    </div>
+    </Box>
   )
 }
 

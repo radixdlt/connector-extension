@@ -2,7 +2,6 @@ import { styled } from 'stitches.config'
 
 const Button = styled('button', {
   backgroundColor: '$primaryButton',
-  width: '$1',
   borderWidth: '$sm',
   borderColor: '$borderColor',
   borderStyle: 'solid',
@@ -16,6 +15,11 @@ const Button = styled('button', {
     backgroundColor: '$primaryButtonHover',
   },
   variants: {
+    full: {
+      true: {
+        width: '$1',
+      },
+    },
     size: {
       small: {
         padding: '$sm $xl',
