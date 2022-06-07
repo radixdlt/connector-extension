@@ -23,6 +23,7 @@ const Button = styled('button', {
     size: {
       small: {
         padding: '$sm $xl',
+        fontSize: '$sm',
       },
     },
     ghost: {

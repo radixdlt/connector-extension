@@ -6,6 +6,8 @@ const colors = {
   white: '#fff',
   green: '#00ab84',
   grey: '#f4f5f9',
+  red: 'red',
+  orange: 'orange',
 }
 
 const space = {
@@ -37,6 +39,13 @@ export const {
 } = createStitches({
   theme: {
     colors: {
+      action: colors.darkBlue,
+      primary: colors.darkBlue,
+      secondary: colors.green,
+      error: colors.red,
+      info: colors.blue,
+      success: colors.green,
+      warning: colors.orange,
       primaryButton: colors.darkBlue,
       primaryButtonHover: colors.green,
       primaryButtonText: colors.white,
