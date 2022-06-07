@@ -10,7 +10,8 @@
   },
   "dependencies": {
     "react": "^18.0.0",
-    "react-dom": "^18.0.0"
+    "react-dom": "^18.0.0",
+    "react-qr-code": "^2.0.7"
   },
   "devDependencies": {
     "@crxjs/vite-plugin": "^1.0.7",

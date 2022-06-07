@@ -1,9 +1,11 @@
 import Button from 'components/button'
+import QRCode from 'react-qr-code'
 
 function Main() {
   return (
     <div>
-      <Button>Generate</Button>
+      <QRCode size={150} value="z4ncptue" />
+      <Button>Connect</Button>
     </div>
   )
 }

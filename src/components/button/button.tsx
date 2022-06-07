@@ -2,7 +2,10 @@ import { styled } from 'stitches.config'
 
 const Button = styled('button', {
   backgroundColor: '$primaryButton',
-  border: '1px solid $borderColor',
+  width: '$1',
+  borderWidth: '$sm',
+  borderColor: '$borderColor',
+  borderStyle: 'solid',
   cursor: 'pointer',
   borderRadius: '$sm',
   fontSize: '$md',

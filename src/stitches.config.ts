@@ -67,6 +67,13 @@ export const {
       '6xl': '96px',
       '7xl': '160px',
     },
+    sizes: {
+      1: '100%',
+    },
+    borderWidths: {
+      sm: '1px',
+      md: '10px',
+    },
   },
   media: {
     bp1: '(min-width: 480px)',
