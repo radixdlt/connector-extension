@@ -8,6 +8,23 @@ const colors = {
   grey: '#f4f5f9',
 }
 
+const space = {
+  0: '2px',
+  xs: '4px',
+  sm: '8px',
+  md: '16px',
+  lg: '24',
+  xl: '32px',
+  '2xl': '40px',
+  '3xl': '48px',
+  '4xl': '64px',
+  '5xl': '80px',
+  '6xl': '96px',
+  '7xl': '160px',
+}
+
+type spaceKeys = `$${keyof typeof space}`
+
 export const {
   styled,
   css,
@@ -53,20 +70,7 @@ export const {
       md: '10px',
       lg: '50%',
     },
-    space: {
-      0: '2px',
-      xs: '4px',
-      sm: '8px',
-      md: '16px',
-      lg: '24',
-      xl: '32px',
-      '2xl': '40px',
-      '3xl': '48px',
-      '4xl': '64px',
-      '5xl': '80px',
-      '6xl': '96px',
-      '7xl': '160px',
-    },
+    space,
     sizes: {
       1: '100%',
     },
@@ -79,7 +83,16 @@ export const {
     bp1: '(min-width: 480px)',
   },
   utils: {
-    marginX: (value) => ({ marginLeft: value, marginRight: value }),
+    my: (value: spaceKeys) => ({
+      marginTop: value,
+      marginBottom: value,
+    }),
+    mx: (value: spaceKeys) => ({
+      marginLeft: value,
+      marginRight: value,
+    }),
+    mt: (value: spaceKeys) => ({ marginTop: value }),
+    mb: (value: spaceKeys) => ({ marginBottom: value }),
   },
 })
 
