@@ -15,7 +15,7 @@ const space = {
   xs: '4px',
   sm: '8px',
   md: '16px',
-  lg: '24',
+  lg: '24px',
   xl: '32px',
   '2xl': '40px',
   '3xl': '48px',
@@ -95,6 +95,14 @@ export const {
     p: (value: spaceKeys) => ({
       paddingTop: value,
       paddingBottom: value,
+      paddingLeft: value,
+      paddingRight: value,
+    }),
+    py: (value: spaceKeys) => ({
+      paddingTop: value,
+      paddingBottom: value,
+    }),
+    px: (value: spaceKeys) => ({
       paddingLeft: value,
       paddingRight: value,
     }),
