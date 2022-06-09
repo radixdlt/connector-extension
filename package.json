@@ -21,7 +21,8 @@
     "@react-spring/web": "^9.4.5",
     "react": "^18.0.0",
     "react-dom": "^18.0.0",
-    "react-qr-code": "^2.0.7"
+    "react-qr-code": "^2.0.7",
+    "react-use": "^17.4.0"
   },
   "devDependencies": {
     "@crxjs/vite-plugin": "^1.0.7",

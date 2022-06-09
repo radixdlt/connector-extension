@@ -126,6 +126,14 @@ const Box = styled('div', {
         justifyContent: 'space-evenly',
       },
     },
+    position: {
+      relative: {
+        position: 'relative',
+      },
+      absolute: {
+        position: 'absolute',
+      },
+    },
   },
 })
 
