@@ -6,7 +6,9 @@
     "dev": "vite",
     "build": "tsc && vite build",
     "preview": "vite preview",
-    "lint": "prettier --write src & yarn eslint './src/**/*'",
+    "prettier":  "prettier --write src",
+    "lint": "eslint './src/**/*'",
+    "pretest": "yarn eslint & yarn prettier & yarn tsc",
     "prepare": "husky install",
     "ladle": "ladle serve"
   },
