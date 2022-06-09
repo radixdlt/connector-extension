@@ -6,8 +6,9 @@
     "dev": "vite",
     "build": "tsc && vite build",
     "preview": "vite preview",
-    "lint": "yarn prettier --write src & yarn eslint './src/**/*'",
-    "prepare": "husky install"
+    "lint": "prettier --write src & yarn eslint './src/**/*'",
+    "prepare": "husky install",
+    "ladle": "ladle serve"
   },
   "dependencies": {
     "@emotion/react": "^11.9.0",
