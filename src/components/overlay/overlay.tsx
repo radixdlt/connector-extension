@@ -8,17 +8,17 @@ interface OverlayProps {
 const Overlay = ({ show }: OverlayProps) => {
   const transitions = useTransition(show, {
     from: { opacity: 0 },
-    enter: { opacity: 0.5 },
+    enter: { opacity: 0.8 },
     leave: { opacity: 0 },
     delay: 0,
-    config: { mass: 1, tension: 680, friction: 100 },
+    config: { mass: 1, tension: 780, friction: 100 },
   })
 
   const OverlayElement = styled(animated.div, {
     backgroundColor: '$primary',
     position: 'absolute',
-    top: 0,
-    bottom: 0,
+    top: 5,
+    bottom: 5,
     left: 0,
     right: 0,
   })

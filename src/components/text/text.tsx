@@ -26,6 +26,12 @@ const Text = styled('p', {
       small: {
         fontSize: '$sm',
       },
+      medium: {
+        fontSize: '$md',
+      },
+      large: {
+        fontSize: '$lg',
+      },
     },
     bold: {
       true: {

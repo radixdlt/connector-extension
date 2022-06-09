@@ -3,19 +3,11 @@ import Box from 'components/box'
 import Text from 'components/text'
 
 interface ClipboardType {
-  children: string
+  value: string
 }
 
-const Clipboard = ({ children }: ClipboardType) => (
-  <Box
-    px="small"
-    py="none"
-    border
-    justify="between"
-    items="center"
-    interactive
-    flex="row"
-  >
+const Clipboard = ({ value }: ClipboardType) => (
+  <Box px="small" py="none" border justify="between" items="center" flex="row">
     <Box css={{ overflow: 'hidden' }} py="none" items="center">
       <Text
         css={{ overflow: 'hidden', maxWidth: '120px' }}
@@ -25,7 +17,7 @@ const Clipboard = ({ children }: ClipboardType) => (
         my="small"
         muted
       >
-        {children}
+        {value}
       </Text>
     </Box>
     <Icon size="small" type="copy" />

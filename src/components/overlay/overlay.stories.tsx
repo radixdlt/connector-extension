@@ -6,7 +6,7 @@ export const Overlay = () => {
   const element = (hovered: boolean) => (
     <Box position="relative">
       <OverlayC show={hovered} />
-      Hover me
+      {hovered ? 'Hovered!' : 'Hover me'}
     </Box>
   )
 

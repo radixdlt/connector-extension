@@ -3,6 +3,6 @@ import TooltipC from './tooltip'
 
 export const Tooltip = () => (
   <TooltipC description="this is a test">
-    <Text interactive>test</Text>
+    <Text interactive>Hover me</Text>
   </TooltipC>
 )
