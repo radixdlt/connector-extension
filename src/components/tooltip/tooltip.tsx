@@ -26,7 +26,7 @@ const slideLeftAndFade = keyframes({
 const StyledContent = styled(TooltipPrimitive.Content, {
   borderRadius: '$sm',
   padding: '$sm $md',
-  fontSize: '$md',
+  fontSize: '$sm',
   color: '$primary',
   backgroundColor: '$background',
   boxShadow:
@@ -64,7 +64,7 @@ const Tooltip = ({ children, description }: TooltipProps) => (
         {children}
       </Box>
     </TooltipTrigger>
-    <StyledContent sideOffset={3}>
+    <StyledContent side="top" align="center" sideOffset={3}>
       {description}
       <StyledArrow />
     </StyledContent>
