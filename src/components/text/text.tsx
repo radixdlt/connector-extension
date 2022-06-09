@@ -2,6 +2,15 @@ import { styled } from 'stitches.config'
 
 const Text = styled('p', {
   variants: {
+    interactive: {
+      true: {
+        cursor: 'pointer',
+        transition: 'color .2s,border-color .2s,background-color .2s',
+        '&:hover': {
+          color: '$primaryButtonHover',
+        },
+      },
+    },
     highlight: {
       false: {
         userSelect: 'none',

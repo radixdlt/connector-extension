@@ -40,6 +40,7 @@ export const {
 } = createStitches({
   theme: {
     colors: {
+      background: colors.white,
       action: colors.darkBlue,
       primary: colors.darkBlue,
       secondary: colors.green,

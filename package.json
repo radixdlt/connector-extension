@@ -6,7 +6,7 @@
     "dev": "vite",
     "build": "tsc && vite build",
     "preview": "vite preview",
-    "prettier":  "prettier --write src",
+    "prettier": "prettier --write src",
     "lint": "eslint './src/**/*'",
     "pretest": "yarn eslint & yarn prettier & yarn tsc",
     "prepare": "husky install",
@@ -17,6 +17,7 @@
     "@emotion/styled": "^11.8.1",
     "@mui/icons-material": "^5.8.2",
     "@mui/material": "^5.8.2",
+    "@radix-ui/react-tooltip": "^0.1.7",
     "react": "^18.0.0",
     "react-dom": "^18.0.0",
     "react-qr-code": "^2.0.7"
