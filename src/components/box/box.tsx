@@ -5,6 +5,11 @@ const Box = styled('div', {
   backgroundColor: 'transparent',
   py: '$sm',
   variants: {
+    full: {
+      true: {
+        width: '100%',
+      },
+    },
     pointer: {
       true: {
         cursor: 'pointer',

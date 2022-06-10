@@ -5,7 +5,7 @@ import Tooltip from 'components/tooltip'
 import Encryptionkey from 'containers/encryptionkey'
 
 const Main = () => (
-  <Box p="small" flex="col">
+  <Box css={{ width: '180px', height: '340px' }} p="small" flex="col">
     <Box py="small" items="center" justify="between">
       <img height="18" width="68" src="assets/images/logo.png" />
       <Tooltip description="Re-generate code">

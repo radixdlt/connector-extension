@@ -7,7 +7,15 @@ interface ClipboardType {
 }
 
 const Clipboard = ({ value }: ClipboardType) => (
-  <Box px="small" py="none" border justify="between" items="center" flex="row">
+  <Box
+    full
+    px="small"
+    py="none"
+    border
+    justify="between"
+    items="center"
+    flex="row"
+  >
     <Box css={{ overflow: 'hidden' }} py="none" items="center">
       <Text
         css={{ overflow: 'hidden', maxWidth: '120px' }}

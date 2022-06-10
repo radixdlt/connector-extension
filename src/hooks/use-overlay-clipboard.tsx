@@ -15,8 +15,9 @@ const useOverlayClipboard = (
       onClick={() => copyToClipboard(copyString)}
       pointer
       position="relative"
-      px="small"
+      px="none"
       py="small"
+      justify="center"
     >
       <Overlay show={hovered} />
       {hovered && (
