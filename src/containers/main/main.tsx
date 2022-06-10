@@ -8,6 +8,7 @@ import { animated, config, useTransition } from '@react-spring/web'
 import { useState } from 'react'
 import { usePrevious } from 'react-use'
 import { styled } from 'stitches.config'
+import Connected from 'containers/connected'
 
 const AnimatedBox = styled(animated.div, {
   position: 'absolute',
@@ -22,7 +23,8 @@ const Main = () => {
 
   const steps = {
     1: <Encryptionkey onNext={() => setStep(2)} />,
-    2: <Connecting />,
+    2: <Connecting onNext={() => setStep(3)} />,
+    3: <Connected />,
   }
 
   const transitions = useTransition(step, {

@@ -1,11 +1,16 @@
 import React from 'react'
-import { ContentCopy, Refresh as RefreshIcon } from '@mui/icons-material'
+import {
+  CheckCircle,
+  ContentCopy,
+  Refresh as RefreshIcon,
+} from '@mui/icons-material'
 import Box from 'components/box'
 import { theme } from 'stitches.config'
 
 const icons = {
   refresh: RefreshIcon,
   copy: ContentCopy,
+  check: CheckCircle,
 }
 
 type IconType = {
