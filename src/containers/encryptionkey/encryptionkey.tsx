@@ -3,7 +3,11 @@ import Clipboard from 'components/clipboard'
 import QRCode from 'react-qr-code'
 import { useOverlayClipboard } from 'hooks'
 
-const Encryptionkey = () => {
+interface EncryptionkeyProps {
+  onNext: () => void
+}
+
+const Encryptionkey = ({ onNext }: EncryptionkeyProps) => {
   const QR = useOverlayClipboard(
     <QRCode size={170} value="z4ncptue" />,
     'z4ncptue'
@@ -17,7 +21,9 @@ const Encryptionkey = () => {
     <>
       {QR}
       {Password}
-      <Button size="small">Connect</Button>
+      <Button full onClick={onNext} size="small">
+        Connect
+      </Button>
     </>
   )
 }

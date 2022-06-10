@@ -1,5 +1,9 @@
-import { Box } from '@mui/system'
+import Box from 'components/box'
 
-const Connecting = () => <Box>Connecting...</Box>
+const Connecting = () => (
+  <Box css={{ height: '250px' }} justify="center" items="center">
+    Connecting...
+  </Box>
+)
 
 export default Connecting
