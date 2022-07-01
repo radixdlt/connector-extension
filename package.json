@@ -19,13 +19,16 @@
     "@mui/material": "^5.8.2",
     "@radix-ui/react-tooltip": "^0.1.7",
     "@react-spring/web": "^9.4.5",
+    "neverthrow": "^4.3.1",
     "react": "^18.0.0",
     "react-dom": "^18.0.0",
     "react-qr-code": "^2.0.7",
-    "react-use": "^17.4.0"
+    "react-use": "^17.4.0",
+    "rxjs": "^7.5.5"
   },
   "devDependencies": {
     "@crxjs/vite-plugin": "^1.0.7",
+    "@hirez_io/observer-spy": "^2.2.0",
     "@ladle/react": "^0.16.0",
     "@stitches/react": "^1.2.8",
     "@types/react": "^18.0.0",

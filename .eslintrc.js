@@ -2,7 +2,8 @@ module.exports = {
   plugins: ["unused-imports"],
   rules: {
     "arrow-body-style": ["error", "as-needed"],
-    "unused-imports/no-unused-imports": "error"
+    "unused-imports/no-unused-imports": "error",
+    "no-undef": "off"
   },
   extends: [
     'alloy',
@@ -13,4 +14,5 @@ module.exports = {
     react: {
       version: '18'
     },
-  }};
+  },
+};
