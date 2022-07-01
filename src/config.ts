@@ -1,0 +1,13 @@
+export const config = {
+  ws: 'wss://signaling-server-pr-9.rdx-works-main.extratools.works',
+  iceServers: [
+    {
+      urls: 'stun:stun.stunprotocol.org',
+    },
+    {
+      urls: 'turn:signaling-server-pr-12.rdx-works-main.extratools.works:80',
+      username: 'username',
+      credential: 'password',
+    },
+  ],
+}
