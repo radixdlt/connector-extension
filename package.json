@@ -10,7 +10,8 @@
     "lint": "eslint './src/**/*'",
     "pretest": "yarn eslint & yarn prettier & yarn tsc",
     "prepare": "husky install",
-    "ladle": "ladle serve"
+    "ladle": "ladle serve",
+    "test": "jest"
   },
   "dependencies": {
     "@emotion/react": "^11.9.0",
@@ -27,10 +28,12 @@
     "rxjs": "^7.5.5"
   },
   "devDependencies": {
+    "@babel/preset-typescript": "^7.18.6",
     "@crxjs/vite-plugin": "^1.0.7",
     "@hirez_io/observer-spy": "^2.2.0",
     "@ladle/react": "^0.16.0",
     "@stitches/react": "^1.2.8",
+    "@types/jest": "^28.1.4",
     "@types/react": "^18.0.0",
     "@types/react-dom": "^18.0.0",
     "@typescript-eslint/eslint-plugin": "^5.27.0",
@@ -41,7 +44,11 @@
     "eslint-plugin-react": "^7.30.0",
     "eslint-plugin-unused-imports": "^2.0.0",
     "husky": "^8.0.0",
+    "jest": "^28.1.2",
+    "jest-environment-jsdom": "^28.1.2",
     "prettier": "^2.6.2",
+    "ts-jest": "^28.0.5",
+    "ts-node": "^10.8.1",
     "typescript": "^4.7.2",
     "vite": "^2.9.9",
     "vite-tsconfig-paths": "^3.5.0"
