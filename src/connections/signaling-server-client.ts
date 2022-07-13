@@ -28,6 +28,7 @@ export const signalingServerClient = () => {
       removeListeners()
       ws = null
     }
+    removeSubscriptions()
   }
 
   const addListeners = () => {
