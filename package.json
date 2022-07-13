@@ -52,5 +52,8 @@
     "typescript": "^4.7.2",
     "vite": "^2.9.9",
     "vite-tsconfig-paths": "^3.5.0"
+  },
+  "jest": {
+    "browser": true
   }
 }
