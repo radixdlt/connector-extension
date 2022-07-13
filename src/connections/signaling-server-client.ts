@@ -1,17 +1,25 @@
 import { config } from 'config'
-import { wsMessageSubject, wsStatusSubject } from './subjects'
+import { Subscription, tap } from 'rxjs'
+import {
+  wsIncomingMessageSubject,
+  wsOutgoingMessageSubject,
+  wsStatusSubject,
+} from './subjects'
 
 export const signalingServerClient = () => {
   let ws: WebSocket | null = null
+  let subscriptions: Subscription | null
 
   const reconnect = () => {
     removeListeners()
+    removeSubscriptions()
     connect()
   }
 
   const connect = () => {
     ws = new WebSocket(config.ws)
     addListeners()
+    addSubscriptions()
   }
 
   const disconnect = () => {
@@ -40,8 +48,22 @@ export const signalingServerClient = () => {
     }
   }
 
+  const addSubscriptions = () => {
+    subscriptions = new Subscription()
+    subscriptions.add(
+      wsOutgoingMessageSubject.pipe(tap(sendMessage)).subscribe()
+    )
+  }
+
+  const removeSubscriptions = () => {
+    if (subscriptions) {
+      subscriptions.unsubscribe()
+      subscriptions = null
+    }
+  }
+
   const onMessage = (event: MessageEvent<string>) => {
-    wsMessageSubject.next(event)
+    wsIncomingMessageSubject.next(event)
   }
 
   const onOpen = () => {
@@ -66,6 +88,5 @@ export const signalingServerClient = () => {
   return {
     connect,
     disconnect,
-    sendMessage,
   }
 }
