@@ -1,5 +1,6 @@
 import { Subscription, tap } from 'rxjs'
 import {
+  wsErrorSubject,
   wsIncomingMessageSubject,
   wsOutgoingMessageSubject,
   wsStatusSubject,
@@ -9,14 +10,14 @@ export const signalingServerClient = (url: string) => {
   let ws: WebSocket | undefined
   let subscriptions: Subscription | undefined
 
-  const reconnect = () => {
+  const connect = () => {
+    wsStatusSubject.next('connecting')
+
     removeListeners()
     removeSubscriptions()
-    connect()
-  }
 
-  const connect = () => {
     ws = new WebSocket(url)
+
     addListeners()
     addSubscriptions()
   }
@@ -68,9 +69,8 @@ export const signalingServerClient = (url: string) => {
     wsStatusSubject.next('disconnected')
   }
 
-  const onError = () => {
-    wsStatusSubject.next('disconnected')
-    reconnect()
+  const onError = (event: Event) => {
+    wsErrorSubject.next(event)
   }
 
   const sendMessage = (message: string) => {
