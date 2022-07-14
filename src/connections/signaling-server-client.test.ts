@@ -1,13 +1,13 @@
 import WSS from 'jest-websocket-mock'
 import { signalingServerClient } from './signaling-server-client'
 import {
-  Status,
   wsStatusSubject,
   wsErrorSubject,
   wsOutgoingMessageSubject,
   wsIncomingMessageSubject,
   wsConnect,
   messageConfirmation,
+  Status,
 } from './subjects'
 import { subscribeSpyTo } from '@hirez_io/observer-spy'
 import { filter, firstValueFrom } from 'rxjs'
