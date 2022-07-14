@@ -11,7 +11,7 @@ import {
 } from './subjects'
 import { subscribeSpyTo } from '@hirez_io/observer-spy'
 import { filter, firstValueFrom } from 'rxjs'
-import { ok } from 'neverthrow'
+import { err, ok } from 'neverthrow'
 
 const delay = (delayTime = 300) =>
   new Promise((resolve) => {
@@ -39,6 +39,9 @@ describe('Signaling server client', () => {
     wsErrorSpy = subscribeSpyTo(wsErrorSubject)
     wsIncomingMessageSpy = subscribeSpyTo(wsIncomingMessageSubject)
     wss = new WSS(url)
+
+    wsConnect.next()
+    await waitUntilConnected()
   })
 
   afterEach(() => {
@@ -46,8 +49,6 @@ describe('Signaling server client', () => {
   })
 
   it('should successfully connect and emit status', async () => {
-    wsConnect.next()
-    await waitUntilConnected()
     expect(wsStatusSpy.getValues()).toEqual([
       'disconnected',
       'connecting',
@@ -56,8 +57,6 @@ describe('Signaling server client', () => {
   })
 
   it('should emit error and status', async () => {
-    wsConnect.next()
-    await waitUntilConnected()
     wss.error()
     expect(wsErrorSpy.getValues()[0]).toBeTruthy()
     expect(wsStatusSpy.getValues()).toEqual([
@@ -69,18 +68,12 @@ describe('Signaling server client', () => {
   })
 
   it('should send a message to ws server', async () => {
-    wsConnect.next()
-    await waitUntilConnected()
-
     wsOutgoingMessageSubject.next('hi from client')
 
     expect(wss).toReceiveMessage('hi from client')
   })
 
   it('should receive a message from ws server', async () => {
-    wsConnect.next()
-    await waitUntilConnected()
-
     wss.send('hi from ws server')
 
     const message: MessageEvent<string>[] = wsIncomingMessageSpy.getValues()
@@ -88,22 +81,44 @@ describe('Signaling server client', () => {
     expect(message[0].data).toBe('hi from ws server')
   })
 
-  it('should send a message with ok confirmation', async () => {
-    wsConnect.next()
-    await waitUntilConnected()
+  describe('message confirmation', () => {
+    let messageConfirmationSpy: ReturnType<typeof subscribeSpyTo<any>>
 
+    beforeEach(async () => {
+      messageConfirmationSpy = subscribeSpyTo(
+        messageConfirmation(message.requestId, 300)
+      )
+    })
     const message = { requestId: '111' }
 
-    const messageConfirmationSpy = subscribeSpyTo(
-      messageConfirmation(message.requestId, 1000)
-    )
+    it('should send a message with ok confirmation', async () => {
+      wsOutgoingMessageSubject.next(JSON.stringify(message))
 
-    wsOutgoingMessageSubject.next(JSON.stringify(message))
+      expect(wss).toReceiveMessage(JSON.stringify(message))
 
-    expect(wss).toReceiveMessage(JSON.stringify(message))
+      wss.send(JSON.stringify({ valid: message }))
 
-    wss.send(JSON.stringify({ valid: message }))
+      expect(messageConfirmationSpy.getValues()).toEqual([ok('111')])
+    })
 
-    expect(messageConfirmationSpy.getValues()).toEqual([ok('111')])
+    it('should fail message confirmation due to timeout', async () => {
+      wsOutgoingMessageSubject.next(JSON.stringify(message))
+
+      expect(wss).toReceiveMessage(JSON.stringify(message))
+
+      await delay()
+
+      expect(messageConfirmationSpy.getValues()).toEqual([
+        err({ requestId: '111', reason: 'timeout' }),
+      ])
+    })
+
+    it('should fail message confirmation due to ws error', async () => {
+      wss.error()
+
+      expect(messageConfirmationSpy.getValues()).toEqual([
+        err({ requestId: '111', reason: 'error' }),
+      ])
+    })
   })
 })
