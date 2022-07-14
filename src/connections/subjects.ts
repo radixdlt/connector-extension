@@ -1,6 +1,6 @@
 import { BehaviorSubject, ReplaySubject, Subject } from 'rxjs'
 
-type Status = 'connecting' | 'connected' | 'disconnected'
+export type Status = 'connecting' | 'connected' | 'disconnected'
 
 export const wsOfferReceived = new BehaviorSubject<boolean>(false)
 export const wsSendAnswer = new ReplaySubject<RTCSessionDescriptionInit>()

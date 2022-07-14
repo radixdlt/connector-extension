@@ -1,12 +1,11 @@
-import { config } from 'config'
-import { Subscription, tap } from 'rxjs'
+import { filter, firstValueFrom, Subscription, tap } from 'rxjs'
 import {
   wsIncomingMessageSubject,
   wsOutgoingMessageSubject,
   wsStatusSubject,
 } from './subjects'
 
-export const signalingServerClient = () => {
+export const signalingServerClient = (url: string) => {
   let ws: WebSocket | null = null
   let subscriptions: Subscription | null
 
@@ -17,7 +16,7 @@ export const signalingServerClient = () => {
   }
 
   const connect = () => {
-    ws = new WebSocket(config.ws)
+    ws = new WebSocket(url)
     addListeners()
     addSubscriptions()
   }
@@ -76,6 +75,7 @@ export const signalingServerClient = () => {
   }
 
   const onError = () => {
+    console.log('onError')
     wsStatusSubject.next('disconnected')
     reconnect()
   }
@@ -86,8 +86,14 @@ export const signalingServerClient = () => {
     }
   }
 
+  const waitUntilConnected = async () =>
+    firstValueFrom(
+      wsStatusSubject.pipe(filter((status) => status === 'connected'))
+    )
+
   return {
     connect,
     disconnect,
+    waitUntilConnected,
   }
 }
