@@ -13,9 +13,10 @@ import { subscribeSpyTo } from '@hirez_io/observer-spy'
 import { filter, firstValueFrom } from 'rxjs'
 import { ok } from 'neverthrow'
 
-const delay = (delayTime = 300) => new Promise(resolve => {
-  setTimeout(resolve, delayTime)
-})
+const delay = (delayTime = 300) =>
+  new Promise((resolve) => {
+    setTimeout(resolve, delayTime)
+  })
 
 const url = 'ws://localhost:1234'
 let wss: WSS
@@ -87,21 +88,22 @@ describe('Signaling server client', () => {
     expect(message[0].data).toBe('hi from ws server')
   })
 
-  it('should send a message with ok confirmation', async() => {
+  it('should send a message with ok confirmation', async () => {
     wsConnect.next()
     await waitUntilConnected()
 
-    const message = {requestId: '111'}
+    const message = { requestId: '111' }
 
-    const messageConfirmationSpy = subscribeSpyTo(messageConfirmation(message.requestId, 1000))
+    const messageConfirmationSpy = subscribeSpyTo(
+      messageConfirmation(message.requestId, 1000)
+    )
 
     wsOutgoingMessageSubject.next(JSON.stringify(message))
 
     expect(wss).toReceiveMessage(JSON.stringify(message))
 
-    wss.send(JSON.stringify({valid: message}))
+    wss.send(JSON.stringify({ valid: message }))
 
     expect(messageConfirmationSpy.getValues()).toEqual([ok('111')])
-
   })
 })

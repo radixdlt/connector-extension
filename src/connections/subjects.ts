@@ -31,10 +31,11 @@ export const messageConfirmation = (requestId: string, timeout: number) =>
     wsIncomingMessageSubject.pipe(
       filter(
         (incomingMessage) =>
+          // TODO: use safe parsing
           JSON.parse(incomingMessage.data).valid.requestId === requestId
       ),
-      first(),
       map(() => ok(requestId))
     ),
-    timer(timeout).pipe(map(() => err(requestId)))
-  )
+    timer(timeout).pipe(map(() => err({ requestId, reason: 'timeout' }))),
+    wsErrorSubject.pipe(map(() => err({ requestId, reason: 'error' })))
+  ).pipe(first())
