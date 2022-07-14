@@ -1,4 +1,4 @@
-import { filter, firstValueFrom, Subscription, tap } from 'rxjs'
+import { Subscription, tap } from 'rxjs'
 import {
   wsIncomingMessageSubject,
   wsOutgoingMessageSubject,
@@ -22,11 +22,9 @@ export const signalingServerClient = (url: string) => {
   }
 
   const disconnect = () => {
-    if (ws) {
-      ws.close()
-      removeListeners()
-      ws = undefined
-    }
+    ws?.close()
+    removeListeners()
+    ws = undefined
     removeSubscriptions()
   }
 
@@ -40,12 +38,10 @@ export const signalingServerClient = (url: string) => {
   }
 
   const removeListeners = () => {
-    if (ws) {
-      ws.removeEventListener('message', onMessage)
-      ws.removeEventListener('close', onClose)
-      ws.removeEventListener('error', onError)
-      ws.removeEventListener('open', onOpen)
-    }
+    ws?.removeEventListener('message', onMessage)
+    ws?.removeEventListener('close', onClose)
+    ws?.removeEventListener('error', onError)
+    ws?.removeEventListener('open', onOpen)
   }
 
   const addSubscriptions = () => {
@@ -56,10 +52,8 @@ export const signalingServerClient = (url: string) => {
   }
 
   const removeSubscriptions = () => {
-    if (subscriptions) {
-      subscriptions.unsubscribe()
-      subscriptions = undefined
-    }
+    subscriptions?.unsubscribe()
+    subscriptions = undefined
   }
 
   const onMessage = (event: MessageEvent<string>) => {
@@ -80,19 +74,12 @@ export const signalingServerClient = (url: string) => {
   }
 
   const sendMessage = (message: string) => {
-    if (ws) {
-      ws.send(message)
-    }
+    // TODO: handle if not connected or ws is undefined
+    ws?.send(message)
   }
-
-  const waitUntilConnected = async () =>
-    firstValueFrom(
-      wsStatusSubject.pipe(filter((status) => status === 'connected'))
-    )
 
   return {
     connect,
     disconnect,
-    waitUntilConnected,
   }
 }
