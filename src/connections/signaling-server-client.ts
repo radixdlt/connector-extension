@@ -6,8 +6,8 @@ import {
 } from './subjects'
 
 export const signalingServerClient = (url: string) => {
-  let ws: WebSocket | null = null
-  let subscriptions: Subscription | null
+  let ws: WebSocket | undefined
+  let subscriptions: Subscription | undefined
 
   const reconnect = () => {
     removeListeners()
@@ -25,7 +25,7 @@ export const signalingServerClient = (url: string) => {
     if (ws) {
       ws.close()
       removeListeners()
-      ws = null
+      ws = undefined
     }
     removeSubscriptions()
   }
@@ -58,7 +58,7 @@ export const signalingServerClient = (url: string) => {
   const removeSubscriptions = () => {
     if (subscriptions) {
       subscriptions.unsubscribe()
-      subscriptions = null
+      subscriptions = undefined
     }
   }
 
@@ -75,7 +75,6 @@ export const signalingServerClient = (url: string) => {
   }
 
   const onError = () => {
-    console.log('onError')
     wsStatusSubject.next('disconnected')
     reconnect()
   }
