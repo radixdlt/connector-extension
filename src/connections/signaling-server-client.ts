@@ -1,5 +1,7 @@
 import { Subscription, tap } from 'rxjs'
 import {
+  wsConnect,
+  wsDisconnect,
   wsErrorSubject,
   wsIncomingMessageSubject,
   wsOutgoingMessageSubject,
@@ -50,6 +52,8 @@ export const signalingServerClient = (url: string) => {
     subscriptions.add(
       wsOutgoingMessageSubject.pipe(tap(sendMessage)).subscribe()
     )
+    subscriptions.add(wsConnect.pipe(tap(connect)).subscribe())
+    subscriptions.add(wsDisconnect.pipe(tap(disconnect)).subscribe())
   }
 
   const removeSubscriptions = () => {
@@ -78,8 +82,9 @@ export const signalingServerClient = (url: string) => {
     ws?.send(message)
   }
 
-  return {
-    connect,
-    disconnect,
+  const bootstrap = () => {
+    addSubscriptions()
   }
+
+  bootstrap()
 }
