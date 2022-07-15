@@ -6,7 +6,7 @@ import {
   wsIncomingMessageSubject,
   wsOutgoingMessageSubject,
   wsStatusSubject,
-} from './subjects'
+} from '../subjects'
 
 export const signalingServerClient = (url: string) => {
   let ws: WebSocket | undefined

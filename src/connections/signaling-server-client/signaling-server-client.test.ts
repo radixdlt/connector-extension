@@ -8,7 +8,7 @@ import {
   wsConnect,
   messageConfirmation,
   Status,
-} from './subjects'
+} from '../subjects'
 import { subscribeSpyTo } from '@hirez_io/observer-spy'
 import { filter, firstValueFrom } from 'rxjs'
 import { err, ok } from 'neverthrow'
