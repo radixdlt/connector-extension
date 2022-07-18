@@ -1,5 +1,5 @@
-import chunksToBuffer from '../chunks-to-buffer'
-import bufferToChunks from '../buffer-to-chunks'
+import { chunksToBuffer } from '../chunks-to-buffer'
+import { bufferToChunks } from '../buffer-to-chunks'
 
 import fs from 'fs'
 import path from 'path'
@@ -15,8 +15,10 @@ describe('#chunk file', () => {
           return
         }
         const chunks = bufferToChunks(data, 16)
-        const result = chunksToBuffer(chunks)
-        expect(result.toString('utf8')).toEqual(data.toString('utf8'))
+        if (chunks.isErr()) throw 'buffer to chunks failed'
+        const result = chunksToBuffer(chunks.value)
+        if (result.isErr()) throw 'chunks to buffer failed'
+        expect(result.value.toString('utf8')).toEqual(data.toString('utf8'))
       }
     )
   })
