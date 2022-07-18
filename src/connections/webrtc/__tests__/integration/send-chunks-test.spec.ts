@@ -1,8 +1,7 @@
 import { MockRTC, expect, delay } from '../test-setup'
 // @ts-ignore
 import data from './index.data'
-import chunksToBuffer from 'utils/chunks-to-buffer'
-import bufferToChunks from 'utils/buffer-to-chunks'
+import { chunksToBuffer, bufferToChunks } from 'utils'
 
 const mockRTC = MockRTC.getRemote({ recordMessages: true })
 
@@ -22,8 +21,10 @@ describe('MockRTC', () => {
     await localConnection.setRemoteDescription(answer)
     const chunks = bufferToChunks(data, 16384)
 
+    if (chunks.isErr()) throw chunks.error
+
     dataChannel.onopen = () => {
-      chunks.forEach((chunk) => {
+      chunks.value.forEach((chunk) => {
         dataChannel.send(chunk)
       })
     }
@@ -32,7 +33,7 @@ describe('MockRTC', () => {
 
     const result = (await mockPeer.getAllMessages()) as Buffer[]
 
-    expect(chunksToBuffer(result)).to.deep.equal(data)
+    expect(chunksToBuffer(result).unwrapOr([])).to.deep.equal(data)
   })
 
   it('send data in one go, without chunking should fail', async () => {
