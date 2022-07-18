@@ -5,20 +5,27 @@ import { chunksToBuffer, bufferToChunks } from 'utils'
 
 const mockRTC = MockRTC.getRemote({ recordMessages: true })
 
+let dataChannel: RTCDataChannel
+let mockPeer: MockRTC.MockRTCPeer
+
+const negotiation = async () => {
+  mockPeer = await mockRTC.buildPeer().thenEcho()
+  const localConnection = new RTCPeerConnection()
+  dataChannel = localConnection.createDataChannel('dataChannel')
+  const localOffer = await localConnection.createOffer()
+  await localConnection.setLocalDescription(localOffer)
+  const { answer } = await mockPeer.answerOffer(localOffer)
+  await localConnection.setRemoteDescription(answer)
+}
+
 describe('MockRTC', () => {
-  beforeEach(() => mockRTC.start())
-  afterEach(() => mockRTC.stop())
+  beforeEach(async () => {
+    await mockRTC.start()
+    await negotiation()
+  })
+  afterEach(async () => mockRTC.stop())
 
   it('send chunks over and make sure the receiver is able to rebuild file', async () => {
-    const mockPeer = await mockRTC.buildPeer().thenEcho()
-
-    const localConnection = new RTCPeerConnection()
-    const dataChannel = localConnection.createDataChannel('dataChannel')
-    const localOffer = await localConnection.createOffer()
-    await localConnection.setLocalDescription(localOffer)
-
-    const { answer } = await mockPeer.answerOffer(localOffer)
-    await localConnection.setRemoteDescription(answer)
     const chunks = bufferToChunks(data, 16384)
 
     if (chunks.isErr()) throw chunks.error
@@ -37,16 +44,6 @@ describe('MockRTC', () => {
   })
 
   it('send data in one go, without chunking should fail', async () => {
-    const mockPeer = await mockRTC.buildPeer().thenEcho()
-
-    const localConnection = new RTCPeerConnection()
-    const dataChannel = localConnection.createDataChannel('dataChannel')
-    const localOffer = await localConnection.createOffer()
-    await localConnection.setLocalDescription(localOffer)
-
-    const { answer } = await mockPeer.answerOffer(localOffer)
-    await localConnection.setRemoteDescription(answer)
-
     dataChannel.onopen = () => {
       dataChannel.send(data)
     }
