@@ -1,4 +1,4 @@
-import { DataTypes } from '../io-types/types'
+import { DataTypes } from 'io-types/types'
 import { err, ok } from 'neverthrow'
 import {
   BehaviorSubject,
@@ -10,7 +10,7 @@ import {
   merge,
   map,
 } from 'rxjs'
-import { parseJSON } from '../utils/parse-json'
+import { parseJSON } from 'utils/parse-json'
 
 export type Status = 'connecting' | 'connected' | 'disconnected'
 
