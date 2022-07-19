@@ -11,4 +11,7 @@ describe('secure random byte generator', () => {
       }
     })
   })
+  it('should fail to generate random bytes', () => {
+    expect(secureRandom(-1)).toBeTruthy()
+  })
 })
