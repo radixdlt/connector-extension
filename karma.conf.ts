@@ -10,7 +10,10 @@ import { NodeGlobalsPolyfillPlugin } from '@esbuild-plugins/node-globals-polyfil
 if (CONTINUOUS) {
   const adminProc = ChildProcess.spawn(
     './node_modules/.bin/node-dev',
-    ['--notify=false', './test/start-test-admin-server.ts'],
+    [
+      '--notify=false',
+      './src/connections/webrtc/__tests__/start-test-admin-server',
+    ],
     { stdio: 'inherit' }
   )
 

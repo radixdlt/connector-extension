@@ -23,7 +23,7 @@ export const wsStatusSubject = new BehaviorSubject<Status>('disconnected')
 export const wsConnect = new Subject<void>()
 export const wsDisconnect = new Subject<void>()
 
-export const rtcStatusSubject = new BehaviorSubject<'open' | 'closed'>('closed')
+export const rtcStatusSubject = new BehaviorSubject<Status>('disconnected')
 export const rtcIncomingMessageSubject = new Subject<string>()
 export const rtcOutgoingMessageSubject = new Subject<string>()
 export const rtcIceCandidate = new Subject<RTCPeerConnectionIceEvent>()
