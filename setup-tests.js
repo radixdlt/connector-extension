@@ -1,3 +1,3 @@
-import { webcrypto } from 'node:crypto'
+import { Crypto } from '@peculiar/webcrypto'
 
-global.crypto = webcrypto
+global.crypto = new Crypto()

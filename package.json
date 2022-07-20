@@ -2,8 +2,8 @@
   "name": "-extension",
   "private": true,
   "version": "0.0.0",
-  "engines" : { 
-    "node" : ">=14 <15"
+  "engines": {
+    "node": ">=14 <15"
   },
   "scripts": {
     "dev": "vite",
@@ -15,7 +15,8 @@
     "pretest": "yarn eslint & yarn prettier & yarn tsc",
     "prepare": "husky install",
     "ladle": "ladle serve",
-    "test": "jest --passWithNoTests & yarn testrtc"
+    "test:jest": "jest",
+    "test": "yarn jest --passWithNoTests & yarn testrtc"
   },
   "dependencies": {
     "@emotion/react": "^11.9.0",
@@ -24,6 +25,7 @@
     "@mui/material": "^5.8.2",
     "@radix-ui/react-tooltip": "^0.1.7",
     "@react-spring/web": "^9.4.5",
+    "bech32": "^2.0.0",
     "neverthrow": "^4.3.1",
     "react": "^18.0.0",
     "react-dom": "^18.0.0",
@@ -39,6 +41,7 @@
     "@esbuild-plugins/node-modules-polyfill": "^0.1.4",
     "@hirez_io/observer-spy": "^2.2.0",
     "@ladle/react": "^0.16.0",
+    "@peculiar/webcrypto": "^1.4.0",
     "@stitches/react": "^1.2.8",
     "@types/chai": "^4.3.1",
     "@types/jest": "^28.1.4",
