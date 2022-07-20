@@ -10,6 +10,11 @@ describe('signaling server secrets', () => {
 
     const secrets = result.value
 
+    expect(Buffer.isBuffer(secrets._connectionPasswordRaw)).toBeTruthy()
+    expect(Buffer.isBuffer(secrets.connectionId)).toBeTruthy()
+    expect(Buffer.isBuffer(secrets.encryptionKey)).toBeTruthy()
+    expect(typeof secrets.passwordBech32).toBe('string')
+
     const result2 = await deriveSecretsFromConnectionPassword(
       secrets._connectionPasswordRaw
     )
