@@ -1,12 +1,12 @@
-import { err, ok } from 'neverthrow'
+import { err, Ok, ok, Result } from 'neverthrow'
 import { bech32 } from 'bech32'
 
-export const convertBufferToBech32 = (buffer: Buffer) => {
+export const convertBufferToBech32 = (buffer: Buffer): Ok<Buffer, never> => {
   const bech32Data = bech32.toWords(buffer)
   return ok(Buffer.from(bech32Data))
 }
 
-export const bech32Encode = (buffer: Buffer) => {
+export const bech32Encode = (buffer: Buffer): Result<string, Error> => {
   if (buffer.length > 90) {
     return err(new Error('Buffer exceeds length limit'))
   }
