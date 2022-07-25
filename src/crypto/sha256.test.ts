@@ -1,6 +1,6 @@
 import { sha256 } from './sha256'
 
-describe.only('sha256', () => {
+describe('sha256', () => {
   it('should hash input', async () => {
     const numArr = new Array(1000).fill(null).map((_, index) => index)
     for (const n of numArr) {
