@@ -1,4 +1,4 @@
-import { bech32Encode, convertBufferToBech32 } from 'crypto/bech32'
+import { convertBufferToBech32, bech32Encode } from 'crypto/bech32'
 import { deriveKey } from 'crypto/kdf'
 import { secureRandom } from 'crypto/secure-random'
 import { sha256 } from 'crypto/sha256'

@@ -8,7 +8,7 @@ describe('key derivation function', () => {
       throw result.error
     }
 
-    expect(result._unsafeUnwrap().toString('hex')).toBe(
+    expect(result.value.toString('hex')).toBe(
       '45d423c89fccaca134e37e5ae4887c1cf2eb7e1b4a7117f2a6aaf17d8d16c312'
     )
   })
