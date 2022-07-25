@@ -1,18 +1,15 @@
 module.exports = {
-  plugins: ["unused-imports"],
+  plugins: ['unused-imports'],
   rules: {
-    "arrow-body-style": ["error", "as-needed"],
-    "unused-imports/no-unused-imports": "error",
-    "no-undef": "off"
+    'arrow-body-style': ['error', 'as-needed'],
+    'unused-imports/no-unused-imports': 'error',
+    'no-undef': 'off',
+    '@typescript-eslint/consistent-type-definitions': ['error', 'type'],
   },
-  extends: [
-    'alloy',
-    'alloy/react',
-    'alloy/typescript',
-  ],
+  extends: ['alloy', 'alloy/react', 'alloy/typescript'],
   settings: {
     react: {
-      version: '18'
+      version: '18',
     },
   },
-};
+}

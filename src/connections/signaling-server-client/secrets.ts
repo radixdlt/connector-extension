@@ -4,7 +4,7 @@ import { secureRandom } from 'crypto/secure-random'
 import { sha256 } from 'crypto/sha256'
 import { combine, ResultAsync } from 'neverthrow'
 
-interface Secrets {
+type Secrets = {
   passwordBech32: string
   encryptionKey: Buffer
   connectionId: Buffer
