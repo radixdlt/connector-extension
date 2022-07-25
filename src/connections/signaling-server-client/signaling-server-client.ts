@@ -3,7 +3,7 @@ import {
   wsConnect,
   wsDisconnect,
   wsErrorSubject,
-  wsIncomingMessageSubject,
+  wsIncomingRawMessageSubject,
   wsOutgoingMessageSubject,
   wsStatusSubject,
 } from '../subjects'
@@ -62,7 +62,7 @@ export const signalingServerClient = (url: string) => {
   }
 
   const onMessage = (event: MessageEvent<string>) => {
-    wsIncomingMessageSubject.next(event)
+    wsIncomingRawMessageSubject.next(event)
   }
 
   const onOpen = () => {

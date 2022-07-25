@@ -4,7 +4,7 @@ import {
   wsStatusSubject,
   wsErrorSubject,
   wsOutgoingMessageSubject,
-  wsIncomingMessageSubject,
+  wsIncomingRawMessageSubject,
   wsConnect,
   messageConfirmation,
   Status,
@@ -37,7 +37,7 @@ describe('Signaling server client', () => {
   beforeEach(async () => {
     wsStatusSpy = subscribeSpyTo(wsStatusSubject)
     wsErrorSpy = subscribeSpyTo(wsErrorSubject)
-    wsIncomingMessageSpy = subscribeSpyTo(wsIncomingMessageSubject)
+    wsIncomingMessageSpy = subscribeSpyTo(wsIncomingRawMessageSubject)
     wss = new WSS(url)
 
     wsConnect.next()
@@ -98,7 +98,7 @@ describe('Signaling server client', () => {
 
       wss.send(JSON.stringify({ valid: message }))
 
-      expect(messageConfirmationSpy.getValues()).toEqual([ok('111')])
+      expect(messageConfirmationSpy.getValues()).toEqual([ok(true)])
     })
 
     it('should fail message confirmation due to timeout', async () => {
