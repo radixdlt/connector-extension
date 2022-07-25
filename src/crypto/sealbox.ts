@@ -1,7 +1,7 @@
 import { combine, Result } from 'neverthrow'
 import { readBuffer } from 'utils/buffer-reader'
 
-type SealedBoxProps = {
+export type SealedBoxProps = {
   ciphertext: Buffer
   iv: Buffer
   authTag: Buffer
