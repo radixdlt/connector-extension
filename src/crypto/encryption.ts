@@ -1,14 +1,14 @@
-import { errAsync, ResultAsync } from 'neverthrow'
+import { ResultAsync } from 'neverthrow'
 import { SealedBoxProps } from './sealbox'
 import { secureRandom } from './secure-random'
 
 export const createIV = () => secureRandom(12)
 
-const getKey = (encryptionKey: string) =>
+const getKey = (encryptionKey: Buffer) =>
   ResultAsync.fromPromise(
     crypto.subtle.importKey(
       'raw',
-      Buffer.from(encryptionKey, 'hex'),
+      encryptionKey,
       {
         name: 'AES-GCM',
         length: 256,
@@ -40,26 +40,19 @@ const cryptoEncrypt = (data: Buffer, encryptionKey: CryptoKey, iv: Buffer) =>
 
 export const decrypt = (
   data: Buffer,
-  encryptionKey: string,
+  encryptionKey: Buffer,
   iv: Buffer
-): ResultAsync<Buffer, Error> => {
-  if (!encryptionKey) {
-    return errAsync(Error('MissingEncryptionKey'))
-  } else if (!data) {
-    return errAsync(Error('MissingEncryptedData'))
-  }
-
-  return getKey(encryptionKey).andThen((cryptoKey) =>
+): ResultAsync<Buffer, Error> =>
+  getKey(encryptionKey).andThen((cryptoKey) =>
     cryptoDecrypt(data, cryptoKey, iv)
   )
-}
 
 const combineIVandCipherText = (iv: Buffer, ciphertext: Buffer): Buffer =>
   Buffer.concat([iv, ciphertext])
 
 export const encrypt = (
   data: Buffer,
-  encryptionKey: string,
+  encryptionKey: Buffer,
   iv: Buffer
 ): ResultAsync<
   Omit<SealedBoxProps, 'ciphertextAndAuthTag' | 'authTag'>,

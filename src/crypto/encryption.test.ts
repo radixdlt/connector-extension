@@ -16,7 +16,7 @@ describe('Encryption', () => {
     const iv = Buffer.from('beefbeefbeefbeefbeefbeef', 'hex')
     const encrypted = await encrypt(
       Buffer.from(testMessage, 'utf8'),
-      encryptionKey,
+      Buffer.from(encryptionKey, 'hex'),
       iv
     )
 
@@ -26,7 +26,7 @@ describe('Encryption', () => {
 
     const decrypted = await decrypt(
       encrypted.value.ciphertext,
-      encryptionKey,
+      Buffer.from(encryptionKey, 'hex'),
       encrypted.value.iv
     )
 
@@ -37,7 +37,7 @@ describe('Encryption', () => {
   it('should decrypt with error', async () => {
     const decrypted = await decrypt(
       Buffer.from(testMessage, 'hex'),
-      encryptionKey,
+      Buffer.from(encryptionKey, 'hex'),
       Buffer.from('test')
     )
     expect(decrypted.isErr()).toBe(true)
@@ -47,14 +47,14 @@ describe('Encryption', () => {
     const iv = Buffer.from('feebfeebfeebfeebfeebfeeb', 'hex')
     const encrypted = await encrypt(
       Buffer.from(testMessage2, 'utf8'),
-      encryptionKey2,
+      Buffer.from(encryptionKey2, 'hex'),
       iv
     )
 
     if (encrypted.isErr()) throw encrypted.error
     const decrypted = await decrypt(
       encrypted.value.ciphertext,
-      encryptionKey2,
+      Buffer.from(encryptionKey2, 'hex'),
       encrypted.value.iv
     )
 

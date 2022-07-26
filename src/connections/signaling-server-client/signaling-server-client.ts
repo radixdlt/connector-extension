@@ -1,3 +1,4 @@
+import log from 'loglevel'
 import { Subscription, tap } from 'rxjs'
 import {
   wsConnect,
@@ -62,23 +63,28 @@ export const signalingServerClient = (url: string) => {
   }
 
   const onMessage = (event: MessageEvent<string>) => {
+    log.debug(`⬇️ incoming ws message: \n ${event.data}`)
     wsIncomingRawMessageSubject.next(event)
   }
 
   const onOpen = () => {
+    log.trace('🟢 connected to websocket')
     wsStatusSubject.next('connected')
   }
 
   const onClose = () => {
+    log.trace('🔴 disconnected from websocket')
     wsStatusSubject.next('disconnected')
   }
 
   const onError = (event: Event) => {
+    log.error(event)
     wsErrorSubject.next(event)
   }
 
   const sendMessage = (message: string) => {
     // TODO: handle if not connected or ws is undefined
+    log.debug(`⬆️ sending ws message: \n ${message}`)
     ws?.send(message)
   }
 
