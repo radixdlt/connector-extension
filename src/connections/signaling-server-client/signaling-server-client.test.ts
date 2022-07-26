@@ -97,7 +97,13 @@ describe('Signaling server client', () => {
         messageConfirmation(message.requestId, 300)
       )
     })
-    const message = { requestId: '111' }
+    const message = {
+      encryptedPayload: '123',
+      connectionId: '1',
+      method: 'answer',
+      source: 'extension',
+      requestId: crypto.randomUUID(),
+    }
 
     it('should send a message with ok confirmation', async () => {
       wsOutgoingMessageSubject.next(JSON.stringify(message))
@@ -117,7 +123,7 @@ describe('Signaling server client', () => {
       await delay()
 
       expect(messageConfirmationSpy.getValues()).toEqual([
-        err({ requestId: '111', reason: 'timeout' }),
+        err({ requestId: message.requestId, reason: 'timeout' }),
       ])
     })
 
@@ -125,7 +131,7 @@ describe('Signaling server client', () => {
       wss.error()
 
       expect(messageConfirmationSpy.getValues()).toEqual([
-        err({ requestId: '111', reason: 'error' }),
+        err({ requestId: message.requestId, reason: 'error' }),
       ])
     })
   })

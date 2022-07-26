@@ -30,9 +30,9 @@ export const deriveSecretsFromConnectionPassword = (
           _connectionPasswordRaw: connectionPasswordRaw,
         }
         log.debug(
-          `🔐 derived secrets from connection password: \n [${
-            secrets._connectionPasswordRaw.toJSON().data
-          }]`
+          `🔐 derived secrets from connection password: \n ${secrets._connectionPasswordRaw.toString(
+            'hex'
+          )}`
         )
         return secrets
       })

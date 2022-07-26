@@ -10,6 +10,7 @@ import {
   timer,
   first,
   Subscription,
+  tap,
 } from 'rxjs'
 import { parseJSON } from 'utils/parse-json'
 import log from 'loglevel'
@@ -25,10 +26,14 @@ import {
 import { DataTypes } from 'io-types/types'
 import { transformBufferToSealbox } from 'crypto/sealbox'
 import { decrypt } from 'crypto/encryption'
+import { validateIncomingMessage } from 'io-types/validate'
 
 export const messageConfirmation = (requestId: string, timeout: number) =>
   merge(
     wsIncomingMessageConfirmationSubject.pipe(
+      tap((message) =>
+        log.debug(`👌 got message confirmation: \n ${message.requestId}`)
+      ),
       filter((message) => message.requestId === requestId),
       map(() => ok(true))
     ),
@@ -45,7 +50,6 @@ export const handleIncomingMessage = (
   result.andThen((message) => {
     const confirmation = (message as { valid: DataTypes })?.valid
     const serverError = (message as { error: any })?.error
-
     if (confirmation) {
       wsIncomingMessageConfirmationSubject.next(confirmation)
       return ok(undefined)
@@ -121,7 +125,16 @@ export const wsIncomingMessage$ = wsIncomingRawMessageSubject.pipe(
       return error
     })
   ),
-  map(handleIncomingMessage),
+  map((result) =>
+    handleIncomingMessage(result).andThen((message) =>
+      message
+        ? validateIncomingMessage(message).mapErr((error) => {
+            log.error(`❌ validation error: \n '${error}' `)
+            return error
+          })
+        : ok(undefined)
+    )
+  ),
   withLatestFrom(wsConnectionSecrets$),
   concatMap(([messageResult, secretsResult]) =>
     messageResult
@@ -136,7 +149,7 @@ export const wsIncomingMessage$ = wsIncomingRawMessageSubject.pipe(
       )
       // TODO: handle error
       .mapErr((error) => {
-        log.error(error)
+        log.trace(error)
       })
   ),
   share()
