@@ -6,7 +6,6 @@ import {
   wsOutgoingMessageSubject,
   wsIncomingRawMessageSubject,
   wsConnect,
-  messageConfirmation,
   Status,
   wsConnectionSecrets$,
   wsConnectionPasswordSubject,
@@ -17,6 +16,7 @@ import { filter, firstValueFrom } from 'rxjs'
 import { err, ok } from 'neverthrow'
 import log from 'loglevel'
 import { createIV, encrypt } from 'crypto/encryption'
+import { messageConfirmation } from './message-handler'
 
 const delay = (delayTime = 300) =>
   new Promise((resolve) => {

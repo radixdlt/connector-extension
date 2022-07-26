@@ -78,7 +78,8 @@ export const signalingServerClient = (url: string) => {
   }
 
   const onError = (event: Event) => {
-    log.error(event)
+    log.error(`❌ got websocket error`)
+    log.trace(event)
     wsErrorSubject.next(event)
   }
 
