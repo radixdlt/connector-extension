@@ -104,11 +104,8 @@ export const signalingServerClient = (url: string) => {
         filter(([, shouldConnect]) => shouldConnect),
         exhaustMap(() => {
           log.debug(
-            '🔄 lost connection to signaling server, trying to reconnect...'
+            '🔄 lost connection to signaling server, attempting to reconnect...'
           )
-
-          connect()
-
           return interval(config.signalingServer.reconnect.interval).pipe(
             withLatestFrom(wsConnect, wsStatusSubject),
             filter(([, shouldConnect]) => shouldConnect),
