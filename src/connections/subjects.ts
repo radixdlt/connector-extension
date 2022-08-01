@@ -20,8 +20,7 @@ export const wsOutgoingMessageSubject = new Subject<string>()
 export const wsIncomingRawMessageSubject = new Subject<MessageEvent<string>>()
 export const wsErrorSubject = new Subject<Event>()
 export const wsStatusSubject = new BehaviorSubject<Status>('disconnected')
-export const wsConnect = new Subject<void>()
-export const wsDisconnect = new Subject<void>()
+export const wsConnect = new BehaviorSubject<boolean>(false)
 export const wsConnectionPasswordSubject = new BehaviorSubject<
   Buffer | undefined
 >(undefined)

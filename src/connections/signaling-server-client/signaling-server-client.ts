@@ -1,8 +1,16 @@
+import { config } from 'config'
 import log from 'loglevel'
-import { Subscription, tap } from 'rxjs'
+import {
+  exhaustMap,
+  filter,
+  first,
+  interval,
+  Subscription,
+  tap,
+  withLatestFrom,
+} from 'rxjs'
 import {
   wsConnect,
-  wsDisconnect,
   wsErrorSubject,
   wsIncomingRawMessageSubject,
   wsOutgoingMessageSubject,
@@ -11,34 +19,28 @@ import {
 
 export const signalingServerClient = (url: string) => {
   let ws: WebSocket | undefined
-  let subscriptions: Subscription | undefined
 
   const connect = () => {
+    log.debug(`📡 connecting to signaling server...`)
     wsStatusSubject.next('connecting')
-
     removeListeners()
-    removeSubscriptions()
-
     ws = new WebSocket(url)
-
-    addListeners()
-    addSubscriptions()
+    addListeners(ws)
   }
 
   const disconnect = () => {
+    log.debug(`🧹 disconnecting from signaling server...`)
     ws?.close()
     removeListeners()
     ws = undefined
-    removeSubscriptions()
+    wsStatusSubject.next('disconnected')
   }
 
-  const addListeners = () => {
-    if (ws) {
-      ws.onmessage = onMessage
-      ws.onopen = onOpen
-      ws.onclose = onClose
-      ws.onerror = onError
-    }
+  const addListeners = (ws: WebSocket) => {
+    ws.onmessage = onMessage
+    ws.onopen = onOpen
+    ws.onclose = onClose
+    ws.onerror = onError
   }
 
   const removeListeners = () => {
@@ -48,32 +50,18 @@ export const signalingServerClient = (url: string) => {
     ws?.removeEventListener('open', onOpen)
   }
 
-  const addSubscriptions = () => {
-    subscriptions = new Subscription()
-    subscriptions.add(
-      wsOutgoingMessageSubject.pipe(tap(sendMessage)).subscribe()
-    )
-    subscriptions.add(wsConnect.pipe(tap(connect)).subscribe())
-    subscriptions.add(wsDisconnect.pipe(tap(disconnect)).subscribe())
-  }
-
-  const removeSubscriptions = () => {
-    subscriptions?.unsubscribe()
-    subscriptions = undefined
-  }
-
   const onMessage = (event: MessageEvent<string>) => {
     log.debug(`⬇️ incoming ws message: \n ${event.data}`)
     wsIncomingRawMessageSubject.next(event)
   }
 
   const onOpen = () => {
-    log.trace('🟢 connected to websocket')
+    log.debug('🟢 connected to signaling server')
     wsStatusSubject.next('connected')
   }
 
   const onClose = () => {
-    log.trace('🔴 disconnected from websocket')
+    log.debug('🔴 disconnected from signaling server')
     wsStatusSubject.next('disconnected')
   }
 
@@ -89,9 +77,61 @@ export const signalingServerClient = (url: string) => {
     ws?.send(message)
   }
 
-  const bootstrap = () => {
-    addSubscriptions()
-  }
+  const subscriptions = new Subscription()
+  subscriptions.add(wsOutgoingMessageSubject.pipe(tap(sendMessage)).subscribe())
+  subscriptions.add(
+    wsConnect
+      .pipe(
+        withLatestFrom(wsStatusSubject),
+        tap(([shouldConnect, status]) => {
+          if (status === 'disconnected' && shouldConnect) {
+            connect()
+          } else if (
+            ['connection', 'connected'].includes(status) &&
+            !shouldConnect
+          ) {
+            disconnect()
+          }
+        })
+      )
+      .subscribe()
+  )
+  subscriptions.add(
+    wsStatusSubject
+      .pipe(
+        filter((status) => status === 'disconnected'),
+        withLatestFrom(wsConnect),
+        filter(([, shouldConnect]) => shouldConnect),
+        exhaustMap(() => {
+          log.debug(
+            '🔄 lost connection to signaling server, trying to reconnect...'
+          )
 
-  bootstrap()
+          connect()
+
+          return interval(config.signalingServer.reconnect.interval).pipe(
+            withLatestFrom(wsConnect, wsStatusSubject),
+            filter(([, shouldConnect]) => shouldConnect),
+            filter(([index, , status]) => {
+              log.debug(
+                `🔄 connection status: ${status}, attempt: ${index + 1}`
+              )
+              wsConnect.next(true)
+              return status === 'connected'
+            }),
+            tap(() => {
+              log.debug('🤙 successfully reconnected to signaling server')
+            }),
+            first()
+          )
+        })
+      )
+      .subscribe()
+  )
+
+  return {
+    connect,
+    disconnect,
+    ws,
+  }
 }

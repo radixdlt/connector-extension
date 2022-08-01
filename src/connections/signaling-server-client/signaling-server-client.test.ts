@@ -33,27 +33,21 @@ let wsIncomingMessageSpy: ReturnType<
   typeof subscribeSpyTo<MessageEvent<string>>
 >
 
-const waitUntilConnected = async () =>
-  firstValueFrom(
-    wsStatusSubject.pipe(filter((status) => status === 'connected'))
-  )
+const waitUntilStatus = async (status: Status) =>
+  firstValueFrom(wsStatusSubject.pipe(filter((s) => s === status)))
 
 describe('Signaling server client', () => {
-  beforeAll(() => {
-    log.setLevel('debug')
-  })
   beforeEach(async () => {
+    log.setLevel('silent')
+    WSS.clean()
+    await delay(5)
     wsStatusSpy = subscribeSpyTo(wsStatusSubject)
     wsErrorSpy = subscribeSpyTo(wsErrorSubject)
     wsIncomingMessageSpy = subscribeSpyTo(wsIncomingRawMessageSubject)
     wss = new WSS(url)
-
-    wsConnect.next()
-    await waitUntilConnected()
-  })
-
-  afterEach(() => {
-    WSS.clean()
+    wsConnect.next(true)
+    await waitUntilStatus('connected')
+    log.setLevel('debug')
   })
 
   it('should successfully connect and emit status', async () => {
@@ -75,18 +69,38 @@ describe('Signaling server client', () => {
     ])
   })
 
+  it('should reconnect if disconnected', async () => {
+    WSS.clean()
+    wss = new WSS(url)
+    await waitUntilStatus('connected')
+    expect(wsStatusSpy.getValues()).toEqual([
+      'disconnected',
+      'connecting',
+      'connected',
+      'disconnected',
+      'connecting',
+      'connected',
+    ])
+  })
+
   it('should send a message to ws server', async () => {
     wsOutgoingMessageSubject.next('hi from client')
-
     expect(wss).toReceiveMessage('hi from client')
   })
 
   it('should receive a message from ws server', async () => {
-    wss.send('hi from ws server')
+    const message = JSON.stringify({
+      encryptedPayload: 'secret stuff here',
+      connectionId: 'abc',
+      method: 'offer',
+      source: 'iOS',
+      requestId: crypto.randomUUID(),
+    })
+    wss.send(message)
 
-    const message: MessageEvent<string>[] = wsIncomingMessageSpy.getValues()
+    const actual: MessageEvent<string>[] = wsIncomingMessageSpy.getValues()
 
-    expect(message[0].data).toBe('hi from ws server')
+    expect(actual[0].data).toBe(message)
   })
 
   describe('message confirmation', () => {

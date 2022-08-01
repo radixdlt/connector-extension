@@ -10,4 +10,9 @@ export const config = {
       credential: 'password',
     },
   ],
+  signalingServer: {
+    reconnect: {
+      interval: 1000,
+    },
+  },
 }
