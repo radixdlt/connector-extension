@@ -5,7 +5,7 @@ import {
   Status,
 } from 'connections/subjects'
 import { makeWebRTC } from 'connections/webrtc/webrtc-connection'
-import { MockRTC, expect } from '../test-setup'
+import { MockRTC, expect, delay } from '../test-setup'
 import { SubscriberSpy, subscribeSpyTo } from '@hirez_io/observer-spy'
 import { filter, firstValueFrom } from 'rxjs'
 
@@ -43,7 +43,7 @@ describe('MockRTC', () => {
     const { peerConnection: localConnection } = makeWebRTC()
     await negotiation(localConnection, mockPeer)
   })
-  afterEach(() => mockRTC.stop())
+  afterEach(async () => mockRTC.stop())
 
   it('should successfully connect and emit status', async () => {
     const result = rtcStatusSpy.getValues()
@@ -51,10 +51,15 @@ describe('MockRTC', () => {
   })
 
   it('should send a message to other peer and receive', async () => {
+    const rtcIncomingMessageSubjectSpy = subscribeSpyTo(
+      rtcIncomingMessageSubject
+    )
+    await delay(300)
     rtcOutgoingMessageSubject.next('hi from client')
-    const rtcIncomingMessageSpy = subscribeSpyTo(rtcIncomingMessageSubject)
     const result = await mockPeer.getAllMessages()
-    expect(rtcIncomingMessageSpy.getValues().pop()).to.equal('hello from mock')
+    expect(rtcIncomingMessageSubjectSpy.getValues().pop()).to.equal(
+      'hello from mock'
+    )
     expect(result.pop()).to.equal('hi from client')
   })
 })
