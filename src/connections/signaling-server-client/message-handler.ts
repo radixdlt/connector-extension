@@ -120,7 +120,7 @@ const distributeMessage = (message: DataTypes): Result<void, Error> => {
 export const wsIncomingMessage$ = wsIncomingRawMessageSubject.pipe(
   pluck('data'),
   map((rawMessage) =>
-    parseJSON(rawMessage).mapErr((error) => {
+    parseJSON<ServerResponse>(rawMessage).mapErr((error) => {
       log.error(`❌ could not parse message: \n '${rawMessage}' `)
       return error
     })
