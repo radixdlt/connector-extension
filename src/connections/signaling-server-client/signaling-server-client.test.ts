@@ -23,7 +23,8 @@ const delay = (delayTime = 300) =>
     setTimeout(resolve, delayTime)
   })
 
-const url = 'ws://localhost:1234'
+const url =
+  'ws://localhost:1234/3ba6fa025c3c304988133c081e9e3f5347bf89421f6445b07abfacd94956a09a?target=wallet&source=extension'
 let wss: WSS
 signalingServerClient(url)
 
@@ -39,8 +40,10 @@ const waitUntilStatus = async (status: Status) =>
 describe('Signaling server client', () => {
   beforeEach(async () => {
     log.setLevel('silent')
+    wsConnectionPasswordSubject.next(Buffer.from([192, 218, 52, 1, 230]))
+
     WSS.clean()
-    await delay(5)
+    await delay(10)
     wsStatusSpy = subscribeSpyTo(wsStatusSubject)
     wsErrorSpy = subscribeSpyTo(wsErrorSubject)
     wsIncomingMessageSpy = subscribeSpyTo(wsIncomingRawMessageSubject)

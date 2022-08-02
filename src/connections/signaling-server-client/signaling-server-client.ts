@@ -11,6 +11,7 @@ import {
 } from 'rxjs'
 import {
   wsConnect,
+  wsConnectionSecrets$,
   wsErrorSubject,
   wsIncomingRawMessageSubject,
   wsOutgoingMessageSubject,
@@ -20,11 +21,13 @@ import {
 export const signalingServerClient = (url: string) => {
   let ws: WebSocket | undefined
 
-  const connect = () => {
-    log.debug(`📡 connecting to signaling server...`)
+  const connect = (connectionId: string) => {
+    log.debug(
+      `📡 connecting to signaling server url: ${url}/${connectionId}?target=wallet&source=extension`
+    )
     wsStatusSubject.next('connecting')
     removeListeners()
-    ws = new WebSocket(url)
+    ws = new WebSocket(`${url}/${connectionId}?target=wallet&source=extension`)
     addListeners(ws)
   }
 
@@ -82,10 +85,10 @@ export const signalingServerClient = (url: string) => {
   subscriptions.add(
     wsConnect
       .pipe(
-        withLatestFrom(wsStatusSubject),
-        tap(([shouldConnect, status]) => {
-          if (status === 'disconnected' && shouldConnect) {
-            connect()
+        withLatestFrom(wsStatusSubject, wsConnectionSecrets$),
+        tap(([shouldConnect, status, secrets]) => {
+          if (status === 'disconnected' && shouldConnect && secrets.isOk()) {
+            connect(secrets.value.connectionId.toString('hex'))
           } else if (
             ['connection', 'connected'].includes(status) &&
             !shouldConnect
