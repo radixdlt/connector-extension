@@ -22,8 +22,14 @@ import {
   wsIncomingRawMessageSubject,
   wsConnectionSecrets$,
   wsErrorSubject,
+  wsServerErrorResponseSubject,
 } from 'connections/subjects'
-import { DataTypes } from 'io-types/types'
+import {
+  DataTypes,
+  SignalingServerResponse,
+  SignalingServerErrorResponse,
+  InvalidMessageError,
+} from 'io-types/types'
 import { transformBufferToSealbox } from 'crypto/sealbox'
 import { decrypt } from 'crypto/encryption'
 import { validateIncomingMessage } from 'io-types/validate'
@@ -37,28 +43,37 @@ export const messageConfirmation = (requestId: string, timeout: number) =>
       filter((message) => message.requestId === requestId),
       map(() => ok(true))
     ),
+    wsServerErrorResponseSubject.pipe(
+      map((message) => err({ requestId, reason: 'serverError', message }))
+    ),
     timer(timeout).pipe(map(() => err({ requestId, reason: 'timeout' }))),
     wsErrorSubject.pipe(map(() => err({ requestId, reason: 'error' })))
   ).pipe(first())
 
-// TODO: add error message type
-type ServerResponse = DataTypes | { valid: DataTypes } | { error: any }
-
 export const handleIncomingMessage = (
-  result: Result<ServerResponse, Error>
-): Result<DataTypes | undefined, Error> =>
+  result: Result<SignalingServerResponse, InvalidMessageError>
+): Result<DataTypes | undefined, SignalingServerErrorResponse> =>
   result.andThen((message) => {
-    const confirmation = (message as { valid: DataTypes })?.valid
-    const serverError = (message as { error: any })?.error
-    if (confirmation) {
-      wsIncomingMessageConfirmationSubject.next(confirmation)
-      return ok(undefined)
-    } else if (serverError) {
-      // TODO: handle server error
-      return err(Error('server error'))
-    } else {
-      return ok(message as DataTypes)
+    switch (message.info) {
+      case 'RemoteData': {
+        return ok(message.data)
+      }
+
+      case 'InvalidMessageError':
+      case 'MissingRemoteClientError':
+      case 'RemoteClientDisconnected':
+      case 'ValidationError': {
+        wsServerErrorResponseSubject.next(message)
+        return err(message)
+      }
+
+      case 'Confirmation': {
+        wsIncomingMessageConfirmationSubject.next(message)
+        break
+      }
     }
+
+    return ok(undefined)
   })
 
 const decryptMessagePayload = (
@@ -120,10 +135,16 @@ const distributeMessage = (message: DataTypes): Result<void, Error> => {
 export const wsIncomingMessage$ = wsIncomingRawMessageSubject.pipe(
   pluck('data'),
   map((rawMessage) =>
-    parseJSON<ServerResponse>(rawMessage).mapErr((error) => {
-      log.error(`❌ could not parse message: \n '${rawMessage}' `)
-      return error
-    })
+    parseJSON<SignalingServerResponse>(rawMessage).mapErr(
+      (error): InvalidMessageError => {
+        log.error(`❌ could not parse message: \n '${rawMessage}' `)
+        return {
+          info: 'InvalidMessageError',
+          data: rawMessage,
+          error: error.message,
+        }
+      }
+    )
   ),
   map((result) =>
     handleIncomingMessage(result).andThen((message) =>

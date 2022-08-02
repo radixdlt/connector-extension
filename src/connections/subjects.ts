@@ -1,4 +1,4 @@
-import { DataTypes } from 'io-types/types'
+import { Confirmation, SignalingServerErrorResponse } from 'io-types/types'
 import { errAsync } from 'neverthrow'
 import {
   BehaviorSubject,
@@ -25,7 +25,9 @@ export const wsConnectionPasswordSubject = new BehaviorSubject<
   Buffer | undefined
 >(undefined)
 export const wsGenerateConnectionSecretsSubject = new Subject<void>()
-export const wsIncomingMessageConfirmationSubject = new Subject<DataTypes>()
+export const wsIncomingMessageConfirmationSubject = new Subject<Confirmation>()
+export const wsServerErrorResponseSubject =
+  new Subject<SignalingServerErrorResponse>()
 
 export const rtcStatusSubject = new BehaviorSubject<'open' | 'closed'>('closed')
 export const rtcIncomingMessageSubject = new Subject<string>()

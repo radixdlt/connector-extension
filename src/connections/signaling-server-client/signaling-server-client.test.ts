@@ -124,7 +124,9 @@ describe('Signaling server client', () => {
 
       expect(wss).toReceiveMessage(JSON.stringify(message))
 
-      wss.send(JSON.stringify({ valid: message }))
+      wss.send(
+        JSON.stringify({ info: 'Confirmation', requestId: message.requestId })
+      )
 
       expect(messageConfirmationSpy.getValues()).toEqual([ok(true)])
     })
@@ -189,12 +191,18 @@ describe('Signaling server client', () => {
 
       const encrypted = encryptedResult.value
 
+      const requestId = crypto.randomUUID()
+
       const message = {
-        encryptedPayload: encrypted.combined.toString('hex'),
-        connectionId: secrets.connectionId.toString('hex'),
-        method: 'offer',
-        source: 'iOS',
-        requestId: crypto.randomUUID(),
+        info: 'RemoteData',
+        requestId,
+        data: {
+          encryptedPayload: encrypted.combined.toString('hex'),
+          connectionId: secrets.connectionId.toString('hex'),
+          method: 'offer',
+          source: 'wallet',
+          requestId,
+        },
       }
 
       wss.send(JSON.stringify(message))

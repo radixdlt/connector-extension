@@ -1,4 +1,5 @@
 import { ResultAsync } from 'neverthrow'
+import { errorIdentity } from 'utils/error-identity'
 
 export const getKeyMaterial = (key: Buffer) =>
   ResultAsync.fromPromise(
@@ -6,7 +7,7 @@ export const getKeyMaterial = (key: Buffer) =>
       'deriveBits',
       'deriveKey',
     ]),
-    (error) => error as Error
+    errorIdentity
   )
 
 const getKey = (
@@ -34,13 +35,13 @@ const getKey = (
       true,
       ['encrypt', 'decrypt']
     ),
-    (error) => error as Error
+    errorIdentity
   )
 
 const exportKey = (cryptoKey: CryptoKey) =>
   ResultAsync.fromPromise(
     crypto.subtle.exportKey('raw', cryptoKey),
-    (error) => error as Error
+    errorIdentity
   )
 
 export const deriveKey = (

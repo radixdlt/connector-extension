@@ -1,4 +1,5 @@
 import { ResultAsync } from 'neverthrow'
+import { errorIdentity } from 'utils/error-identity'
 import { SealedBoxProps } from './sealbox'
 import { secureRandom } from './secure-random'
 
@@ -16,13 +17,13 @@ const getKey = (encryptionKey: Buffer) =>
       false,
       ['encrypt', 'decrypt']
     ),
-    (error) => error as Error
+    errorIdentity
   )
 
 const cryptoDecrypt = (data: Buffer, encryptionKey: CryptoKey, iv: Buffer) =>
   ResultAsync.fromPromise(
     crypto.subtle.decrypt({ name: 'AES-GCM', iv }, encryptionKey, data),
-    (error) => error as Error
+    errorIdentity
   ).map(Buffer.from)
 
 const cryptoEncrypt = (data: Buffer, encryptionKey: CryptoKey, iv: Buffer) =>
@@ -35,7 +36,7 @@ const cryptoEncrypt = (data: Buffer, encryptionKey: CryptoKey, iv: Buffer) =>
       encryptionKey,
       data
     ),
-    (error) => error as Error
+    errorIdentity
   ).map(Buffer.from)
 
 export const decrypt = (

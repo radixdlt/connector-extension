@@ -1,4 +1,5 @@
 import { err, ok, Result } from 'neverthrow'
+import { errorIdentity } from './error-identity'
 
 export const parseJSON = <T = Record<string, any>>(
   text: string
@@ -6,6 +7,6 @@ export const parseJSON = <T = Record<string, any>>(
   try {
     return ok(JSON.parse(text))
   } catch (error) {
-    return err(error as Error)
+    return err(errorIdentity(error))
   }
 }
