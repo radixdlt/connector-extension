@@ -2,9 +2,10 @@ import { bech32Encode, convertBufferToBech32 } from 'crypto/bech32'
 import { deriveKey } from 'crypto/kdf'
 import { secureRandom } from 'crypto/secure-random'
 import { sha256 } from 'crypto/sha256'
+import log from 'loglevel'
 import { combine, ResultAsync } from 'neverthrow'
 
-type Secrets = {
+export type Secrets = {
   passwordBech32: string
   encryptionKey: Buffer
   connectionId: Buffer
@@ -21,12 +22,20 @@ export const deriveSecretsFromConnectionPassword = (
   ]).andThen(([encryptionKey, connectionId]) =>
     convertBufferToBech32(connectionPasswordRaw)
       .andThen(bech32Encode)
-      .map((passwordBech32) => ({
-        passwordBech32,
-        encryptionKey,
-        connectionId,
-        _connectionPasswordRaw: connectionPasswordRaw,
-      }))
+      .map((passwordBech32) => {
+        const secrets = {
+          passwordBech32,
+          encryptionKey,
+          connectionId,
+          _connectionPasswordRaw: connectionPasswordRaw,
+        }
+        log.debug(
+          `🔐 derived secrets from connection password: \n ${secrets._connectionPasswordRaw.toString(
+            'hex'
+          )}`
+        )
+        return secrets
+      })
   )
 
 export const generateConnectionPasswordAndDeriveSecrets = (
