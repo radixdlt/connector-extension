@@ -1,4 +1,5 @@
 import { err, ok, ResultAsync } from 'neverthrow'
+import { errorIdentity } from 'utils/error-identity'
 
 type EventListenerInput = Parameters<
   typeof chrome['storage']['onChanged']['addListener']
@@ -12,10 +13,7 @@ const ChromeApi = () => {
 
   const setItem = (item: Record<string, any>) =>
     checkIfChromeContext().asyncAndThen(() =>
-      ResultAsync.fromPromise(
-        chrome.storage.sync.set(item),
-        (error) => error as Error
-      )
+      ResultAsync.fromPromise(chrome.storage.sync.set(item), errorIdentity)
     )
 
   const getItem = <T>(key: string): ResultAsync<T, Error> =>
@@ -26,7 +24,7 @@ const ChromeApi = () => {
             resolve(data[key])
           })
         }),
-        (error) => error as Error
+        errorIdentity
       )
     )
 
@@ -38,16 +36,13 @@ const ChromeApi = () => {
             resolve(data)
           })
         }),
-        (error) => error as Error
+        errorIdentity
       )
     )
 
   const removeItem = (key: string | string[]) =>
     checkIfChromeContext().asyncAndThen(() =>
-      ResultAsync.fromPromise(
-        chrome.storage.sync.remove(key),
-        (error) => error as Error
-      )
+      ResultAsync.fromPromise(chrome.storage.sync.remove(key), errorIdentity)
     )
 
   const addListener = (listener: EventListenerInput) =>
@@ -81,7 +76,7 @@ const ChromeApi = () => {
             resolve(response)
           )
         }),
-        (error) => error as Error
+        errorIdentity
       )
     )
 
