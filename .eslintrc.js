@@ -12,4 +12,13 @@ module.exports = {
       version: '18',
     },
   },
+  overrides: [
+    {
+      files: ['**/chrome-api.test.ts'],
+      rules: {
+        'max-nested-callbacks': 'off',
+        'max-params': 'off',
+      },
+    },
+  ],
 }
