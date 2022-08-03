@@ -11,7 +11,7 @@
     "preview": "vite preview",
     "prettier": "prettier --write src",
     "lint": "eslint './src/**/*'",
-    "testrtc": "karma start",
+    "testrtc": "NODE_ENV=test karma start",
     "pretest": "yarn eslint & yarn prettier & yarn tsc",
     "prepare": "husky install",
     "ladle": "ladle serve",

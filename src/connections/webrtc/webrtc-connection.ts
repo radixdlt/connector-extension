@@ -1,5 +1,5 @@
 import { config } from 'config'
-import { map } from 'rxjs'
+import { map, Subscription } from 'rxjs'
 import {
   rtcStatusSubject,
   rtcIncomingMessageSubject,
@@ -7,12 +7,15 @@ import {
 } from '../subjects'
 
 export const makeWebRTC = () => {
-  const peerConnection = new RTCPeerConnection({
-    iceServers: config.iceServers, // disable if test mode
-  })
+  const { environment, iceServers } = config
+  const peerConnection = new RTCPeerConnection(
+    environment !== 'test' ? { iceServers } : undefined
+  )
+
+  let rtcOutgoingMessageSubjectSubscription: Subscription | undefined
 
   const dataChannel = peerConnection.createDataChannel('data', {
-    negotiated: true,
+    negotiated: config.environment !== 'test',
     id: 0,
     ordered: true,
   })
@@ -22,26 +25,28 @@ export const makeWebRTC = () => {
   }
 
   dataChannel.onopen = () => {
-    console.log('dataChannel open')
-    rtcStatusSubject.next('open')
+    rtcOutgoingMessageSubjectSubscription = rtcOutgoingMessageSubject
+      .pipe(
+        map(sendMessage)
+        // parseResponse (zod),
+        // check valid,
+      )
+      .subscribe()
+
+    rtcStatusSubject.next('connected')
+  }
+
+  dataChannel.onclosing = () => {
+    rtcOutgoingMessageSubjectSubscription?.unsubscribe()
   }
 
   dataChannel.onclose = () => {
-    console.log('dataChannel closed')
-    rtcStatusSubject.next('closed')
+    rtcStatusSubject.next('disconnected')
   }
 
   const sendMessage = (message: string) => {
     dataChannel.send(message)
   }
-
-  rtcOutgoingMessageSubject
-    .pipe(
-      map(sendMessage)
-      // parseResponse (zod),
-      // check valid,
-    )
-    .subscribe()
 
   return {
     peerConnection,

@@ -29,7 +29,7 @@ export const wsIncomingMessageConfirmationSubject = new Subject<Confirmation>()
 export const wsServerErrorResponseSubject =
   new Subject<SignalingServerErrorResponse>()
 
-export const rtcStatusSubject = new BehaviorSubject<'open' | 'closed'>('closed')
+export const rtcStatusSubject = new BehaviorSubject<Status>('disconnected')
 export const rtcIncomingMessageSubject = new Subject<string>()
 export const rtcOutgoingMessageSubject = new Subject<string>()
 export const rtcIceCandidateSubject = new Subject<RTCPeerConnectionIceEvent>()

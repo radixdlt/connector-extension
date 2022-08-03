@@ -1,4 +1,5 @@
 export const config = {
+  environment: process.env.NODE_ENV,
   ws: 'wss://signaling-server-pr-9.rdx-works-main.extratools.works',
   iceServers: [
     {
