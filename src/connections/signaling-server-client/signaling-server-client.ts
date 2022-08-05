@@ -15,13 +15,13 @@ import { subjects as allSubjects } from '../subjects'
 
 type Source = 'wallet' | 'extension'
 
-export const signalingServerClient = ({
-  url,
+export const SignalingServerClient = ({
+  baseUrl,
   target = 'wallet',
   source = 'extension',
   subjects,
 }: {
-  url: string
+  baseUrl: string
   target?: Source
   source?: Source
   subjects: typeof allSubjects
@@ -29,19 +29,19 @@ export const signalingServerClient = ({
   const sendMessageDirection = `[${source} => ${target}]`
   const receiveMessageDirection = `[${target} => ${source}]`
   log.debug(
-    `📡 created instance of signalingServerClient with baseUrl:\n${url}`
+    `📡 created instance of signalingServerClient with baseUrl:\n${baseUrl}`
   )
   let ws: WebSocket | undefined
   subjects.wsSource.next(source)
 
   const connect = (connectionId: string) => {
     log.debug(
-      `📡 connecting to signaling server url:\n${url}/${connectionId}?target=${target}&source=${source}`
+      `📡 connecting to signaling server url:\n${baseUrl}/${connectionId}?target=${target}&source=${source}`
     )
     subjects.wsStatusSubject.next('connecting')
     removeListeners()
     ws = new WebSocket(
-      `${url}/${connectionId}?target=${target}&source=${source}`
+      `${baseUrl}/${connectionId}?target=${target}&source=${source}`
     )
     addListeners(ws)
   }
@@ -94,7 +94,7 @@ export const signalingServerClient = ({
 
   const sendMessage = (message: string) => {
     // TODO: handle if not connected or ws is undefined
-    log.debug(`⬆️ ${sendMessageDirection} sending ws message :\n${message}`)
+    log.debug(`⬆️ ${sendMessageDirection} sending ws message:\n${message}`)
     ws?.send(message)
   }
 
@@ -135,17 +135,18 @@ export const signalingServerClient = ({
           ([status, shouldConnect]) =>
             status === 'disconnected' && shouldConnect
         ),
-        exhaustMap(([status, shouldConnect]) => {
-          log.info({ status, shouldConnect })
-          log.debug(
-            '🔄 lost connection to signaling server, attempting to reconnect...'
-          )
-          return interval(config.signalingServer.reconnect.interval).pipe(
+        exhaustMap(() =>
+          interval(config.signalingServer.reconnect.interval).pipe(
             withLatestFrom(subjects.wsConnectSubject, subjects.wsStatusSubject),
-            filter(([, shouldConnect]) => shouldConnect),
+            filter(
+              ([, shouldConnect, status]) =>
+                shouldConnect && status === 'disconnected'
+            ),
             filter(([index, , status]) => {
               log.debug(
-                `🔄 connection status: ${status}, attempt: ${index + 1}`
+                `🔄 lost connection to signaling server, attempting to reconnect... status: ${status}, attempt: ${
+                  index + 1
+                }`
               )
               subjects.wsConnectSubject.next(true)
               return status === 'connected'
@@ -155,7 +156,7 @@ export const signalingServerClient = ({
             }),
             first()
           )
-        })
+        )
       )
       .subscribe()
   )

@@ -4,7 +4,7 @@ import { concatMap, Subscription, switchMap, tap } from 'rxjs'
 import { errorIdentity } from 'utils/error-identity'
 import { subjects as allSubjects } from '../subjects'
 
-export const WebRTC = ({
+export const WebRtc = ({
   peerConnectionConfig,
   dataChannelConfig,
   subjects,
@@ -13,7 +13,7 @@ export const WebRTC = ({
   dataChannelConfig: RTCDataChannelInit
   subjects: typeof allSubjects
 }) => {
-  const createPeerConnectionAndDataChannel = () => {
+  const CreatePeerConnectionAndDataChannel = () => {
     const peerConnection = new RTCPeerConnection(peerConnectionConfig)
     log.debug(`🤌 created webRTC peer connection instance`)
     log.trace(peerConnectionConfig)
@@ -198,5 +198,28 @@ export const WebRTC = ({
     return { peerConnection, dataChannel, destroy }
   }
 
-  return { createPeerConnectionAndDataChannel }
+  let peerConnection: ReturnType<typeof CreatePeerConnectionAndDataChannel>
+
+  const subscriptions = new Subscription()
+
+  subscriptions.add(
+    subjects.rtcConnectSubject
+      .pipe(
+        tap((shouldConnect) => {
+          if (shouldConnect && !peerConnection) {
+            peerConnection = CreatePeerConnectionAndDataChannel()
+          }
+        })
+      )
+      .subscribe()
+  )
+
+  const destroy = () => {
+    subscriptions.unsubscribe()
+    if (peerConnection) {
+      peerConnection.destroy()
+    }
+  }
+
+  return { CreatePeerConnectionAndDataChannel, destroy }
 }

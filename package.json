@@ -16,7 +16,8 @@
     "prepare": "husky install",
     "ladle": "ladle serve",
     "test:jest": "jest",
-    "test": "make test"
+    "test": "make test",
+    "test:ci": "yarn test:jest"
   },
   "dependencies": {
     "@emotion/react": "^11.9.0",

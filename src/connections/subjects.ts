@@ -21,6 +21,7 @@ import { secureRandom } from 'crypto/secure-random'
 
 export type Status = 'connecting' | 'connected' | 'disconnected'
 export type DataChannelStatus = 'open' | 'closed'
+export type SubjectsType = ReturnType<typeof Subjects>
 
 export const Subjects = () => {
   const wsOfferReceived = new BehaviorSubject<boolean>(false)
@@ -41,6 +42,7 @@ export const Subjects = () => {
   const wsServerErrorResponseSubject =
     new Subject<SignalingServerErrorResponse>()
 
+  const rtcConnectSubject = new BehaviorSubject<boolean>(false)
   const rtcStatusSubject = new BehaviorSubject<DataChannelStatus>('closed')
   const rtcIncomingMessageSubject = new Subject<
     MessageEvent<ArrayBuffer | string>
@@ -67,6 +69,7 @@ export const Subjects = () => {
     wsGenerateConnectionSecretsSubject,
     wsIncomingMessageConfirmationSubject,
     wsServerErrorResponseSubject,
+    rtcConnectSubject,
     rtcStatusSubject,
     rtcIncomingMessageSubject,
     rtcOutgoingMessageSubject,

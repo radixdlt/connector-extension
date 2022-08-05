@@ -1,19 +1,19 @@
 import WSS from 'jest-websocket-mock'
-import { signalingServerClient } from './signaling-server-client'
+import { SignalingServerClient } from './signaling-server-client'
 import { subjects, Status } from '../subjects'
 import { subscribeSpyTo } from '@hirez_io/observer-spy'
 import { filter, firstValueFrom } from 'rxjs'
 import { err, ok } from 'neverthrow'
 import log from 'loglevel'
 import { createIV, encrypt } from 'crypto/encryption'
-import { messageHandler } from './message-handler'
+import { MessageHandler } from './message-handler'
 import { delayAsync } from 'test-utils/delay-async'
 
 const url =
   'ws://localhost:1234/3ba6fa025c3c304988133c081e9e3f5347bf89421f6445b07abfacd94956a09a?target=wallet&source=extension'
 let wss: WSS
-signalingServerClient({ url, subjects })
-const { sendMessageWithConfirmation } = messageHandler(subjects)
+SignalingServerClient({ baseUrl: url, subjects })
+const { sendMessageWithConfirmation } = MessageHandler(subjects)
 
 let wsStatusSpy: ReturnType<typeof subscribeSpyTo<Status>>
 let wsErrorSpy: ReturnType<typeof subscribeSpyTo<Event>>

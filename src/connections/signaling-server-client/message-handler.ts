@@ -14,6 +14,7 @@ import {
   switchMap,
   Observable,
   of,
+  combineLatest,
 } from 'rxjs'
 import { parseJSON } from 'utils/parse-json'
 import log from 'loglevel'
@@ -30,7 +31,8 @@ import { createIV, decrypt, encrypt } from 'crypto/encryption'
 import { validateIncomingMessage } from 'io-types/validate'
 import { Secrets } from './secrets'
 
-export const messageHandler = (subjects: typeof allSubjects) => {
+export const MessageHandler = (subjects: typeof allSubjects) => {
+  log.debug('🫔 message handler initiated')
   const sendMessageWithConfirmation = (
     messageResult: Result<Omit<DataTypes, 'payload'>, Error>,
     timeout = 3000
@@ -292,6 +294,18 @@ export const messageHandler = (subjects: typeof allSubjects) => {
         tap((result) => {
           // TODO: handle error
           if (result.isErr()) log.error(result.error)
+        })
+      )
+      .subscribe()
+  )
+
+  subscriptions.add(
+    combineLatest([subjects.rtcStatusSubject, subjects.wsConnectSubject])
+      .pipe(
+        tap(([webRtcStatus, shouldSignalingServerConnect]) => {
+          if (webRtcStatus === 'open' && shouldSignalingServerConnect) {
+            subjects.wsConnectSubject.next(false)
+          }
         })
       )
       .subscribe()
