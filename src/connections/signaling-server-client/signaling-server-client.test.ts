@@ -1,32 +1,19 @@
 import WSS from 'jest-websocket-mock'
 import { signalingServerClient } from './signaling-server-client'
-import {
-  wsStatusSubject,
-  wsErrorSubject,
-  wsOutgoingMessageSubject,
-  wsIncomingRawMessageSubject,
-  wsConnect,
-  Status,
-  wsConnectionSecrets$,
-  wsConnectionPasswordSubject,
-  rtcRemoteOfferSubject,
-} from '../subjects'
+import { subjects, Status } from '../subjects'
 import { subscribeSpyTo } from '@hirez_io/observer-spy'
 import { filter, firstValueFrom } from 'rxjs'
 import { err, ok } from 'neverthrow'
 import log from 'loglevel'
 import { createIV, encrypt } from 'crypto/encryption'
-import { messageConfirmation } from './message-handler'
-
-const delay = (delayTime = 300) =>
-  new Promise((resolve) => {
-    setTimeout(resolve, delayTime)
-  })
+import { messageHandler } from './message-handler'
+import { delayAsync } from 'test-utils/delay-async'
 
 const url =
   'ws://localhost:1234/3ba6fa025c3c304988133c081e9e3f5347bf89421f6445b07abfacd94956a09a?target=wallet&source=extension'
 let wss: WSS
-signalingServerClient(url)
+signalingServerClient({ url, subjects })
+const { sendMessageWithConfirmation } = messageHandler(subjects)
 
 let wsStatusSpy: ReturnType<typeof subscribeSpyTo<Status>>
 let wsErrorSpy: ReturnType<typeof subscribeSpyTo<Event>>
@@ -35,20 +22,22 @@ let wsIncomingMessageSpy: ReturnType<
 >
 
 const waitUntilStatus = async (status: Status) =>
-  firstValueFrom(wsStatusSubject.pipe(filter((s) => s === status)))
+  firstValueFrom(subjects.wsStatusSubject.pipe(filter((s) => s === status)))
 
 describe('Signaling server client', () => {
   beforeEach(async () => {
     log.setLevel('silent')
-    wsConnectionPasswordSubject.next(Buffer.from([192, 218, 52, 1, 230]))
+    subjects.wsConnectionPasswordSubject.next(
+      Buffer.from([192, 218, 52, 1, 230])
+    )
 
     WSS.clean()
-    await delay(10)
-    wsStatusSpy = subscribeSpyTo(wsStatusSubject)
-    wsErrorSpy = subscribeSpyTo(wsErrorSubject)
-    wsIncomingMessageSpy = subscribeSpyTo(wsIncomingRawMessageSubject)
+    await delayAsync(10)
+    wsStatusSpy = subscribeSpyTo(subjects.wsStatusSubject)
+    wsErrorSpy = subscribeSpyTo(subjects.wsErrorSubject)
+    wsIncomingMessageSpy = subscribeSpyTo(subjects.wsIncomingRawMessageSubject)
     wss = new WSS(url)
-    wsConnect.next(true)
+    subjects.wsConnectSubject.next(true)
     await waitUntilStatus('connected')
     log.setLevel('debug')
   })
@@ -87,7 +76,7 @@ describe('Signaling server client', () => {
   })
 
   it('should send a message to ws server', async () => {
-    wsOutgoingMessageSubject.next('hi from client')
+    subjects.wsOutgoingMessageSubject.next('hi from client')
     expect(wss).toReceiveMessage('hi from client')
   })
 
@@ -109,11 +98,6 @@ describe('Signaling server client', () => {
   describe('message confirmation', () => {
     let messageConfirmationSpy: ReturnType<typeof subscribeSpyTo<any>>
 
-    beforeEach(async () => {
-      messageConfirmationSpy = subscribeSpyTo(
-        messageConfirmation(message.requestId, 300)
-      )
-    })
     const message = {
       encryptedPayload: '123',
       connectionId: '1',
@@ -122,24 +106,28 @@ describe('Signaling server client', () => {
       requestId: crypto.randomUUID(),
     }
 
-    it('should send a message with ok confirmation', async () => {
-      wsOutgoingMessageSubject.next(JSON.stringify(message))
+    beforeEach(async () => {
+      messageConfirmationSpy = subscribeSpyTo(
+        sendMessageWithConfirmation(ok(message as any), 300)
+      )
+    })
 
+    it('should send a message with ok confirmation', async () => {
       expect(wss).toReceiveMessage(JSON.stringify(message))
 
       wss.send(
-        JSON.stringify({ info: 'Confirmation', requestId: message.requestId })
+        JSON.stringify({ info: 'confirmation', requestId: message.requestId })
       )
 
       expect(messageConfirmationSpy.getValues()).toEqual([ok(true)])
     })
 
     it('should fail message confirmation due to timeout', async () => {
-      wsOutgoingMessageSubject.next(JSON.stringify(message))
+      subjects.wsOutgoingMessageSubject.next(JSON.stringify(message))
 
       expect(wss).toReceiveMessage(JSON.stringify(message))
 
-      await delay()
+      await delayAsync()
 
       expect(messageConfirmationSpy.getValues()).toEqual([
         err({ requestId: message.requestId, reason: 'timeout' }),
@@ -157,17 +145,21 @@ describe('Signaling server client', () => {
 
   describe('decrypt message payload', () => {
     beforeEach(() => {
-      wsConnectionPasswordSubject.next(Buffer.from([192, 218, 52, 1, 230]))
+      subjects.wsConnectionPasswordSubject.next(
+        Buffer.from([192, 218, 52, 1, 230])
+      )
     })
     afterEach(() => {
-      wsConnectionPasswordSubject.next(undefined)
+      subjects.wsConnectionPasswordSubject.next(undefined)
     })
     it('should decrypt payload and send to offer subject', async () => {
-      const expectedBech32Password = 'crdrgq0x'
-      const wsConnectionSecretsSpy = subscribeSpyTo(wsConnectionSecrets$)
-      const rtcRemoteOfferSpy = subscribeSpyTo(rtcRemoteOfferSubject)
+      const expectedBech32Password = 'CRDRGQ0X'
+      const wsConnectionSecretsSpy = subscribeSpyTo(
+        subjects.wsConnectionSecrets$
+      )
+      const rtcRemoteOfferSpy = subscribeSpyTo(subjects.rtcRemoteOfferSubject)
 
-      await delay(100)
+      await delayAsync(100)
 
       const secretsResult = wsConnectionSecretsSpy.getValueAt(0)
 
@@ -197,7 +189,7 @@ describe('Signaling server client', () => {
       const requestId = crypto.randomUUID()
 
       const message = {
-        info: 'RemoteData',
+        info: 'remoteData',
         requestId,
         data: {
           encryptedPayload: encrypted.combined.toString('hex'),
@@ -210,7 +202,7 @@ describe('Signaling server client', () => {
 
       wss.send(JSON.stringify(message))
 
-      await delay()
+      await delayAsync()
 
       expect(rtcRemoteOfferSpy.getValueAt(0)).toEqual({
         ...offerPayload,

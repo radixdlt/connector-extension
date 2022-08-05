@@ -14,5 +14,5 @@ export const bech32Encode = (buffer: Buffer): Result<string, Error> => {
     .encode('', buffer)
     // drop bech32 delimiter/separator and checksum
     .slice(1, -6)
-  return ok(bech32String)
+  return ok(bech32String.toUpperCase())
 }

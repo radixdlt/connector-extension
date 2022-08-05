@@ -1,0 +1,10 @@
+version: '3.7'
+
+services:
+  extension-tests:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    volumes:
+      - ./src:/home/node/app/src
+    container_name: extension-tests

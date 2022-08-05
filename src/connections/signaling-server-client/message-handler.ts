@@ -11,171 +11,291 @@ import {
   first,
   Subscription,
   tap,
+  switchMap,
+  Observable,
+  of,
 } from 'rxjs'
 import { parseJSON } from 'utils/parse-json'
 import log from 'loglevel'
-import {
-  rtcRemoteAnswerSubject,
-  rtcRemoteOfferSubject,
-  rtcRemoveIceCandidateSubject,
-  wsIncomingMessageConfirmationSubject,
-  wsIncomingRawMessageSubject,
-  wsConnectionSecrets$,
-  wsErrorSubject,
-  wsServerErrorResponseSubject,
-} from 'connections/subjects'
+import { subjects as allSubjects } from 'connections/subjects'
 import {
   DataTypes,
   SignalingServerResponse,
   SignalingServerErrorResponse,
   InvalidMessageError,
+  IceCandidate,
 } from 'io-types/types'
 import { transformBufferToSealbox } from 'crypto/sealbox'
-import { decrypt } from 'crypto/encryption'
+import { createIV, decrypt, encrypt } from 'crypto/encryption'
 import { validateIncomingMessage } from 'io-types/validate'
+import { Secrets } from './secrets'
 
-export const messageConfirmation = (requestId: string, timeout: number) =>
-  merge(
-    wsIncomingMessageConfirmationSubject.pipe(
-      tap((message) =>
-        log.debug(`👌 got message confirmation: \n ${message.requestId}`)
+export const messageHandler = (subjects: typeof allSubjects) => {
+  const sendMessageWithConfirmation = (
+    messageResult: Result<Omit<DataTypes, 'payload'>, Error>,
+    timeout = 3000
+  ): Observable<
+    Result<boolean, Error | { requestId: string; reason: string }>
+  > => {
+    if (messageResult.isErr()) return of(err(messageResult.error))
+
+    const message = messageResult.value
+    const { requestId } = message
+    subjects.wsOutgoingMessageSubject.next(JSON.stringify(message))
+    return merge(
+      subjects.wsIncomingMessageConfirmationSubject.pipe(
+        tap((message) =>
+          log.debug(`👌 got message confirmation:\n${message.requestId}`)
+        ),
+        filter(
+          (incomingMessage) => message.requestId === incomingMessage.requestId
+        ),
+        map(() => ok(true))
       ),
-      filter((message) => message.requestId === requestId),
-      map(() => ok(true))
-    ),
-    wsServerErrorResponseSubject.pipe(
-      map((message) => err({ requestId, reason: 'serverError', message }))
-    ),
-    timer(timeout).pipe(map(() => err({ requestId, reason: 'timeout' }))),
-    wsErrorSubject.pipe(map(() => err({ requestId, reason: 'error' })))
-  ).pipe(first())
-
-export const handleIncomingMessage = (
-  result: Result<SignalingServerResponse, InvalidMessageError>
-): Result<DataTypes | undefined, SignalingServerErrorResponse> =>
-  result.andThen((message) => {
-    switch (message.info) {
-      case 'RemoteData': {
-        return ok(message.data)
-      }
-
-      case 'InvalidMessageError':
-      case 'MissingRemoteClientError':
-      case 'RemoteClientDisconnected':
-      case 'ValidationError': {
-        wsServerErrorResponseSubject.next(message)
-        return err(message)
-      }
-
-      case 'Confirmation': {
-        wsIncomingMessageConfirmationSubject.next(message)
-        break
-      }
-    }
-
-    return ok(undefined)
-  })
-
-const decryptMessagePayload = (
-  message: DataTypes,
-  encryptionKey: Buffer
-): ResultAsync<DataTypes, Error> => {
-  log.debug(`🧩 attempting to decrypt message payload`)
-  return transformBufferToSealbox(Buffer.from(message.encryptedPayload, 'hex'))
-    .asyncAndThen(({ ciphertextAndAuthTag, iv }) =>
-      decrypt(ciphertextAndAuthTag, encryptionKey, iv).mapErr((error) => {
-        log.debug(`❌ failed to decrypt payload`)
-        return error
-      })
-    )
-    .andThen((decrypted) =>
-      parseJSON<DataTypes['payload']>(decrypted.toString('utf8')).mapErr(
-        (error) => {
-          log.debug(`❌ failed to parse decrypted payload: \n ${decrypted}`)
-          return error
-        }
+      subjects.wsServerErrorResponseSubject.pipe(
+        map((message) => err({ requestId, reason: 'serverError', message }))
+      ),
+      timer(timeout).pipe(map(() => err({ requestId, reason: 'timeout' }))),
+      subjects.wsErrorSubject.pipe(
+        map(() => err({ requestId, reason: 'error' }))
       )
-    )
-    .map(
-      (payload: DataTypes['payload']) =>
-        ({ ...message, payload } as unknown as DataTypes)
-    )
-}
-
-const distributeMessage = (message: DataTypes): Result<void, Error> => {
-  switch (message.method) {
-    case 'answer': {
-      rtcRemoteAnswerSubject.next({ ...message.payload, type: 'answer' })
-      log.debug(
-        `🚀 received remote answer: \n ${JSON.stringify(message.payload)}`
-      )
-      return ok(undefined)
-    }
-
-    case 'offer':
-      rtcRemoteOfferSubject.next({ ...message.payload, type: 'offer' })
-      log.debug(
-        `🗿 received remote offer: \n ${JSON.stringify(message.payload)}`
-      )
-      return ok(undefined)
-
-    case 'iceCandidate':
-      rtcRemoveIceCandidateSubject.next(new RTCIceCandidate(message.payload))
-      log.debug(
-        `🧊 received remote iceCandidate: \n ${JSON.stringify(message.payload)}`
-      )
-      return ok(undefined)
-
-    default:
-      log.error(`❌ received unsupported method: \n ${JSON.stringify(message)}`)
-      return err(Error('invalid message method'))
+    ).pipe(first())
   }
-}
 
-export const wsIncomingMessage$ = wsIncomingRawMessageSubject.pipe(
-  pluck('data'),
-  map((rawMessage) =>
-    parseJSON<SignalingServerResponse>(rawMessage).mapErr(
-      (error): InvalidMessageError => {
-        log.error(`❌ could not parse message: \n '${rawMessage}' `)
-        return {
-          info: 'InvalidMessageError',
-          data: rawMessage,
-          error: error.message,
+  const handleIncomingMessage = (
+    result: Result<SignalingServerResponse, InvalidMessageError>
+  ): Result<DataTypes | undefined, SignalingServerErrorResponse> =>
+    result.andThen((message) => {
+      switch (message.info) {
+        case 'remoteData': {
+          return ok(message.data)
+        }
+
+        case 'invalidMessageError':
+        case 'missingRemoteClientError':
+        case 'remoteClientDisconnected':
+        case 'validationError': {
+          subjects.wsServerErrorResponseSubject.next(message)
+          return err(message)
+        }
+
+        case 'confirmation': {
+          subjects.wsIncomingMessageConfirmationSubject.next(message)
+          break
         }
       }
+
+      return ok(undefined)
+    })
+
+  const decryptMessagePayload = (
+    message: DataTypes,
+    encryptionKey: Buffer
+  ): ResultAsync<DataTypes, Error> => {
+    log.debug(`🧩 attempting to decrypt message payload`)
+    return transformBufferToSealbox(
+      Buffer.from(message.encryptedPayload, 'hex')
     )
-  ),
-  map((result) =>
-    handleIncomingMessage(result).andThen((message) =>
-      message
-        ? validateIncomingMessage(message).mapErr((error) => {
-            log.error(`❌ validation error: \n '${error}' `)
-            return error
-          })
-        : ok(undefined)
-    )
-  ),
-  withLatestFrom(wsConnectionSecrets$),
-  concatMap(([messageResult, secretsResult]) =>
-    messageResult
-      .asyncAndThen((message) =>
-        message
-          ? secretsResult
-              .asyncAndThen((secrets) =>
-                decryptMessagePayload(message, secrets.encryptionKey)
-              )
-              .andThen(distributeMessage)
-          : okAsync(undefined)
+      .asyncAndThen(({ ciphertextAndAuthTag, iv }) =>
+        decrypt(ciphertextAndAuthTag, encryptionKey, iv).mapErr((error) => {
+          log.debug(`❌ failed to decrypt payload`)
+          return error
+        })
       )
-      // TODO: handle error
-      .mapErr((error) => {
-        log.trace(error)
+      .andThen((decrypted) =>
+        parseJSON<DataTypes['payload']>(decrypted.toString('utf8')).mapErr(
+          (error) => {
+            log.debug(`❌ failed to parse decrypted payload: \n ${decrypted}`)
+            return error
+          }
+        )
+      )
+      .map((payload: DataTypes['payload']) => {
+        log.debug(`✅ successfully decrypted payload`)
+        log.trace(payload)
+        return { ...message, payload } as unknown as DataTypes
       })
-  ),
-  share()
-)
+  }
 
-const subscriptions = new Subscription()
+  const createMessage = (
+    {
+      payload,
+      method,
+      source,
+    }: Pick<DataTypes, 'payload' | 'method' | 'source'>,
+    { encryptionKey, connectionId }: Secrets
+  ): ResultAsync<Omit<DataTypes, 'payload'>, Error> =>
+    createIV()
+      .asyncAndThen((iv) =>
+        encrypt(Buffer.from(JSON.stringify(payload)), encryptionKey, iv)
+      )
+      .map((encrypted) => ({
+        requestId: crypto.randomUUID(),
+        connectionId: connectionId.toString('hex'),
+        encryptedPayload: encrypted.combined.toString('hex'),
+        method,
+        source,
+      }))
 
-subscriptions.add(wsIncomingMessage$.subscribe())
+  const distributeMessage = (message: DataTypes): Result<void, Error> => {
+    switch (message.method) {
+      case 'answer': {
+        log.debug(`🚀 received remote answer:`)
+        log.trace(message.payload)
+        subjects.rtcRemoteAnswerSubject.next({
+          ...message.payload,
+          type: 'answer',
+        })
+
+        return ok(undefined)
+      }
+
+      case 'offer':
+        log.debug(`🗿 received remote offer:`)
+        log.trace(JSON.stringify(message.payload))
+        subjects.rtcRemoteOfferSubject.next({
+          ...message.payload,
+          type: 'offer',
+        })
+        return ok(undefined)
+
+      case 'iceCandidate':
+        log.debug(`🥶 received remote iceCandidate`)
+        log.trace(message.payload)
+        subjects.rtcRemoteIceCandidateSubject.next(
+          new RTCIceCandidate(message.payload)
+        )
+        return ok(undefined)
+
+      default:
+        log.error(
+          `❌ received unsupported method: \n ${JSON.stringify(message)}`
+        )
+        return err(Error('invalid message method'))
+    }
+  }
+
+  const wsIncomingMessage$ = subjects.wsIncomingRawMessageSubject.pipe(
+    pluck('data'),
+    map((rawMessage) =>
+      parseJSON<SignalingServerResponse>(rawMessage)
+        .mapErr((error): InvalidMessageError => {
+          log.error(`❌ could not parse message: \n '${rawMessage}' `)
+          return {
+            info: 'invalidMessageError',
+            data: rawMessage,
+            error: error.message,
+          }
+        })
+        .map((message) => {
+          log.debug(
+            `🐍 parsed message:\ninfo: '${message.info}'\nrequestId: '${
+              (message as any)?.requestId
+            }`
+          )
+          log.trace(message)
+
+          return message
+        })
+    ),
+    map((result) =>
+      handleIncomingMessage(result).andThen((message) =>
+        message
+          ? validateIncomingMessage(message).mapErr((error) => {
+              log.error(`❌ validation error: \n '${error}' `)
+              return error
+            })
+          : ok(undefined)
+      )
+    ),
+    withLatestFrom(subjects.wsConnectionSecrets$),
+    concatMap(([messageResult, secretsResult]) =>
+      messageResult
+        .asyncAndThen((message) =>
+          message
+            ? secretsResult
+                .asyncAndThen((secrets) =>
+                  decryptMessagePayload(message, secrets.encryptionKey)
+                )
+                .andThen(distributeMessage)
+            : okAsync(undefined)
+        )
+        // TODO: handle error
+        .mapErr((error) => {
+          log.trace(error)
+        })
+    ),
+    share()
+  )
+
+  const subscriptions = new Subscription()
+
+  subscriptions.add(wsIncomingMessage$.subscribe())
+  subscriptions.add(
+    merge(
+      subjects.rtcLocalOfferSubject.pipe(
+        filter(
+          (
+            offer
+          ): offer is {
+            type: 'offer'
+            sdp: string
+          } => !!offer.sdp
+        ),
+        map(({ sdp, type }) => ({ method: type, payload: { sdp } }))
+      ),
+      subjects.rtcLocalAnswerSubject.pipe(
+        filter(
+          (
+            answer
+          ): answer is {
+            type: 'answer'
+            sdp: string
+          } => !!answer.sdp
+        ),
+        map(({ sdp, type }) => ({ method: type, payload: { sdp } }))
+      ),
+      subjects.rtcLocalIceCandidateSubject.pipe(
+        filter(
+          (iceCandidate) =>
+            !!iceCandidate.candidate &&
+            !!iceCandidate.sdpMid &&
+            iceCandidate.sdpMLineIndex !== null
+        ),
+        map(({ candidate, sdpMid, sdpMLineIndex }) => {
+          // eslint-disable-next-line @typescript-eslint/consistent-type-assertions
+          const payload = {
+            candidate,
+            sdpMid,
+            sdpMLineIndex,
+          } as IceCandidate['payload']
+          return {
+            method: 'iceCandidate' as IceCandidate['method'],
+            payload,
+          }
+        })
+      )
+    )
+      .pipe(
+        withLatestFrom(
+          subjects.wsSource,
+          subjects.wsConnectionSecretsSubject.pipe(
+            filter((secrets): secrets is Result<Secrets, Error> => !!secrets)
+          )
+        ),
+        switchMap(([{ payload, method }, source, secretsResult]) =>
+          secretsResult.asyncAndThen((secrets) =>
+            createMessage({ method, source, payload }, secrets)
+          )
+        ),
+        switchMap((result) => sendMessageWithConfirmation(result)),
+        tap((result) => {
+          // TODO: handle error
+          if (result.isErr()) log.error(result.error)
+        })
+      )
+      .subscribe()
+  )
+
+  return { subscriptions, sendMessageWithConfirmation }
+}

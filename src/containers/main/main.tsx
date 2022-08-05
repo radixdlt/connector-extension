@@ -2,13 +2,14 @@ import Icon from 'components/icon'
 import Box from 'components/box'
 import Button from 'components/button'
 import Tooltip from 'components/tooltip'
-import Encryptionkey from 'containers/encryptionkey'
 import Connecting from 'containers/connecting'
 import { animated, config, useTransition } from '@react-spring/web'
 import { useState } from 'react'
 import { usePrevious } from 'react-use'
 import { styled } from 'stitches.config'
-import Connected from 'containers/connected'
+import { Connected } from 'containers/connected/connected'
+import { EncryptionKey } from 'containers/encryptionkey'
+import { subjects } from 'connections'
 
 const AnimatedBox = styled(animated.div, {
   position: 'absolute',
@@ -22,7 +23,14 @@ const Main = () => {
   const prevStep = usePrevious(step)
 
   const steps = {
-    1: <Encryptionkey onNext={() => setStep(2)} />,
+    1: (
+      <EncryptionKey
+        onNext={() => {
+          subjects.wsConnectSubject.next(true)
+          return setStep(2)
+        }}
+      />
+    ),
     2: <Connecting onNext={() => setStep(3)} />,
     3: <Connected />,
   }

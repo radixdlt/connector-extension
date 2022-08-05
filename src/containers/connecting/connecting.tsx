@@ -1,14 +1,18 @@
 import Box from 'components/box'
-import { useEffect } from 'react'
+import { useWebRtcDataChannelStatus } from 'hooks/use-rtc-data-channel-status'
 
-interface ConnectingProps {
+type ConnectingProps = {
   onNext: () => void
 }
 
 const Connecting = ({ onNext }: ConnectingProps) => {
-  useEffect(() => {
-    setTimeout(onNext, 1000)
-  }, [])
+  const status = useWebRtcDataChannelStatus()
+
+  if (status === 'open') {
+    setTimeout(() => {
+      onNext()
+    })
+  }
 
   return (
     <Box css={{ height: '250px' }} justify="center" items="center">

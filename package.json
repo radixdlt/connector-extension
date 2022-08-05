@@ -16,7 +16,7 @@
     "prepare": "husky install",
     "ladle": "ladle serve",
     "test:jest": "jest",
-    "test": "yarn jest --passWithNoTests & yarn testrtc"
+    "test": "make test"
   },
   "dependencies": {
     "@emotion/react": "^11.9.0",
@@ -26,6 +26,7 @@
     "@radix-ui/react-tooltip": "^0.1.7",
     "@react-spring/web": "^9.4.5",
     "bech32": "^2.0.0",
+    "buffer": "^6.0.3",
     "loglevel": "^1.8.0",
     "neverthrow": "^4.3.1",
     "react": "^18.0.0",
@@ -42,6 +43,7 @@
     "@esbuild-plugins/node-modules-polyfill": "^0.1.4",
     "@hirez_io/observer-spy": "^2.2.0",
     "@ladle/react": "^0.16.0",
+    "@mapbox/node-pre-gyp": "^1.0.9",
     "@peculiar/webcrypto": "^1.4.0",
     "@stitches/react": "^1.2.8",
     "@types/chai": "^4.3.1",
@@ -56,6 +58,7 @@
     "eslint": "^8.16.0",
     "eslint-config-alloy": "^4.5.1",
     "eslint-plugin-react": "^7.30.0",
+    "eslint-plugin-react-hooks": "^4.6.0",
     "eslint-plugin-unused-imports": "^2.0.0",
     "husky": "^8.0.0",
     "jest": "^28.1.2",
@@ -71,6 +74,7 @@
     "mocha": "^10.0.0",
     "mockrtc": "^0.1.0",
     "prettier": "^2.7.1",
+    "rtc-everywhere": "^0.0.5",
     "ts-jest": "^28.0.5",
     "ts-node": "^10.8.1",
     "typescript": "^4.7.2",
