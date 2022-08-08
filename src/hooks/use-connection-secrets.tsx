@@ -1,5 +1,5 @@
 import { subjects } from 'connections'
-import { Secrets } from 'connections/signaling-server-client/secrets'
+import { Secrets } from 'connections/secrets'
 import { Result } from 'neverthrow'
 import { useEffect, useState } from 'react'
 import { tap } from 'rxjs'

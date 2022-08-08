@@ -24,5 +24,6 @@ export const config = {
       id: 0,
       ordered: true,
     },
+    chunkSize: 16384,
   },
 }

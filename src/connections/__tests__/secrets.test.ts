@@ -1,7 +1,7 @@
 import {
   deriveSecretsFromConnectionPassword,
   generateConnectionPasswordAndDeriveSecrets,
-} from './secrets'
+} from '../secrets'
 describe('signaling server secrets', () => {
   it('should generate connection password and derive secrets', async () => {
     const result = await generateConnectionPasswordAndDeriveSecrets(5)

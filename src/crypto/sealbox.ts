@@ -1,4 +1,4 @@
-import { combine, Result } from 'neverthrow'
+import { Result } from 'neverthrow'
 import { readBuffer } from 'utils/buffer-reader'
 
 export type SealedBoxProps = {
@@ -30,7 +30,7 @@ export const transformBufferToSealbox = (
   const nonceLength = 12
   const authTagLength = 16
 
-  return combine([
+  return Result.combine([
     readNextBuffer(nonceLength),
     readNextBuffer(buffer.length - nonceLength - authTagLength),
     readNextBuffer(authTagLength),

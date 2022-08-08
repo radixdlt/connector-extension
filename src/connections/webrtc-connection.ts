@@ -1,8 +1,8 @@
 import log from 'loglevel'
 import { ResultAsync } from 'neverthrow'
-import { concatMap, Subscription, switchMap, tap } from 'rxjs'
+import { concatMap, merge, Subscription, switchMap, tap } from 'rxjs'
 import { errorIdentity } from 'utils/error-identity'
-import { subjects as allSubjects } from '../subjects'
+import { subjects as allSubjects } from './subjects'
 
 export const WebRtc = ({
   peerConnectionConfig,
@@ -89,8 +89,7 @@ export const WebRtc = ({
     log.trace(dataChannelConfig)
 
     const onmessage = (ev: MessageEvent<ArrayBuffer | string>) => {
-      log.debug(`⬇️ incoming data channel message`)
-      subjects.rtcIncomingMessageSubject.next(ev)
+      subjects.rtcIncomingChunkedMessageSubject.next(ev.data)
     }
 
     const onopen = () => {
@@ -108,8 +107,7 @@ export const WebRtc = ({
     dataChannel.onclose = onclose
 
     const sendMessage = (message: string) => {
-      log.debug(`⬆️ outgoing data channel message`)
-      log.trace(message)
+      log.debug(`⬆️ outgoing data channel message:\n${message}`)
       dataChannel.send(message)
     }
 
@@ -192,7 +190,12 @@ export const WebRtc = ({
     )
 
     subscriptions.add(
-      subjects.rtcOutgoingMessageSubject.pipe(tap(sendMessage)).subscribe()
+      merge(
+        subjects.rtcOutgoingChunkedMessageSubject,
+        subjects.rtcOutgoingErrorMessageSubject
+      )
+        .pipe(tap(sendMessage))
+        .subscribe()
     )
 
     return { peerConnection, dataChannel, destroy }

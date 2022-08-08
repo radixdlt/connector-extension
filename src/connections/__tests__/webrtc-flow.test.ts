@@ -58,7 +58,7 @@ describe('webRTC flow', () => {
   })
 
   afterEach(async () => {
-    log.setLevel('debug')
+    log.setLevel('silent')
     await WebRtcTestHelper.cleanup(walletClient)
     await WebRtcTestHelper.cleanup(extensionClient)
   })
@@ -79,7 +79,15 @@ describe('webRTC flow', () => {
       extensionClient.subjects.rtcIncomingMessageSubject
     )
 
-    walletClient.subjects.rtcOutgoingMessageSubject.next('hello from wallet')
+    const message = `Cerberus is the unique consensus protocol underpinning Radix. It took seven years of research, starting in 2013 and culminating in the Cerberus Whitepaper in 2020. How Cerberus is going to be implemented in its final fully sharded form is the focus of Radix Labs and Cassandra.
+
+In its final form, Cerberus represents a radically different paradigm in the design of decentralized Distributed Ledger Technology systems. It is the only protocol that is designed so that all transactions are atomically composed across shards. This is a critical feature if DeFi is to ever scale to billions of users.
+    
+Cerberus takes a well-proven 'single-pipe' BFT (Byzantine Fault Tolerance) consensus process and parallelizes it across an extensive set of instances or shards – practically an unlimited number of shards. It achieves this parallelization through a unique new 'braided' synchronization of consensus across shards, as required by the 'dependencies' of each transaction. This requires the use of a specialized application layer called the Radix Engine.
+    
+All of this provides Cerberus with practically infinite 'linear' scalability. This means that as more nodes are added to the Radix Public Network, throughput increases linearly. As a result, Cerberus is the only consensus protocol that is capable of supporting the global financial system on a decentralized network.`
+
+    walletClient.subjects.rtcOutgoingMessageSubject.next(message)
     extensionClient.subjects.rtcOutgoingMessageSubject.next(
       'hello from extension'
     )
@@ -91,11 +99,7 @@ describe('webRTC flow', () => {
     )
     await delayAsync()
 
-    expect(extensionIncomingMessage.getValues()).toEqual([
-      { data: 'hello from wallet', type: 'message' },
-    ])
-    expect(walletIncomingMessage.getValues()).toEqual([
-      { data: 'hello from extension', type: 'message' },
-    ])
+    expect(extensionIncomingMessage.getValues()).toEqual([message])
+    expect(walletIncomingMessage.getValues()).toEqual(['hello from extension'])
   })
 })

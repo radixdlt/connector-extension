@@ -15,6 +15,8 @@ import {
   Observable,
   of,
   combineLatest,
+  mergeMap,
+  exhaustMap,
 } from 'rxjs'
 import { parseJSON } from 'utils/parse-json'
 import log from 'loglevel'
@@ -30,9 +32,11 @@ import { transformBufferToSealbox } from 'crypto/sealbox'
 import { createIV, decrypt, encrypt } from 'crypto/encryption'
 import { validateIncomingMessage } from 'io-types/validate'
 import { Secrets } from './secrets'
+import { Chunked, ChunkedMessageType, messageToChunked } from './data-chunking'
+import { toBuffer } from 'utils/to-buffer'
 
 export const MessageHandler = (subjects: typeof allSubjects) => {
-  log.debug('🫔 message handler initiated')
+  log.debug('🤝 message handler initiated')
   const sendMessageWithConfirmation = (
     messageResult: Result<Omit<DataTypes, 'payload'>, Error>,
     timeout = 3000
@@ -306,6 +310,84 @@ export const MessageHandler = (subjects: typeof allSubjects) => {
           if (webRtcStatus === 'open' && shouldSignalingServerConnect) {
             subjects.wsConnectSubject.next(false)
           }
+        })
+      )
+      .subscribe()
+  )
+
+  subscriptions.add(
+    subjects.rtcOutgoingMessageSubject
+      .pipe(
+        mergeMap((rawMessage) =>
+          messageToChunked(toBuffer(rawMessage)).map((message) => [
+            JSON.stringify(message.metaData),
+            ...message.chunks.map((chunk) => JSON.stringify(chunk)),
+          ])
+        ),
+        concatMap((result) => {
+          // TODO: handle error
+          if (result.isErr()) return []
+          return result.value
+        }),
+        tap((chunk) => subjects.rtcOutgoingChunkedMessageSubject.next(chunk))
+      )
+      .subscribe()
+  )
+
+  const rtcParsedIncomingDataChannelMessage =
+    subjects.rtcIncomingChunkedMessageSubject.pipe(
+      map((message) =>
+        parseJSON<ChunkedMessageType>(toBuffer(message).toString('utf-8'))
+      )
+    )
+
+  subscriptions.add(
+    rtcParsedIncomingDataChannelMessage
+      .pipe(
+        exhaustMap((messageResult) => {
+          const chunkedResult = messageResult.andThen((message) =>
+            message.packageType === 'metaData'
+              ? ok(Chunked(message))
+              : err(Error(`expected metaData got '${message.packageType}'`))
+          )
+          if (chunkedResult.isErr()) return [chunkedResult]
+          const chunked = chunkedResult.value
+
+          return rtcParsedIncomingDataChannelMessage.pipe(
+            tap((result) =>
+              result.map((message) => {
+                log.debug(
+                  `⬇️ incoming data channel message:\n${JSON.stringify(
+                    message
+                  )}`
+                )
+                return message.packageType === 'chunk'
+                  ? chunked.addChunk(message)
+                  : undefined
+              })
+            ),
+            filter(() => {
+              const allChunksReceived = chunked.allChunksReceived()
+              return allChunksReceived.isOk() && allChunksReceived.value
+            }),
+            tap(() =>
+              chunked
+                .toString()
+                .map((message) =>
+                  subjects.rtcIncomingMessageSubject.next(message)
+                )
+                .mapErr((error) => {
+                  log.error(error)
+                  return subjects.rtcOutgoingErrorMessageSubject.next(
+                    JSON.stringify({
+                      packageType: 'receiveMessageError',
+                      messageId: chunked.metaData.messageId,
+                      error: 'messageHashesMismatch',
+                    })
+                  )
+                })
+            )
+          )
         })
       )
       .subscribe()

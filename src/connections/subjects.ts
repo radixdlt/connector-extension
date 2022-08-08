@@ -13,10 +13,7 @@ import {
   tap,
   Subscription,
 } from 'rxjs'
-import {
-  deriveSecretsFromConnectionPassword,
-  Secrets,
-} from './signaling-server-client/secrets'
+import { deriveSecretsFromConnectionPassword, Secrets } from './secrets'
 import { secureRandom } from 'crypto/secure-random'
 
 export type Status = 'connecting' | 'connected' | 'disconnected'
@@ -44,10 +41,11 @@ export const Subjects = () => {
 
   const rtcConnectSubject = new BehaviorSubject<boolean>(false)
   const rtcStatusSubject = new BehaviorSubject<DataChannelStatus>('closed')
-  const rtcIncomingMessageSubject = new Subject<
-    MessageEvent<ArrayBuffer | string>
-  >()
+  const rtcIncomingChunkedMessageSubject = new Subject<ArrayBuffer | string>()
+  const rtcIncomingMessageSubject = new Subject<string>()
   const rtcOutgoingMessageSubject = new Subject<string>()
+  const rtcOutgoingErrorMessageSubject = new Subject<string>()
+  const rtcOutgoingChunkedMessageSubject = new Subject<string>()
   const rtcLocalIceCandidateSubject = new Subject<RTCIceCandidate>()
   const rtcLocalAnswerSubject = new Subject<RTCSessionDescriptionInit>()
   const rtcLocalOfferSubject = new Subject<RTCSessionDescriptionInit>()
@@ -72,7 +70,10 @@ export const Subjects = () => {
     rtcConnectSubject,
     rtcStatusSubject,
     rtcIncomingMessageSubject,
+    rtcIncomingChunkedMessageSubject,
+    rtcOutgoingErrorMessageSubject,
     rtcOutgoingMessageSubject,
+    rtcOutgoingChunkedMessageSubject,
     rtcLocalIceCandidateSubject,
     rtcLocalAnswerSubject,
     rtcRemoteOfferSubject,

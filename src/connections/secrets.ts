@@ -3,7 +3,7 @@ import { deriveKey } from 'crypto/kdf'
 import { secureRandom } from 'crypto/secure-random'
 import { sha256 } from 'crypto/sha256'
 import log from 'loglevel'
-import { combine, ResultAsync } from 'neverthrow'
+import { ResultAsync } from 'neverthrow'
 
 export type Secrets = {
   passwordBech32: string
@@ -16,7 +16,7 @@ export type Secrets = {
 export const deriveSecretsFromConnectionPassword = (
   connectionPasswordRaw: Buffer
 ): ResultAsync<Secrets, Error> =>
-  combine([
+  ResultAsync.combine([
     deriveKey(connectionPasswordRaw),
     sha256(connectionPasswordRaw),
   ]).andThen(([encryptionKey, connectionId]) =>

@@ -11,7 +11,7 @@ import {
   withLatestFrom,
   skip,
 } from 'rxjs'
-import { subjects as allSubjects } from '../subjects'
+import { subjects as allSubjects } from './subjects'
 
 type Source = 'wallet' | 'extension'
 

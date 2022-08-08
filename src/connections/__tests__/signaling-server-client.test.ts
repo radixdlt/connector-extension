@@ -1,12 +1,12 @@
 import WSS from 'jest-websocket-mock'
-import { SignalingServerClient } from './signaling-server-client'
+import { SignalingServerClient } from '../signaling-server-client'
 import { subjects, Status } from '../subjects'
 import { subscribeSpyTo } from '@hirez_io/observer-spy'
 import { filter, firstValueFrom } from 'rxjs'
 import { err, ok } from 'neverthrow'
 import log from 'loglevel'
 import { createIV, encrypt } from 'crypto/encryption'
-import { MessageHandler } from './message-handler'
+import { MessageHandler } from '../message-handler'
 import { delayAsync } from 'test-utils/delay-async'
 
 const url =
