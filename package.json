@@ -17,7 +17,7 @@
     "ladle": "ladle serve",
     "test:jest": "jest",
     "test": "make test",
-    "test:ci": "yarn test:jest"
+    "test:ci": "yarn test:jest --ci"
   },
   "dependencies": {
     "@emotion/react": "^11.9.0",
