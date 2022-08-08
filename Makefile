@@ -1,8 +1,8 @@
 test:
-	docker run --rm browser-extension-tests:latest yarn test
+	docker-compose run browser-extension-tests yarn test:jest
 
 test-watch:
-	docker run --rm -it browser-extension-tests:latest yarn test:watch
+	docker-compose run browser-extension-tests yarn test:watch
 
 build: 
 	docker build . -t browser-extension-tests:latest

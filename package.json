@@ -10,12 +10,12 @@
     "build": "tsc && vite build",
     "preview": "vite preview",
     "prettier": "prettier --write src",
-    "lint": "eslint './src/**/*'",
     "testrtc": "NODE_ENV=test karma start",
-    "pretest": "yarn eslint & yarn prettier & yarn tsc",
+    "lint": "yarn eslint & yarn prettier & yarn tsc",
     "prepare": "husky install",
     "ladle": "ladle serve",
     "test": "jest",
+    "test:jest": "jest",
     "test:watch": "jest --watch"
   },
   "dependencies": {
