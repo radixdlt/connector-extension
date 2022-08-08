@@ -27,8 +27,5 @@ jobs:
         with:
           node-version: '18.x'
 
-      # - name: Install dependencies
-      #   run: yarn add --dev wrtc
-
       - name: Running tests and lint
         run: make test
