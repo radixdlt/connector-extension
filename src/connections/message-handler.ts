@@ -336,9 +336,12 @@ export const MessageHandler = (subjects: typeof allSubjects) => {
 
   const rtcParsedIncomingDataChannelMessage =
     subjects.rtcIncomingChunkedMessageSubject.pipe(
-      map((message) =>
-        parseJSON<ChunkedMessageType>(toBuffer(message).toString('utf-8'))
-      )
+      // TODO: add runtime message validation
+      map((rawMessage) => {
+        const message = toBuffer(rawMessage).toString('utf-8')
+        log.debug(`⬇️ incoming data channel message:\n${message}`)
+        return parseJSON<ChunkedMessageType>(message)
+      })
     )
 
   subscriptions.add(
@@ -355,16 +358,11 @@ export const MessageHandler = (subjects: typeof allSubjects) => {
 
           return rtcParsedIncomingDataChannelMessage.pipe(
             tap((result) =>
-              result.map((message) => {
-                log.debug(
-                  `⬇️ incoming data channel message:\n${JSON.stringify(
-                    message
-                  )}`
-                )
-                return message.packageType === 'chunk'
+              result.map((message) =>
+                message.packageType === 'chunk'
                   ? chunked.addChunk(message)
                   : undefined
-              })
+              )
             ),
             filter(() => {
               const allChunksReceived = chunked.allChunksReceived()
