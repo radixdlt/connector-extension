@@ -15,9 +15,8 @@
     "pretest": "yarn eslint & yarn prettier & yarn tsc",
     "prepare": "husky install",
     "ladle": "ladle serve",
-    "test:jest": "jest",
-    "test": "make test",
-    "test:ci": "yarn test:jest --ci"
+    "test": "jest",
+    "test:watch": "jest --watch"
   },
   "dependencies": {
     "@emotion/react": "^11.9.0",

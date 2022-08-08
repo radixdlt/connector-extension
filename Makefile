@@ -1,8 +1,8 @@
 test:
-	docker-compose run extension-tests yarn test:jest
+	docker-compose run extension-tests yarn test 
 
 test-watch:
-	docker-compose run extension-tests yarn test:jest --watch 
+	docker-compose run extension-tests yarn test:watch
 
 build: 
 	docker build . -t browser-extension-tests:latest
