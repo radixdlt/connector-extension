@@ -7,4 +7,3 @@ services:
       dockerfile: Dockerfile
     volumes:
       - ./src:/home/node/app/src
-    container_name: browser-extension-tests
