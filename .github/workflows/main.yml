@@ -28,4 +28,4 @@ jobs:
           node-version: '18.x'
 
       - name: Running tests and lint
-        run: make test
+        run: make build && make test
