@@ -8,6 +8,7 @@ declare global {
   // eslint-disable-next-line @typescript-eslint/consistent-type-definitions
   interface Window {
     setLogLevel: (level: log.LogLevelDesc) => void
+    webRtcClient: ReturnType<typeof WebRtcClient>
   }
 }
 
@@ -29,6 +30,8 @@ export const bootstrapApplication = (subjects: SubjectsType) => {
 
   webRtcClient.subjects.wsGenerateConnectionSecretsSubject.next()
   webRtcClient.subjects.rtcConnectSubject.next(true)
+
+  window.webRtcClient = webRtcClient
 
   return { webRtcClient }
 }

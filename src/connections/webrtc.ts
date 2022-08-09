@@ -20,10 +20,21 @@ export const WebRtc = ({
 
     const onicecandidate = (e: RTCPeerConnectionIceEvent) => {
       if (e.candidate) {
-        log.info(`🧊 got local ice candidate`)
+        log.debug(`🧊 got local ice candidate`)
         subjects.rtcLocalIceCandidateSubject.next(e.candidate)
       }
     }
+
+    const oniceconnectionstatechange = () => {
+      log.info(`🧊 iceConnectionState: ${peerConnection.iceConnectionState}`)
+      if (
+        ['disconnected', 'failed'].includes(peerConnection.iceConnectionState)
+      ) {
+        // TODO: Restart webRTC
+      }
+    }
+
+    peerConnection.oniceconnectionstatechange = oniceconnectionstatechange
 
     peerConnection.onicecandidate = onicecandidate
 
@@ -119,6 +130,10 @@ export const WebRtc = ({
       dataChannel.close()
       peerConnection.close()
       peerConnection.removeEventListener('icecandidate', onicecandidate)
+      peerConnection.removeEventListener(
+        'iceconnectionstatechange',
+        oniceconnectionstatechange
+      )
       dataChannel.removeEventListener('message', onmessage)
       dataChannel.removeEventListener('open', onopen)
       dataChannel.removeEventListener('close', onclose)
@@ -211,7 +226,9 @@ export const WebRtc = ({
     return { peerConnection, dataChannel, destroy }
   }
 
-  let peerConnection: ReturnType<typeof CreatePeerConnectionAndDataChannel>
+  let peerConnection:
+    | ReturnType<typeof CreatePeerConnectionAndDataChannel>
+    | undefined
 
   const subscriptions = new Subscription()
 
@@ -236,5 +253,9 @@ export const WebRtc = ({
     }
   }
 
-  return { CreatePeerConnectionAndDataChannel, destroy }
+  return {
+    CreatePeerConnectionAndDataChannel,
+    destroy,
+    getPeerConnection: () => peerConnection,
+  }
 }
