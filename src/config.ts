@@ -25,5 +25,6 @@ export const config = {
       ordered: true,
     },
     chunkSize: 11_500,
+    confirmationTimeout: 3_000,
   },
 }

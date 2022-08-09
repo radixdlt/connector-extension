@@ -1,4 +1,4 @@
-import { err, Ok, ok, okAsync, Result, ResultAsync } from 'neverthrow'
+import { err, ok, okAsync, Result, ResultAsync } from 'neverthrow'
 import {
   map,
   share,
@@ -35,6 +35,7 @@ import { validateIncomingMessage } from 'io-types/validate'
 import { Secrets } from './secrets'
 import { Chunked, ChunkedMessageType, messageToChunked } from './data-chunking'
 import { toBuffer } from 'utils/to-buffer'
+import { config } from '../config'
 
 export const MessageHandler = (subjects: typeof allSubjects) => {
   log.debug('🤝 message handler initiated')
@@ -329,13 +330,19 @@ export const MessageHandler = (subjects: typeof allSubjects) => {
       share()
     )
 
-  const dataChannelConfirmation = (messageId: string) =>
+  const dataChannelConfirmation = (messageIdResult: Result<string, Error>) =>
     rtcParsedIncomingDataChannelMessage.pipe(
       filter(
         (messageResult) =>
+          messageIdResult.isOk() &&
           messageResult.isOk() &&
           messageResult.value.packageType === 'receiveMessageConfirmation' &&
-          messageResult.value.messageId === messageId
+          messageResult.value.messageId === messageIdResult.value
+      ),
+      tap(() =>
+        log.debug(
+          `👌 received webRTC outgoing datachannel message confirmation for messageId: ${messageIdResult._unsafeUnwrap()}`
+        )
       )
     )
 
@@ -355,12 +362,17 @@ export const MessageHandler = (subjects: typeof allSubjects) => {
               return message.metaData.messageId
             })
           ).pipe(
-            filter((result): result is Ok<string, never> => result.isOk()),
-            mergeMap((result: Ok<string, never>) =>
-              dataChannelConfirmation(result.value).pipe(
-                tap(() =>
-                  log.debug(
-                    `👌 received webRTC outgoing datachannel message confirmation for messageId: ${result.value}`
+            mergeMap((result) =>
+              merge(
+                dataChannelConfirmation(result),
+                timer(config.webRTC.confirmationTimeout).pipe(
+                  map(() =>
+                    // eslint-disable-next-line max-nested-callbacks
+                    result.map((messageId) =>
+                      log.debug(
+                        `❌ confirmation message timeout for messageId: '${messageId}'`
+                      )
+                    )
                   )
                 )
               )
