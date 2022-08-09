@@ -3,7 +3,6 @@ import {
   map,
   share,
   withLatestFrom,
-  pluck,
   concatMap,
   merge,
   filter,
@@ -184,7 +183,7 @@ export const MessageHandler = (subjects: typeof allSubjects) => {
   }
 
   const wsIncomingMessage$ = subjects.wsIncomingRawMessageSubject.pipe(
-    pluck('data'),
+    map((messageEvent) => messageEvent.data),
     map((rawMessage) =>
       parseJSON<SignalingServerResponse>(rawMessage)
         .mapErr((error): InvalidMessageError => {

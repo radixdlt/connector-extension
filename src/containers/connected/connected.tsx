@@ -3,13 +3,15 @@ import { useWebRtcIncomingMessage } from 'hooks/use-rtc-incoming-message'
 import { useWebRtcSendMessage } from 'hooks/use-rtc-send-message'
 import { useEffect, useState } from 'react'
 
-const oneMB = new Array(1000)
+const tenMB = new Array(1_000 * 10)
   .fill(null)
   .map(
     () =>
       `Lorem ipsum dolor sit amet, consectetur adipiscing elit. Aenean eu odio consectetur, varius lorem quis, finibus enim. Aliquam erat volutpat. Vivamus posuere sit amet justo ut vulputate. Nam ultrices nec tortor at pulvinar. Nunc et nibh purus. Donec vehicula venenatis risus eu sollicitudin. Sed posuere eu odio ac semper. Sed vitae est id dui blandit aliquet. Sed dapibus mi dui, ut rhoncus dolor aliquet tempus. Nam fermentum justo a arcu egestas, id laoreet urna condimentum. Nunc auctor elit sed arcu lobortis, a tincidunt libero mollis. Etiam hendrerit eu risus eget porttitor. Donec vitae neque vehicula, cursus magna eget, mollis metus. Vestibulum ante ipsum primis in faucibus orci luctus et ultrices posuere cubilia curae; Vestibulum vel facilisis diam. Sed non tortor ultricies, viverra mauris tempor, cursus justo. Vestibulum ante ipsum primis in faucibus orci luctus et ultrices posuere cubilia curae; Vestibulum vel facilisis diam. Sed non tortor ultricies, viverra mauris tempor, cursu. `
   )
   .join('')
+
+const oneMB = tenMB.slice(0, tenMB.length / 10)
 
 export const Connected = () => {
   const [messages, setMessages] = useState<string[]>([])
@@ -20,6 +22,7 @@ export const Connected = () => {
 
   useEffect(() => {
     if (incomingMessage && incomingMessage.length < 1000) {
+      setMessageCounter((prev) => prev + 1)
       setMessages((prev) => [...prev, `⬇️ ${incomingMessage}`])
     } else if (incomingMessage && incomingMessage.length >= 1000) {
       setMessageCounter((prev) => prev + 1)
@@ -92,6 +95,24 @@ export const Connected = () => {
             }}
           >
             Send 1MB message
+          </button>
+          <button
+            style={{ marginTop: 10 }}
+            type="button"
+            onClick={() => {
+              sendMessage(tenMB.slice(0, tenMB.length / 2))
+            }}
+          >
+            Send 5MB message
+          </button>
+          <button
+            style={{ marginTop: 10 }}
+            type="button"
+            onClick={() => {
+              sendMessage(tenMB)
+            }}
+          >
+            Send 10MB message
           </button>
         </Box>
       </form>
