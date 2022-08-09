@@ -1,5 +1,8 @@
+import { LogLevelDesc } from 'loglevel'
+
 export const config = {
   environment: process.env.NODE_ENV,
+  logLevel: (process.env.LOG_LEVEL as LogLevelDesc) || 'debug',
   signalingServer: {
     baseUrl: 'wss://signaling-server-pr-30.rdx-works-main.extratools.works',
     reconnect: {

@@ -14,7 +14,7 @@ declare global {
 window.setLogLevel = (level: log.LogLevelDesc) => log.setLevel(level)
 
 export const bootstrapApplication = (subjects: SubjectsType) => {
-  log.setLevel('debug')
+  log.setLevel(config.logLevel)
 
   const webRtcClient = WebRtcClient({
     subjects,
