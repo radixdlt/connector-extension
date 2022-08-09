@@ -340,7 +340,7 @@ export const MessageHandler = (subjects: typeof allSubjects) => {
       ),
       tap(() =>
         log.debug(
-          `👌 received webRTC outgoing datachannel message confirmation for messageId: ${messageIdResult._unsafeUnwrap()}`
+          `👌 received message confirmation for messageId: '${messageIdResult._unsafeUnwrap()}'`
         )
       )
     )
