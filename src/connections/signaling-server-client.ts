@@ -28,6 +28,8 @@ export const SignalingServerClient = ({
 }) => {
   const sendMessageDirection = `[${source} => ${target}]`
   const receiveMessageDirection = `[${target} => ${source}]`
+  let t0 = 0
+  let t1 = 0
   log.debug(
     `📡 created instance of signalingServerClient with baseUrl:\n${baseUrl}`
   )
@@ -40,6 +42,7 @@ export const SignalingServerClient = ({
     )
     subjects.wsStatusSubject.next('connecting')
     removeListeners()
+    t0 = performance.now()
     ws = new WebSocket(
       `${baseUrl}/${connectionId}?target=${target}&source=${source}`
     )
@@ -75,9 +78,13 @@ export const SignalingServerClient = ({
   }
 
   const onOpen = () => {
+    t1 = performance.now()
     log.debug(
-      `🟢 connected to signaling server\ntarget=${target}&source=${source}`
+      `🟢 connected to signaling server\ntarget=${target}&source=${source}\nconnect time: ${(
+        t1 - t0
+      ).toFixed(0)} ms`
     )
+
     subjects.wsStatusSubject.next('connected')
   }
 
