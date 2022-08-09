@@ -89,7 +89,7 @@ describe('webRTC flow', () => {
       extensionClient.subjects.rtcIncomingMessageSubject
     )
 
-    const message = oneMB.slice(0, oneMB.length / 10)
+    const message = oneMB.slice(0, oneMB.length / 1000)
 
     walletClient.subjects.rtcOutgoingMessageSubject.next(message)
     extensionClient.subjects.rtcOutgoingMessageSubject.next(
@@ -105,5 +105,25 @@ describe('webRTC flow', () => {
 
     expect(extensionIncomingMessage.getValues()).toEqual([message])
     expect(walletIncomingMessage.getValues()).toEqual(['hello from extension'])
+  })
+
+  it.skip('should reconnect if a client disconnects', async () => {
+    walletClient.subjects.rtcConnectSubject.next(true)
+    extensionClient.subjects.rtcConnectSubject.next(true)
+
+    walletClient.subjects.rtcCreateOfferSubject.next()
+
+    await waitUntilOpen('open', walletClient.subjects.rtcStatusSubject)
+    await waitUntilOpen('open', extensionClient.subjects.rtcStatusSubject)
+
+    await waitUntilStatus('disconnected', walletClient.subjects.wsStatusSubject)
+    await waitUntilStatus(
+      'disconnected',
+      extensionClient.subjects.wsStatusSubject
+    )
+
+    // extensionClient.webRtc.peerConnection?.dataChannel.close()
+
+    await delayAsync()
   })
 })
