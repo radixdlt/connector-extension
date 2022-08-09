@@ -14,7 +14,7 @@
     "lint": "yarn eslint & yarn prettier & yarn tsc",
     "prepare": "husky install",
     "ladle": "ladle serve",
-    "test": "jest",
+    "test": "jest --forceExit",
     "test:watch": "jest --watch"
   },
   "dependencies": {
@@ -42,8 +42,8 @@
     "@esbuild-plugins/node-globals-polyfill": "^0.1.1",
     "@esbuild-plugins/node-modules-polyfill": "^0.1.4",
     "@hirez_io/observer-spy": "^2.2.0",
+    "@koush/wrtc": "^0.5.3",
     "@ladle/react": "^2.1.0",
-    "@mapbox/node-pre-gyp": "^1.0.9",
     "@peculiar/webcrypto": "^1.4.0",
     "@stitches/react": "^1.2.8",
     "@types/chai": "^4.3.3",

@@ -211,6 +211,8 @@ export const WebRtc = ({
         tap((shouldConnect) => {
           if (shouldConnect && !peerConnection) {
             peerConnection = CreatePeerConnectionAndDataChannel()
+          } else if (!shouldConnect && peerConnection) {
+            peerConnection.destroy()
           }
         })
       )

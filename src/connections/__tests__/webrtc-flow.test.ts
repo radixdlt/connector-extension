@@ -25,6 +25,8 @@ const WebRtcTestHelper = {
   },
 
   cleanup: async (client: WebRtcClient) => {
+    client.subjects.rtcConnectSubject.next(false)
+    await waitUntilOpen('closed', client.subjects.rtcStatusSubject)
     client.destroy()
     await waitUntilStatus('disconnected', client.subjects.wsStatusSubject)
     await waitUntilOpen('closed', client.subjects.rtcStatusSubject)
@@ -58,7 +60,7 @@ describe('webRTC flow', () => {
   })
 
   afterEach(async () => {
-    log.setLevel('silent')
+    log.setLevel('debug')
     await WebRtcTestHelper.cleanup(walletClient)
     await WebRtcTestHelper.cleanup(extensionClient)
   })

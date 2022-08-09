@@ -1,7 +1,6 @@
 import { Crypto } from '@peculiar/webcrypto'
 import { chrome } from 'jest-chrome'
-
-import webRTC from 'wrtc'
+import webRTC from '@koush/wrtc'
 
 global.crypto = new Crypto()
 global.chrome = chrome
