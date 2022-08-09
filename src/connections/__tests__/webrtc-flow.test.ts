@@ -6,6 +6,14 @@ import { config } from '../../config'
 import { WebRtcClient } from 'connections/webrtc-client'
 import { delayAsync } from 'test-utils/delay-async'
 
+const oneMB = new Array(1000)
+  .fill(null)
+  .map(
+    () =>
+      `Lorem ipsum dolor sit amet, consectetur adipiscing elit. Aenean eu odio consectetur, varius lorem quis, finibus enim. Aliquam erat volutpat. Vivamus posuere sit amet justo ut vulputate. Nam ultrices nec tortor at pulvinar. Nunc et nibh purus. Donec vehicula venenatis risus eu sollicitudin. Sed posuere eu odio ac semper. Sed vitae est id dui blandit aliquet. Sed dapibus mi dui, ut rhoncus dolor aliquet tempus. Nam fermentum justo a arcu egestas, id laoreet urna condimentum. Nunc auctor elit sed arcu lobortis, a tincidunt libero mollis. Etiam hendrerit eu risus eget porttitor. Donec vitae neque vehicula, cursus magna eget, mollis metus. Vestibulum ante ipsum primis in faucibus orci luctus et ultrices posuere cubilia curae; Vestibulum vel facilisis diam. Sed non tortor ultricies, viverra mauris tempor, cursus justo. Vestibulum ante ipsum primis in faucibus orci luctus et ultrices posuere cubilia curae; Vestibulum vel facilisis diam. Sed non tortor ultricies, viverra mauris tempor, cursu. `
+  )
+  .join('')
+
 const waitUntilStatus = async (status: Status, obs: Observable<Status>) =>
   firstValueFrom(obs.pipe(filter((s) => s === status)))
 
@@ -60,7 +68,7 @@ describe('webRTC flow', () => {
   })
 
   afterEach(async () => {
-    log.setLevel('debug')
+    log.setLevel('silent')
     await WebRtcTestHelper.cleanup(walletClient)
     await WebRtcTestHelper.cleanup(extensionClient)
   })
@@ -80,14 +88,6 @@ describe('webRTC flow', () => {
     const extensionIncomingMessage = subscribeSpyTo(
       extensionClient.subjects.rtcIncomingMessageSubject
     )
-
-    const oneMB = new Array(1000)
-      .fill(null)
-      .map(
-        () =>
-          `Lorem ipsum dolor sit amet, consectetur adipiscing elit. Aenean eu odio consectetur, varius lorem quis, finibus enim. Aliquam erat volutpat. Vivamus posuere sit amet justo ut vulputate. Nam ultrices nec tortor at pulvinar. Nunc et nibh purus. Donec vehicula venenatis risus eu sollicitudin. Sed posuere eu odio ac semper. Sed vitae est id dui blandit aliquet. Sed dapibus mi dui, ut rhoncus dolor aliquet tempus. Nam fermentum justo a arcu egestas, id laoreet urna condimentum. Nunc auctor elit sed arcu lobortis, a tincidunt libero mollis. Etiam hendrerit eu risus eget porttitor. Donec vitae neque vehicula, cursus magna eget, mollis metus. Vestibulum ante ipsum primis in faucibus orci luctus et ultrices posuere cubilia curae; Vestibulum vel facilisis diam. Sed non tortor ultricies, viverra mauris tempor, cursus justo. Vestibulum ante ipsum primis in faucibus orci luctus et ultrices posuere cubilia curae; Vestibulum vel facilisis diam. Sed non tortor ultricies, viverra mauris tempor, cursu. `
-      )
-      .join('')
 
     const message = oneMB.slice(0, oneMB.length / 10)
 
