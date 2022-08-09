@@ -9,4 +9,4 @@ RUN yarn add --dev wrtc
 
 COPY . .
 
-CMD yarn test:jest
+CMD yarn test

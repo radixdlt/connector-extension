@@ -1,7 +1,7 @@
 version: '3.7'
 
 services:
-  browser-extension-tests:
+  tests:
     build:
       context: .
       dockerfile: Dockerfile
