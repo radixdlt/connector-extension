@@ -1,10 +1,10 @@
 import { SignalingServerClient } from 'connections/signaling-server-client'
-import { Subjects, WebRtc, MessageHandler } from 'connections'
+import { Subjects, WebRtc, Subscriptions } from 'connections'
 
 type WebRTCType = ReturnType<typeof WebRtc>
 type SignalingServerClient = ReturnType<typeof SignalingServerClient>
 type SubjectsType = ReturnType<typeof Subjects>
-type MessageHandler = ReturnType<typeof MessageHandler>
+type MessageHandler = ReturnType<typeof Subscriptions>
 
 export type WebRtcClient = ReturnType<typeof WebRtcClient>
 export type WebRtcClientInput = {
@@ -18,7 +18,7 @@ export type WebRtcClientInput = {
 
 export const WebRtcClient = (input: WebRtcClientInput) => {
   const subjects = input.subjects || Subjects()
-  const messageHandler = MessageHandler(subjects)
+  const messageHandler = Subscriptions(subjects)
   const signalingServerClient = SignalingServerClient({
     baseUrl: input.signalingServerOptions.baseUrl,
     source: input.signalingServerOptions.source,

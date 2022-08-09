@@ -3,18 +3,9 @@ import {
   MessageSources,
   SignalingServerErrorResponse,
 } from 'io-types/types'
-import { errAsync, Result } from 'neverthrow'
-import {
-  BehaviorSubject,
-  ReplaySubject,
-  Subject,
-  switchMap,
-  share,
-  tap,
-  Subscription,
-} from 'rxjs'
-import { deriveSecretsFromConnectionPassword, Secrets } from './secrets'
-import { secureRandom } from 'crypto/secure-random'
+import { Result } from 'neverthrow'
+import { BehaviorSubject, ReplaySubject, Subject } from 'rxjs'
+import { Secrets } from './secrets'
 import { MessageConfirmation } from './data-chunking'
 
 export type Status = 'connecting' | 'connected' | 'disconnected'
@@ -57,7 +48,7 @@ export const Subjects = () => {
   const rtcRemoteIceCandidateSubject = new Subject<RTCIceCandidate>()
   const rtcCreateOfferSubject = new Subject<void>()
 
-  const allSubjects = {
+  return {
     wsOfferReceived,
     wsSource,
     wsOutgoingMessageSubject,
@@ -85,34 +76,6 @@ export const Subjects = () => {
     rtcRemoteIceCandidateSubject,
     rtcCreateOfferSubject,
     rtcLocalOfferSubject,
-  }
-
-  const wsConnectionSecrets$ = wsConnectionPasswordSubject.pipe(
-    switchMap((password) =>
-      password
-        ? deriveSecretsFromConnectionPassword(password)
-        : errAsync(Error('missing connection password'))
-    ),
-    share(),
-    tap((result) => wsConnectionSecretsSubject.next(result))
-  )
-
-  const wsGenerateConnectionSecrets$ = wsGenerateConnectionSecretsSubject.pipe(
-    tap(() => {
-      secureRandom(5).map((buffer) => wsConnectionPasswordSubject.next(buffer))
-    })
-  )
-
-  const subscriptions = new Subscription()
-  subscriptions.add(wsConnectionSecrets$.subscribe())
-  subscriptions.add(wsGenerateConnectionSecrets$.subscribe())
-  // subscriptions.add(rtcLocalOfferSubject.subscribe(console.log))
-
-  return {
-    ...allSubjects,
-    wsConnectionSecrets$,
-    wsGenerateConnectionSecrets$,
-    subscriptions,
   }
 }
 

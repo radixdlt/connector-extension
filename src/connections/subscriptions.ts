@@ -1,4 +1,4 @@
-import { err, ok, okAsync, Result, ResultAsync } from 'neverthrow'
+import { err, errAsync, ok, okAsync, Result, ResultAsync } from 'neverthrow'
 import {
   map,
   share,
@@ -31,12 +31,13 @@ import {
 import { transformBufferToSealbox } from 'crypto/sealbox'
 import { createIV, decrypt, encrypt } from 'crypto/encryption'
 import { validateIncomingMessage } from 'io-types/validate'
-import { Secrets } from './secrets'
+import { deriveSecretsFromConnectionPassword, Secrets } from './secrets'
 import { Chunked, ChunkedMessageType, messageToChunked } from './data-chunking'
 import { toBuffer } from 'utils/to-buffer'
 import { config } from '../config'
+import { secureRandom } from 'crypto/secure-random'
 
-export const MessageHandler = (subjects: typeof allSubjects) => {
+export const Subscriptions = (subjects: typeof allSubjects) => {
   log.debug('🤝 message handler initiated')
   const sendMessageWithConfirmation = (
     messageResult: Result<Omit<DataTypes, 'payload'>, Error>,
@@ -215,7 +216,11 @@ export const MessageHandler = (subjects: typeof allSubjects) => {
           : ok(undefined)
       )
     ),
-    withLatestFrom(subjects.wsConnectionSecrets$),
+    withLatestFrom(
+      subjects.wsConnectionSecretsSubject.pipe(
+        filter((result): result is Result<Secrets, Error> => !!result)
+      )
+    ),
     concatMap(([messageResult, secretsResult]) =>
       messageResult
         .asyncAndThen((message) =>
@@ -430,6 +435,31 @@ export const MessageHandler = (subjects: typeof allSubjects) => {
                   )
                 })
             )
+          )
+        })
+      )
+      .subscribe()
+  )
+
+  subscriptions.add(
+    subjects.wsConnectionPasswordSubject
+      .pipe(
+        switchMap((password) =>
+          password
+            ? deriveSecretsFromConnectionPassword(password)
+            : errAsync(Error('missing connection password'))
+        ),
+        share(),
+        tap((result) => subjects.wsConnectionSecretsSubject.next(result))
+      )
+      .subscribe()
+  )
+  subscriptions.add(
+    subjects.wsGenerateConnectionSecretsSubject
+      .pipe(
+        tap(() => {
+          secureRandom(5).map((buffer) =>
+            subjects.wsConnectionPasswordSubject.next(buffer)
           )
         })
       )

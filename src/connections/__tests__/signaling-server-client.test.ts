@@ -6,14 +6,14 @@ import { filter, firstValueFrom } from 'rxjs'
 import { err, ok } from 'neverthrow'
 import log from 'loglevel'
 import { createIV, encrypt } from 'crypto/encryption'
-import { MessageHandler } from '../message-handler'
+import { Subscriptions } from '../subscriptions'
 import { delayAsync } from 'test-utils/delay-async'
 
 const url =
   'ws://localhost:1234/3ba6fa025c3c304988133c081e9e3f5347bf89421f6445b07abfacd94956a09a?target=wallet&source=extension'
 let wss: WSS
 SignalingServerClient({ baseUrl: url, subjects })
-const { sendMessageWithConfirmation } = MessageHandler(subjects)
+const { sendMessageWithConfirmation } = Subscriptions(subjects)
 
 let wsStatusSpy: ReturnType<typeof subscribeSpyTo<Status>>
 let wsErrorSpy: ReturnType<typeof subscribeSpyTo<Event>>
@@ -155,13 +155,15 @@ describe('Signaling server client', () => {
     it('should decrypt payload and send to offer subject', async () => {
       const expectedBech32Password = 'CRDRGQ0X'
       const wsConnectionSecretsSpy = subscribeSpyTo(
-        subjects.wsConnectionSecrets$
+        subjects.wsConnectionSecretsSubject
       )
       const rtcRemoteOfferSpy = subscribeSpyTo(subjects.rtcRemoteOfferSubject)
 
       await delayAsync(100)
 
       const secretsResult = wsConnectionSecretsSpy.getValueAt(0)
+
+      if (!secretsResult) throw Error('missing secrets')
 
       if (secretsResult.isErr()) throw secretsResult.error
 
