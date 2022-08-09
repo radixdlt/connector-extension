@@ -81,13 +81,15 @@ describe('webRTC flow', () => {
       extensionClient.subjects.rtcIncomingMessageSubject
     )
 
-    const message = `Cerberus is the unique consensus protocol underpinning Radix. It took seven years of research, starting in 2013 and culminating in the Cerberus Whitepaper in 2020. How Cerberus is going to be implemented in its final fully sharded form is the focus of Radix Labs and Cassandra.
+    const oneMB = new Array(1000)
+      .fill(null)
+      .map(
+        () =>
+          `Lorem ipsum dolor sit amet, consectetur adipiscing elit. Aenean eu odio consectetur, varius lorem quis, finibus enim. Aliquam erat volutpat. Vivamus posuere sit amet justo ut vulputate. Nam ultrices nec tortor at pulvinar. Nunc et nibh purus. Donec vehicula venenatis risus eu sollicitudin. Sed posuere eu odio ac semper. Sed vitae est id dui blandit aliquet. Sed dapibus mi dui, ut rhoncus dolor aliquet tempus. Nam fermentum justo a arcu egestas, id laoreet urna condimentum. Nunc auctor elit sed arcu lobortis, a tincidunt libero mollis. Etiam hendrerit eu risus eget porttitor. Donec vitae neque vehicula, cursus magna eget, mollis metus. Vestibulum ante ipsum primis in faucibus orci luctus et ultrices posuere cubilia curae; Vestibulum vel facilisis diam. Sed non tortor ultricies, viverra mauris tempor, cursus justo. Vestibulum ante ipsum primis in faucibus orci luctus et ultrices posuere cubilia curae; Vestibulum vel facilisis diam. Sed non tortor ultricies, viverra mauris tempor, cursu. `
+      )
+      .join('')
 
-In its final form, Cerberus represents a radically different paradigm in the design of decentralized Distributed Ledger Technology systems. It is the only protocol that is designed so that all transactions are atomically composed across shards. This is a critical feature if DeFi is to ever scale to billions of users.
-    
-Cerberus takes a well-proven 'single-pipe' BFT (Byzantine Fault Tolerance) consensus process and parallelizes it across an extensive set of instances or shards – practically an unlimited number of shards. It achieves this parallelization through a unique new 'braided' synchronization of consensus across shards, as required by the 'dependencies' of each transaction. This requires the use of a specialized application layer called the Radix Engine.
-    
-All of this provides Cerberus with practically infinite 'linear' scalability. This means that as more nodes are added to the Radix Public Network, throughput increases linearly. As a result, Cerberus is the only consensus protocol that is capable of supporting the global financial system on a decentralized network.`
+    const message = oneMB.slice(0, oneMB.length / 10)
 
     walletClient.subjects.rtcOutgoingMessageSubject.next(message)
     extensionClient.subjects.rtcOutgoingMessageSubject.next(

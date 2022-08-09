@@ -15,6 +15,7 @@ import {
 } from 'rxjs'
 import { deriveSecretsFromConnectionPassword, Secrets } from './secrets'
 import { secureRandom } from 'crypto/secure-random'
+import { MessageConfirmation } from './data-chunking'
 
 export type Status = 'connecting' | 'connected' | 'disconnected'
 export type DataChannelStatus = 'open' | 'closed'
@@ -44,6 +45,8 @@ export const Subjects = () => {
   const rtcIncomingChunkedMessageSubject = new Subject<ArrayBuffer | string>()
   const rtcIncomingMessageSubject = new Subject<string>()
   const rtcOutgoingMessageSubject = new Subject<string>()
+  const rtcOutgoingConfirmationMessageSubject =
+    new Subject<MessageConfirmation>()
   const rtcOutgoingErrorMessageSubject = new Subject<string>()
   const rtcOutgoingChunkedMessageSubject = new Subject<string>()
   const rtcLocalIceCandidateSubject = new Subject<RTCIceCandidate>()
@@ -71,6 +74,7 @@ export const Subjects = () => {
     rtcStatusSubject,
     rtcIncomingMessageSubject,
     rtcIncomingChunkedMessageSubject,
+    rtcOutgoingConfirmationMessageSubject,
     rtcOutgoingErrorMessageSubject,
     rtcOutgoingMessageSubject,
     rtcOutgoingChunkedMessageSubject,

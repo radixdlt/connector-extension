@@ -1,4 +1,4 @@
-import { err, ok, okAsync, Result, ResultAsync } from 'neverthrow'
+import { err, Ok, ok, okAsync, Result, ResultAsync } from 'neverthrow'
 import {
   map,
   share,
@@ -15,8 +15,9 @@ import {
   Observable,
   of,
   combineLatest,
-  mergeMap,
   exhaustMap,
+  from,
+  mergeMap,
 } from 'rxjs'
 import { parseJSON } from 'utils/parse-json'
 import log from 'loglevel'
@@ -315,34 +316,61 @@ export const MessageHandler = (subjects: typeof allSubjects) => {
       .subscribe()
   )
 
-  subscriptions.add(
-    subjects.rtcOutgoingMessageSubject
-      .pipe(
-        mergeMap((rawMessage) =>
-          messageToChunked(toBuffer(rawMessage)).map((message) => [
-            JSON.stringify(message.metaData),
-            ...message.chunks.map((chunk) => JSON.stringify(chunk)),
-          ])
-        ),
-        concatMap((result) => {
-          // TODO: handle error
-          if (result.isErr()) return []
-          return result.value
-        }),
-        tap((chunk) => subjects.rtcOutgoingChunkedMessageSubject.next(chunk))
-      )
-      .subscribe()
-  )
-
   const rtcParsedIncomingDataChannelMessage =
     subjects.rtcIncomingChunkedMessageSubject.pipe(
       // TODO: add runtime message validation
       map((rawMessage) => {
         const message = toBuffer(rawMessage).toString('utf-8')
-        log.debug(`⬇️ incoming data channel message:\n${message}`)
+        log.debug(
+          `⬇️ incoming data channel message:\nsize: ${message.length} Bytes\n${message}`
+        )
         return parseJSON<ChunkedMessageType>(message)
-      })
+      }),
+      share()
     )
+
+  const dataChannelConfirmation = (messageId: string) =>
+    rtcParsedIncomingDataChannelMessage.pipe(
+      filter(
+        (messageResult) =>
+          messageResult.isOk() &&
+          messageResult.value.packageType === 'receiveMessageConfirmation' &&
+          messageResult.value.messageId === messageId
+      )
+    )
+
+  subscriptions.add(
+    subjects.rtcOutgoingMessageSubject
+      .pipe(
+        concatMap((rawMessage) =>
+          from(
+            messageToChunked(toBuffer(rawMessage)).map((message) => {
+              const chunks = [
+                JSON.stringify(message.metaData),
+                ...message.chunks.map((chunk) => JSON.stringify(chunk)),
+              ]
+              chunks.forEach((chunk) =>
+                subjects.rtcOutgoingChunkedMessageSubject.next(chunk)
+              )
+              return message.metaData.messageId
+            })
+          ).pipe(
+            filter((result): result is Ok<string, never> => result.isOk()),
+            mergeMap((result: Ok<string, never>) =>
+              dataChannelConfirmation(result.value).pipe(
+                tap(() =>
+                  log.debug(
+                    `👌 received webRTC outgoing datachannel message confirmation for messageId: ${result.value}`
+                  )
+                )
+              )
+            ),
+            first()
+          )
+        )
+      )
+      .subscribe()
+  )
 
   subscriptions.add(
     rtcParsedIncomingDataChannelMessage
@@ -368,12 +396,18 @@ export const MessageHandler = (subjects: typeof allSubjects) => {
               const allChunksReceived = chunked.allChunksReceived()
               return allChunksReceived.isOk() && allChunksReceived.value
             }),
+            first(),
             tap(() =>
               chunked
                 .toString()
-                .map((message) =>
+                .map((message) => {
+                  subjects.rtcOutgoingConfirmationMessageSubject.next({
+                    packageType: 'receiveMessageConfirmation',
+                    messageId: chunked.metaData.messageId,
+                  })
                   subjects.rtcIncomingMessageSubject.next(message)
-                )
+                  return undefined
+                })
                 .mapErr((error) => {
                   log.error(error)
                   return subjects.rtcOutgoingErrorMessageSubject.next(

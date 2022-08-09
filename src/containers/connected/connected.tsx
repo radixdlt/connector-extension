@@ -13,23 +13,26 @@ const oneMB = new Array(1000)
 
 export const Connected = () => {
   const [messages, setMessages] = useState<string[]>([])
+  const [messageCounter, setMessageCounter] = useState<number>(0)
   const [outgoingMessage, setOutgoingMessage] = useState<string>('')
   const sendMessage = useWebRtcSendMessage()
   const incomingMessage = useWebRtcIncomingMessage()
 
   useEffect(() => {
-    if (incomingMessage) {
+    if (incomingMessage && incomingMessage.length < 1000) {
       setMessages((prev) => [...prev, `⬇️ ${incomingMessage}`])
+    } else if (incomingMessage && incomingMessage.length >= 1000) {
+      setMessageCounter((prev) => prev + 1)
     }
   }, [incomingMessage])
 
   return (
-    <Box css={{ height: '250px' }} justify="center" items="center">
+    <Box css={{ height: '250px' }} justify="center" items="center" flex="col">
       {/* <Box>
         <Icon color="$success" type="check" />{' '}
         <Text ml="xsmall">Connected</Text>
       </Box> */}
-
+      <Box>Received messages: {messageCounter}</Box>
       <form
         style={{ height: '100%', overflow: 'auto' }}
         onSubmit={(ev) => {

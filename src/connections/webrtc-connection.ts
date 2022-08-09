@@ -1,6 +1,6 @@
 import log from 'loglevel'
 import { ResultAsync } from 'neverthrow'
-import { concatMap, merge, Subscription, switchMap, tap } from 'rxjs'
+import { concatMap, map, merge, Subscription, switchMap, tap } from 'rxjs'
 import { errorIdentity } from 'utils/error-identity'
 import { subjects as allSubjects } from './subjects'
 
@@ -107,7 +107,9 @@ export const WebRtc = ({
     dataChannel.onclose = onclose
 
     const sendMessage = (message: string) => {
-      log.debug(`⬆️ outgoing data channel message:\n${message}`)
+      log.debug(
+        `⬆️ outgoing data channel message:\nsize: ${message.length} Bytes\n${message}`
+      )
       dataChannel.send(message)
     }
 
@@ -192,7 +194,15 @@ export const WebRtc = ({
     subscriptions.add(
       merge(
         subjects.rtcOutgoingChunkedMessageSubject,
-        subjects.rtcOutgoingErrorMessageSubject
+        subjects.rtcOutgoingErrorMessageSubject,
+        subjects.rtcOutgoingConfirmationMessageSubject.pipe(
+          tap((message) => {
+            log.debug(
+              `👌 sending webRTC data channel confirmation for messageId: ${message.messageId}`
+            )
+          }),
+          map((message) => JSON.stringify(message))
+        )
       )
         .pipe(tap(sendMessage))
         .subscribe()

@@ -18,6 +18,11 @@ type MessageChunk = {
   messageId: string
 }
 
+export type MessageConfirmation = {
+  packageType: 'receiveMessageConfirmation'
+  messageId: string
+}
+
 type MessageError = 'messageHashesMismatch'
 
 type ChunkedMessageReceiveMessageError = {
@@ -28,7 +33,11 @@ type ChunkedMessageReceiveMessageError = {
 
 type MessageErrorTypes = ChunkedMessageReceiveMessageError
 
-export type ChunkedMessageType = MetaData | MessageChunk | MessageErrorTypes
+export type ChunkedMessageType =
+  | MetaData
+  | MessageChunk
+  | MessageConfirmation
+  | MessageErrorTypes
 
 export const messageToChunked = (
   message: Buffer,
