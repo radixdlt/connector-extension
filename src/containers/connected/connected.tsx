@@ -31,6 +31,7 @@ export const Connected = () => {
       </Box> */}
 
       <form
+        style={{ height: '100%', overflow: 'auto' }}
         onSubmit={(ev) => {
           ev.preventDefault()
           setMessages((prev) => [...prev, `⬆️ ${outgoingMessage}`])
@@ -39,7 +40,7 @@ export const Connected = () => {
         }}
       >
         <Box
-          css={{ border: '1px solid black', height: '200px', overflow: 'auto' }}
+          css={{ border: '1px solid black', height: '150px', overflow: 'auto' }}
           border
           p="small"
         >
