@@ -5,10 +5,15 @@ export const rtcRestart = (subjects: SubjectsType) =>
   combineLatest([
     subjects.rtcIceConnectionState,
     subjects.rtcConnectSubject,
+    subjects.rtcStatusSubject,
   ]).pipe(
     filter(
-      ([state, shouldConnect]) =>
-        ['disconnected', 'failed'].includes(state) && shouldConnect
+      ([rtcIceConnectionState, shouldConnect, status]) =>
+        (status === 'disconnected' ||
+          (!!rtcIceConnectionState &&
+            ['failed', 'disconnected'].includes(rtcIceConnectionState))) &&
+        shouldConnect &&
+        status !== 'connecting'
     ),
     tap(() => subjects.rtcRestart.next())
   )

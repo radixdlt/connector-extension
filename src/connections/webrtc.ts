@@ -14,8 +14,9 @@ export const WebRtc = ({
   subjects: typeof allSubjects
 }) => {
   const CreatePeerConnectionAndDataChannel = () => {
+    subjects.rtcStatusSubject.next('connecting')
     const peerConnection = new RTCPeerConnection(peerConnectionConfig)
-    log.debug(`🤌 created webRTC peer connection instance`)
+    log.debug(`🕸 created webRTC peer connection instance`)
     log.trace(peerConnectionConfig)
 
     const onicecandidate = (e: RTCPeerConnectionIceEvent) => {
@@ -101,12 +102,12 @@ export const WebRtc = ({
 
     const onopen = () => {
       log.debug(`🔊 webRTC data channel open`)
-      subjects.rtcStatusSubject.next('open')
+      subjects.rtcStatusSubject.next('connected')
     }
 
     const onclose = () => {
       log.debug(`🔇 webRTC data channel closed`)
-      subjects.rtcStatusSubject.next('closed')
+      subjects.rtcStatusSubject.next('disconnected')
     }
 
     dataChannel.onmessage = onmessage
@@ -224,6 +225,13 @@ export const WebRtc = ({
     return { peerConnection, dataChannel, destroy }
   }
 
+  const destroy = () => {
+    subscriptions.unsubscribe()
+    if (peerConnection) {
+      peerConnection.destroy()
+    }
+  }
+
   let peerConnection:
     | ReturnType<typeof CreatePeerConnectionAndDataChannel>
     | undefined
@@ -244,12 +252,20 @@ export const WebRtc = ({
       .subscribe()
   )
 
-  const destroy = () => {
-    subscriptions.unsubscribe()
-    if (peerConnection) {
-      peerConnection.destroy()
-    }
-  }
+  subscriptions.add(
+    subjects.rtcRestart
+      .pipe(
+        tap(() => {
+          if (peerConnection) {
+            log.debug(`🔄 restarting webRTC...`)
+            peerConnection.destroy()
+            peerConnection = CreatePeerConnectionAndDataChannel()
+            subjects.wsConnectSubject.next(true)
+          }
+        })
+      )
+      .subscribe()
+  )
 
   return {
     CreatePeerConnectionAndDataChannel,

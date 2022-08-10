@@ -9,7 +9,6 @@ import { Secrets } from './secrets'
 import { MessageConfirmation, MessageErrorTypes } from './data-chunking'
 
 export type Status = 'connecting' | 'connected' | 'disconnected'
-export type DataChannelStatus = 'open' | 'closed'
 export type SubjectsType = ReturnType<typeof Subjects>
 
 export const Subjects = () => {
@@ -32,7 +31,7 @@ export const Subjects = () => {
     new Subject<SignalingServerErrorResponse>()
 
   const rtcConnectSubject = new BehaviorSubject<boolean>(false)
-  const rtcStatusSubject = new BehaviorSubject<DataChannelStatus>('closed')
+  const rtcStatusSubject = new BehaviorSubject<Status>('disconnected')
   const rtcIncomingChunkedMessageSubject = new Subject<ArrayBuffer | string>()
   const rtcIncomingMessageSubject = new Subject<string>()
   const rtcOutgoingMessageSubject = new Subject<string>()
@@ -47,7 +46,9 @@ export const Subjects = () => {
   const rtcRemoteAnswerSubject = new Subject<RTCSessionDescriptionInit>()
   const rtcRemoteIceCandidateSubject = new Subject<RTCIceCandidate>()
   const rtcCreateOfferSubject = new Subject<void>()
-  const rtcIceConnectionState = new Subject<RTCIceConnectionState>()
+  const rtcIceConnectionState = new BehaviorSubject<
+    RTCIceConnectionState | undefined
+  >(undefined)
   const rtcRestart = new Subject<void>()
 
   return {

@@ -1,5 +1,5 @@
 import log from 'loglevel'
-import { Status, DataChannelStatus } from 'connections'
+import { Status } from 'connections'
 import { filter, firstValueFrom, Observable } from 'rxjs'
 import { subscribeSpyTo } from '@hirez_io/observer-spy'
 import { config } from '../../config'
@@ -17,10 +17,8 @@ const oneMB = new Array(1000)
 const waitUntilStatus = async (status: Status, obs: Observable<Status>) =>
   firstValueFrom(obs.pipe(filter((s) => s === status)))
 
-const waitUntilOpen = async (
-  status: DataChannelStatus,
-  obs: Observable<DataChannelStatus>
-) => firstValueFrom(obs.pipe(filter((s) => s === status)))
+const waitUntilOpen = async (status: Status, obs: Observable<Status>) =>
+  firstValueFrom(obs.pipe(filter((s) => s === status)))
 
 const WebRtcTestHelper = {
   bootstrap: async (client: WebRtcClient) => {
@@ -34,10 +32,10 @@ const WebRtcTestHelper = {
 
   cleanup: async (client: WebRtcClient) => {
     client.subjects.rtcConnectSubject.next(false)
-    await waitUntilOpen('closed', client.subjects.rtcStatusSubject)
+    await waitUntilOpen('disconnected', client.subjects.rtcStatusSubject)
     client.destroy()
     await waitUntilStatus('disconnected', client.subjects.wsStatusSubject)
-    await waitUntilOpen('closed', client.subjects.rtcStatusSubject)
+    await waitUntilOpen('disconnected', client.subjects.rtcStatusSubject)
   },
 }
 
@@ -74,13 +72,14 @@ describe('webRTC flow', () => {
   })
 
   it('should send message over data channel between two clients', async () => {
+    log.setLevel('silent')
     walletClient.subjects.rtcConnectSubject.next(true)
     extensionClient.subjects.rtcConnectSubject.next(true)
 
     walletClient.subjects.rtcCreateOfferSubject.next()
 
-    await waitUntilOpen('open', walletClient.subjects.rtcStatusSubject)
-    await waitUntilOpen('open', extensionClient.subjects.rtcStatusSubject)
+    await waitUntilOpen('connected', walletClient.subjects.rtcStatusSubject)
+    await waitUntilOpen('connected', extensionClient.subjects.rtcStatusSubject)
 
     const walletIncomingMessage = subscribeSpyTo(
       walletClient.subjects.rtcIncomingMessageSubject
@@ -107,14 +106,15 @@ describe('webRTC flow', () => {
     expect(walletIncomingMessage.getValues()).toEqual(['hello from extension'])
   })
 
-  it.skip('should reconnect if a client disconnects', async () => {
+  it('should reconnect if a client disconnects', async () => {
+    log.setLevel('silent')
     walletClient.subjects.rtcConnectSubject.next(true)
     extensionClient.subjects.rtcConnectSubject.next(true)
 
     walletClient.subjects.rtcCreateOfferSubject.next()
 
-    await waitUntilOpen('open', walletClient.subjects.rtcStatusSubject)
-    await waitUntilOpen('open', extensionClient.subjects.rtcStatusSubject)
+    await waitUntilOpen('connected', walletClient.subjects.rtcStatusSubject)
+    await waitUntilOpen('connected', extensionClient.subjects.rtcStatusSubject)
 
     await waitUntilStatus('disconnected', walletClient.subjects.wsStatusSubject)
     await waitUntilStatus(
@@ -122,8 +122,26 @@ describe('webRTC flow', () => {
       extensionClient.subjects.wsStatusSubject
     )
 
-    // extensionClient.webRtc.peerConnection?.dataChannel.close()
+    walletClient.subjects.rtcIceConnectionState.next('failed')
+
+    await waitUntilOpen('connected', walletClient.subjects.wsStatusSubject)
+    await waitUntilOpen('connected', extensionClient.subjects.wsStatusSubject)
+
+    walletClient.subjects.rtcCreateOfferSubject.next()
+
+    await waitUntilOpen('connected', walletClient.subjects.rtcStatusSubject)
+    await waitUntilOpen('connected', extensionClient.subjects.rtcStatusSubject)
+
+    const walletIncomingMessage = subscribeSpyTo(
+      walletClient.subjects.rtcIncomingMessageSubject
+    )
+
+    extensionClient.subjects.rtcOutgoingMessageSubject.next(
+      'hello from extension'
+    )
 
     await delayAsync()
+
+    expect(walletIncomingMessage.getValues()).toEqual(['hello from extension'])
   })
 })

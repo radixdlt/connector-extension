@@ -41,7 +41,6 @@ describe('Signaling server client', () => {
     wss = new WSS(url)
     subjects.wsConnectSubject.next(true)
     await waitUntilStatus('connected')
-    log.setLevel('debug')
   })
 
   afterEach(() => {

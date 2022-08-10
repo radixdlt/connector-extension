@@ -3,7 +3,7 @@ import { Chunked, messageToChunked } from '../data-chunking'
 
 describe('data chunking', () => {
   beforeEach(() => {
-    log.setLevel('debug')
+    log.setLevel('silent')
   })
 
   describe('happy paths', () => {
