@@ -38,8 +38,10 @@ const Main = () => {
     3: <Connected />,
   }
 
-  if (status === 'connecting') setStep(2)
-  else if (status === 'connected') setStep(3)
+  console.log(status)
+
+  if (status === 'connecting' && ![1, 2].includes(step)) setStep(2)
+  else if (status === 'connected' && step !== 3) setStep(3)
 
   const transitions = useTransition(step, {
     initial: {},
