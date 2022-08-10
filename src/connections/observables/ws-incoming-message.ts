@@ -135,12 +135,7 @@ export const wsIncomingMessage = (subjects: SubjectsType) =>
     ),
     map((result) =>
       handleIncomingMessage(subjects)(result).andThen((message) =>
-        message
-          ? validateIncomingMessage(message).mapErr((error) => {
-              log.error(`❌ validation error: \n '${error}' `)
-              return error
-            })
-          : ok(undefined)
+        message ? validateIncomingMessage(message) : ok(undefined)
       )
     ),
     withLatestFrom(

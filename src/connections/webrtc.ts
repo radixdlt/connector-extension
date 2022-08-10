@@ -8,9 +8,12 @@ import {
   Subscription,
   switchMap,
   tap,
+  withLatestFrom,
+  distinctUntilChanged,
+  filter,
 } from 'rxjs'
 import { errorIdentity } from 'utils/error-identity'
-import { subjects as allSubjects } from './subjects'
+import { SubjectsType } from 'connections/subjects'
 
 export const WebRtc = ({
   peerConnectionConfig,
@@ -19,7 +22,7 @@ export const WebRtc = ({
 }: {
   peerConnectionConfig: RTCConfiguration
   dataChannelConfig: RTCDataChannelInit
-  subjects: typeof allSubjects
+  subjects: SubjectsType
 }) => {
   const CreatePeerConnectionAndDataChannel = () => {
     subjects.rtcStatusSubject.next('connecting')
@@ -145,7 +148,6 @@ export const WebRtc = ({
       dataChannel.removeEventListener('open', onopen)
       dataChannel.removeEventListener('close', onclose)
       peerConnectionInstance = undefined
-      subjects.rtcStatusSubject.next('disconnected')
     }
 
     const subscriptions = new Subscription()
@@ -250,6 +252,19 @@ export const WebRtc = ({
 
   const subscriptions = new Subscription()
 
+  const rtcRestart = (subjects: SubjectsType) =>
+    subjects.rtcIceConnectionStateSubject.pipe(
+      distinctUntilChanged(),
+      filter((rtcIceConnectionState) =>
+        ['failed', 'disconnected'].includes(rtcIceConnectionState || '')
+      ),
+      tap(() => {
+        peerConnectionInstance?.dataChannel.close()
+      })
+    )
+
+  subscriptions.add(rtcRestart(subjects).subscribe())
+
   subscriptions.add(
     combineLatest([subjects.rtcConnectSubject, subjects.rtcStatusSubject])
       .pipe(
@@ -268,8 +283,8 @@ export const WebRtc = ({
             peerConnectionInstance.destroy()
           } else if (
             shouldConnect &&
-            rtcStatusSubject === 'disconnected' &&
-            !!peerConnectionInstance
+            peerConnectionInstance &&
+            rtcStatusSubject === 'disconnected'
           ) {
             subjects.rtcRestartSubject.next()
           }
@@ -281,12 +296,12 @@ export const WebRtc = ({
   subscriptions.add(
     subjects.rtcRestartSubject
       .pipe(
-        tap(() => {
-          if (peerConnectionInstance) {
-            log.info(`🔄 restarting webRTC...`)
-            peerConnectionInstance.destroy()
-            subjects.wsConnectSubject.next(true)
-          }
+        withLatestFrom(subjects.wsSourceSubject),
+        tap(([, wsSourceSubject]) => {
+          log.debug(`🔄 [${wsSourceSubject}] restarting webRTC...`)
+          peerConnectionInstance?.destroy()
+          peerConnectionInstance = CreatePeerConnectionAndDataChannel()
+          subjects.wsConnectSubject.next(true)
         })
       )
       .subscribe()

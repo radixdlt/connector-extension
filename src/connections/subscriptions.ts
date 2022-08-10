@@ -1,6 +1,5 @@
 import { Subscription } from 'rxjs'
 import { SubjectsType } from 'connections/subjects'
-import { rtcRestart } from './observables/rtc-restart'
 import { wsIncomingMessage } from './observables/ws-incoming-message'
 import {
   wsConnectionPassword,
@@ -24,7 +23,6 @@ export const Subscriptions = (subjects: SubjectsType) => {
 
   subscriptions.add(rtcOutgoingMessage(subjects).subscribe())
   subscriptions.add(rtcIncomingMessage(subjects).subscribe())
-  subscriptions.add(rtcRestart(subjects).subscribe())
 
   return subscriptions
 }

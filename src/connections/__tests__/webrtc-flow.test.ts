@@ -112,7 +112,6 @@ describe('webRTC flow', () => {
     extensionClient.subjects.rtcConnectSubject.next(true)
 
     walletClient.subjects.rtcCreateOfferSubject.next()
-
     await waitUntilOpen('connected', walletClient.subjects.rtcStatusSubject)
     await waitUntilOpen('connected', extensionClient.subjects.rtcStatusSubject)
 
@@ -121,7 +120,6 @@ describe('webRTC flow', () => {
       'disconnected',
       extensionClient.subjects.wsStatusSubject
     )
-
     walletClient.subjects.rtcIceConnectionStateSubject.next('failed')
 
     await waitUntilOpen('connected', walletClient.subjects.wsStatusSubject)
@@ -131,6 +129,12 @@ describe('webRTC flow', () => {
 
     await waitUntilOpen('connected', walletClient.subjects.rtcStatusSubject)
     await waitUntilOpen('connected', extensionClient.subjects.rtcStatusSubject)
+
+    await waitUntilStatus('disconnected', walletClient.subjects.wsStatusSubject)
+    await waitUntilStatus(
+      'disconnected',
+      extensionClient.subjects.wsStatusSubject
+    )
 
     const walletIncomingMessage = subscribeSpyTo(
       walletClient.subjects.rtcIncomingMessageSubject

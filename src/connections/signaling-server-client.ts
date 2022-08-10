@@ -11,9 +11,9 @@ import {
   withLatestFrom,
   skip,
   concatMap,
-  timer,
   take,
   switchMap,
+  debounceTime,
 } from 'rxjs'
 import { subjects as allSubjects } from './subjects'
 
@@ -56,8 +56,8 @@ export const SignalingServerClient = ({
   }
 
   const disconnect = () => {
-    subjects.wsStatusSubject.next('disconnecting')
     log.debug(`🧹 disconnecting from signaling server...`)
+    subjects.wsStatusSubject.next('disconnecting')
     ws?.close()
     removeListeners()
     ws = undefined
@@ -109,21 +109,22 @@ export const SignalingServerClient = ({
   const sendMessage = (message: string) => {
     log.debug(`⬆️ ${sendMessageDirection} sending ws message:\n${message}`)
     ws?.send(message)
-    subjects.wsIsSendingMessageSubject.next(false)
   }
 
   const subscriptions = new Subscription()
   subscriptions.add(
     subjects.wsOutgoingMessageSubject
       .pipe(
-        concatMap((message) => {
-          subjects.wsIsSendingMessageSubject.next(true)
-          return timer(100).pipe(
+        tap(() => subjects.wsIsSendingMessageSubject.next(true)),
+        concatMap((message) =>
+          interval(100).pipe(
             filter(() => (ws ? ws.OPEN === ws.readyState : false)),
             take(1),
             tap(() => sendMessage(message))
           )
-        })
+        ),
+        debounceTime(1000),
+        tap(() => subjects.wsIsSendingMessageSubject.next(false))
       )
       .subscribe()
   )
