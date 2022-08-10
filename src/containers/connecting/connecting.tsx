@@ -8,7 +8,7 @@ type ConnectingProps = {
 const Connecting = ({ onNext }: ConnectingProps) => {
   const status = useWebRtcDataChannelStatus()
 
-  if (status === 'open') {
+  if (status === 'connected') {
     setTimeout(() => {
       onNext()
     })
