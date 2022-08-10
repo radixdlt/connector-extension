@@ -1,9 +1,9 @@
-import { DataChannelStatus, subjects } from 'connections'
+import { Status, subjects } from 'connections'
 import { useEffect, useState } from 'react'
 import { tap } from 'rxjs'
 
 export const useWebRtcDataChannelStatus = () => {
-  const [secrets, setSecrets] = useState<DataChannelStatus>()
+  const [secrets, setSecrets] = useState<Status>()
 
   useEffect(() => {
     const subscription = subjects.rtcStatusSubject
