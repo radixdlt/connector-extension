@@ -259,6 +259,7 @@ export const WebRtc = ({
         ['failed', 'disconnected'].includes(rtcIceConnectionState || '')
       ),
       tap(() => {
+        peerConnectionInstance?.peerConnection.close()
         peerConnectionInstance?.dataChannel.close()
       })
     )
