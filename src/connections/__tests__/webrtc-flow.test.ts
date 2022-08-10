@@ -147,5 +147,5 @@ describe('webRTC flow', () => {
     await delayAsync()
 
     expect(walletIncomingMessage.getValues()).toEqual(['hello from extension'])
-  })
+  }, 10_000)
 })
