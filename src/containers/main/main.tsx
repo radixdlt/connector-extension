@@ -11,6 +11,7 @@ import { Connected } from 'containers/connected/connected'
 import { EncryptionKey } from 'containers/encryptionkey'
 import { subjects } from 'connections'
 import logo from 'images/logo.png'
+import { useWebRtcDataChannelStatus } from 'hooks/use-rtc-data-channel-status'
 
 const AnimatedBox = styled(animated.div, {
   position: 'absolute',
@@ -20,6 +21,7 @@ const AnimatedBox = styled(animated.div, {
 })
 
 const Main = () => {
+  const status = useWebRtcDataChannelStatus()
   const [step, setStep] = useState<keyof typeof steps>(1)
   const prevStep = usePrevious(step)
 
@@ -32,9 +34,12 @@ const Main = () => {
         }}
       />
     ),
-    2: <Connecting onNext={() => setStep(3)} />,
+    2: <Connecting />,
     3: <Connected />,
   }
+
+  if (status === 'connecting') setStep(2)
+  else if (status === 'connected') setStep(3)
 
   const transitions = useTransition(step, {
     initial: {},
