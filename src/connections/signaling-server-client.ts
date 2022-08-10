@@ -10,6 +10,10 @@ import {
   tap,
   withLatestFrom,
   skip,
+  concatMap,
+  timer,
+  take,
+  switchMap,
 } from 'rxjs'
 import { subjects as allSubjects } from './subjects'
 
@@ -36,7 +40,7 @@ export const SignalingServerClient = ({
     `📡 created instance of signalingServerClient with baseUrl:\n${baseUrl}`
   )
   let ws: WebSocket | undefined
-  subjects.wsSource.next(source)
+  subjects.wsSourceSubject.next(source)
 
   const connect = (connectionId: string) => {
     log.debug(
@@ -52,6 +56,7 @@ export const SignalingServerClient = ({
   }
 
   const disconnect = () => {
+    subjects.wsStatusSubject.next('disconnecting')
     log.debug(`🧹 disconnecting from signaling server...`)
     ws?.close()
     removeListeners()
@@ -102,14 +107,25 @@ export const SignalingServerClient = ({
   }
 
   const sendMessage = (message: string) => {
-    // TODO: handle if not connected or ws is undefined
     log.debug(`⬆️ ${sendMessageDirection} sending ws message:\n${message}`)
     ws?.send(message)
+    subjects.wsIsSendingMessageSubject.next(false)
   }
 
   const subscriptions = new Subscription()
   subscriptions.add(
-    subjects.wsOutgoingMessageSubject.pipe(tap(sendMessage)).subscribe()
+    subjects.wsOutgoingMessageSubject
+      .pipe(
+        concatMap((message) => {
+          subjects.wsIsSendingMessageSubject.next(true)
+          return timer(100).pipe(
+            filter(() => (ws ? ws.OPEN === ws.readyState : false)),
+            take(1),
+            tap(() => sendMessage(message))
+          )
+        })
+      )
+      .subscribe()
   )
   subscriptions.add(
     combineLatest([
@@ -126,16 +142,31 @@ export const SignalingServerClient = ({
             secrets.isOk()
           ) {
             connect(secrets.value.connectionId.toString('hex'))
-          } else if (
-            ['connection', 'connected'].includes(status) &&
-            !shouldConnect
-          ) {
-            disconnect()
           }
         })
       )
       .subscribe()
   )
+
+  subscriptions.add(
+    combineLatest([subjects.wsConnectSubject, subjects.wsStatusSubject])
+      .pipe(
+        switchMap(([shouldConnect, status]) => {
+          if (['connecting', 'connected'].includes(status) && !shouldConnect) {
+            return interval(100).pipe(
+              withLatestFrom(subjects.wsIsSendingMessageSubject),
+              filter(([, wsIsSendingMessage]) => !wsIsSendingMessage),
+              take(1),
+              tap(disconnect)
+            )
+          } else {
+            return []
+          }
+        })
+      )
+      .subscribe()
+  )
+
   subscriptions.add(
     combineLatest([subjects.wsStatusSubject, subjects.wsConnectSubject])
       .pipe(

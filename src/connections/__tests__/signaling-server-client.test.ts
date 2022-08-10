@@ -1,6 +1,6 @@
 import WSS from 'jest-websocket-mock'
 import { SignalingServerClient } from '../signaling-server-client'
-import { subjects, Status } from '../subjects'
+import { Subjects, Status, SubjectsType } from '../subjects'
 import { subscribeSpyTo } from '@hirez_io/observer-spy'
 import { filter, firstValueFrom } from 'rxjs'
 import { err, ok } from 'neverthrow'
@@ -13,7 +13,8 @@ import { wsMessageConfirmation } from 'connections/observables/ws-message-confir
 const url =
   'ws://localhost:1234/3ba6fa025c3c304988133c081e9e3f5347bf89421f6445b07abfacd94956a09a?target=wallet&source=extension'
 let wss: WSS
-SignalingServerClient({ baseUrl: url, subjects })
+
+let subjects: SubjectsType
 let subscriptions: SubscriptionsType
 
 let wsStatusSpy: ReturnType<typeof subscribeSpyTo<Status>>
@@ -28,7 +29,9 @@ const waitUntilStatus = async (status: Status) =>
 describe('Signaling server client', () => {
   beforeEach(async () => {
     log.setLevel('silent')
+    subjects = Subjects()
     subscriptions = Subscriptions(subjects)
+    SignalingServerClient({ baseUrl: url, subjects })
     subjects.wsConnectionPasswordSubject.next(
       Buffer.from([192, 218, 52, 1, 230])
     )
@@ -101,8 +104,6 @@ describe('Signaling server client', () => {
   })
 
   describe('message confirmation', () => {
-    let messageConfirmationSpy: ReturnType<typeof subscribeSpyTo<any>>
-
     const message = {
       encryptedPayload: '123',
       connectionId: '1',
@@ -111,13 +112,12 @@ describe('Signaling server client', () => {
       requestId: crypto.randomUUID(),
     }
 
-    beforeEach(async () => {
-      messageConfirmationSpy = subscribeSpyTo(
-        wsMessageConfirmation(subjects)(ok(message as any), 300)
-      )
-    })
+    beforeEach(async () => {})
 
     it('should send a message with ok confirmation', async () => {
+      let messageConfirmationSpy = subscribeSpyTo(
+        wsMessageConfirmation(subjects)(ok(message as any), 300)
+      )
       expect(wss).toReceiveMessage(JSON.stringify(message))
 
       wss.send(
@@ -128,6 +128,9 @@ describe('Signaling server client', () => {
     })
 
     it('should fail message confirmation due to timeout', async () => {
+      let messageConfirmationSpy = subscribeSpyTo(
+        wsMessageConfirmation(subjects)(ok(message as any), 300)
+      )
       subjects.wsOutgoingMessageSubject.next(JSON.stringify(message))
 
       expect(wss).toReceiveMessage(JSON.stringify(message))
@@ -140,6 +143,9 @@ describe('Signaling server client', () => {
     })
 
     it('should fail message confirmation due to ws error', async () => {
+      let messageConfirmationSpy = subscribeSpyTo(
+        wsMessageConfirmation(subjects)(ok(message as any), 300)
+      )
       wss.error()
 
       expect(messageConfirmationSpy.getValues()).toEqual([

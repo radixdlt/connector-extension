@@ -67,7 +67,7 @@ export const wsSendSdpAndIcecandidate = (subjects: SubjectsType) => {
   )
 
   return merge(localOffer$, localAnswer$, localIceCandidate$).pipe(
-    withLatestFrom(subjects.wsSource, connectionSecrets$),
+    withLatestFrom(subjects.wsSourceSubject, connectionSecrets$),
     switchMap(([{ payload, method }, source, secretsResult]) =>
       from(
         secretsResult.asyncAndThen((secrets) =>

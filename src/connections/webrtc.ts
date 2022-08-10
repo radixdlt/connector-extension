@@ -1,6 +1,14 @@
 import log from 'loglevel'
 import { ResultAsync } from 'neverthrow'
-import { concatMap, map, merge, Subscription, switchMap, tap } from 'rxjs'
+import {
+  combineLatest,
+  concatMap,
+  map,
+  merge,
+  Subscription,
+  switchMap,
+  tap,
+} from 'rxjs'
 import { errorIdentity } from 'utils/error-identity'
 import { subjects as allSubjects } from './subjects'
 
@@ -28,7 +36,9 @@ export const WebRtc = ({
 
     const oniceconnectionstatechange = () => {
       log.debug(`🧊 iceConnectionState: ${peerConnection.iceConnectionState}`)
-      subjects.rtcIceConnectionState.next(peerConnection.iceConnectionState)
+      subjects.rtcIceConnectionStateSubject.next(
+        peerConnection.iceConnectionState
+      )
     }
 
     peerConnection.oniceconnectionstatechange = oniceconnectionstatechange
@@ -134,6 +144,8 @@ export const WebRtc = ({
       dataChannel.removeEventListener('message', onmessage)
       dataChannel.removeEventListener('open', onopen)
       dataChannel.removeEventListener('close', onclose)
+      peerConnectionInstance = undefined
+      subjects.rtcStatusSubject.next('disconnected')
     }
 
     const subscriptions = new Subscription()
@@ -227,25 +239,39 @@ export const WebRtc = ({
 
   const destroy = () => {
     subscriptions.unsubscribe()
-    if (peerConnection) {
-      peerConnection.destroy()
+    if (peerConnectionInstance) {
+      peerConnectionInstance.destroy()
     }
   }
 
-  let peerConnection:
+  let peerConnectionInstance:
     | ReturnType<typeof CreatePeerConnectionAndDataChannel>
     | undefined
 
   const subscriptions = new Subscription()
 
   subscriptions.add(
-    subjects.rtcConnectSubject
+    combineLatest([subjects.rtcConnectSubject, subjects.rtcStatusSubject])
       .pipe(
-        tap((shouldConnect) => {
-          if (shouldConnect && !peerConnection) {
-            peerConnection = CreatePeerConnectionAndDataChannel()
-          } else if (!shouldConnect && peerConnection) {
-            peerConnection.destroy()
+        tap(([shouldConnect, rtcStatusSubject]) => {
+          if (
+            shouldConnect &&
+            !peerConnectionInstance &&
+            rtcStatusSubject === 'disconnected'
+          ) {
+            peerConnectionInstance = CreatePeerConnectionAndDataChannel()
+          } else if (
+            !shouldConnect &&
+            peerConnectionInstance &&
+            rtcStatusSubject !== 'disconnected'
+          ) {
+            peerConnectionInstance.destroy()
+          } else if (
+            shouldConnect &&
+            rtcStatusSubject === 'disconnected' &&
+            !!peerConnectionInstance
+          ) {
+            subjects.rtcRestartSubject.next()
           }
         })
       )
@@ -253,13 +279,12 @@ export const WebRtc = ({
   )
 
   subscriptions.add(
-    subjects.rtcRestart
+    subjects.rtcRestartSubject
       .pipe(
         tap(() => {
-          if (peerConnection) {
-            log.debug(`🔄 restarting webRTC...`)
-            peerConnection.destroy()
-            peerConnection = CreatePeerConnectionAndDataChannel()
+          if (peerConnectionInstance) {
+            log.info(`🔄 restarting webRTC...`)
+            peerConnectionInstance.destroy()
             subjects.wsConnectSubject.next(true)
           }
         })
@@ -270,6 +295,6 @@ export const WebRtc = ({
   return {
     CreatePeerConnectionAndDataChannel,
     destroy,
-    getPeerConnection: () => peerConnection,
+    getPeerConnection: () => peerConnectionInstance,
   }
 }

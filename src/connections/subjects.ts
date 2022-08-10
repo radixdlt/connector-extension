@@ -8,12 +8,16 @@ import { BehaviorSubject, ReplaySubject, Subject } from 'rxjs'
 import { Secrets } from './secrets'
 import { MessageConfirmation, MessageErrorTypes } from './data-chunking'
 
-export type Status = 'connecting' | 'connected' | 'disconnected'
+export type Status =
+  | 'connecting'
+  | 'connected'
+  | 'disconnected'
+  | 'disconnecting'
 export type SubjectsType = ReturnType<typeof Subjects>
 
 export const Subjects = () => {
-  const wsOfferReceived = new BehaviorSubject<boolean>(false)
-  const wsSource = new ReplaySubject<MessageSources>()
+  const wsOfferReceivedSubject = new BehaviorSubject<boolean>(false)
+  const wsSourceSubject = new ReplaySubject<MessageSources>()
   const wsOutgoingMessageSubject = new Subject<string>()
   const wsIncomingRawMessageSubject = new Subject<MessageEvent<string>>()
   const wsErrorSubject = new Subject<Event>()
@@ -29,6 +33,7 @@ export const Subjects = () => {
   const wsIncomingMessageConfirmationSubject = new Subject<Confirmation>()
   const wsServerErrorResponseSubject =
     new Subject<SignalingServerErrorResponse>()
+  const wsIsSendingMessageSubject = new BehaviorSubject<boolean>(false)
 
   const rtcConnectSubject = new BehaviorSubject<boolean>(false)
   const rtcStatusSubject = new BehaviorSubject<Status>('disconnected')
@@ -46,14 +51,12 @@ export const Subjects = () => {
   const rtcRemoteAnswerSubject = new Subject<RTCSessionDescriptionInit>()
   const rtcRemoteIceCandidateSubject = new Subject<RTCIceCandidate>()
   const rtcCreateOfferSubject = new Subject<void>()
-  const rtcIceConnectionState = new BehaviorSubject<
-    RTCIceConnectionState | undefined
-  >(undefined)
-  const rtcRestart = new Subject<void>()
+  const rtcIceConnectionStateSubject = new Subject<RTCIceConnectionState>()
+  const rtcRestartSubject = new Subject<void>()
 
   return {
-    wsOfferReceived,
-    wsSource,
+    wsOfferReceivedSubject,
+    wsSourceSubject,
     wsOutgoingMessageSubject,
     wsIncomingRawMessageSubject,
     wsErrorSubject,
@@ -64,6 +67,7 @@ export const Subjects = () => {
     wsGenerateConnectionSecretsSubject,
     wsIncomingMessageConfirmationSubject,
     wsServerErrorResponseSubject,
+    wsIsSendingMessageSubject,
     rtcConnectSubject,
     rtcStatusSubject,
     rtcIncomingMessageSubject,
@@ -79,8 +83,8 @@ export const Subjects = () => {
     rtcRemoteIceCandidateSubject,
     rtcCreateOfferSubject,
     rtcLocalOfferSubject,
-    rtcIceConnectionState,
-    rtcRestart,
+    rtcIceConnectionStateSubject,
+    rtcRestartSubject,
   }
 }
 

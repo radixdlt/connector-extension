@@ -122,7 +122,7 @@ describe('webRTC flow', () => {
       extensionClient.subjects.wsStatusSubject
     )
 
-    walletClient.subjects.rtcIceConnectionState.next('failed')
+    walletClient.subjects.rtcIceConnectionStateSubject.next('failed')
 
     await waitUntilOpen('connected', walletClient.subjects.wsStatusSubject)
     await waitUntilOpen('connected', extensionClient.subjects.wsStatusSubject)
