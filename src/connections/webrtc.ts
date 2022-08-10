@@ -26,12 +26,8 @@ export const WebRtc = ({
     }
 
     const oniceconnectionstatechange = () => {
-      log.info(`🧊 iceConnectionState: ${peerConnection.iceConnectionState}`)
-      if (
-        ['disconnected', 'failed'].includes(peerConnection.iceConnectionState)
-      ) {
-        // TODO: Restart webRTC
-      }
+      log.debug(`🧊 iceConnectionState: ${peerConnection.iceConnectionState}`)
+      subjects.rtcIceConnectionState.next(peerConnection.iceConnectionState)
     }
 
     peerConnection.oniceconnectionstatechange = oniceconnectionstatechange
@@ -209,7 +205,9 @@ export const WebRtc = ({
     subscriptions.add(
       merge(
         subjects.rtcOutgoingChunkedMessageSubject,
-        subjects.rtcOutgoingErrorMessageSubject,
+        subjects.rtcOutgoingErrorMessageSubject.pipe(
+          map((message) => JSON.stringify(message))
+        ),
         subjects.rtcOutgoingConfirmationMessageSubject.pipe(
           tap((message) => {
             log.debug(

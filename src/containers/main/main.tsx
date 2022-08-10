@@ -10,6 +10,7 @@ import { styled } from 'stitches.config'
 import { Connected } from 'containers/connected/connected'
 import { EncryptionKey } from 'containers/encryptionkey'
 import { subjects } from 'connections'
+import logo from 'images/logo.png'
 
 const AnimatedBox = styled(animated.div, {
   position: 'absolute',
@@ -55,7 +56,12 @@ const Main = () => {
   return (
     <Box css={{ width: '180px', height: '340px' }} p="small" flex="col">
       <Box py="small" items="center" justify="between">
-        <img height="18" width="68" src="assets/images/logo.png" />
+        <Box flex="col">
+          <Box flex="row">
+            <img height="18" width="68" src={logo} />
+            <Box css={{ alignSelf: 'center', ml: '$sm', p: '$0' }}>0.0.5</Box>
+          </Box>
+        </Box>
         <Tooltip description="Re-generate code">
           <Button border="none" ghost size="iconSmall">
             <Icon color="$secondary" size="small" type="refresh" />

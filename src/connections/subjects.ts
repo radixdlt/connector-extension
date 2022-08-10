@@ -6,7 +6,7 @@ import {
 import { Result } from 'neverthrow'
 import { BehaviorSubject, ReplaySubject, Subject } from 'rxjs'
 import { Secrets } from './secrets'
-import { MessageConfirmation } from './data-chunking'
+import { MessageConfirmation, MessageErrorTypes } from './data-chunking'
 
 export type Status = 'connecting' | 'connected' | 'disconnected'
 export type DataChannelStatus = 'open' | 'closed'
@@ -38,7 +38,7 @@ export const Subjects = () => {
   const rtcOutgoingMessageSubject = new Subject<string>()
   const rtcOutgoingConfirmationMessageSubject =
     new Subject<MessageConfirmation>()
-  const rtcOutgoingErrorMessageSubject = new Subject<string>()
+  const rtcOutgoingErrorMessageSubject = new Subject<MessageErrorTypes>()
   const rtcOutgoingChunkedMessageSubject = new Subject<string>()
   const rtcLocalIceCandidateSubject = new Subject<RTCIceCandidate>()
   const rtcLocalAnswerSubject = new Subject<RTCSessionDescriptionInit>()
@@ -47,6 +47,8 @@ export const Subjects = () => {
   const rtcRemoteAnswerSubject = new Subject<RTCSessionDescriptionInit>()
   const rtcRemoteIceCandidateSubject = new Subject<RTCIceCandidate>()
   const rtcCreateOfferSubject = new Subject<void>()
+  const rtcIceConnectionState = new Subject<RTCIceConnectionState>()
+  const rtcRestart = new Subject<void>()
 
   return {
     wsOfferReceived,
@@ -76,6 +78,8 @@ export const Subjects = () => {
     rtcRemoteIceCandidateSubject,
     rtcCreateOfferSubject,
     rtcLocalOfferSubject,
+    rtcIceConnectionState,
+    rtcRestart,
   }
 }
 

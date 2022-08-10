@@ -15,17 +15,25 @@ const oneMB = tenMB.slice(0, tenMB.length / 10)
 
 export const Connected = () => {
   const [messages, setMessages] = useState<string[]>([])
-  const [messageCounter, setMessageCounter] = useState<number>(0)
+  const [incomingMessageCounter, setIncomingMessageCounter] =
+    useState<number>(0)
+  const [outGoingMessageCounter, setoutGoingMessageCounter] =
+    useState<number>(0)
   const [outgoingMessage, setOutgoingMessage] = useState<string>('')
   const sendMessage = useWebRtcSendMessage()
   const incomingMessage = useWebRtcIncomingMessage()
 
+  const sendLargeMessage = (text: string) => {
+    setoutGoingMessageCounter((prev) => prev + 1)
+    setMessages((prev) => [...prev, `⬆️ ${text}`])
+  }
+
   useEffect(() => {
     if (incomingMessage && incomingMessage.length < 1000) {
-      setMessageCounter((prev) => prev + 1)
+      setIncomingMessageCounter((prev) => prev + 1)
       setMessages((prev) => [...prev, `⬇️ ${incomingMessage}`])
     } else if (incomingMessage && incomingMessage.length >= 1000) {
-      setMessageCounter((prev) => prev + 1)
+      setIncomingMessageCounter((prev) => prev + 1)
     }
   }, [incomingMessage])
 
@@ -35,11 +43,13 @@ export const Connected = () => {
         <Icon color="$success" type="check" />{' '}
         <Text ml="xsmall">Connected</Text>
       </Box> */}
-      <Box>Received messages: {messageCounter}</Box>
+      <Box>Received messages: {incomingMessageCounter}</Box>
+      <Box>Sent messages: {outGoingMessageCounter}</Box>
       <form
         style={{ height: '100%', overflow: 'auto' }}
         onSubmit={(ev) => {
           ev.preventDefault()
+          setoutGoingMessageCounter((prev) => prev + 1)
           setMessages((prev) => [...prev, `⬆️ ${outgoingMessage}`])
           sendMessage(outgoingMessage)
           setOutgoingMessage('')
@@ -64,6 +74,7 @@ export const Connected = () => {
             style={{ marginTop: 10 }}
             type="button"
             onClick={() => {
+              sendLargeMessage(`sent 0.1 MB`)
               sendMessage(oneMB.slice(0, oneMB.length / 10))
             }}
           >
@@ -73,6 +84,7 @@ export const Connected = () => {
             style={{ marginTop: 10 }}
             type="button"
             onClick={() => {
+              sendLargeMessage(`sent 0.25 MB`)
               sendMessage(oneMB.slice(0, oneMB.length / 5))
             }}
           >
@@ -82,6 +94,7 @@ export const Connected = () => {
             style={{ marginTop: 10 }}
             type="button"
             onClick={() => {
+              sendLargeMessage(`sent 0.5 MB`)
               sendMessage(oneMB.slice(0, oneMB.length / 2))
             }}
           >
@@ -91,6 +104,7 @@ export const Connected = () => {
             style={{ marginTop: 10 }}
             type="button"
             onClick={() => {
+              sendLargeMessage(`sent 1 MB`)
               sendMessage(oneMB)
             }}
           >
@@ -100,6 +114,7 @@ export const Connected = () => {
             style={{ marginTop: 10 }}
             type="button"
             onClick={() => {
+              sendLargeMessage(`sent 5 MB`)
               sendMessage(tenMB.slice(0, tenMB.length / 2))
             }}
           >
@@ -109,6 +124,7 @@ export const Connected = () => {
             style={{ marginTop: 10 }}
             type="button"
             onClick={() => {
+              sendLargeMessage(`sent 10 MB`)
               sendMessage(tenMB)
             }}
           >

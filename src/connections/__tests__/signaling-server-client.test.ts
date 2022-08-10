@@ -6,14 +6,15 @@ import { filter, firstValueFrom } from 'rxjs'
 import { err, ok } from 'neverthrow'
 import log from 'loglevel'
 import { createIV, encrypt } from 'crypto/encryption'
-import { Subscriptions } from '../subscriptions'
+import { Subscriptions, SubscriptionsType } from '../subscriptions'
 import { delayAsync } from 'test-utils/delay-async'
+import { wsMessageConfirmation } from 'connections/observables/ws-message-confirmation'
 
 const url =
   'ws://localhost:1234/3ba6fa025c3c304988133c081e9e3f5347bf89421f6445b07abfacd94956a09a?target=wallet&source=extension'
 let wss: WSS
 SignalingServerClient({ baseUrl: url, subjects })
-const { sendMessageWithConfirmation } = Subscriptions(subjects)
+let subscriptions: SubscriptionsType
 
 let wsStatusSpy: ReturnType<typeof subscribeSpyTo<Status>>
 let wsErrorSpy: ReturnType<typeof subscribeSpyTo<Event>>
@@ -27,6 +28,7 @@ const waitUntilStatus = async (status: Status) =>
 describe('Signaling server client', () => {
   beforeEach(async () => {
     log.setLevel('silent')
+    subscriptions = Subscriptions(subjects)
     subjects.wsConnectionPasswordSubject.next(
       Buffer.from([192, 218, 52, 1, 230])
     )
@@ -40,6 +42,10 @@ describe('Signaling server client', () => {
     subjects.wsConnectSubject.next(true)
     await waitUntilStatus('connected')
     log.setLevel('debug')
+  })
+
+  afterEach(() => {
+    subscriptions.unsubscribe()
   })
 
   it('should successfully connect and emit status', async () => {
@@ -108,7 +114,7 @@ describe('Signaling server client', () => {
 
     beforeEach(async () => {
       messageConfirmationSpy = subscribeSpyTo(
-        sendMessageWithConfirmation(ok(message as any), 300)
+        wsMessageConfirmation(subjects)(ok(message as any), 300)
       )
     })
 

@@ -15,6 +15,8 @@ import { subjects as allSubjects } from './subjects'
 
 type Source = 'wallet' | 'extension'
 
+export type SignalingServerClientType = ReturnType<typeof SignalingServerClient>
+
 export const SignalingServerClient = ({
   baseUrl,
   target = 'wallet',

@@ -31,7 +31,7 @@ type ChunkedMessageReceiveMessageError = {
   error: MessageError
 }
 
-type MessageErrorTypes = ChunkedMessageReceiveMessageError
+export type MessageErrorTypes = ChunkedMessageReceiveMessageError
 
 export type ChunkedMessageType =
   | MetaData
