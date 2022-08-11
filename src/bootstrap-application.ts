@@ -17,6 +17,8 @@ window.setLogLevel = (level: log.LogLevelDesc) => log.setLevel(level)
 export const bootstrapApplication = (subjects: SubjectsType) => {
   log.setLevel(config.logLevel)
 
+  log.info(`🏃‍♂️ running in: '${process.env.NODE_ENV}' mode`)
+
   const webRtcClient = WebRtcClient({
     subjects,
     webRtcOptions: {

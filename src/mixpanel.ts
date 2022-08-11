@@ -14,8 +14,12 @@ type trackers =
 
 mx.init(config.mixpanel.token, { debug: true })
 
-export const setConnectionId = (connectionId: string) =>
-  mx.identify(connectionId)
+export const setConnectionId = (connectionId: string) => {
+  if (process.env.NODE_ENV !== 'production') return
+  return mx.identify(connectionId)
+}
 
-export const track = (tracker: trackers, data?: Record<string, any>) =>
-  mx.track(tracker, data)
+export const track = (tracker: trackers, data?: Record<string, any>) => {
+  if (process.env.NODE_ENV !== 'production') return
+  return mx.track(tracker, data)
+}

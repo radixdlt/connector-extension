@@ -2,9 +2,9 @@ import { LogLevelDesc } from 'loglevel'
 
 export const config = {
   environment: process.env.NODE_ENV,
-  logLevel: 'debug' as LogLevelDesc,
+  logLevel: import.meta.env.VITE_APP_LOG_LEVEL as LogLevelDesc,
   signalingServer: {
-    baseUrl: 'wss://signaling-server-pr-30.rdx-works-main.extratools.works',
+    baseUrl: import.meta.env.VITE_APP_SIGNALING_SERVER_BASE_URL,
     reconnect: {
       interval: 1000,
     },
