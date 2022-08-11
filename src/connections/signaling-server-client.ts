@@ -109,9 +109,15 @@ export const SignalingServerClient = ({
   subscriptions.add(wsDisconnect(subjects, disconnect).subscribe())
   subscriptions.add(wsReconnect(subjects).subscribe())
 
+  const destroy = () => {
+    disconnect()
+    subscriptions.unsubscribe()
+  }
+
   return {
     connect,
     disconnect,
     ws,
+    destroy,
   }
 }

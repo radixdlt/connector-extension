@@ -27,9 +27,11 @@ export const WebRtcClient = (input: WebRtcClientInput) => {
   })
 
   const destroy = () => {
-    subscriptions.unsubscribe()
     subjects.wsConnectSubject.next(false)
+    signalingServerClient.destroy()
+    subjects.rtcConnectSubject.next(false)
     webRtc.destroy()
+    subscriptions.unsubscribe()
   }
 
   return {
