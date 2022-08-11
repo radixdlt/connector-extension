@@ -4,7 +4,7 @@ import Button from 'components/button'
 import Tooltip from 'components/tooltip'
 import Connecting from 'containers/connecting'
 import { animated, config, useTransition } from '@react-spring/web'
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { usePrevious } from 'react-use'
 import { styled } from 'stitches.config'
 import { Connected } from 'containers/connected/connected'
@@ -25,6 +25,12 @@ const Main = () => {
   const [step, setStep] = useState<keyof typeof steps>(1)
   const prevStep = usePrevious(step)
 
+  useEffect(() => {
+    if (step === 1) return
+    else if (status === 'connecting' && step !== 2) setStep(2)
+    else if (status === 'connected' && step !== 3) setStep(3)
+  }, [step, status])
+
   const steps = {
     1: (
       <EncryptionKey
@@ -37,11 +43,6 @@ const Main = () => {
     2: <Connecting />,
     3: <Connected />,
   }
-
-  console.log(status)
-
-  if (status === 'connecting' && ![1, 2].includes(step)) setStep(2)
-  else if (status === 'connected' && step !== 3) setStep(3)
 
   const transitions = useTransition(step, {
     initial: {},
