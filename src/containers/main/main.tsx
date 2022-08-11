@@ -12,6 +12,7 @@ import { EncryptionKey } from 'containers/encryptionkey'
 import { subjects } from 'connections'
 import logo from 'images/logo.png'
 import { useWebRtcDataChannelStatus } from 'hooks/use-rtc-data-channel-status'
+import { config as appConfig } from '../../config'
 
 const AnimatedBox = styled(animated.div, {
   position: 'absolute',
@@ -71,7 +72,9 @@ const Main = () => {
         <Box flex="col">
           <Box flex="row">
             <img height="18" width="68" src={logo} />
-            <Box css={{ alignSelf: 'center', ml: '$sm', p: '$0' }}>0.0.5</Box>
+            <Box css={{ alignSelf: 'center', ml: '$sm', p: '$0' }}>
+              {appConfig.version}
+            </Box>
           </Box>
         </Box>
 

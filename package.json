@@ -14,8 +14,8 @@
     "lint": "yarn eslint & yarn prettier & yarn tsc",
     "prepare": "husky install",
     "ladle": "ladle serve",
-    "test": "dotenv jest --forceExit",
-    "test:watch": "dotenv jest --watch"
+    "test": "jest --forceExit",
+    "test:watch": "jest --watch"
   },
   "dependencies": {
     "@emotion/react": "^11.10.0",
@@ -58,6 +58,7 @@
     "@typescript-eslint/parser": "^5.33.0",
     "@vitejs/plugin-react": "^2.0.0",
     "babel-preset-vite": "^1.0.4",
+    "dotenv": "^16.0.1",
     "dotenv-cli": "^6.0.0",
     "eslint": "^8.21.0",
     "eslint-config-alloy": "^4.6.2",
