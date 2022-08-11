@@ -27,7 +27,10 @@ const Main = () => {
 
   useEffect(() => {
     if (step === 1) return
-    else if (['connecting', 'disconnected'].includes(status) && step !== 2)
+    else if (
+      ['connecting', 'disconnected'].includes(status || '') &&
+      step !== 2
+    )
       setStep(2)
     else if (status === 'connected' && step !== 3) setStep(3)
   }, [step, status])
