@@ -1,5 +1,6 @@
 import { config } from 'config'
 import log from 'loglevel'
+import { track } from 'mixpanel'
 import {
   combineLatest,
   exhaustMap,
@@ -43,6 +44,7 @@ export const SignalingServerClient = ({
   subjects.wsSourceSubject.next(source)
 
   const connect = (connectionId: string) => {
+    track('ws_connecting')
     log.debug(
       `📡 connecting to signaling server url:\n${baseUrl}/${connectionId}?target=${target}&source=${source}`
     )
@@ -62,6 +64,7 @@ export const SignalingServerClient = ({
     removeListeners()
     ws = undefined
     subjects.wsStatusSubject.next('disconnected')
+    track('ws_disconnected')
   }
 
   const addListeners = (ws: WebSocket) => {
@@ -91,7 +94,7 @@ export const SignalingServerClient = ({
         t1 - t0
       ).toFixed(0)} ms`
     )
-
+    track('ws_connected', { connectionTime: t1 - t0 })
     subjects.wsStatusSubject.next('connected')
   }
 

@@ -14,6 +14,7 @@ import {
 } from 'rxjs'
 import { errorIdentity } from 'utils/error-identity'
 import { SubjectsType } from 'connections/subjects'
+import { track } from 'mixpanel'
 
 export const WebRtc = ({
   peerConnectionConfig,
@@ -25,6 +26,7 @@ export const WebRtc = ({
   subjects: SubjectsType
 }) => {
   const CreatePeerConnectionAndDataChannel = () => {
+    track('webrtc_connecting')
     subjects.rtcStatusSubject.next('connecting')
     const peerConnection = new RTCPeerConnection(peerConnectionConfig)
     log.debug(`🕸 created webRTC peer connection instance`)
@@ -115,6 +117,7 @@ export const WebRtc = ({
 
     const onopen = () => {
       log.debug(`🔊 webRTC data channel open`)
+      track('webrtc_connected')
       subjects.rtcStatusSubject.next('connected')
     }
 
@@ -148,6 +151,7 @@ export const WebRtc = ({
       dataChannel.removeEventListener('open', onopen)
       dataChannel.removeEventListener('close', onclose)
       peerConnectionInstance = undefined
+      track('webrtc_disconnected')
     }
 
     const subscriptions = new Subscription()

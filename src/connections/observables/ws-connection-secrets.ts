@@ -1,6 +1,7 @@
 import { deriveSecretsFromConnectionPassword } from 'connections/secrets'
 import { SubjectsType } from 'connections/subjects'
 import { secureRandom } from 'crypto/secure-random'
+import { setConnectionId } from 'mixpanel'
 import { errAsync } from 'neverthrow'
 import { tap, switchMap, share } from 'rxjs'
 
@@ -21,5 +22,9 @@ export const wsConnectionPassword = (subjects: SubjectsType) =>
         : errAsync(Error('missing connection password'))
     ),
     share(),
-    tap((result) => subjects.wsConnectionSecretsSubject.next(result))
+    tap((result) => {
+      if (result.isOk())
+        setConnectionId(result.value.connectionId.toString('hex'))
+      return subjects.wsConnectionSecretsSubject.next(result)
+    })
   )

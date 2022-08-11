@@ -2,6 +2,7 @@ import { config } from 'config'
 import { messageToChunked } from 'connections/data-chunking'
 import { SubjectsType } from 'connections/subjects'
 import log from 'loglevel'
+import { track } from 'mixpanel'
 import { Result } from 'neverthrow'
 import {
   concatMap,
@@ -27,11 +28,13 @@ const dataChannelConfirmation =
           messageResult.value.packageType === 'receiveMessageConfirmation' &&
           messageResult.value.messageId === messageIdResult.value
       ),
-      tap(() =>
-        log.debug(
-          `👌 received message confirmation for messageId: '${messageIdResult._unsafeUnwrap()}'`
+      tap(() => {
+        const messageId = messageIdResult._unsafeUnwrap()
+        track('webrtc_message_send_confirmed', { messageId })
+        return log.debug(
+          `👌 received message confirmation for messageId: '${messageId}'`
         )
-      )
+      })
     )
 
 export const rtcOutgoingMessage = (subjects: SubjectsType) =>
@@ -39,6 +42,10 @@ export const rtcOutgoingMessage = (subjects: SubjectsType) =>
     concatMap((rawMessage) =>
       from(
         messageToChunked(toBuffer(rawMessage)).map((message) => {
+          track('webrtc_message_send', {
+            messageId: message.metaData.messageId,
+            size: rawMessage.length,
+          })
           const chunks = [
             JSON.stringify(message.metaData),
             ...message.chunks.map((chunk) => JSON.stringify(chunk)),
@@ -55,11 +62,15 @@ export const rtcOutgoingMessage = (subjects: SubjectsType) =>
             timer(config.webRTC.confirmationTimeout).pipe(
               map(() =>
                 // eslint-disable-next-line max-nested-callbacks
-                result.map((messageId) =>
-                  log.debug(
+                result.map((messageId) => {
+                  track('webrtc_message_send_failed', {
+                    reason: 'timeout',
+                    messageId,
+                  })
+                  return log.debug(
                     `❌ confirmation message timeout for messageId: '${messageId}'`
                   )
-                )
+                })
               )
             )
           )

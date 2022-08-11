@@ -30,4 +30,5 @@ export const config = {
     chunkSize: 11_500,
     confirmationTimeout: 3_000,
   },
+  mixpanel: { token: 'b85738f974413421c9aa247d1cc18150' },
 }
