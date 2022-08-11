@@ -2,7 +2,6 @@ import log from 'loglevel'
 import { ResultAsync } from 'neverthrow'
 import {
   combineLatest,
-  concatMap,
   map,
   merge,
   Subscription,
@@ -15,6 +14,11 @@ import {
 import { errorIdentity } from 'utils/error-identity'
 import { SubjectsType } from 'connections/subjects'
 import { track } from 'mixpanel'
+import {
+  rtcRemoteIceCandidate,
+  rtcRemoteOfferSubject,
+  rtcRemoteAnswer,
+} from './observables/rtc-remote'
 
 export const WebRtc = ({
   peerConnectionConfig,
@@ -157,53 +161,19 @@ export const WebRtc = ({
     const subscriptions = new Subscription()
 
     subscriptions.add(
-      subjects.rtcRemoteIceCandidateSubject
-        .pipe(
-          concatMap((iceCandidate) => {
-            log.debug(`🧊 adding incoming ice candidate`)
-            return addIceCandidate(new RTCIceCandidate(iceCandidate))
-          }),
-          tap((result) => {
-            // TODO: handle error
-            if (result.isErr()) log.error(result.error)
-          })
-        )
-        .subscribe()
+      rtcRemoteIceCandidate(subjects, addIceCandidate).subscribe()
     )
-
     subscriptions.add(
-      subjects.rtcRemoteOfferSubject
-        .pipe(
-          switchMap((offer) =>
-            setRemoteDescription(offer)
-              .andThen(createPeerConnectionAnswer)
-              .andThen(setLocalDescription)
-          ),
-          tap((result) => {
-            // TODO: handle error
-            if (result.isErr()) {
-              return log.error(result.error)
-            }
-            subjects.rtcLocalAnswerSubject.next(result.value)
-          })
-        )
-        .subscribe()
+      rtcRemoteOfferSubject(
+        subjects,
+        setRemoteDescription,
+        createPeerConnectionAnswer,
+        setLocalDescription
+      ).subscribe()
     )
-
     subscriptions.add(
-      subjects.rtcRemoteAnswerSubject
-        .pipe(
-          switchMap((answer) => setRemoteDescription(answer)),
-          tap((result) => {
-            // TODO: handle error
-            if (result.isErr()) {
-              return log.error(result.error)
-            }
-          })
-        )
-        .subscribe()
+      rtcRemoteAnswer(subjects, setRemoteDescription).subscribe()
     )
-
     subscriptions.add(
       subjects.rtcCreateOfferSubject
         .pipe(

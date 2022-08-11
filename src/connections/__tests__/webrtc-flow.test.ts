@@ -107,7 +107,7 @@ describe('webRTC flow', () => {
   })
 
   it('should reconnect if a client disconnects', async () => {
-    log.setLevel('debug')
+    log.setLevel('silent')
     walletClient.subjects.rtcConnectSubject.next(true)
     extensionClient.subjects.rtcConnectSubject.next(true)
 

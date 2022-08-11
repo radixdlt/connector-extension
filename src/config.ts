@@ -3,6 +3,7 @@ import { LogLevelDesc } from 'loglevel'
 export const config = {
   environment: process.env.NODE_ENV,
   logLevel: import.meta.env.VITE_APP_LOG_LEVEL as LogLevelDesc,
+  version: import.meta.env.VITE_APP_VERSION,
   signalingServer: {
     baseUrl: import.meta.env.VITE_APP_SIGNALING_SERVER_BASE_URL,
     reconnect: {

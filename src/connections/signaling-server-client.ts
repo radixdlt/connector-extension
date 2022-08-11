@@ -1,40 +1,29 @@
-import { config } from 'config'
 import log from 'loglevel'
 import { track } from 'mixpanel'
-import {
-  combineLatest,
-  exhaustMap,
-  filter,
-  first,
-  interval,
-  Subscription,
-  tap,
-  withLatestFrom,
-  skip,
-  concatMap,
-  take,
-  switchMap,
-  debounceTime,
-} from 'rxjs'
-import { subjects as allSubjects } from './subjects'
+import { Subscription } from 'rxjs'
+import { wsSendMessage } from './observables/ws-send-message'
+import { wsConnect } from './observables/ws-connect'
+import { wsReconnect } from './observables/ws-reconnect'
+import { SubjectsType } from './subjects'
+import { wsDisconnect } from './observables/ws-disconnect'
 
 type Source = 'wallet' | 'extension'
 
 export type SignalingServerClientType = ReturnType<typeof SignalingServerClient>
+export type SignalingServerClientInput = {
+  baseUrl: string
+  target?: Source
+  source?: Source
+  subjects: SubjectsType
+}
 
 export const SignalingServerClient = ({
   baseUrl,
   target = 'wallet',
   source = 'extension',
   subjects,
-}: {
-  baseUrl: string
-  target?: Source
-  source?: Source
-  subjects: typeof allSubjects
-}) => {
+}: SignalingServerClientInput) => {
   const sendMessageDirection = `[${source} => ${target}]`
-  const receiveMessageDirection = `[${target} => ${source}]`
   let t0 = 0
   let t1 = 0
   log.debug(
@@ -115,95 +104,10 @@ export const SignalingServerClient = ({
   }
 
   const subscriptions = new Subscription()
-  subscriptions.add(
-    subjects.wsOutgoingMessageSubject
-      .pipe(
-        tap(() => subjects.wsIsSendingMessageSubject.next(true)),
-        concatMap((message) =>
-          interval(100).pipe(
-            filter(() => (ws ? ws.OPEN === ws.readyState : false)),
-            take(1),
-            tap(() => sendMessage(message))
-          )
-        ),
-        debounceTime(1000),
-        tap(() => subjects.wsIsSendingMessageSubject.next(false))
-      )
-      .subscribe()
-  )
-  subscriptions.add(
-    combineLatest([
-      subjects.wsConnectSubject,
-      subjects.wsConnectionSecretsSubject,
-    ])
-      .pipe(
-        withLatestFrom(subjects.wsStatusSubject),
-        tap(([[shouldConnect, secrets], status]) => {
-          if (
-            status === 'disconnected' &&
-            shouldConnect &&
-            secrets &&
-            secrets.isOk()
-          ) {
-            connect(secrets.value.connectionId.toString('hex'))
-          }
-        })
-      )
-      .subscribe()
-  )
-
-  subscriptions.add(
-    combineLatest([subjects.wsConnectSubject, subjects.wsStatusSubject])
-      .pipe(
-        switchMap(([shouldConnect, status]) => {
-          if (['connecting', 'connected'].includes(status) && !shouldConnect) {
-            return interval(100).pipe(
-              withLatestFrom(subjects.wsIsSendingMessageSubject),
-              filter(([, wsIsSendingMessage]) => !wsIsSendingMessage),
-              take(1),
-              tap(disconnect)
-            )
-          } else {
-            return []
-          }
-        })
-      )
-      .subscribe()
-  )
-
-  subscriptions.add(
-    combineLatest([subjects.wsStatusSubject, subjects.wsConnectSubject])
-      .pipe(
-        skip(1),
-        filter(
-          ([status, shouldConnect]) =>
-            status === 'disconnected' && shouldConnect
-        ),
-        exhaustMap(() =>
-          interval(config.signalingServer.reconnect.interval).pipe(
-            withLatestFrom(subjects.wsConnectSubject, subjects.wsStatusSubject),
-            filter(
-              ([, shouldConnect, status]) =>
-                shouldConnect && status === 'disconnected'
-            ),
-            filter(([index, , status]) => {
-              log.debug(
-                `🔄 lost connection to signaling server, attempting to reconnect... status: ${status}, attempt: ${
-                  index + 1
-                }`
-              )
-              subjects.wsConnectSubject.next(true)
-              return status === 'connected'
-            }),
-            tap(() => {
-              log.debug('🤙 successfully reconnected to signaling server')
-            }),
-            first()
-          )
-        )
-      )
-      .subscribe()
-  )
+  subscriptions.add(wsSendMessage(subjects, sendMessage, () => ws).subscribe())
+  subscriptions.add(wsConnect(subjects, connect).subscribe())
+  subscriptions.add(wsDisconnect(subjects, disconnect).subscribe())
+  subscriptions.add(wsReconnect(subjects).subscribe())
 
   return {
     connect,
