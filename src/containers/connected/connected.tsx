@@ -85,7 +85,7 @@ export const Connected = () => {
             type="button"
             onClick={() => {
               sendLargeMessage(`sent 0.25 MB`)
-              sendMessage(oneMB.slice(0, oneMB.length / 5))
+              sendMessage(oneMB.slice(0, oneMB.length / 4))
             }}
           >
             Send 0.25MB message

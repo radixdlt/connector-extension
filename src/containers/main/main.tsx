@@ -27,7 +27,8 @@ const Main = () => {
 
   useEffect(() => {
     if (step === 1) return
-    else if (status === 'connecting' && step !== 2) setStep(2)
+    else if (['connecting', 'disconnected'].includes(status) && step !== 2)
+      setStep(2)
     else if (status === 'connected' && step !== 3) setStep(3)
   }, [step, status])
 
@@ -70,12 +71,14 @@ const Main = () => {
             <Box css={{ alignSelf: 'center', ml: '$sm', p: '$0' }}>0.0.5</Box>
           </Box>
         </Box>
+
         <Tooltip description="Re-generate code">
           <Button border="none" ghost size="iconSmall">
             <Icon color="$secondary" size="small" type="refresh" />
           </Button>
         </Tooltip>
       </Box>
+
       {transitions((styles, item) => (
         <AnimatedBox style={styles}>{steps[item]}</AnimatedBox>
       ))}
