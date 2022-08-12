@@ -16,6 +16,7 @@ import { config as appConfig } from '../../config'
 import { useSaveConnectionPassword } from 'hooks/use-save-connection-password'
 import { useConnectionSecrets } from 'hooks/use-connection-secrets'
 import { useAutoConnect } from 'hooks/use-auto-connect'
+import { storageSubjects } from 'storage/subjects'
 
 const AnimatedBox = styled(animated.div, {
   position: 'absolute',
@@ -96,6 +97,7 @@ const Main = () => {
               onClick={() => {
                 setStep(1)
                 subjects.wsAutoConnect.next(false)
+                storageSubjects.removeConnectionPasswordSubject.next()
               }}
             />
           </Button>

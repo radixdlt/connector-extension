@@ -11,3 +11,11 @@ export const addConnectionPassword = (
       chromeApi.storage.setItem('connectionPassword', buffer.toString('hex'))
     )
   )
+
+export const removeConnectionPassword = (
+  subjects: StorageSubjectsType,
+  chromeApi: ChromeApiType
+) =>
+  subjects.removeConnectionPasswordSubject.pipe(
+    switchMap(() => chromeApi.storage.removeItem('connectionPassword'))
+  )

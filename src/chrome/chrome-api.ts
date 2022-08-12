@@ -64,13 +64,15 @@ export const ChromeApi = (id: string) => {
       )
     )
 
-  const removeItem = (key: string | string[]) =>
-    checkIfChromeContext().asyncAndThen(() =>
+  const removeItem = (key: string | string[]) => {
+    log.debug(`📦 removing item with key: '${key}'`)
+    return checkIfChromeContext().asyncAndThen(() =>
       ResultAsync.fromPromise(
         chrome.storage.local.remove(`${id}:${key}`),
         errorIdentity
       )
     )
+  }
 
   const addListener = (listener: EventListenerInput) =>
     checkIfChromeContext().map(() =>
