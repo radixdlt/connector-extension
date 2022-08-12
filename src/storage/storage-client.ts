@@ -6,6 +6,7 @@ import { storageSubscriptions } from './subscriptions'
 export type StorageClientType = ReturnType<typeof StorageClient>
 export const StorageClient = (id: string, subjects: StorageSubjectsType) => {
   log.debug(`📦 storage client with id: '${id}' initiated`)
+  // TODO: Support more browsers
   const chromeAPI = ChromeApi(id)
   const subscription = storageSubscriptions(subjects, chromeAPI)
 

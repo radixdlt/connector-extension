@@ -30,7 +30,7 @@ export const ChromeApi = (id: string) => {
     checkIfChromeContext().asyncAndThen(() =>
       ResultAsync.fromPromise(
         new Promise((resolve) => {
-          console.log(`${id}:${key}`)
+          log.debug(`📦 getting item with key: '${key}'`)
           chrome.storage.local.get(
             `${id}:${key}`,
             (data: Record<string, T>) => {
