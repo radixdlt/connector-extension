@@ -14,6 +14,8 @@ import logo from 'images/logo.png'
 import { useWebRtcDataChannelStatus } from 'hooks/use-rtc-data-channel-status'
 import { config as appConfig } from '../../config'
 import { useSaveConnectionPassword } from 'hooks/use-save-connection-password'
+import { useConnectionSecrets } from 'hooks/use-connection-secrets'
+import { useAutoConnect } from 'hooks/use-auto-connect'
 
 const AnimatedBox = styled(animated.div, {
   position: 'absolute',
@@ -24,19 +26,24 @@ const AnimatedBox = styled(animated.div, {
 
 const Main = () => {
   useSaveConnectionPassword()
+  const connectionSecret = useConnectionSecrets()
+  const autoConnect = useAutoConnect()
   const status = useWebRtcDataChannelStatus()
   const [step, setStep] = useState<keyof typeof steps>(1)
   const prevStep = usePrevious(step)
 
   useEffect(() => {
-    if (step === 1) return
+    if (connectionSecret?.isOk() && step === 1 && autoConnect) {
+      subjects.wsConnectSubject.next(true)
+      setStep(2)
+    } else if (step === 1) return
     else if (
       ['connecting', 'disconnected'].includes(status || '') &&
       step !== 2
     )
       setStep(2)
     else if (status === 'connected' && step !== 3) setStep(3)
-  }, [step, status])
+  }, [step, status, connectionSecret, autoConnect])
 
   const steps = {
     1: (
@@ -82,7 +89,15 @@ const Main = () => {
 
         <Tooltip description="Re-generate code">
           <Button border="none" ghost size="iconSmall">
-            <Icon color="$secondary" size="small" type="refresh" />
+            <Icon
+              color="$secondary"
+              size="small"
+              type="refresh"
+              onClick={() => {
+                setStep(1)
+                subjects.wsAutoConnect.next(false)
+              }}
+            />
           </Button>
         </Tooltip>
       </Box>

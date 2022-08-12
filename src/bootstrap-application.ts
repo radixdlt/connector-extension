@@ -46,6 +46,7 @@ export const bootstrapApplication = (subjects: SubjectsType) => {
         webRtcClient.subjects.wsConnectionPasswordSubject.next(
           Buffer.from(connectionPassword, 'hex')
         )
+        webRtcClient.subjects.wsAutoConnect.next(true)
       } else {
         log.debug(
           `🔑 did not find connection password in storage, generating new password`

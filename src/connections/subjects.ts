@@ -15,77 +15,42 @@ export type Status =
   | 'disconnecting'
 export type SubjectsType = ReturnType<typeof Subjects>
 
-export const Subjects = () => {
-  const wsOfferReceivedSubject = new BehaviorSubject<boolean>(false)
-  const wsSourceSubject = new ReplaySubject<MessageSources>()
-  const wsOutgoingMessageSubject = new Subject<string>()
-  const wsIncomingRawMessageSubject = new Subject<MessageEvent<string>>()
-  const wsErrorSubject = new Subject<Event>()
-  const wsStatusSubject = new BehaviorSubject<Status>('disconnected')
-  const wsConnectSubject = new BehaviorSubject<boolean>(false)
-  const wsConnectionPasswordSubject = new BehaviorSubject<Buffer | undefined>(
+export const Subjects = () => ({
+  wsOfferReceivedSubject: new BehaviorSubject<boolean>(false),
+  wsSourceSubject: new ReplaySubject<MessageSources>(),
+  wsOutgoingMessageSubject: new Subject<string>(),
+  wsIncomingRawMessageSubject: new Subject<MessageEvent<string>>(),
+  wsErrorSubject: new Subject<Event>(),
+  wsStatusSubject: new BehaviorSubject<Status>('disconnected'),
+  wsConnectSubject: new BehaviorSubject<boolean>(false),
+  wsConnectionPasswordSubject: new BehaviorSubject<Buffer | undefined>(
     undefined
-  )
-  const wsConnectionSecretsSubject = new BehaviorSubject<
+  ),
+  wsConnectionSecretsSubject: new BehaviorSubject<
     Result<Secrets, Error> | undefined
-  >(undefined)
-  const wsGenerateConnectionSecretsSubject = new Subject<void>()
-  const wsIncomingMessageConfirmationSubject = new Subject<Confirmation>()
-  const wsServerErrorResponseSubject =
-    new Subject<SignalingServerErrorResponse>()
-  const wsIsSendingMessageSubject = new BehaviorSubject<boolean>(false)
-
-  const rtcConnectSubject = new BehaviorSubject<boolean>(false)
-  const rtcStatusSubject = new BehaviorSubject<Status>('disconnected')
-  const rtcIncomingChunkedMessageSubject = new Subject<ArrayBuffer | string>()
-  const rtcIncomingMessageSubject = new Subject<string>()
-  const rtcOutgoingMessageSubject = new Subject<string>()
-  const rtcOutgoingConfirmationMessageSubject =
-    new Subject<MessageConfirmation>()
-  const rtcOutgoingErrorMessageSubject = new Subject<MessageErrorTypes>()
-  const rtcOutgoingChunkedMessageSubject = new Subject<string>()
-  const rtcLocalIceCandidateSubject = new Subject<RTCIceCandidate>()
-  const rtcLocalAnswerSubject = new Subject<RTCSessionDescriptionInit>()
-  const rtcLocalOfferSubject = new Subject<RTCSessionDescriptionInit>()
-  const rtcRemoteOfferSubject = new Subject<RTCSessionDescriptionInit>()
-  const rtcRemoteAnswerSubject = new Subject<RTCSessionDescriptionInit>()
-  const rtcRemoteIceCandidateSubject = new Subject<RTCIceCandidate>()
-  const rtcCreateOfferSubject = new Subject<void>()
-  const rtcIceConnectionStateSubject = new Subject<RTCIceConnectionState>()
-  const rtcRestartSubject = new Subject<void>()
-
-  return {
-    wsOfferReceivedSubject,
-    wsSourceSubject,
-    wsOutgoingMessageSubject,
-    wsIncomingRawMessageSubject,
-    wsErrorSubject,
-    wsStatusSubject,
-    wsConnectSubject,
-    wsConnectionPasswordSubject,
-    wsConnectionSecretsSubject,
-    wsGenerateConnectionSecretsSubject,
-    wsIncomingMessageConfirmationSubject,
-    wsServerErrorResponseSubject,
-    wsIsSendingMessageSubject,
-    rtcConnectSubject,
-    rtcStatusSubject,
-    rtcIncomingMessageSubject,
-    rtcIncomingChunkedMessageSubject,
-    rtcOutgoingConfirmationMessageSubject,
-    rtcOutgoingErrorMessageSubject,
-    rtcOutgoingMessageSubject,
-    rtcOutgoingChunkedMessageSubject,
-    rtcLocalIceCandidateSubject,
-    rtcLocalAnswerSubject,
-    rtcRemoteOfferSubject,
-    rtcRemoteAnswerSubject,
-    rtcRemoteIceCandidateSubject,
-    rtcCreateOfferSubject,
-    rtcLocalOfferSubject,
-    rtcIceConnectionStateSubject,
-    rtcRestartSubject,
-  }
-}
+  >(undefined),
+  wsGenerateConnectionSecretsSubject: new Subject<void>(),
+  wsIncomingMessageConfirmationSubject: new Subject<Confirmation>(),
+  wsServerErrorResponseSubject: new Subject<SignalingServerErrorResponse>(),
+  wsIsSendingMessageSubject: new BehaviorSubject<boolean>(false),
+  wsAutoConnect: new BehaviorSubject<boolean>(false),
+  rtcConnectSubject: new BehaviorSubject<boolean>(false),
+  rtcStatusSubject: new BehaviorSubject<Status>('disconnected'),
+  rtcIncomingChunkedMessageSubject: new Subject<ArrayBuffer | string>(),
+  rtcIncomingMessageSubject: new Subject<string>(),
+  rtcOutgoingMessageSubject: new Subject<string>(),
+  rtcOutgoingConfirmationMessageSubject: new Subject<MessageConfirmation>(),
+  rtcOutgoingErrorMessageSubject: new Subject<MessageErrorTypes>(),
+  rtcOutgoingChunkedMessageSubject: new Subject<string>(),
+  rtcLocalIceCandidateSubject: new Subject<RTCIceCandidate>(),
+  rtcLocalAnswerSubject: new Subject<RTCSessionDescriptionInit>(),
+  rtcLocalOfferSubject: new Subject<RTCSessionDescriptionInit>(),
+  rtcRemoteOfferSubject: new Subject<RTCSessionDescriptionInit>(),
+  rtcRemoteAnswerSubject: new Subject<RTCSessionDescriptionInit>(),
+  rtcRemoteIceCandidateSubject: new Subject<RTCIceCandidate>(),
+  rtcCreateOfferSubject: new Subject<void>(),
+  rtcIceConnectionStateSubject: new Subject<RTCIceConnectionState>(),
+  rtcRestartSubject: new Subject<void>(),
+})
 
 export const subjects = Subjects()
