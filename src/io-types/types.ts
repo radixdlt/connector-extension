@@ -66,8 +66,12 @@ export type RemoteClientDisconnected = {
   info: 'remoteClientDisconnected'
 }
 
-export type RemoteClientConnected = {
-  info: 'remoteClientConnected'
+export type RemoteClientJustConnected = {
+  info: 'remoteClientJustConnected'
+}
+
+export type RemoteClientIsAlreadyConnected = {
+  info: 'remoteClientIsAlreadyConnected'
 }
 
 export type MissingRemoteClientError = {
@@ -90,7 +94,8 @@ export type ValidationError = {
 export type SignalingServerResponse =
   | Confirmation
   | RemoteData
-  | RemoteClientConnected
+  | RemoteClientJustConnected
+  | RemoteClientIsAlreadyConnected
   | RemoteClientDisconnected
   | MissingRemoteClientError
   | InvalidMessageError
