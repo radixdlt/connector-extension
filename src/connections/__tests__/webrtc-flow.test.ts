@@ -23,7 +23,11 @@ const waitUntilOpen = async (status: Status, obs: Observable<Status>) =>
 const WebRtcTestHelper = {
   bootstrap: async (client: WebRtcClient) => {
     client.subjects.wsConnectionPasswordSubject.next(
-      Buffer.from([146, 116, 216, 80, 168])
+      Buffer.from([
+        101, 11, 188, 67, 254, 113, 165, 152, 53, 19, 118, 227, 195, 21, 110,
+        83, 145, 197, 78, 134, 31, 238, 50, 160, 207, 34, 245, 16, 26, 135, 105,
+        96,
+      ])
     )
     client.subjects.wsConnectSubject.next(true)
 
@@ -61,8 +65,6 @@ describe('webRTC flow', () => {
 
     await WebRtcTestHelper.bootstrap(walletClient)
     await WebRtcTestHelper.bootstrap(extensionClient)
-
-    log.setLevel('debug')
   })
 
   afterEach(async () => {
@@ -72,7 +74,7 @@ describe('webRTC flow', () => {
   })
 
   it('should send message over data channel between two clients', async () => {
-    log.setLevel('silent')
+    log.setLevel('debug')
     walletClient.subjects.rtcConnectSubject.next(true)
     extensionClient.subjects.rtcConnectSubject.next(true)
 

@@ -156,7 +156,7 @@ export const wsIncomingMessage = (subjects: SubjectsType) =>
         )
         // TODO: handle error
         .mapErr((error) => {
-          log.trace(error)
+          log.error(error)
         })
     ),
     share()

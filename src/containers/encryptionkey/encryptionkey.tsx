@@ -11,7 +11,7 @@ type EncryptionKeyProps = {
 export const EncryptionKey = ({ onNext }: EncryptionKeyProps) => {
   const secretsResult = useConnectionSecrets()
   const secrets = secretsResult?.isOk() ? secretsResult.value : undefined
-  const password = secrets?.passwordBech32 || ''
+  const password = secrets?.encryptionKey.toString('hex') || ''
 
   const QR = useOverlayClipboard(
     <QRCode size={170} value={password} />,

@@ -5,7 +5,7 @@ import { secureRandom } from './secure-random'
 
 export const createIV = () => secureRandom(12)
 
-const getKey = (encryptionKey: Buffer) =>
+export const getKey = (encryptionKey: Buffer) =>
   ResultAsync.fromPromise(
     crypto.subtle.importKey(
       'raw',
@@ -66,3 +66,4 @@ export const encrypt = (
       iv,
       ciphertext,
     }))
+    .mapErr((error) => error)

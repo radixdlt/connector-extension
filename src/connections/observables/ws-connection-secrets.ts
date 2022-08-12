@@ -1,3 +1,4 @@
+import { config } from 'config'
 import { deriveSecretsFromConnectionPassword } from 'connections/secrets'
 import { SubjectsType } from 'connections/subjects'
 import { secureRandom } from 'crypto/secure-random'
@@ -8,7 +9,7 @@ import { tap, switchMap, share } from 'rxjs'
 export const wsGenerateConnectionSecrets = (subjects: SubjectsType) =>
   subjects.wsGenerateConnectionSecretsSubject.pipe(
     tap(() => {
-      secureRandom(5).map((buffer) =>
+      secureRandom(config.secrets.connectionPasswordByteLength).map((buffer) =>
         subjects.wsConnectionPasswordSubject.next(buffer)
       )
     })

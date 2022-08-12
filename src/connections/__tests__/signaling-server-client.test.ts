@@ -33,7 +33,11 @@ describe('Signaling server client', () => {
     subscriptions = Subscriptions(subjects)
     SignalingServerClient({ baseUrl: url, subjects })
     subjects.wsConnectionPasswordSubject.next(
-      Buffer.from([192, 218, 52, 1, 230])
+      Buffer.from([
+        101, 11, 188, 67, 254, 113, 165, 152, 53, 19, 118, 227, 195, 21, 110,
+        83, 145, 197, 78, 134, 31, 238, 50, 160, 207, 34, 245, 16, 26, 135, 105,
+        96,
+      ])
     )
 
     WSS.clean()
@@ -156,15 +160,12 @@ describe('Signaling server client', () => {
 
   describe('decrypt message payload', () => {
     beforeEach(() => {
-      subjects.wsConnectionPasswordSubject.next(
-        Buffer.from([192, 218, 52, 1, 230])
-      )
+      subjects.wsGenerateConnectionSecretsSubject.next()
     })
     afterEach(() => {
       subjects.wsConnectionPasswordSubject.next(undefined)
     })
     it('should decrypt payload and send to offer subject', async () => {
-      const expectedBech32Password = 'CRDRGQ0X'
       const wsConnectionSecretsSpy = subscribeSpyTo(
         subjects.wsConnectionSecretsSubject
       )
@@ -179,8 +180,6 @@ describe('Signaling server client', () => {
       if (secretsResult.isErr()) throw secretsResult.error
 
       const secrets = secretsResult.value
-
-      expect(secrets.passwordBech32).toEqual(expectedBech32Password)
 
       const offerPayload = {
         sdp: 'v=0\r\no=- 9071002879172211114 2 IN IP4 127.0.0.1\r\ns=-\r\nt=0 0\r\na=group:BUNDLE 0\r\na=extmap-allow-mixed\r\na=msid-semantic: WMS\r\nm=application 9 UDP/DTLS/SCTP webrtc-datachannel\r\nc=IN IP4 0.0.0.0\r\na=ice-ufrag:ANaE\r\na=ice-pwd:2nJbdtiNceHOsCsnJ4qUKTbG\r\na=ice-options:trickle\r\na=fingerprint:sha-256 3F:AF:30:C3:48:90:25:8F:98:0B:3E:E2:CA:4F:D4:A7:07:DE:5F:B4:EC:B1:14:B8:E3:D4:22:43:01:64:0D:63\r\na=setup:actpass\r\na=mid:0\r\na=sctp-port:5000\r\na=max-message-size:262144\r\n',
