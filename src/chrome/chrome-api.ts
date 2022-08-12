@@ -1,3 +1,4 @@
+import log from 'loglevel'
 import { err, ok, ResultAsync } from 'neverthrow'
 import { errorIdentity } from 'utils/error-identity'
 
@@ -7,33 +8,56 @@ type EventListenerInput = Parameters<
 
 type SendMessageInput = Parameters<typeof chrome['tabs']['sendMessage']>
 
-const ChromeApi = () => {
-  const checkIfChromeContext = () =>
-    window.chrome ? ok(undefined) : err(Error('not a chromium browser'))
+export type ChromeApiType = ReturnType<typeof ChromeApi>
 
-  const setItem = (item: Record<string, any>) =>
-    checkIfChromeContext().asyncAndThen(() =>
-      ResultAsync.fromPromise(chrome.storage.sync.set(item), errorIdentity)
+export const ChromeApi = (id: string) => {
+  const checkIfChromeContext = () =>
+    window.chrome.storage
+      ? ok(undefined)
+      : err(Error('could not detect chrome.storage in window object'))
+
+  const setItem = (key: string, value: string) => {
+    log.debug(`📦 storing item: {${key}: '${value}'}`)
+    return checkIfChromeContext().asyncAndThen(() =>
+      ResultAsync.fromPromise(
+        chrome.storage.local.set({ [`${id}:${key}`]: value }),
+        errorIdentity
+      )
     )
+  }
 
   const getItem = <T>(key: string): ResultAsync<T, Error> =>
     checkIfChromeContext().asyncAndThen(() =>
       ResultAsync.fromPromise(
         new Promise((resolve) => {
-          chrome.storage.sync.get(key, (data: Record<string, T>) => {
-            resolve(data[key])
-          })
+          console.log(`${id}:${key}`)
+          chrome.storage.local.get(
+            `${id}:${key}`,
+            (data: Record<string, T>) => {
+              resolve(data[`${id}:${key}`])
+            }
+          )
         }),
         errorIdentity
       )
     )
 
-  const getAllItems = (): ResultAsync<Record<string, any>, Error> =>
+  const getAllItems = (): ResultAsync<Record<string, string>, Error> =>
     checkIfChromeContext().asyncAndThen(() =>
       ResultAsync.fromPromise(
-        new Promise<Record<string, any>>((resolve) => {
-          chrome.storage.sync.get(null, (data) => {
-            resolve(data)
+        new Promise<Record<string, string>>((resolve) => {
+          chrome.storage.local.get(null, (data) => {
+            resolve(
+              Object.entries(data)
+                .filter(([key]) => key.includes(id))
+                .reduce<Record<string, string>>(
+                  (acc, [key, value]) => ({
+                    ...acc,
+                    [key.replace(`${id}:`, '')]: value,
+                  }),
+                  {}
+                )
+            )
           })
         }),
         errorIdentity
@@ -42,7 +66,10 @@ const ChromeApi = () => {
 
   const removeItem = (key: string | string[]) =>
     checkIfChromeContext().asyncAndThen(() =>
-      ResultAsync.fromPromise(chrome.storage.sync.remove(key), errorIdentity)
+      ResultAsync.fromPromise(
+        chrome.storage.local.remove(`${id}:${key}`),
+        errorIdentity
+      )
     )
 
   const addListener = (listener: EventListenerInput) =>
@@ -80,7 +107,5 @@ const ChromeApi = () => {
       )
     )
 
-  return { storage, sendMessage }
+  return { storage, sendMessage, id }
 }
-
-export const chromeAPI = ChromeApi()

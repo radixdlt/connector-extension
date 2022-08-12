@@ -13,6 +13,7 @@ import { subjects } from 'connections'
 import logo from 'images/logo.png'
 import { useWebRtcDataChannelStatus } from 'hooks/use-rtc-data-channel-status'
 import { config as appConfig } from '../../config'
+import { useSaveConnectionPassword } from 'hooks/use-save-connection-password'
 
 const AnimatedBox = styled(animated.div, {
   position: 'absolute',
@@ -22,6 +23,7 @@ const AnimatedBox = styled(animated.div, {
 })
 
 const Main = () => {
+  useSaveConnectionPassword()
   const status = useWebRtcDataChannelStatus()
   const [step, setStep] = useState<keyof typeof steps>(1)
   const prevStep = usePrevious(step)
