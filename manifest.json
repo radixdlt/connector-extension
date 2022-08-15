@@ -16,8 +16,9 @@
   },
   "content_scripts": [
     {
-      "matches": ["<all_urls>"],
-      "js": ["src/chrome/content.ts"]
+      "matches": ["http://*/*", "https://*/*"],
+      "js": ["src/chrome/content.ts"],
+      "run_at": "document_start"
     }
   ]
 }
