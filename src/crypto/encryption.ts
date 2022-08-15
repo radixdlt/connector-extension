@@ -2,6 +2,7 @@ import { ResultAsync } from 'neverthrow'
 import { errorIdentity } from 'utils/error-identity'
 import { SealedBoxProps } from './sealbox'
 import { secureRandom } from './secure-random'
+import { Buffer } from 'buffer'
 
 export const createIV = () => secureRandom(12)
 

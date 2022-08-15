@@ -1,3 +1,4 @@
+import { Buffer } from 'buffer'
 import { Result } from 'neverthrow'
 import { readBuffer } from 'utils/buffer-reader'
 

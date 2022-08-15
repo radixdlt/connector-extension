@@ -2,6 +2,7 @@ import { Secrets } from 'connections/secrets'
 import { createIV, encrypt } from 'crypto/encryption'
 import { DataTypes } from 'io-types/types'
 import { ResultAsync } from 'neverthrow'
+import { Buffer } from 'buffer'
 
 export const wsCreateMessage = (
   { payload, method, source }: Pick<DataTypes, 'payload' | 'method' | 'source'>,

@@ -13,6 +13,7 @@ import log from 'loglevel'
 import { err, ok, okAsync, Result, ResultAsync } from 'neverthrow'
 import { filter, map, concatMap, withLatestFrom, share } from 'rxjs'
 import { parseJSON } from 'utils'
+import { Buffer } from 'buffer'
 
 const distributeMessage =
   (subjects: SubjectsType) =>

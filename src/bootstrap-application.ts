@@ -1,5 +1,4 @@
 import { Buffer } from 'buffer'
-window.Buffer = Buffer
 import { config } from 'config'
 import { SubjectsType, WebRtcClient } from 'connections'
 import log from 'loglevel'

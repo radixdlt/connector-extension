@@ -1,4 +1,5 @@
 import { Subject } from 'rxjs'
+import { Buffer } from 'buffer'
 
 export type StorageSubjectsType = ReturnType<typeof StorageSubjects>
 export const StorageSubjects = () => ({

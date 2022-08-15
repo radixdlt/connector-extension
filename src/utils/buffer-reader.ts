@@ -1,4 +1,5 @@
 import { err, ok, Result } from 'neverthrow'
+import { Buffer } from 'buffer'
 
 type BufferReader = {
   finishedParsing: () => Result<boolean, Error>

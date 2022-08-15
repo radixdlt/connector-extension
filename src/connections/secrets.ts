@@ -3,6 +3,7 @@ import { secureRandom } from 'crypto/secure-random'
 import { sha256 } from 'crypto/sha256'
 import log from 'loglevel'
 import { ResultAsync } from 'neverthrow'
+import { Buffer } from 'buffer'
 
 export type Secrets = {
   encryptionKey: Buffer

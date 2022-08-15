@@ -25,7 +25,7 @@ const AnimatedBox = styled(animated.div, {
   zIndex: 0,
 })
 
-const Main = () => {
+export const Main = () => {
   useSaveConnectionPassword()
   const connectionSecret = useConnectionSecrets()
   const autoConnect = useAutoConnect()
@@ -110,5 +110,3 @@ const Main = () => {
     </Box>
   )
 }
-
-export default Main

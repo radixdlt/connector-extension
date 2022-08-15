@@ -1,6 +1,7 @@
 import { ResultAsync } from 'neverthrow'
 import { errorIdentity } from 'utils/error-identity'
 import { toBuffer } from 'utils/to-buffer'
+import { Buffer } from 'buffer'
 
 export const sha256 = (input: Buffer | string) =>
   ResultAsync.fromPromise(

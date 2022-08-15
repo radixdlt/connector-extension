@@ -3,6 +3,7 @@ import { sha256 } from 'crypto/sha256'
 import log from 'loglevel'
 import { err, ok, Result } from 'neverthrow'
 import { bufferToChunks } from 'utils'
+import { Buffer } from 'buffer'
 
 type MetaData = {
   packageType: 'metaData'

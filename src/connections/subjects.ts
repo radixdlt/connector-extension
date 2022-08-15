@@ -7,6 +7,7 @@ import { Result } from 'neverthrow'
 import { BehaviorSubject, ReplaySubject, Subject } from 'rxjs'
 import { Secrets } from './secrets'
 import { MessageConfirmation, MessageErrorTypes } from './data-chunking'
+import { Buffer } from 'buffer'
 
 export type Status =
   | 'connecting'

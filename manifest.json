@@ -9,5 +9,15 @@
     "tabs",
     "activeTab",
     "unlimitedStorage"
+  ],
+  "background": {
+    "service_worker": "src/chrome/background.ts",
+    "type": "module"
+  },
+  "content_scripts": [
+    {
+      "matches": ["<all_urls>"],
+      "js": ["src/chrome/content.ts"]
+    }
   ]
 }

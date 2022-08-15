@@ -71,8 +71,7 @@ export const SignalingServerClient = ({
   }
 
   const onMessage = (event: MessageEvent<string>) => {
-    log.debug(`⬇️ incoming ws message:`)
-    log.trace(event.data)
+    log.debug(`⬇️ incoming ws message:\n${event.data}`)
     subjects.wsIncomingRawMessageSubject.next(event)
   }
 

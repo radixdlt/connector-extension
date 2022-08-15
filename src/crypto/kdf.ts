@@ -1,4 +1,5 @@
 import { ResultAsync } from 'neverthrow'
+import { Buffer } from 'buffer'
 import { errorIdentity } from 'utils/error-identity'
 
 export const getKeyMaterial = (key: Buffer) =>

@@ -1,3 +1,4 @@
+import { Buffer } from 'buffer'
 const hasArrayBuffer = typeof ArrayBuffer === 'function'
 const { toString } = Object.prototype
 
