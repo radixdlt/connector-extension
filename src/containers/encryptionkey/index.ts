@@ -1,1 +1,1 @@
-export { default } from './encryptionkey'
+export * from './encryptionkey'

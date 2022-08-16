@@ -1,5 +1,6 @@
 import { err, Ok, ok, Result } from 'neverthrow'
 import { bech32 } from 'bech32'
+import { Buffer } from 'buffer'
 
 export const convertBufferToBech32 = (buffer: Buffer): Ok<Buffer, never> => {
   const bech32Data = bech32.toWords(buffer)
@@ -14,5 +15,5 @@ export const bech32Encode = (buffer: Buffer): Result<string, Error> => {
     .encode('', buffer)
     // drop bech32 delimiter/separator and checksum
     .slice(1, -6)
-  return ok(bech32String)
+  return ok(bech32String.toUpperCase())
 }

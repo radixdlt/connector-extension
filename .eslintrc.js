@@ -6,7 +6,12 @@ module.exports = {
     'no-undef': 'off',
     '@typescript-eslint/consistent-type-definitions': ['error', 'type'],
   },
-  extends: ['alloy', 'alloy/react', 'alloy/typescript'],
+  extends: [
+    'alloy',
+    'alloy/react',
+    'alloy/typescript',
+    'plugin:react-hooks/recommended',
+  ],
   settings: {
     react: {
       version: '18',

@@ -2,5 +2,23 @@
   "manifest_version": 3,
   "name": "Radix Chrome Extension",
   "version": "1.0.0",
-  "action": { "default_popup": "index.html" }
+  "action": { "default_popup": "index.html" },
+  "permissions": [
+    "scripting",
+    "storage",
+    "tabs",
+    "activeTab",
+    "unlimitedStorage"
+  ],
+  "background": {
+    "service_worker": "src/chrome/background.ts",
+    "type": "module"
+  },
+  "content_scripts": [
+    {
+      "matches": ["http://*/*", "https://*/*"],
+      "js": ["src/chrome/content.ts"],
+      "run_at": "document_start"
+    }
+  ]
 }

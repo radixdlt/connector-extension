@@ -6,12 +6,12 @@ const Ice = literal('iceCandidate')
 
 const Types = union([Offer, Answer, Ice])
 
-const source = union([literal('wallet'), literal('extension')])
+const Sources = union([literal('wallet'), literal('extension')])
 
 export const AnswerIO = object({
   requestId: string(),
   method: Answer,
-  source,
+  source: Sources,
   connectionId: string(),
   encryptedPayload: string(),
   payload: object({
@@ -22,7 +22,7 @@ export const AnswerIO = object({
 export const OfferIO = object({
   requestId: string(),
   method: Offer,
-  source,
+  source: Sources,
   connectionId: string(),
   encryptedPayload: string(),
   payload: object({
@@ -33,7 +33,7 @@ export const OfferIO = object({
 export const IceCandidateIO = object({
   requestId: string(),
   method: Ice,
-  source,
+  source: Sources,
   connectionId: string(),
   encryptedPayload: string(),
   payload: object({
@@ -47,38 +47,46 @@ export type Answer = z.infer<typeof AnswerIO>
 export type Offer = z.infer<typeof OfferIO>
 export type IceCandidate = z.infer<typeof IceCandidateIO>
 export type MessagePayloadTypes = z.infer<typeof Types>
+export type MessageSources = z.infer<typeof Sources>
 
 export type DataTypes = Answer | IceCandidate | Offer
 
 export type Confirmation = {
-  info: 'Confirmation'
+  info: 'confirmation'
   requestId: DataTypes['requestId']
 }
 
 export type RemoteData = {
-  info: 'RemoteData'
+  info: 'remoteData'
   requestId: DataTypes['requestId']
   data: DataTypes
 }
 
 export type RemoteClientDisconnected = {
-  info: 'RemoteClientDisconnected'
-  target: DataTypes['source']
+  info: 'remoteClientDisconnected'
+}
+
+export type RemoteClientJustConnected = {
+  info: 'remoteClientJustConnected'
+}
+
+export type RemoteClientIsAlreadyConnected = {
+  info: 'remoteClientIsAlreadyConnected'
 }
 
 export type MissingRemoteClientError = {
-  info: 'MissingRemoteClientError'
+  info: 'missingRemoteClientError'
   requestId: DataTypes['requestId']
 }
 
 export type InvalidMessageError = {
-  info: 'InvalidMessageError'
+  info: 'invalidMessageError'
   error: string
   data: string
 }
 
 export type ValidationError = {
-  info: 'ValidationError'
+  info: 'validationError'
   requestId: DataTypes['requestId']
   error: ZodError[]
 }
@@ -86,6 +94,8 @@ export type ValidationError = {
 export type SignalingServerResponse =
   | Confirmation
   | RemoteData
+  | RemoteClientJustConnected
+  | RemoteClientIsAlreadyConnected
   | RemoteClientDisconnected
   | MissingRemoteClientError
   | InvalidMessageError

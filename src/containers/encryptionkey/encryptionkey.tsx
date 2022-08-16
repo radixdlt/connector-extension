@@ -1,20 +1,25 @@
 import Button from 'components/button'
 import Clipboard from 'components/clipboard'
 import QRCode from 'react-qr-code'
+import { useConnectionSecrets } from 'hooks/use-connection-secrets'
 import { useOverlayClipboard } from 'hooks'
 
-interface EncryptionkeyProps {
+type EncryptionKeyProps = {
   onNext: () => void
 }
 
-const Encryptionkey = ({ onNext }: EncryptionkeyProps) => {
+export const EncryptionKey = ({ onNext }: EncryptionKeyProps) => {
+  const secretsResult = useConnectionSecrets()
+  const secrets = secretsResult?.isOk() ? secretsResult.value : undefined
+  const password = secrets?.encryptionKey.toString('hex') || ''
+
   const QR = useOverlayClipboard(
-    <QRCode size={170} value="z4ncptue" />,
-    'z4ncptue'
+    <QRCode size={170} value={password} />,
+    password
   )
   const Password = useOverlayClipboard(
-    <Clipboard value="e565c7765192b7eeeaf8b1937d5321feaeb74cf51bdc9ba09d55ad806ee56b22" />,
-    'e565c7765192b7eeeaf8b1937d5321feaeb74cf51bdc9ba09d55ad806ee56b22',
+    <Clipboard value={password} />,
+    password,
     true
   )
   return (
@@ -27,5 +32,3 @@ const Encryptionkey = ({ onNext }: EncryptionkeyProps) => {
     </>
   )
 }
-
-export default Encryptionkey

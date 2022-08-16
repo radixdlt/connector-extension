@@ -1,4 +1,4 @@
-import { encrypt, decrypt } from './encryption'
+import { encrypt, decrypt, getKey } from './encryption'
 const testMessage = 'Hello RDX JavaScript from Swift'
 const testMessage2 = 'Hello RDX Swift from TS'
 
@@ -60,5 +60,17 @@ describe('Encryption', () => {
 
     if (decrypted.isErr()) throw decrypted.error
     expect(decrypted.value.toString('utf8')).toBe(testMessage2)
+  })
+
+  it('should', async () => {
+    const keyResult = await getKey(
+      Buffer.from([
+        101, 11, 188, 67, 254, 113, 165, 152, 53, 19, 118, 227, 195, 21, 110,
+        83, 145, 197, 78, 134, 31, 238, 50, 160, 207, 34, 245, 16, 26, 135, 105,
+        96,
+      ])
+    )
+    if (keyResult.isErr()) throw keyResult.error
+    expect(keyResult.isOk()).toBe(true)
   })
 })

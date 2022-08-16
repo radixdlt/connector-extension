@@ -1,8 +1,7 @@
 import { ResultAsync } from 'neverthrow'
 import { errorIdentity } from 'utils/error-identity'
-
-const toBuffer = (input: Buffer | string): Buffer =>
-  typeof input === 'string' ? Buffer.from(input, 'utf-8') : input
+import { toBuffer } from 'utils/to-buffer'
+import { Buffer } from 'buffer'
 
 export const sha256 = (input: Buffer | string) =>
   ResultAsync.fromPromise(

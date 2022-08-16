@@ -1,58 +1,57 @@
-import { Confirmation, SignalingServerErrorResponse } from 'io-types/types'
-import { errAsync } from 'neverthrow'
 import {
-  BehaviorSubject,
-  ReplaySubject,
-  Subject,
-  switchMap,
-  share,
-  tap,
-  Subscription,
-} from 'rxjs'
-import { deriveSecretsFromConnectionPassword } from './signaling-server-client/secrets'
-import { secureRandom } from 'crypto/secure-random'
+  Confirmation,
+  MessageSources,
+  SignalingServerErrorResponse,
+} from 'io-types/types'
+import { Result } from 'neverthrow'
+import { BehaviorSubject, ReplaySubject, Subject } from 'rxjs'
+import { Secrets } from './secrets'
+import { MessageConfirmation, MessageErrorTypes } from './data-chunking'
+import { Buffer } from 'buffer'
 
-export type Status = 'connecting' | 'connected' | 'disconnected'
+export type Status =
+  | 'connecting'
+  | 'connected'
+  | 'disconnected'
+  | 'disconnecting'
+export type SubjectsType = ReturnType<typeof Subjects>
 
-export const wsOfferReceived = new BehaviorSubject<boolean>(false)
-export const wsSendAnswer = new ReplaySubject<RTCSessionDescriptionInit>()
-export const wsOutgoingMessageSubject = new Subject<string>()
-export const wsIncomingRawMessageSubject = new Subject<MessageEvent<string>>()
-export const wsErrorSubject = new Subject<Event>()
-export const wsStatusSubject = new BehaviorSubject<Status>('disconnected')
-export const wsConnect = new BehaviorSubject<boolean>(false)
-export const wsConnectionPasswordSubject = new BehaviorSubject<
-  Buffer | undefined
->(undefined)
-export const wsGenerateConnectionSecretsSubject = new Subject<void>()
-export const wsIncomingMessageConfirmationSubject = new Subject<Confirmation>()
-export const wsServerErrorResponseSubject =
-  new Subject<SignalingServerErrorResponse>()
-
-export const rtcStatusSubject = new BehaviorSubject<Status>('disconnected')
-export const rtcIncomingMessageSubject = new Subject<string>()
-export const rtcOutgoingMessageSubject = new Subject<string>()
-export const rtcIceCandidateSubject = new Subject<RTCPeerConnectionIceEvent>()
-export const rtcRemoteOfferSubject = new Subject<RTCSessionDescriptionInit>()
-export const rtcRemoteAnswerSubject = new Subject<RTCSessionDescriptionInit>()
-export const rtcRemoveIceCandidateSubject = new Subject<RTCIceCandidate>()
-
-export const wsConnectionSecrets$ = wsConnectionPasswordSubject.pipe(
-  switchMap((password) =>
-    password
-      ? deriveSecretsFromConnectionPassword(password)
-      : errAsync(Error('missing connection password'))
+export const Subjects = () => ({
+  wsOfferReceivedSubject: new BehaviorSubject<boolean>(false),
+  wsSourceSubject: new ReplaySubject<MessageSources>(),
+  wsOutgoingMessageSubject: new Subject<string>(),
+  wsIncomingRawMessageSubject: new Subject<MessageEvent<string>>(),
+  wsErrorSubject: new Subject<Event>(),
+  wsStatusSubject: new BehaviorSubject<Status>('disconnected'),
+  wsConnectSubject: new BehaviorSubject<boolean>(false),
+  wsConnectionPasswordSubject: new BehaviorSubject<Buffer | undefined>(
+    undefined
   ),
-  share()
-)
+  wsConnectionSecretsSubject: new BehaviorSubject<
+    Result<Secrets, Error> | undefined
+  >(undefined),
+  wsGenerateConnectionSecretsSubject: new Subject<void>(),
+  wsIncomingMessageConfirmationSubject: new Subject<Confirmation>(),
+  wsServerErrorResponseSubject: new Subject<SignalingServerErrorResponse>(),
+  wsIsSendingMessageSubject: new BehaviorSubject<boolean>(false),
+  wsAutoConnect: new BehaviorSubject<boolean>(false),
+  rtcConnectSubject: new BehaviorSubject<boolean>(false),
+  rtcStatusSubject: new BehaviorSubject<Status>('disconnected'),
+  rtcIncomingChunkedMessageSubject: new Subject<ArrayBuffer | string>(),
+  rtcIncomingMessageSubject: new Subject<string>(),
+  rtcOutgoingMessageSubject: new Subject<string>(),
+  rtcOutgoingConfirmationMessageSubject: new Subject<MessageConfirmation>(),
+  rtcOutgoingErrorMessageSubject: new Subject<MessageErrorTypes>(),
+  rtcOutgoingChunkedMessageSubject: new Subject<string>(),
+  rtcLocalIceCandidateSubject: new Subject<RTCIceCandidate>(),
+  rtcLocalAnswerSubject: new Subject<RTCSessionDescriptionInit>(),
+  rtcLocalOfferSubject: new Subject<RTCSessionDescriptionInit>(),
+  rtcRemoteOfferSubject: new Subject<RTCSessionDescriptionInit>(),
+  rtcRemoteAnswerSubject: new Subject<RTCSessionDescriptionInit>(),
+  rtcRemoteIceCandidateSubject: new Subject<RTCIceCandidate>(),
+  rtcCreateOfferSubject: new Subject<void>(),
+  rtcIceConnectionStateSubject: new Subject<RTCIceConnectionState>(),
+  rtcRestartSubject: new Subject<void>(),
+})
 
-export const wsGenerateConnectionSecrets$ =
-  wsGenerateConnectionSecretsSubject.pipe(
-    tap(() => {
-      secureRandom(5).map((buffer) => wsConnectionPasswordSubject.next(buffer))
-    })
-  )
-
-const subscriptions = new Subscription()
-
-subscriptions.add(wsGenerateConnectionSecrets$.subscribe())
+export const subjects = Subjects()

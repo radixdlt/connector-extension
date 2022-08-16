@@ -1,3 +1,4 @@
+import { Buffer } from 'buffer'
 import { err, ok, Result } from 'neverthrow'
 
 export const secureRandom = (byteCount: number): Result<Buffer, Error> => {
