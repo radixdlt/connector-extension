@@ -5,5 +5,7 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
+    environment:
+      CI: 1
     volumes:
       - ./src:/home/node/app/src
