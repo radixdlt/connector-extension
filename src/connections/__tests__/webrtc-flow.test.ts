@@ -74,7 +74,7 @@ describe('webRTC flow', () => {
   })
 
   it('should send message over data channel between two clients', async () => {
-    log.setLevel('debug')
+    log.setLevel('silent')
     walletClient.subjects.rtcConnectSubject.next(true)
     extensionClient.subjects.rtcConnectSubject.next(true)
 
@@ -106,7 +106,7 @@ describe('webRTC flow', () => {
 
     expect(extensionIncomingMessage.getValues()).toEqual([message])
     expect(walletIncomingMessage.getValues()).toEqual(['hello from extension'])
-  })
+  }, 30_000)
 
   it('should reconnect if a client disconnects', async () => {
     log.setLevel('silent')
@@ -149,5 +149,5 @@ describe('webRTC flow', () => {
     await delayAsync()
 
     expect(walletIncomingMessage.getValues()).toEqual(['hello from extension'])
-  }, 10_000)
+  }, 30_000)
 })
