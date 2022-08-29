@@ -95,7 +95,5 @@ export const BootstrapApplication = ({
     messageClient.destroy()
   }
 
-  webRtcSubjects.wsAutoConnect.next(true)
-
   return { webRtcClient, storageClient, messageClient, destroy }
 }

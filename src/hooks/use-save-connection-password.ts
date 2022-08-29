@@ -1,7 +1,6 @@
 import { WebRtcContext } from 'contexts/web-rtc-context'
 import { useContext, useEffect } from 'react'
 import { filter, tap, withLatestFrom } from 'rxjs'
-import { storageSubjects } from 'storage/subjects'
 
 export const useSaveConnectionPassword = () => {
   const webRtc = useContext(WebRtcContext)
@@ -13,7 +12,7 @@ export const useSaveConnectionPassword = () => {
         withLatestFrom(webRtc.webRtcClient.subjects.wsConnectionSecretsSubject),
         tap(([, secretsResult]) =>
           secretsResult?.map((secrets) =>
-            storageSubjects.addConnectionPasswordSubject.next(
+            webRtc.storageClient.subjects.addConnectionPasswordSubject.next(
               secrets.encryptionKey
             )
           )

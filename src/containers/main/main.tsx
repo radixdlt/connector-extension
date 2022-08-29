@@ -14,7 +14,6 @@ import { useWebRtcDataChannelStatus } from 'hooks/use-rtc-data-channel-status'
 import { useSaveConnectionPassword } from 'hooks/use-save-connection-password'
 import { useConnectionSecrets } from 'hooks/use-connection-secrets'
 import { useAutoConnect } from 'hooks/use-auto-connect'
-import { storageSubjects } from 'storage/subjects'
 import { WebRtcContext } from 'contexts/web-rtc-context'
 import { config as appConfig } from '../../config'
 
@@ -99,7 +98,7 @@ export const Main = () => {
               onClick={() => {
                 setStep(1)
                 webRtc?.webRtcClient.subjects.wsAutoConnect.next(false)
-                storageSubjects.removeConnectionPasswordSubject.next()
+                webRtc?.storageClient.subjects.removeConnectionPasswordSubject.next()
               }}
             />
           </Button>
