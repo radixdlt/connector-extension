@@ -1,9 +1,9 @@
-import { SubjectsType } from 'connections/subjects'
+import { WebRtcSubjectsType } from 'connections/subjects'
 import { PeerConnectionAndDataChannelType } from 'connections/webrtc-peer-connection'
 import { combineLatest, tap } from 'rxjs'
 
 export const rtcConnection = (
-  subjects: SubjectsType,
+  subjects: WebRtcSubjectsType,
   getPeerConnection: () => PeerConnectionAndDataChannelType | undefined,
   createPeerConnection: () => void,
   destroyPeerConnection: () => void

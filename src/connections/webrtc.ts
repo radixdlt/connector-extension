@@ -1,5 +1,5 @@
 import { Subscription } from 'rxjs'
-import { SubjectsType } from 'connections/subjects'
+import { WebRtcSubjectsType } from 'connections/subjects'
 import {
   PeerConnectionAndDataChannel,
   PeerConnectionAndDataChannelType,
@@ -14,7 +14,7 @@ export const WebRtc = ({
 }: {
   peerConnectionConfig: RTCConfiguration
   dataChannelConfig: RTCDataChannelInit
-  subjects: SubjectsType
+  subjects: WebRtcSubjectsType
 }) => {
   let peerConnectionInstance: PeerConnectionAndDataChannelType | undefined
 

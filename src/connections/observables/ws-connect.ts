@@ -1,8 +1,8 @@
-import { SubjectsType } from 'connections/subjects'
+import { WebRtcSubjectsType } from 'connections/subjects'
 import { combineLatest, withLatestFrom, tap } from 'rxjs'
 
 export const wsConnect = (
-  subjects: SubjectsType,
+  subjects: WebRtcSubjectsType,
   connect: (connectionId: string) => void
 ) =>
   combineLatest([

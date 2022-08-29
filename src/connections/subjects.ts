@@ -14,9 +14,9 @@ export type Status =
   | 'connected'
   | 'disconnected'
   | 'disconnecting'
-export type SubjectsType = ReturnType<typeof Subjects>
+export type WebRtcSubjectsType = ReturnType<typeof WebRtcSubjects>
 
-export const Subjects = () => ({
+export const WebRtcSubjects = () => ({
   wsOfferReceivedSubject: new BehaviorSubject<boolean>(false),
   wsSourceSubject: new ReplaySubject<MessageSources>(),
   wsOutgoingMessageSubject: new Subject<string>(),
@@ -53,5 +53,3 @@ export const Subjects = () => ({
   rtcIceConnectionStateSubject: new Subject<RTCIceConnectionState>(),
   rtcRestartSubject: new Subject<void>(),
 })
-
-export const subjects = Subjects()

@@ -1,4 +1,4 @@
-import { SubjectsType } from 'connections/subjects'
+import { WebRtcSubjectsType } from 'connections/subjects'
 import {
   combineLatest,
   switchMap,
@@ -9,7 +9,10 @@ import {
   tap,
 } from 'rxjs'
 
-export const wsDisconnect = (subjects: SubjectsType, disconnect: () => void) =>
+export const wsDisconnect = (
+  subjects: WebRtcSubjectsType,
+  disconnect: () => void
+) =>
   combineLatest([subjects.wsConnectSubject, subjects.wsStatusSubject]).pipe(
     switchMap(([shouldConnect, status]) => {
       if (['connecting', 'connected'].includes(status) && !shouldConnect) {

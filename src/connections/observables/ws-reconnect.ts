@@ -1,5 +1,5 @@
 import { config } from 'config'
-import { SubjectsType } from 'connections/subjects'
+import { WebRtcSubjectsType } from 'connections/subjects'
 import log from 'loglevel'
 import {
   combineLatest,
@@ -12,7 +12,7 @@ import {
   first,
 } from 'rxjs'
 
-export const wsReconnect = (subjects: SubjectsType) =>
+export const wsReconnect = (subjects: WebRtcSubjectsType) =>
   combineLatest([subjects.wsStatusSubject, subjects.wsConnectSubject]).pipe(
     skip(1),
     filter(

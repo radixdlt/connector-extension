@@ -1,18 +1,17 @@
 import { Subscription } from 'rxjs'
-import { SubjectsType } from 'connections/subjects'
+import { WebRtcSubjectsType } from 'connections/subjects'
 import { wsIncomingMessage } from './observables/ws-incoming-message'
 import {
   wsConnectionPassword,
   wsGenerateConnectionSecrets,
 } from './observables/ws-connection-secrets'
 import { wsConnection } from './observables/ws-connection'
-import { rtcOutgoingMessage } from './observables/rtc-outgoing-message'
 import { rtcIncomingMessage } from './observables/rtc-incoming-message'
 import { wsSendSdpAndIcecandidate } from './observables/ws-send-sdp-and-icecandidate'
 
-export type SubscriptionsType = ReturnType<typeof Subscriptions>
+export type WebRtcSubscriptionsType = ReturnType<typeof WebRtcSubscriptions>
 
-export const Subscriptions = (subjects: SubjectsType) => {
+export const WebRtcSubscriptions = (subjects: WebRtcSubjectsType) => {
   const subscriptions = new Subscription()
 
   subscriptions.add(wsIncomingMessage(subjects).subscribe())
@@ -21,7 +20,6 @@ export const Subscriptions = (subjects: SubjectsType) => {
   subscriptions.add(wsGenerateConnectionSecrets(subjects).subscribe())
   subscriptions.add(wsConnectionPassword(subjects).subscribe())
 
-  subscriptions.add(rtcOutgoingMessage(subjects).subscribe())
   subscriptions.add(rtcIncomingMessage(subjects).subscribe())
 
   return subscriptions

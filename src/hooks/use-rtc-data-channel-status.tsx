@@ -1,12 +1,15 @@
-import { Status, subjects } from 'connections'
-import { useEffect, useState } from 'react'
+import { Status } from 'connections'
+import { WebRtcContext } from 'contexts/web-rtc-context'
+import { useEffect, useState, useContext } from 'react'
 import { tap } from 'rxjs'
 
 export const useWebRtcDataChannelStatus = () => {
+  const webRtc = useContext(WebRtcContext)
   const [secrets, setSecrets] = useState<Status>()
 
   useEffect(() => {
-    const subscription = subjects.rtcStatusSubject
+    if (!webRtc) return
+    const subscription = webRtc.webRtcClient.subjects.rtcStatusSubject
       .pipe(tap((result) => setSecrets(result)))
       .subscribe()
 

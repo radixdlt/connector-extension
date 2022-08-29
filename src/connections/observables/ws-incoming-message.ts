@@ -1,5 +1,5 @@
 import { Secrets } from 'connections/secrets'
-import { SubjectsType } from 'connections/subjects'
+import { WebRtcSubjectsType } from 'connections/subjects'
 import { decrypt } from 'crypto/encryption'
 import { transformBufferToSealbox } from 'crypto/sealbox'
 import {
@@ -16,7 +16,7 @@ import { parseJSON } from 'utils'
 import { Buffer } from 'buffer'
 
 const distributeMessage =
-  (subjects: SubjectsType) =>
+  (subjects: WebRtcSubjectsType) =>
   (message: DataTypes): Result<void, Error> => {
     switch (message.method) {
       case 'answer': {
@@ -83,7 +83,7 @@ const decryptMessagePayload = (
 }
 
 const handleIncomingMessage =
-  (subjects: SubjectsType) =>
+  (subjects: WebRtcSubjectsType) =>
   (
     result: Result<SignalingServerResponse, InvalidMessageError>
   ): Result<DataTypes | undefined, SignalingServerErrorResponse> =>
@@ -110,7 +110,7 @@ const handleIncomingMessage =
       return ok(undefined)
     })
 
-export const wsIncomingMessage = (subjects: SubjectsType) =>
+export const wsIncomingMessage = (subjects: WebRtcSubjectsType) =>
   subjects.wsIncomingRawMessageSubject.pipe(
     map((messageEvent) => messageEvent.data),
     map((rawMessage) =>

@@ -1,5 +1,5 @@
 import { Secrets } from 'connections/secrets'
-import { SubjectsType } from 'connections/subjects'
+import { WebRtcSubjectsType } from 'connections/subjects'
 import { IceCandidate } from 'io-types/types'
 import log from 'loglevel'
 import { Result } from 'neverthrow'
@@ -16,7 +16,7 @@ import {
 import { wsCreateMessage } from '../ws-create-message'
 import { wsMessageConfirmation } from './ws-message-confirmation'
 
-export const wsSendSdpAndIcecandidate = (subjects: SubjectsType) => {
+export const wsSendSdpAndIcecandidate = (subjects: WebRtcSubjectsType) => {
   const localOffer$ = subjects.rtcLocalOfferSubject.pipe(
     filter(
       (

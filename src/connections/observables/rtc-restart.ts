@@ -1,9 +1,9 @@
-import { SubjectsType } from 'connections/subjects'
+import { WebRtcSubjectsType } from 'connections/subjects'
 import log from 'loglevel'
 import { withLatestFrom, tap, distinctUntilChanged, filter } from 'rxjs'
 
 export const rtcRestart = (
-  subjects: SubjectsType,
+  subjects: WebRtcSubjectsType,
   createPeerConnectionAndDataChannel: () => void
 ) =>
   subjects.rtcRestartSubject.pipe(
@@ -16,7 +16,7 @@ export const rtcRestart = (
   )
 
 export const rtcIceConnectionState = (
-  subjects: SubjectsType,
+  subjects: WebRtcSubjectsType,
   closePeerConnection: () => void
 ) =>
   subjects.rtcIceConnectionStateSubject.pipe(

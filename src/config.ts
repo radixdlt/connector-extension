@@ -1,9 +1,11 @@
 import { LogLevelDesc } from 'loglevel'
+import packageJson from '../package.json'
+const { version } = packageJson
 
 export const config = {
   environment: process.env.NODE_ENV,
   logLevel: import.meta.env.VITE_APP_LOG_LEVEL as LogLevelDesc,
-  version: import.meta.env.VITE_APP_VERSION,
+  version,
   secrets: {
     connectionPasswordByteLength: 32,
   },

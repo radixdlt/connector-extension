@@ -1,21 +1,24 @@
 import WSS from 'jest-websocket-mock'
 import { SignalingServerClient } from '../signaling-server-client'
-import { Subjects, Status, SubjectsType } from '../subjects'
+import { Status, WebRtcSubjectsType, WebRtcSubjects } from '../subjects'
 import { subscribeSpyTo } from '@hirez_io/observer-spy'
 import { filter, firstValueFrom } from 'rxjs'
 import { err, ok } from 'neverthrow'
 import log from 'loglevel'
 import { createIV, encrypt } from 'crypto/encryption'
-import { Subscriptions, SubscriptionsType } from '../subscriptions'
 import { delayAsync } from 'test-utils/delay-async'
 import { wsMessageConfirmation } from 'connections/observables/ws-message-confirmation'
+import {
+  WebRtcSubscriptionsType,
+  WebRtcSubscriptions,
+} from 'connections/subscriptions'
 
 const url =
   'ws://localhost:1234/3ba6fa025c3c304988133c081e9e3f5347bf89421f6445b07abfacd94956a09a?target=wallet&source=extension'
 let wss: WSS
 
-let subjects: SubjectsType
-let subscriptions: SubscriptionsType
+let subjects: WebRtcSubjectsType
+let subscriptions: WebRtcSubscriptionsType
 
 let wsStatusSpy: ReturnType<typeof subscribeSpyTo<Status>>
 let wsErrorSpy: ReturnType<typeof subscribeSpyTo<Event>>
@@ -29,8 +32,8 @@ const waitUntilStatus = async (status: Status) =>
 describe('Signaling server client', () => {
   beforeEach(async () => {
     log.setLevel('silent')
-    subjects = Subjects()
-    subscriptions = Subscriptions(subjects)
+    subjects = WebRtcSubjects()
+    subscriptions = WebRtcSubscriptions(subjects)
     SignalingServerClient({ baseUrl: url, subjects })
     subjects.wsConnectionPasswordSubject.next(
       Buffer.from([

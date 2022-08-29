@@ -10,14 +10,14 @@ import {
 } from './observables/rtc-remote'
 import { rtcCreateOffer } from './observables/rtc-create-offer'
 import { rtcSendMessage } from './observables/rtc-send-message'
-import { SubjectsType } from './subjects'
+import { WebRtcSubjectsType } from './subjects'
 
 export type PeerConnectionAndDataChannelType = ReturnType<
   typeof PeerConnectionAndDataChannel
 >
 
 export const PeerConnectionAndDataChannel = (
-  subjects: SubjectsType,
+  subjects: WebRtcSubjectsType,
   peerConnectionConfig: RTCConfiguration,
   dataChannelConfig: RTCDataChannelInit
 ) => {

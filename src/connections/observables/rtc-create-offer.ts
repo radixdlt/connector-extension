@@ -1,10 +1,10 @@
-import { SubjectsType } from 'connections/subjects'
+import { WebRtcSubjectsType } from 'connections/subjects'
 import log from 'loglevel'
 import { ResultAsync } from 'neverthrow'
 import { switchMap, tap } from 'rxjs'
 
 export const rtcCreateOffer = (
-  subjects: SubjectsType,
+  subjects: WebRtcSubjectsType,
   createPeerConnectionOffer: () => ResultAsync<
     RTCSessionDescriptionInit,
     Error

@@ -1,6 +1,6 @@
 import { config } from 'config'
 import { messageToChunked } from 'connections/data-chunking'
-import { SubjectsType } from 'connections/subjects'
+import { WebRtcSubjectsType } from 'connections/subjects'
 import log from 'loglevel'
 import { track } from 'mixpanel'
 import { Result } from 'neverthrow'
@@ -14,12 +14,13 @@ import {
   filter,
   tap,
   merge,
+  share,
 } from 'rxjs'
 import { toBuffer } from 'utils/to-buffer'
 import { rtcParsedIncomingMessage } from './rtc-incoming-message'
 
 const dataChannelConfirmation =
-  (subjects: SubjectsType) => (messageIdResult: Result<string, Error>) =>
+  (subjects: WebRtcSubjectsType) => (messageIdResult: Result<string, Error>) =>
     rtcParsedIncomingMessage(subjects).pipe(
       filter(
         (messageResult) =>
@@ -37,8 +38,9 @@ const dataChannelConfirmation =
       })
     )
 
-export const rtcOutgoingMessage = (subjects: SubjectsType) =>
+export const rtcOutgoingMessage = (subjects: WebRtcSubjectsType) =>
   subjects.rtcOutgoingMessageSubject.pipe(
+    share(),
     concatMap((rawMessage) =>
       from(
         messageToChunked(toBuffer(rawMessage)).map((message) => {

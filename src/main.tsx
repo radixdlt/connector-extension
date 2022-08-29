@@ -2,13 +2,13 @@ import React from 'react'
 import ReactDOM from 'react-dom/client'
 import { Main } from './containers/main/main'
 import '../fonts.css'
-import { bootstrapApplication } from 'bootstrap-application'
-import { subjects } from 'connections'
-
-bootstrapApplication(subjects)
+import { BootstrapApplication } from 'bootstrap-application'
+import { WebRtcContext } from 'contexts/web-rtc-context'
 
 ReactDOM.createRoot(document.getElementById('root')!).render(
   <React.StrictMode>
-    <Main />
+    <WebRtcContext.Provider value={BootstrapApplication({})}>
+      <Main />
+    </WebRtcContext.Provider>
   </React.StrictMode>
 )

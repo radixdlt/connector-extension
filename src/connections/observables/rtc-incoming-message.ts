@@ -1,4 +1,3 @@
-import { SubjectsType } from 'connections/subjects'
 import { exhaustMap, filter, first, tap, map, share } from 'rxjs'
 import { Chunked } from 'connections/data-chunking'
 import log from 'loglevel'
@@ -6,8 +5,9 @@ import { ok, err } from 'neverthrow'
 import { ChunkedMessageType } from 'connections/data-chunking'
 import { parseJSON } from 'utils'
 import { toBuffer } from 'utils/to-buffer'
+import { WebRtcSubjectsType } from 'connections/subjects'
 
-export const rtcParsedIncomingMessage = (subjects: SubjectsType) =>
+export const rtcParsedIncomingMessage = (subjects: WebRtcSubjectsType) =>
   subjects.rtcIncomingChunkedMessageSubject.pipe(
     // TODO: add runtime message validation
     map((rawMessage) => {
@@ -20,7 +20,7 @@ export const rtcParsedIncomingMessage = (subjects: SubjectsType) =>
     share()
   )
 
-export const rtcIncomingMessage = (subjects: SubjectsType) =>
+export const rtcIncomingMessage = (subjects: WebRtcSubjectsType) =>
   rtcParsedIncomingMessage(subjects).pipe(
     exhaustMap((messageResult) => {
       const chunkedResult = messageResult.andThen((message) =>

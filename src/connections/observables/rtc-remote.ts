@@ -1,10 +1,10 @@
-import { SubjectsType } from 'connections/subjects'
+import { WebRtcSubjectsType } from 'connections/subjects'
 import log from 'loglevel'
 import { ResultAsync } from 'neverthrow'
 import { concatMap, tap, switchMap } from 'rxjs'
 
 export const rtcRemoteIceCandidate = (
-  subjects: SubjectsType,
+  subjects: WebRtcSubjectsType,
   addIceCandidate: (
     iceCandidate: RTCIceCandidateInit
   ) => ResultAsync<void, Error>
@@ -21,7 +21,7 @@ export const rtcRemoteIceCandidate = (
   )
 
 export const rtcRemoteOfferSubject = (
-  subjects: SubjectsType,
+  subjects: WebRtcSubjectsType,
   setRemoteDescription: (
     sessionDescription: RTCSessionDescriptionInit
   ) => ResultAsync<void, Error>,
@@ -50,7 +50,7 @@ export const rtcRemoteOfferSubject = (
   )
 
 export const rtcRemoteAnswer = (
-  subjects: SubjectsType,
+  subjects: WebRtcSubjectsType,
   setRemoteDescription: (
     sessionDescription: RTCSessionDescriptionInit
   ) => ResultAsync<void, Error>

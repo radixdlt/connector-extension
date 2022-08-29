@@ -1,14 +1,16 @@
-import { subjects as connectionSubjects } from 'connections/subjects'
-import { useEffect } from 'react'
+import { WebRtcContext } from 'contexts/web-rtc-context'
+import { useContext, useEffect } from 'react'
 import { filter, tap, withLatestFrom } from 'rxjs'
 import { storageSubjects } from 'storage/subjects'
 
 export const useSaveConnectionPassword = () => {
+  const webRtc = useContext(WebRtcContext)
   useEffect(() => {
-    const subscription = connectionSubjects.rtcStatusSubject
+    if (!webRtc) return
+    const subscription = webRtc.webRtcClient.subjects.rtcStatusSubject
       .pipe(
         filter((status) => status === 'connected'),
-        withLatestFrom(connectionSubjects.wsConnectionSecretsSubject),
+        withLatestFrom(webRtc.webRtcClient.subjects.wsConnectionSecretsSubject),
         tap(([, secretsResult]) =>
           secretsResult?.map((secrets) =>
             storageSubjects.addConnectionPasswordSubject.next(

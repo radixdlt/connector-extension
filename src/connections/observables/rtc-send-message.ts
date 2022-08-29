@@ -1,9 +1,9 @@
-import { SubjectsType } from 'connections/subjects'
+import { WebRtcSubjectsType } from 'connections/subjects'
 import log from 'loglevel'
 import { map, merge, tap } from 'rxjs'
 
 export const rtcSendMessage = (
-  subjects: SubjectsType,
+  subjects: WebRtcSubjectsType,
   sendMessage: (message: string) => void
 ) =>
   merge(

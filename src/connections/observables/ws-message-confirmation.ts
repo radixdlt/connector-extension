@@ -1,11 +1,11 @@
-import { SubjectsType } from 'connections/subjects'
+import { WebRtcSubjectsType } from 'connections/subjects'
 import { DataTypes } from 'io-types/types'
 import log from 'loglevel'
 import { err, ok, Result } from 'neverthrow'
 import { merge, Observable, of, tap, filter, map, timer, first } from 'rxjs'
 
 export const wsMessageConfirmation =
-  (subjects: SubjectsType) =>
+  (subjects: WebRtcSubjectsType) =>
   (
     messageResult: Result<Omit<DataTypes, 'payload'>, Error>,
     timeout = 3000

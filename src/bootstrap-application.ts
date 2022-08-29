@@ -1,8 +1,16 @@
 import { Buffer } from 'buffer'
 import { config } from 'config'
-import { SubjectsType, WebRtcClient } from 'connections'
+import {
+  WebRtcSubjectsType,
+  WebRtcClient,
+  WebRtcClientInput,
+  WebRtcSubjects,
+  SignalingServerClientInput,
+} from 'connections'
 import log from 'loglevel'
-import { storageSubjects } from 'storage/subjects'
+import { MessageClient } from 'messages/message-client'
+import { MessageSubjects, MessageSubjectsType } from 'messages/subjects'
+import { StorageSubjects, StorageSubjectsType } from 'storage/subjects'
 import { StorageClient } from './storage/storage-client'
 
 declare global {
@@ -15,7 +23,31 @@ declare global {
 
 window.setLogLevel = (level: log.LogLevelDesc) => log.setLevel(level)
 
-export const bootstrapApplication = (subjects: SubjectsType) => {
+export type BootstrapApplicationType = ReturnType<typeof BootstrapApplication>
+
+export const BootstrapApplication = ({
+  webRtcSubjects = WebRtcSubjects(),
+  webRtcClientOptions = {
+    webRtcOptions: {
+      peerConnectionConfig: config.webRTC.peerConnectionConfig,
+      dataChannelConfig: config.webRTC.dataChannelConfig,
+    },
+  },
+  signalingServerOptions = {
+    baseUrl: config.signalingServer.baseUrl,
+  },
+  messageSubjects = MessageSubjects(),
+  storageSubjects = StorageSubjects(),
+}: Partial<{
+  webRtcSubjects: WebRtcSubjectsType
+  webRtcClientOptions: Omit<
+    WebRtcClientInput,
+    'signalingServerOptions' | 'subjects'
+  >
+  signalingServerOptions: Omit<SignalingServerClientInput, 'subjects'>
+  messageSubjects: MessageSubjectsType
+  storageSubjects: StorageSubjectsType
+}>) => {
   log.setLevel(config.logLevel)
 
   log.info(
@@ -23,17 +55,14 @@ export const bootstrapApplication = (subjects: SubjectsType) => {
   )
 
   const webRtcClient = WebRtcClient({
-    subjects,
-    webRtcOptions: {
-      peerConnectionConfig: config.webRTC.peerConnectionConfig,
-      dataChannelConfig: config.webRTC.dataChannelConfig,
-    },
-    signalingServerOptions: {
-      baseUrl: config.signalingServer.baseUrl,
-    },
+    ...webRtcClientOptions,
+    subjects: webRtcSubjects,
+    signalingServerOptions,
   })
 
   const storageClient = StorageClient('radix', storageSubjects)
+
+  const messageClient = MessageClient(messageSubjects, webRtcSubjects)
 
   storageClient
     .getConnectionPassword()
@@ -60,5 +89,11 @@ export const bootstrapApplication = (subjects: SubjectsType) => {
 
   window.webRtcClient = webRtcClient
 
-  return { webRtcClient, storageClient }
+  const destroy = () => {
+    webRtcClient.destroy()
+    storageClient.destroy()
+    messageClient.destroy()
+  }
+
+  return { webRtcClient, storageClient, messageClient, destroy }
 }

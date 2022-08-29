@@ -4,7 +4,7 @@ import { Subscription } from 'rxjs'
 import { wsSendMessage } from './observables/ws-send-message'
 import { wsConnect } from './observables/ws-connect'
 import { wsReconnect } from './observables/ws-reconnect'
-import { SubjectsType } from './subjects'
+import { WebRtcSubjectsType } from './subjects'
 import { wsDisconnect } from './observables/ws-disconnect'
 
 type Source = 'wallet' | 'extension'
@@ -14,7 +14,7 @@ export type SignalingServerClientInput = {
   baseUrl: string
   target?: Source
   source?: Source
-  subjects: SubjectsType
+  subjects: WebRtcSubjectsType
 }
 
 export const SignalingServerClient = ({

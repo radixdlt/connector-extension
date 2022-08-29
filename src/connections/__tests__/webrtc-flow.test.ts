@@ -5,6 +5,10 @@ import { subscribeSpyTo } from '@hirez_io/observer-spy'
 import { config } from '../../config'
 import { WebRtcClient } from 'connections/webrtc-client'
 import { delayAsync } from 'test-utils/delay-async'
+import {
+  BootstrapApplication,
+  BootstrapApplicationType,
+} from '../../bootstrap-application'
 
 const oneMB = new Array(1000)
   .fill(null)
@@ -43,111 +47,150 @@ const WebRtcTestHelper = {
   },
 }
 
-let walletClient: WebRtcClient
-let extensionClient: WebRtcClient
+let wallet: BootstrapApplicationType
+let extension: BootstrapApplicationType
 
 describe('webRTC flow', () => {
   beforeEach(async () => {
     log.setLevel('silent')
-    walletClient = WebRtcClient({
+    extension = BootstrapApplication({})
+
+    wallet = BootstrapApplication({
+      webRtcClientOptions: {
+        webRtcOptions: config.webRTC,
+      },
       signalingServerOptions: {
         ...config.signalingServer,
-        target: 'extension',
         source: 'wallet',
+        target: 'extension',
       },
-      webRtcOptions: config.webRTC,
     })
 
-    extensionClient = WebRtcClient({
-      signalingServerOptions: config.signalingServer,
-      webRtcOptions: config.webRTC,
-    })
-
-    await WebRtcTestHelper.bootstrap(walletClient)
-    await WebRtcTestHelper.bootstrap(extensionClient)
+    await WebRtcTestHelper.bootstrap(wallet.webRtcClient)
+    await WebRtcTestHelper.bootstrap(extension.webRtcClient)
   })
 
   afterEach(async () => {
     log.setLevel('silent')
-    await WebRtcTestHelper.cleanup(walletClient)
-    await WebRtcTestHelper.cleanup(extensionClient)
+    wallet.destroy()
+    extension.destroy()
   })
 
   it('should send message over data channel between two clients', async () => {
     log.setLevel('silent')
-    walletClient.subjects.rtcConnectSubject.next(true)
-    extensionClient.subjects.rtcConnectSubject.next(true)
+    wallet.webRtcClient.subjects.rtcConnectSubject.next(true)
+    extension.webRtcClient.subjects.rtcConnectSubject.next(true)
 
-    walletClient.subjects.rtcCreateOfferSubject.next()
+    wallet.webRtcClient.subjects.rtcCreateOfferSubject.next()
 
-    await waitUntilOpen('connected', walletClient.subjects.rtcStatusSubject)
-    await waitUntilOpen('connected', extensionClient.subjects.rtcStatusSubject)
+    await waitUntilOpen(
+      'connected',
+      wallet.webRtcClient.subjects.rtcStatusSubject
+    )
+    await waitUntilOpen(
+      'connected',
+      extension.webRtcClient.subjects.rtcStatusSubject
+    )
 
     const walletIncomingMessage = subscribeSpyTo(
-      walletClient.subjects.rtcIncomingMessageSubject
+      wallet.webRtcClient.subjects.rtcIncomingMessageSubject
     )
     const extensionIncomingMessage = subscribeSpyTo(
-      extensionClient.subjects.rtcIncomingMessageSubject
+      extension.webRtcClient.subjects.rtcIncomingMessageSubject
     )
 
     const message = oneMB.slice(0, oneMB.length / 1000)
 
-    walletClient.subjects.rtcOutgoingMessageSubject.next(message)
-    extensionClient.subjects.rtcOutgoingMessageSubject.next(
+    await waitUntilStatus(
+      'disconnected',
+      wallet.webRtcClient.subjects.wsStatusSubject
+    )
+    await waitUntilStatus(
+      'disconnected',
+      extension.webRtcClient.subjects.wsStatusSubject
+    )
+
+    wallet.messageClient.subjects.addMessageSubject.next(message)
+    extension.messageClient.subjects.addMessageSubject.next(
       'hello from extension'
     )
 
-    await waitUntilStatus('disconnected', walletClient.subjects.wsStatusSubject)
-    await waitUntilStatus(
-      'disconnected',
-      extensionClient.subjects.wsStatusSubject
-    )
     await delayAsync()
 
-    expect(extensionIncomingMessage.getValues()).toEqual([message])
-    expect(walletIncomingMessage.getValues()).toEqual(['hello from extension'])
+    expect(extensionIncomingMessage.getValues()).toEqual([
+      JSON.stringify(message),
+    ])
+    expect(walletIncomingMessage.getValues()).toEqual([
+      JSON.stringify('hello from extension'),
+    ])
   }, 30_000)
 
   it('should reconnect if a client disconnects', async () => {
     log.setLevel('silent')
-    walletClient.subjects.rtcConnectSubject.next(true)
-    extensionClient.subjects.rtcConnectSubject.next(true)
+    wallet.webRtcClient.subjects.rtcConnectSubject.next(true)
+    extension.webRtcClient.subjects.rtcConnectSubject.next(true)
 
-    walletClient.subjects.rtcCreateOfferSubject.next()
-    await waitUntilOpen('connected', walletClient.subjects.rtcStatusSubject)
-    await waitUntilOpen('connected', extensionClient.subjects.rtcStatusSubject)
-
-    await waitUntilStatus('disconnected', walletClient.subjects.wsStatusSubject)
-    await waitUntilStatus(
-      'disconnected',
-      extensionClient.subjects.wsStatusSubject
+    wallet.webRtcClient.subjects.rtcCreateOfferSubject.next()
+    await waitUntilOpen(
+      'connected',
+      wallet.webRtcClient.subjects.rtcStatusSubject
     )
-    walletClient.subjects.rtcIceConnectionStateSubject.next('failed')
+    await waitUntilOpen(
+      'connected',
+      extension.webRtcClient.subjects.rtcStatusSubject
+    )
 
-    await waitUntilOpen('connected', walletClient.subjects.wsStatusSubject)
-    await waitUntilOpen('connected', extensionClient.subjects.wsStatusSubject)
-
-    walletClient.subjects.rtcCreateOfferSubject.next()
-
-    await waitUntilOpen('connected', walletClient.subjects.rtcStatusSubject)
-    await waitUntilOpen('connected', extensionClient.subjects.rtcStatusSubject)
-
-    await waitUntilStatus('disconnected', walletClient.subjects.wsStatusSubject)
     await waitUntilStatus(
       'disconnected',
-      extensionClient.subjects.wsStatusSubject
+      wallet.webRtcClient.subjects.wsStatusSubject
+    )
+    await waitUntilStatus(
+      'disconnected',
+      extension.webRtcClient.subjects.wsStatusSubject
+    )
+    wallet.webRtcClient.subjects.rtcIceConnectionStateSubject.next('failed')
+
+    await waitUntilOpen(
+      'connected',
+      wallet.webRtcClient.subjects.wsStatusSubject
+    )
+    await waitUntilOpen(
+      'connected',
+      extension.webRtcClient.subjects.wsStatusSubject
+    )
+
+    wallet.webRtcClient.subjects.rtcCreateOfferSubject.next()
+
+    await waitUntilOpen(
+      'connected',
+      wallet.webRtcClient.subjects.rtcStatusSubject
+    )
+    await waitUntilOpen(
+      'connected',
+      extension.webRtcClient.subjects.rtcStatusSubject
+    )
+
+    await waitUntilStatus(
+      'disconnected',
+      wallet.webRtcClient.subjects.wsStatusSubject
+    )
+    await waitUntilStatus(
+      'disconnected',
+      extension.webRtcClient.subjects.wsStatusSubject
     )
 
     const walletIncomingMessage = subscribeSpyTo(
-      walletClient.subjects.rtcIncomingMessageSubject
+      wallet.webRtcClient.subjects.rtcIncomingMessageSubject
     )
 
-    extensionClient.subjects.rtcOutgoingMessageSubject.next(
+    extension.messageClient.subjects.addMessageSubject.next(
       'hello from extension'
     )
 
     await delayAsync()
 
-    expect(walletIncomingMessage.getValues()).toEqual(['hello from extension'])
+    expect(walletIncomingMessage.getValues()).toEqual([
+      JSON.stringify('hello from extension'),
+    ])
   }, 30_000)
 })

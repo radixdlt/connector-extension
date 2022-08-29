@@ -1,8 +1,8 @@
-import { SubjectsType } from 'connections/subjects'
+import { WebRtcSubjectsType } from 'connections/subjects'
 import { tap, concatMap, interval, filter, take, debounceTime } from 'rxjs'
 
 export const wsSendMessage = (
-  subjects: SubjectsType,
+  subjects: WebRtcSubjectsType,
   sendMessage: (message: string) => void,
   getWs: () => WebSocket | undefined
 ) =>

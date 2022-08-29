@@ -4,19 +4,19 @@ import Button from 'components/button'
 import Tooltip from 'components/tooltip'
 import Connecting from 'containers/connecting'
 import { animated, config, useTransition } from '@react-spring/web'
-import { useEffect, useState } from 'react'
+import { useContext, useEffect, useState } from 'react'
 import { usePrevious } from 'react-use'
 import { styled } from 'stitches.config'
 import { Connected } from 'containers/connected/connected'
 import { EncryptionKey } from 'containers/encryptionkey'
-import { subjects } from 'connections'
 import logo from 'images/logo.png'
 import { useWebRtcDataChannelStatus } from 'hooks/use-rtc-data-channel-status'
-import { config as appConfig } from '../../config'
 import { useSaveConnectionPassword } from 'hooks/use-save-connection-password'
 import { useConnectionSecrets } from 'hooks/use-connection-secrets'
 import { useAutoConnect } from 'hooks/use-auto-connect'
 import { storageSubjects } from 'storage/subjects'
+import { WebRtcContext } from 'contexts/web-rtc-context'
+import { config as appConfig } from '../../config'
 
 const AnimatedBox = styled(animated.div, {
   position: 'absolute',
@@ -26,6 +26,7 @@ const AnimatedBox = styled(animated.div, {
 })
 
 export const Main = () => {
+  const webRtc = useContext(WebRtcContext)
   useSaveConnectionPassword()
   const connectionSecret = useConnectionSecrets()
   const autoConnect = useAutoConnect()
@@ -34,8 +35,9 @@ export const Main = () => {
   const prevStep = usePrevious(step)
 
   useEffect(() => {
+    if (!webRtc) return
     if (connectionSecret?.isOk() && step === 1 && autoConnect) {
-      subjects.wsConnectSubject.next(true)
+      webRtc.webRtcClient.subjects.wsConnectSubject.next(true)
       setStep(2)
     } else if (step === 1) return
     else if (
@@ -50,7 +52,7 @@ export const Main = () => {
     1: (
       <EncryptionKey
         onNext={() => {
-          subjects.wsConnectSubject.next(true)
+          webRtc?.webRtcClient.subjects.wsConnectSubject.next(true)
           return setStep(2)
         }}
       />
@@ -96,7 +98,7 @@ export const Main = () => {
               type="refresh"
               onClick={() => {
                 setStep(1)
-                subjects.wsAutoConnect.next(false)
+                webRtc?.webRtcClient.subjects.wsAutoConnect.next(false)
                 storageSubjects.removeConnectionPasswordSubject.next()
               }}
             />

@@ -1,12 +1,12 @@
 import { config } from 'config'
 import { deriveSecretsFromConnectionPassword } from 'connections/secrets'
-import { SubjectsType } from 'connections/subjects'
+import { WebRtcSubjectsType } from 'connections/subjects'
 import { secureRandom } from 'crypto/secure-random'
 import { setConnectionId } from 'mixpanel'
 import { errAsync } from 'neverthrow'
 import { tap, switchMap, share } from 'rxjs'
 
-export const wsGenerateConnectionSecrets = (subjects: SubjectsType) =>
+export const wsGenerateConnectionSecrets = (subjects: WebRtcSubjectsType) =>
   subjects.wsGenerateConnectionSecretsSubject.pipe(
     tap(() => {
       secureRandom(config.secrets.connectionPasswordByteLength).map((buffer) =>
@@ -15,7 +15,7 @@ export const wsGenerateConnectionSecrets = (subjects: SubjectsType) =>
     })
   )
 
-export const wsConnectionPassword = (subjects: SubjectsType) =>
+export const wsConnectionPassword = (subjects: WebRtcSubjectsType) =>
   subjects.wsConnectionPasswordSubject.pipe(
     switchMap((password) =>
       password
