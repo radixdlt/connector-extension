@@ -1,6 +1,12 @@
 import { object, ZodError } from 'zod'
 import { err, ok, Result } from 'neverthrow'
-import { DataTypes, AnswerIO, IceCandidateIO, OfferIO } from './types'
+import {
+  DataTypes,
+  AnswerIO,
+  IceCandidateIO,
+  OfferIO,
+  IceCandidatesIO,
+} from './types'
 
 const validate = (
   schema: ReturnType<typeof object>,
@@ -24,6 +30,8 @@ export const validateIncomingMessage = (
       return validate(AnswerIO.omit({ payload: true }), message)
     case 'iceCandidate':
       return validate(IceCandidateIO.omit({ payload: true }), message)
+    case 'iceCandidates':
+      return validate(IceCandidatesIO.omit({ payload: true }), message)
 
     default:
       return err(Error('invalid method'))

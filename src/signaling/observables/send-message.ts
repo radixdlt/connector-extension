@@ -1,4 +1,13 @@
-import { tap, concatMap, interval, filter, take, debounceTime } from 'rxjs'
+import {
+  tap,
+  concatMap,
+  interval,
+  filter,
+  take,
+  debounceTime,
+  merge,
+  of,
+} from 'rxjs'
 import { SignalingSubjectsType } from 'signaling/subjects'
 
 export const sendMessage = (
@@ -9,7 +18,7 @@ export const sendMessage = (
   subjects.wsOutgoingMessageSubject.pipe(
     tap(() => subjects.wsIsSendingMessageSubject.next(true)),
     concatMap((message) =>
-      interval(100).pipe(
+      merge(of(true), interval(100)).pipe(
         filter(() => {
           const ws = getWs()
           return ws ? ws.OPEN === ws.readyState : false

@@ -48,6 +48,15 @@ const distributeMessage =
         )
         return ok(undefined)
 
+      case 'iceCandidates':
+        log.debug(`🥶 received remote iceCandidates`)
+        log.trace(message.payload)
+        message.payload.forEach((item) =>
+          subjects.rtcRemoteIceCandidateSubject.next(new RTCIceCandidate(item))
+        )
+
+        return ok(undefined)
+
       default:
         log.error(
           `❌ received unsupported method: \n ${JSON.stringify(message)}`

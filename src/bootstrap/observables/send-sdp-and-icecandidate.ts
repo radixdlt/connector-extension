@@ -1,6 +1,6 @@
 import { Secrets } from 'signaling/secrets'
 import { WebRtcSubjectsType } from 'webrtc/subjects'
-import { IceCandidate } from 'io-types/types'
+import { IceCandidates } from 'io-types/types'
 import log from 'loglevel'
 import { Result, err, ok } from 'neverthrow'
 import {
@@ -8,7 +8,6 @@ import {
   filter,
   map,
   withLatestFrom,
-  switchMap,
   tap,
   from,
   mergeMap,
@@ -16,6 +15,8 @@ import {
   of,
   timer,
   first,
+  concatMap,
+  bufferTime,
 } from 'rxjs'
 import { DataTypes } from 'io-types/types'
 import { SignalingSubjectsType } from 'signaling/subjects'
@@ -100,34 +101,27 @@ export const sendSdpAndIcecandidate = (
     map(({ sdp, type }) => ({ method: type, payload: { sdp } }))
   )
 
-  const localIceCandidate$ = webRtcSubjects.rtcLocalIceCandidateSubject.pipe(
+  const localIceCandidates$ = webRtcSubjects.rtcLocalIceCandidateSubject.pipe(
     filter(
       (iceCandidate) =>
         !!iceCandidate.candidate &&
         !!iceCandidate.sdpMid &&
         iceCandidate.sdpMLineIndex !== null
     ),
-    map(({ candidate, sdpMid, sdpMLineIndex }) => {
-      // eslint-disable-next-line @typescript-eslint/consistent-type-assertions
-      const payload = {
-        candidate,
-        sdpMid,
-        sdpMLineIndex,
-      } as IceCandidate['payload']
-      return {
-        method: 'iceCandidate' as IceCandidate['method'],
-        payload,
-      }
-    })
+    bufferTime(2000),
+    map((iceCandidates) => ({
+      method: 'iceCandidates' as IceCandidates['method'],
+      payload: iceCandidates as IceCandidates['payload'],
+    }))
   )
 
   const connectionSecrets$ = signalingSubjects.wsConnectionSecretsSubject.pipe(
     filter((secrets): secrets is Result<Secrets, Error> => !!secrets)
   )
 
-  return merge(localOffer$, localAnswer$, localIceCandidate$).pipe(
+  return merge(localOffer$, localAnswer$, localIceCandidates$).pipe(
     withLatestFrom(signalingSubjects.wsSourceSubject, connectionSecrets$),
-    switchMap(([{ payload, method }, source, secretsResult]) =>
+    concatMap(([{ payload, method }, source, secretsResult]) =>
       from(
         secretsResult.asyncAndThen((secrets) =>
           createMessage({ method, source, payload }, secrets)
