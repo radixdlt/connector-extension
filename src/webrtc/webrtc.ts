@@ -1,8 +1,5 @@
 import { WebRtcSubjectsType } from 'webrtc/subjects'
-import {
-  PeerConnectionAndDataChannel,
-  PeerConnectionAndDataChannelType,
-} from './webrtc-peer-connection'
+import { PeerConnection, PeerConnectionType } from './peer-connection'
 
 export type WebRtcType = ReturnType<typeof WebRtc>
 export const WebRtc = ({
@@ -14,11 +11,11 @@ export const WebRtc = ({
   dataChannelConfig: RTCDataChannelInit
   subjects: WebRtcSubjectsType
 }) => {
-  let peerConnectionInstance: PeerConnectionAndDataChannelType | undefined
+  let peerConnectionInstance: PeerConnectionType | undefined
 
   const createPeerConnection = () => {
     peerConnectionInstance?.destroy()
-    peerConnectionInstance = PeerConnectionAndDataChannel(
+    peerConnectionInstance = PeerConnection(
       subjects,
       peerConnectionConfig,
       dataChannelConfig

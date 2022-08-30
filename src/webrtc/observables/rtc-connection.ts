@@ -1,10 +1,10 @@
 import { WebRtcSubjectsType } from 'webrtc/subjects'
-import { PeerConnectionAndDataChannelType } from 'webrtc/webrtc-peer-connection'
+import { PeerConnectionType } from 'webrtc/peer-connection'
 import { combineLatest, tap } from 'rxjs'
 
 export const rtcConnection = (
   subjects: WebRtcSubjectsType,
-  getPeerConnection: () => PeerConnectionAndDataChannelType | undefined,
+  getPeerConnection: () => PeerConnectionType | undefined,
   createPeerConnection: () => void,
   destroyPeerConnection: () => void
   // eslint-disable-next-line max-params
