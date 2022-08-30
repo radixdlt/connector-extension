@@ -1,6 +1,7 @@
 import loglevel from 'loglevel'
 import { SignalingSubjectsType } from 'signaling/subjects'
 import { StorageClientType } from 'storage/storage-client'
+import { Buffer } from 'buffer'
 
 export const setupConnectionPassword = (
   getConnectionPassword: StorageClientType['getConnectionPassword'],
