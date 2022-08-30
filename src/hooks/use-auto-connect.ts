@@ -7,8 +7,8 @@ export const useAutoConnect = () => {
   const webRtc = useContext(WebRtcContext)
 
   useEffect(() => {
-    if (!webRtc?.webRtcClient) return
-    const subscription = webRtc?.webRtcClient.subjects.wsAutoConnect
+    if (!webRtc) return
+    const subscription = webRtc?.signaling.subjects.wsAutoConnect
       .pipe(tap((result) => setAutoConnect(result)))
       .subscribe()
 

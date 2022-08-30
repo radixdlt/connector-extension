@@ -36,7 +36,7 @@ export const Main = () => {
   useEffect(() => {
     if (!webRtc) return
     if (connectionSecret?.isOk() && step === 1 && autoConnect) {
-      webRtc.webRtcClient.subjects.wsConnectSubject.next(true)
+      webRtc.signaling.subjects.wsConnectSubject.next(true)
       setStep(2)
     } else if (step === 1) return
     else if (
@@ -51,7 +51,7 @@ export const Main = () => {
     1: (
       <EncryptionKey
         onNext={() => {
-          webRtc?.webRtcClient.subjects.wsConnectSubject.next(true)
+          webRtc?.signaling.subjects.wsConnectSubject.next(true)
           return setStep(2)
         }}
       />
@@ -97,8 +97,8 @@ export const Main = () => {
               type="refresh"
               onClick={() => {
                 setStep(1)
-                webRtc?.webRtcClient.subjects.wsAutoConnect.next(false)
-                webRtc?.storageClient.subjects.removeConnectionPasswordSubject.next()
+                webRtc?.signaling.subjects.wsAutoConnect.next(false)
+                webRtc?.storage.subjects.removeConnectionPasswordSubject.next()
               }}
             />
           </Button>

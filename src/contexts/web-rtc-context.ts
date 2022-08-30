@@ -1,6 +1,4 @@
-import { BootstrapApplicationType } from 'bootstrap-application'
+import { BootstrapType } from 'bootstrap/bootstrap'
 import { createContext } from 'react'
 
-export const WebRtcContext = createContext<BootstrapApplicationType | null>(
-  null
-)
+export const WebRtcContext = createContext<BootstrapType | null>(null)

@@ -6,13 +6,13 @@ export const useSaveConnectionPassword = () => {
   const webRtc = useContext(WebRtcContext)
   useEffect(() => {
     if (!webRtc) return
-    const subscription = webRtc.webRtcClient.subjects.rtcStatusSubject
+    const subscription = webRtc.webRtc.subjects.rtcStatusSubject
       .pipe(
         filter((status) => status === 'connected'),
-        withLatestFrom(webRtc.webRtcClient.subjects.wsConnectionSecretsSubject),
+        withLatestFrom(webRtc.signaling.subjects.wsConnectionSecretsSubject),
         tap(([, secretsResult]) =>
           secretsResult?.map((secrets) =>
-            webRtc.storageClient.subjects.addConnectionPasswordSubject.next(
+            webRtc.storage.subjects.addConnectionPasswordSubject.next(
               secrets.encryptionKey
             )
           )

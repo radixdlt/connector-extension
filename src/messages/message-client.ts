@@ -1,15 +1,8 @@
-import { WebRtcSubjectsType } from 'connections'
 import { MessageSubjects } from './subjects'
 import { MessageSubscriptions } from './subscriptions'
 
-export const MessageClient = (
-  messageSubjects = MessageSubjects(),
-  webRtcSubjects: WebRtcSubjectsType
-) => {
-  const messageSubscriptions = MessageSubscriptions(
-    messageSubjects,
-    webRtcSubjects
-  )
+export const MessageClient = (messageSubjects = MessageSubjects()) => {
+  const messageSubscriptions = MessageSubscriptions(messageSubjects)
 
   const destroy = () => {
     messageSubscriptions.unsubscribe()

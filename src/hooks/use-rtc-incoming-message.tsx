@@ -8,7 +8,7 @@ export const useWebRtcIncomingMessage = () => {
 
   useEffect(() => {
     if (!webRtc) return
-    const subscription = webRtc.webRtcClient.subjects.rtcIncomingMessageSubject
+    const subscription = webRtc.webRtc.subjects.rtcIncomingMessageSubject
       .pipe(tap((message) => setMessage(message)))
       .subscribe()
 
