@@ -1,13 +1,15 @@
 import { ChromeApi } from 'chrome/chrome-api'
-import log, { Logger } from 'loglevel'
+import { Logger } from 'loglevel'
 import { StorageSubjectsType } from './subjects'
 import { storageSubscriptions } from './subscriptions'
 
-export const makeChromeApi = (id: string) => {
-  const chromeAPI = ChromeApi(id)
+export const makeChromeApi = (id: string, logger: Logger) => {
+  const chromeAPI = ChromeApi(id, logger)
   const getConnectionPassword = () =>
     chromeAPI.storage.getItem<string>('connectionPassword')
-  return { chromeAPI, getConnectionPassword }
+  const removeConnectionPassword = () =>
+    chromeAPI.storage.removeItem('connectionPassword')
+  return { chromeAPI, getConnectionPassword, removeConnectionPassword }
 }
 
 export type StorageClientType = ReturnType<typeof StorageClient>
@@ -17,12 +19,28 @@ export type StorageInput = {
   logger: Logger
 }
 export const StorageClient = (input: StorageInput) => {
-  log.debug(`📦 storage client with id: '${input.id}' initiated`)
+  input.logger.debug(`📦 storage client with id: '${input.id}' initiated`)
   // TODO: Support more browsers
-  const { chromeAPI, getConnectionPassword } = makeChromeApi(input.id)
+  const { chromeAPI, getConnectionPassword, removeConnectionPassword } =
+    makeChromeApi(input.id, input.logger)
   const subscription = storageSubscriptions(input.subjects, chromeAPI)
 
+  const onPasswordChange = (changes: {
+    [key: string]: chrome.storage.StorageChange
+  }) => {
+    const value = changes[`${input.id}:connectionPassword`]
+    if (changes[`${input.id}:connectionPassword`]) {
+      input.logger.info(`🔐 detected password change`)
+      input.subjects.onPasswordChange.next(
+        value.newValue ? Buffer.from(value.newValue, 'hex') : undefined
+      )
+    }
+  }
+
+  chromeAPI.storage.addListener(onPasswordChange)
+
   const destroy = () => {
+    chromeAPI.storage.removeListener(onPasswordChange)
     subscription.unsubscribe()
   }
 
@@ -31,5 +49,7 @@ export const StorageClient = (input: StorageInput) => {
     destroy,
     id: input.id,
     getConnectionPassword,
+    removeConnectionPassword,
+    chromeAPI,
   }
 }

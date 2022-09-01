@@ -4,48 +4,57 @@ import Button from 'components/button'
 import Tooltip from 'components/tooltip'
 import Connecting from 'containers/connecting'
 import { animated, config, useTransition } from '@react-spring/web'
-import { useContext, useEffect, useState } from 'react'
+import { useContext, useState, useEffect } from 'react'
 import { usePrevious } from 'react-use'
 import { styled } from 'stitches.config'
-import { ChatBox } from 'containers/chat-box/chat-box'
+import { Connected } from 'containers/connected/connected'
 import { EncryptionKey } from 'containers/encryptionkey'
 import logo from 'images/logo.png'
-import { useWebRtcDataChannelStatus } from 'hooks/use-rtc-data-channel-status'
 import { useSaveConnectionPassword } from 'hooks/use-save-connection-password'
-import { useConnectionSecrets } from 'hooks/use-connection-secrets'
-import { useAutoConnect } from 'hooks/use-auto-connect'
 import { WebRtcContext } from 'contexts/web-rtc-context'
 import { config as appConfig } from '../../config'
+import { Subscription, tap } from 'rxjs'
 
 const AnimatedBox = styled(animated.div, {
   position: 'absolute',
-  width: '85%',
+  width: '100%',
+  left: 0,
   top: 70,
   zIndex: 0,
 })
 
-export const Main = () => {
+export const Setup = () => {
   const webRtc = useContext(WebRtcContext)
   useSaveConnectionPassword()
-  const connectionSecret = useConnectionSecrets()
-  const autoConnect = useAutoConnect()
-  const status = useWebRtcDataChannelStatus()
   const [step, setStep] = useState<keyof typeof steps>(1)
   const prevStep = usePrevious(step)
 
   useEffect(() => {
-    if (!webRtc) return
-    if (connectionSecret?.isOk() && step === 1 && autoConnect) {
-      webRtc.signaling.subjects.wsConnectSubject.next(true)
-      setStep(2)
-    } else if (step === 1) return
-    else if (
-      ['connecting', 'disconnected'].includes(status || '') &&
-      step !== 2
+    webRtc?.storage.getConnectionPassword().map((secret) => {
+      if (!secret)
+        webRtc.signaling.subjects.wsGenerateConnectionSecretsSubject.next()
+
+      return undefined
+    })
+
+    const subscriptions = new Subscription()
+
+    subscriptions.add()
+
+    subscriptions.add(
+      webRtc?.webRtc.subjects.rtcStatusSubject
+        .pipe(
+          tap((status) => {
+            if (status === 'connected') setStep(3)
+          })
+        )
+        .subscribe()
     )
-      setStep(2)
-    else if (status === 'connected' && step !== 3) setStep(3)
-  }, [step, status, connectionSecret, autoConnect])
+
+    return () => {
+      subscriptions?.unsubscribe()
+    }
+  }, [webRtc])
 
   const steps = {
     1: (
@@ -57,7 +66,7 @@ export const Main = () => {
       />
     ),
     2: <Connecting />,
-    3: <ChatBox />,
+    3: <Connected />,
   }
 
   const transitions = useTransition(step, {
@@ -78,7 +87,7 @@ export const Main = () => {
   })
 
   return (
-    <Box css={{ width: '180px', height: '340px' }} p="small" flex="col">
+    <Box css={{ height: '340px', position: 'relative' }} p="small" flex="col">
       <Box py="small" items="center" justify="between">
         <Box flex="col">
           <Box flex="row">
@@ -95,11 +104,9 @@ export const Main = () => {
               color="$secondary"
               size="small"
               type="refresh"
-              onClick={() => {
+              onClick={async () => {
                 setStep(1)
-                webRtc?.signaling.subjects.wsAutoConnect.next(false)
-                webRtc?.storage.subjects.removeConnectionPasswordSubject.next()
-                webRtc?.signaling.subjects.wsGenerateConnectionSecretsSubject.next()
+                await webRtc?.storage.removeConnectionPassword()
               }}
             />
           </Button>

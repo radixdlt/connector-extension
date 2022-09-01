@@ -8,9 +8,9 @@ import { SignalingSubjects, SignalingSubjectsType } from 'signaling/subjects'
 import { StorageSubjects, StorageSubjectsType } from 'storage/subjects'
 import { StorageClient, StorageInput } from '../storage/storage-client'
 import { ApplicationSubscriptions } from './subscriptions'
-import { setupConnectionPassword } from './setup-connection-password'
 import { WebRtcSubjects, WebRtcSubjectsType } from 'webrtc/subjects'
 import { WebRtcClient, WebRtcClientInput } from 'webrtc/webrtc-client'
+import { setupConnectionPassword } from './setup-connection-password'
 
 export type BootstrapType = ReturnType<typeof Bootstrap>
 
@@ -85,14 +85,18 @@ export const Bootstrap = ({
     logger: storageLogger,
   })
 
-  setupConnectionPassword(storage.getConnectionPassword, signaling.subjects)
+  setupConnectionPassword(
+    storage.getConnectionPassword,
+    signaling.subjects,
+    logger
+  )
 
   webRtc.subjects.rtcConnectSubject.next(true)
 
   const applicationSubscriptions = ApplicationSubscriptions({
-    webRtc: webRtc,
+    webRtc,
+    storage,
     signalingSubjects: signaling.subjects,
-    storageSubjects: storage.subjects,
     logger,
   })
 

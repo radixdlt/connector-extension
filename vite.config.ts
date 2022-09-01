@@ -14,7 +14,7 @@ const [major, minor, patch, label = '0'] = version
 
 const manifest = defineManifest(async (env) => ({
   manifest_version: 3,
-  name: 'Radix Chrome Extension',
+  name: 'Radix Babylon Extension',
   version: `${major}.${minor}.${patch}.${label}`,
   version_name: version,
   description: 'Radix Babylon Browser Extension',
@@ -24,7 +24,7 @@ const manifest = defineManifest(async (env) => ({
     type: 'module',
   },
   options_ui: {
-    page: 'index.html',
+    page: 'src/chrome/setup.html',
     open_in_tab: false,
   },
   content_scripts: [

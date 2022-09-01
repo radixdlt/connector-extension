@@ -1,18 +1,19 @@
 import { WebRtcClientType } from 'webrtc/webrtc-client'
 import { Subscription } from 'rxjs'
 import { SignalingSubjectsType } from 'signaling/subjects'
-import { StorageSubjectsType } from 'storage/subjects'
 import { connection } from './observables/connection'
 import { wsSendMessage } from './observables/ws-send-message'
 import { wsIncomingMessage } from './observables/ws-incoming-message'
 import { rtcRestart } from './observables/rtc-restart'
 import { wsConnect } from './observables/ws-connect'
+import { wsConnectionPasswordChange } from './observables/ws-connection-password-change'
 import { Logger } from 'loglevel'
+import { StorageClientType } from 'storage/storage-client'
 
 export type ApplicationSubscriptionsInput = {
   webRtc: WebRtcClientType
   signalingSubjects: SignalingSubjectsType
-  storageSubjects: StorageSubjectsType
+  storage: StorageClientType
   logger: Logger
 }
 export const ApplicationSubscriptions = (
@@ -46,6 +47,13 @@ export const ApplicationSubscriptions = (
 
   subscriptions.add(
     wsConnect(input.webRtc.subjects, input.signalingSubjects).subscribe()
+  )
+
+  subscriptions.add(
+    wsConnectionPasswordChange(
+      input.storage.subjects,
+      input.signalingSubjects
+    ).subscribe()
   )
 
   return subscriptions
