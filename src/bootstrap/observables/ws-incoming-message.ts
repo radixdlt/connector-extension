@@ -9,7 +9,7 @@ import {
   SignalingServerResponse,
 } from 'io-types/types'
 import { validateIncomingMessage } from 'io-types/validate'
-import log from 'loglevel'
+import { Logger } from 'loglevel'
 import { err, ok, okAsync, Result, ResultAsync } from 'neverthrow'
 import { filter, map, concatMap, withLatestFrom, share } from 'rxjs'
 import { parseJSON } from 'utils'
@@ -17,12 +17,12 @@ import { Buffer } from 'buffer'
 import { SignalingSubjectsType } from 'signaling/subjects'
 
 const distributeMessage =
-  (subjects: WebRtcSubjectsType) =>
+  (subjects: WebRtcSubjectsType, logger: Logger) =>
   (message: DataTypes): Result<void, Error> => {
     switch (message.method) {
       case 'answer': {
-        log.debug(`🚀 received remote answer:`)
-        log.trace(message.payload)
+        logger.debug(`🚀 received remote answer:`)
+        logger.trace(message.payload)
         subjects.rtcRemoteAnswerSubject.next({
           ...message.payload,
           type: 'answer',
@@ -32,8 +32,8 @@ const distributeMessage =
       }
 
       case 'offer':
-        log.debug(`🗿 received remote offer:`)
-        log.trace(JSON.stringify(message.payload))
+        logger.debug(`🗿 received remote offer:`)
+        logger.trace(JSON.stringify(message.payload))
         subjects.rtcRemoteOfferSubject.next({
           ...message.payload,
           type: 'offer',
@@ -41,16 +41,16 @@ const distributeMessage =
         return ok(undefined)
 
       case 'iceCandidate':
-        log.debug(`🥶 received remote iceCandidate`)
-        log.trace(message.payload)
+        logger.debug(`🥶 received remote iceCandidate`)
+        logger.trace(message.payload)
         subjects.rtcRemoteIceCandidateSubject.next(
           new RTCIceCandidate(message.payload)
         )
         return ok(undefined)
 
       case 'iceCandidates':
-        log.debug(`🥶 received remote iceCandidates`)
-        log.trace(message.payload)
+        logger.debug(`🥶 received remote iceCandidates`)
+        logger.trace(message.payload)
         message.payload.forEach((item) =>
           subjects.rtcRemoteIceCandidateSubject.next(new RTCIceCandidate(item))
         )
@@ -58,7 +58,7 @@ const distributeMessage =
         return ok(undefined)
 
       default:
-        log.error(
+        logger.error(
           `❌ received unsupported method: \n ${JSON.stringify(message)}`
         )
         return err(Error('invalid message method'))
@@ -67,27 +67,28 @@ const distributeMessage =
 
 const decryptMessagePayload = (
   message: DataTypes,
-  encryptionKey: Buffer
+  encryptionKey: Buffer,
+  logger: Logger
 ): ResultAsync<DataTypes, Error> => {
-  log.debug(`🧩 attempting to decrypt message payload`)
+  logger.debug(`🧩 attempting to decrypt message payload`)
   return transformBufferToSealbox(Buffer.from(message.encryptedPayload, 'hex'))
     .asyncAndThen(({ ciphertextAndAuthTag, iv }) =>
       decrypt(ciphertextAndAuthTag, encryptionKey, iv).mapErr((error) => {
-        log.debug(`❌ failed to decrypt payload`)
+        logger.debug(`❌ failed to decrypt payload`)
         return error
       })
     )
     .andThen((decrypted) =>
       parseJSON<DataTypes['payload']>(decrypted.toString('utf8')).mapErr(
         (error) => {
-          log.debug(`❌ failed to parse decrypted payload: \n ${decrypted}`)
+          logger.debug(`❌ failed to parse decrypted payload: \n ${decrypted}`)
           return error
         }
       )
     )
     .map((payload: DataTypes['payload']) => {
-      log.debug(`✅ successfully decrypted payload`)
-      log.trace(payload)
+      logger.debug(`✅ successfully decrypted payload`)
+      logger.trace(payload)
       return { ...message, payload } as unknown as DataTypes
     })
 }
@@ -121,14 +122,15 @@ const handleIncomingMessage =
 
 export const wsIncomingMessage = (
   signalingSubjects: SignalingSubjectsType,
-  webRtcSubjects: WebRtcSubjectsType
+  webRtcSubjects: WebRtcSubjectsType,
+  logger: Logger
 ) =>
   signalingSubjects.wsIncomingRawMessageSubject.pipe(
     map((messageEvent) => messageEvent.data),
     map((rawMessage) =>
       parseJSON<SignalingServerResponse>(rawMessage)
         .mapErr((error): InvalidMessageError => {
-          log.error(`❌ could not parse message: \n '${rawMessage}' `)
+          logger.error(`❌ could not parse message: \n '${rawMessage}' `)
           return {
             info: 'invalidMessageError',
             data: rawMessage,
@@ -136,12 +138,12 @@ export const wsIncomingMessage = (
           }
         })
         .map((message) => {
-          log.debug(
+          logger.debug(
             `🐍 parsed message:\ninfo: '${message.info}'\nrequestId: '${
               (message as any)?.requestId
             }`
           )
-          log.trace(message)
+          logger.trace(message)
 
           return message
         })
@@ -162,14 +164,14 @@ export const wsIncomingMessage = (
           message
             ? secretsResult
                 .asyncAndThen((secrets) =>
-                  decryptMessagePayload(message, secrets.encryptionKey)
+                  decryptMessagePayload(message, secrets.encryptionKey, logger)
                 )
-                .andThen(distributeMessage(webRtcSubjects))
+                .andThen(distributeMessage(webRtcSubjects, logger))
             : okAsync(undefined)
         )
         // TODO: handle error
         .mapErr((error) => {
-          log.error(error)
+          logger.error(error)
         })
     ),
     share()

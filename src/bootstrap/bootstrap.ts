@@ -93,6 +93,7 @@ export const Bootstrap = ({
     webRtc: webRtc,
     signalingSubjects: signaling.subjects,
     storageSubjects: storage.subjects,
+    logger,
   })
 
   const destroy = () => {

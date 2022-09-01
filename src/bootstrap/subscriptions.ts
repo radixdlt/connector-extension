@@ -7,11 +7,13 @@ import { wsSendMessage } from './observables/ws-send-message'
 import { wsIncomingMessage } from './observables/ws-incoming-message'
 import { rtcRestart } from './observables/rtc-restart'
 import { wsConnect } from './observables/ws-connect'
+import { Logger } from 'loglevel'
 
 export type ApplicationSubscriptionsInput = {
   webRtc: WebRtcClientType
   signalingSubjects: SignalingSubjectsType
   storageSubjects: StorageSubjectsType
+  logger: Logger
 }
 export const ApplicationSubscriptions = (
   input: ApplicationSubscriptionsInput
@@ -29,7 +31,8 @@ export const ApplicationSubscriptions = (
   subscriptions.add(
     wsIncomingMessage(
       input.signalingSubjects,
-      input.webRtc.subjects
+      input.webRtc.subjects,
+      input.logger
     ).subscribe()
   )
 
