@@ -1,7 +1,7 @@
 import { combineLatest, withLatestFrom, tap } from 'rxjs'
 import { SignalingSubjectsType } from 'signaling/subjects'
 
-export const connect = (
+export const wsConnect = (
   subjects: SignalingSubjectsType,
   connect: (connectionId: string) => void
 ) =>

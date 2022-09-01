@@ -1,4 +1,4 @@
-import log from 'loglevel'
+import { Logger } from 'loglevel'
 import { ResultAsync } from 'neverthrow'
 import { Subscription } from 'rxjs'
 import { errorIdentity } from 'utils/error-identity'
@@ -17,23 +17,25 @@ export type PeerConnectionType = ReturnType<typeof PeerConnection>
 export const PeerConnection = (
   subjects: WebRtcSubjectsType,
   peerConnectionConfig: RTCConfiguration,
-  dataChannelConfig: RTCDataChannelInit
+  dataChannelConfig: RTCDataChannelInit,
+  logger: Logger
+  // eslint-disable-next-line max-params
 ) => {
   track('webrtc_connecting')
   subjects.rtcStatusSubject.next('connecting')
   const peerConnection = new RTCPeerConnection(peerConnectionConfig)
-  log.debug(`🕸 created webRTC peer connection instance`)
-  log.trace(peerConnectionConfig)
+  logger.debug(`🕸 created webRTC peer connection instance`)
+  logger.trace(peerConnectionConfig)
 
   const onicecandidate = (e: RTCPeerConnectionIceEvent) => {
     if (e.candidate) {
-      log.debug(`🧊 got local ice candidate`)
+      logger.debug(`🧊 got local ice candidate`)
       subjects.rtcLocalIceCandidateSubject.next(e.candidate)
     }
   }
 
   const oniceconnectionstatechange = () => {
-    log.debug(`🧊 iceConnectionState: ${peerConnection.iceConnectionState}`)
+    logger.debug(`🧊 iceConnectionState: ${peerConnection.iceConnectionState}`)
     subjects.rtcIceConnectionStateSubject.next(
       peerConnection.iceConnectionState
     )
@@ -46,10 +48,10 @@ export const PeerConnection = (
   const setRemoteDescription = (
     sessionDescription: RTCSessionDescriptionInit
   ): ResultAsync<void, Error> => {
-    log.debug(
+    logger.debug(
       `👾 setting remote webRTC description: ${sessionDescription.type}`
     )
-    log.trace(sessionDescription)
+    logger.trace(sessionDescription)
     return ResultAsync.fromPromise(
       peerConnection.setRemoteDescription(sessionDescription),
       errorIdentity
@@ -59,7 +61,9 @@ export const PeerConnection = (
   const setLocalDescription = (
     sessionDescription: RTCSessionDescriptionInit
   ) => {
-    log.debug(`👾 setting local webRTC description: ${sessionDescription.type}`)
+    logger.debug(
+      `👾 setting local webRTC description: ${sessionDescription.type}`
+    )
     return ResultAsync.fromPromise(
       peerConnection.setLocalDescription(sessionDescription),
       errorIdentity
@@ -70,7 +74,7 @@ export const PeerConnection = (
     RTCSessionDescriptionInit,
     Error
   > => {
-    log.debug(`🗣 creating local webRTC answer`)
+    logger.debug(`🗣 creating local webRTC answer`)
     return ResultAsync.fromPromise(peerConnection.createAnswer(), errorIdentity)
   }
 
@@ -78,7 +82,7 @@ export const PeerConnection = (
     RTCSessionDescriptionInit,
     Error
   > => {
-    log.debug(`🗣 creating local webRTC offer`)
+    logger.debug(`🗣 creating local webRTC offer`)
     return ResultAsync.fromPromise(peerConnection.createOffer(), errorIdentity)
   }
 
@@ -93,21 +97,21 @@ export const PeerConnection = (
     dataChannelConfig
   )
 
-  log.trace(`🤌 created webRTC data channel with`)
-  log.trace(dataChannelConfig)
+  logger.trace(`🤌 created webRTC data channel with`)
+  logger.trace(dataChannelConfig)
 
   const onmessage = (ev: MessageEvent<ArrayBuffer | string>) => {
     subjects.rtcIncomingChunkedMessageSubject.next(ev.data)
   }
 
   const onopen = () => {
-    log.debug(`🔊 webRTC data channel open`)
+    logger.info(`🔊 webRTC data channel open`)
     track('webrtc_connected')
     subjects.rtcStatusSubject.next('connected')
   }
 
   const onclose = () => {
-    log.debug(`🔇 webRTC data channel closed`)
+    logger.info(`🔇 webRTC data channel closed`)
     subjects.rtcStatusSubject.next('disconnected')
   }
 
@@ -116,14 +120,14 @@ export const PeerConnection = (
   dataChannel.onclose = onclose
 
   const sendMessage = (message: string) => {
-    log.debug(
+    logger.debug(
       `⬆️ outgoing data channel message:\nsize: ${message.length} Bytes\n${message}`
     )
     dataChannel.send(message)
   }
 
   const destroy = () => {
-    log.debug(`🧹 destroying webRTC instance`)
+    logger.debug(`🧹 destroying webRTC instance`)
     subscriptions.unsubscribe()
     dataChannel.close()
     peerConnection.close()
@@ -141,25 +145,29 @@ export const PeerConnection = (
 
   const subscriptions = new Subscription()
   subscriptions.add(
-    rtcRemoteIceCandidate(subjects, addIceCandidate).subscribe()
+    rtcRemoteIceCandidate(subjects, addIceCandidate, logger).subscribe()
   )
   subscriptions.add(
     rtcRemoteOfferSubject(
       subjects,
       setRemoteDescription,
       createPeerConnectionAnswer,
-      setLocalDescription
+      setLocalDescription,
+      logger
     ).subscribe()
   )
-  subscriptions.add(rtcRemoteAnswer(subjects, setRemoteDescription).subscribe())
+  subscriptions.add(
+    rtcRemoteAnswer(subjects, setRemoteDescription, logger).subscribe()
+  )
   subscriptions.add(
     rtcCreateOffer(
       subjects,
       createPeerConnectionOffer,
-      setLocalDescription
+      setLocalDescription,
+      logger
     ).subscribe()
   )
-  subscriptions.add(rtcSendMessage(subjects, sendMessage).subscribe())
+  subscriptions.add(rtcSendMessage(subjects, sendMessage, logger).subscribe())
 
   return { peerConnection, dataChannel, destroy }
 }

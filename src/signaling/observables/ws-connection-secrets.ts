@@ -5,8 +5,9 @@ import { setConnectionId } from 'mixpanel'
 import { errAsync } from 'neverthrow'
 import { tap, switchMap, share } from 'rxjs'
 import { SignalingSubjectsType } from 'signaling/subjects'
+import { Logger } from 'loglevel'
 
-export const generateConnectionSecrets = (subjects: SignalingSubjectsType) =>
+export const wsGenerateConnectionSecrets = (subjects: SignalingSubjectsType) =>
   subjects.wsGenerateConnectionSecretsSubject.pipe(
     tap(() => {
       secureRandom(config.secrets.connectionPasswordByteLength).map((buffer) =>
@@ -15,11 +16,14 @@ export const generateConnectionSecrets = (subjects: SignalingSubjectsType) =>
     })
   )
 
-export const connectionPassword = (subjects: SignalingSubjectsType) =>
+export const wsConnectionPassword = (
+  subjects: SignalingSubjectsType,
+  logger: Logger
+) =>
   subjects.wsConnectionPasswordSubject.pipe(
     switchMap((password) =>
       password
-        ? deriveSecretsFromConnectionPassword(password)
+        ? deriveSecretsFromConnectionPassword(password, logger)
         : errAsync(Error('missing connection password'))
     ),
     share(),

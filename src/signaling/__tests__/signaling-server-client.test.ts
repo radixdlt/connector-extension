@@ -8,7 +8,7 @@ import { createIV, encrypt } from 'crypto/encryption'
 import { delayAsync } from 'test-utils/delay-async'
 import { SignalingSubjectsType } from 'signaling/subjects'
 import { SignalingServerClientType } from 'signaling/signaling-server-client'
-import { messageConfirmation } from 'signaling/observables/message-confirmation'
+import { wsMessageConfirmation } from 'signaling/observables/ws-message-confirmation'
 import { Bootstrap, BootstrapType } from 'bootstrap/bootstrap'
 
 const url =
@@ -35,7 +35,7 @@ describe('Signaling server client', () => {
   beforeEach(async () => {
     log.setLevel('debug')
     application = Bootstrap({
-      signalingServerOptions: {
+      signalingClientOptions: {
         baseUrl: url,
       },
     })
@@ -132,7 +132,7 @@ describe('Signaling server client', () => {
 
     it('should send a message with ok confirmation', async () => {
       let messageConfirmationSpy = subscribeSpyTo(
-        messageConfirmation(signalingSubjects)(ok(message as any), 300)
+        wsMessageConfirmation(signalingSubjects, log)(ok(message as any), 300)
       )
       expect(wss).toReceiveMessage(JSON.stringify(message))
 
@@ -145,7 +145,7 @@ describe('Signaling server client', () => {
 
     it('should fail message confirmation due to timeout', async () => {
       let messageConfirmationSpy = subscribeSpyTo(
-        messageConfirmation(signalingSubjects)(ok(message as any), 300)
+        wsMessageConfirmation(signalingSubjects, log)(ok(message as any), 300)
       )
       signalingSubjects.wsOutgoingMessageSubject.next(JSON.stringify(message))
 
@@ -160,7 +160,7 @@ describe('Signaling server client', () => {
 
     it('should fail message confirmation due to ws error', async () => {
       let messageConfirmationSpy = subscribeSpyTo(
-        messageConfirmation(signalingSubjects)(ok(message as any), 300)
+        wsMessageConfirmation(signalingSubjects, log)(ok(message as any), 300)
       )
       wss.error()
 

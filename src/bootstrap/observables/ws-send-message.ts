@@ -1,6 +1,6 @@
 import { Secrets } from 'signaling/secrets'
 import { WebRtcSubjectsType } from 'webrtc/subjects'
-import { IceCandidates } from 'io-types/types'
+import { IceCandidate, IceCandidates } from 'io-types/types'
 import log from 'loglevel'
 import { Result, err, ok } from 'neverthrow'
 import {
@@ -14,17 +14,18 @@ import {
   Observable,
   of,
   timer,
-  first,
   concatMap,
   bufferTime,
+  first,
 } from 'rxjs'
 import { DataTypes } from 'io-types/types'
 import { SignalingSubjectsType } from 'signaling/subjects'
 import { createIV, encrypt } from 'crypto/encryption'
 import { ResultAsync } from 'neverthrow'
 import { Buffer } from 'buffer'
+import { config } from 'config'
 
-const createMessage = (
+const wsCreateMessage = (
   { payload, method, source }: Pick<DataTypes, 'payload' | 'method' | 'source'>,
   { encryptionKey, connectionId }: Secrets
 ): ResultAsync<Omit<DataTypes, 'payload'>, Error> =>
@@ -40,40 +41,47 @@ const createMessage = (
       source,
     }))
 
-const messageConfirmation =
-  (subjects: SignalingSubjectsType) =>
-  (
-    messageResult: Result<Omit<DataTypes, 'payload'>, Error>,
-    timeout = 3000
-  ): Observable<
-    Result<boolean, Error | { requestId: string; reason: string }>
-  > => {
-    if (messageResult.isErr()) return of(err(messageResult.error))
+const wsMessageConfirmation = (
+  subjects: SignalingSubjectsType,
+  messageResult: Result<Omit<DataTypes, 'payload'>, Error>,
+  timeout = 3000
+): Observable<
+  Result<boolean, Error | { requestId: string; reason: string }>
+> => {
+  if (messageResult.isErr()) return of(err(messageResult.error))
 
-    const message = messageResult.value
-    const { requestId } = message
-    subjects.wsOutgoingMessageSubject.next(JSON.stringify(message))
-    return merge(
-      subjects.wsIncomingMessageConfirmationSubject.pipe(
-        tap((message) =>
-          log.debug(`👌 got message confirmation:\n${message.requestId}`)
-        ),
-        filter(
-          (incomingMessage) => message.requestId === incomingMessage.requestId
-        ),
-        map(() => ok(true))
-      ),
-      subjects.wsServerErrorResponseSubject.pipe(
-        map((message) => err({ requestId, reason: 'serverError', message }))
-      ),
-      timer(timeout).pipe(map(() => err({ requestId, reason: 'timeout' }))),
-      subjects.wsErrorSubject.pipe(
-        map(() => err({ requestId, reason: 'error' }))
-      )
-    ).pipe(first())
-  }
+  const message = messageResult.value
 
-export const sendSdpAndIcecandidate = (
+  subjects.wsOutgoingMessageSubject.next(JSON.stringify(message))
+
+  const success$ = subjects.wsIncomingMessageConfirmationSubject.pipe(
+    tap((message) =>
+      log.debug(`👌 got message confirmation:\n${message.requestId}`)
+    ),
+    filter(
+      (incomingMessage) => message.requestId === incomingMessage.requestId
+    ),
+    map(() => ok(true))
+  )
+
+  const serverError$ = subjects.wsServerErrorResponseSubject.pipe(
+    map((response) =>
+      err({ requestId: message.requestId, reason: 'serverError', response })
+    )
+  )
+
+  const timeout$ = timer(timeout).pipe(
+    map(() => err({ requestId: message.requestId, reason: 'timeout' }))
+  )
+
+  const websocketError$ = subjects.wsErrorSubject.pipe(
+    map(() => err({ requestId: message.requestId, reason: 'error' }))
+  )
+
+  return merge(success$, serverError$, timeout$, websocketError$).pipe(first())
+}
+
+export const wsSendMessage = (
   signalingSubjects: SignalingSubjectsType,
   webRtcSubjects: WebRtcSubjectsType
 ) => {
@@ -108,10 +116,23 @@ export const sendSdpAndIcecandidate = (
         !!iceCandidate.sdpMid &&
         iceCandidate.sdpMLineIndex !== null
     ),
-    bufferTime(2000),
+    bufferTime(config.signalingServer.iceCandidatesBatchTime),
     map((iceCandidates) => ({
       method: 'iceCandidates' as IceCandidates['method'],
       payload: iceCandidates as IceCandidates['payload'],
+    }))
+  )
+
+  const localIceCandidate$ = webRtcSubjects.rtcLocalIceCandidateSubject.pipe(
+    filter(
+      (iceCandidate) =>
+        !!iceCandidate.candidate &&
+        !!iceCandidate.sdpMid &&
+        iceCandidate.sdpMLineIndex !== null
+    ),
+    map((iceCandidate) => ({
+      method: 'iceCandidate' as IceCandidate['method'],
+      payload: iceCandidate as IceCandidate['payload'],
     }))
   )
 
@@ -119,15 +140,22 @@ export const sendSdpAndIcecandidate = (
     filter((secrets): secrets is Result<Secrets, Error> => !!secrets)
   )
 
-  return merge(localOffer$, localAnswer$, localIceCandidates$).pipe(
+  return merge(
+    localOffer$,
+    localAnswer$,
+    // TODO: remove when mobile wallet adds support for batched iceCandidates
+    config.signalingServer.useBatchedIceCandidates
+      ? localIceCandidates$
+      : localIceCandidate$
+  ).pipe(
     withLatestFrom(signalingSubjects.wsSourceSubject, connectionSecrets$),
     concatMap(([{ payload, method }, source, secretsResult]) =>
       from(
         secretsResult.asyncAndThen((secrets) =>
-          createMessage({ method, source, payload }, secrets)
+          wsCreateMessage({ method, source, payload }, secrets)
         )
       ).pipe(
-        mergeMap((result) => messageConfirmation(signalingSubjects)(result))
+        mergeMap((result) => wsMessageConfirmation(signalingSubjects, result))
       )
     ),
     tap((result) => {

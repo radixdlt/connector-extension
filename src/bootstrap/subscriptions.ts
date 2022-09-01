@@ -1,19 +1,17 @@
-import { WebRtcClient } from 'webrtc/webrtc-client'
-import { MessageSubjectsType } from 'messages/subjects'
+import { WebRtcClientType } from 'webrtc/webrtc-client'
 import { Subscription } from 'rxjs'
 import { SignalingSubjectsType } from 'signaling/subjects'
 import { StorageSubjectsType } from 'storage/subjects'
 import { connection } from './observables/connection'
-import { sendSdpAndIcecandidate } from './observables/send-sdp-and-icecandidate'
-import { messageQueue } from './observables/message-queue'
-import { incomingMessage } from './observables/incoming-message'
-import { rtcRestart } from './observables/restart'
+import { wsSendMessage } from './observables/ws-send-message'
+import { wsIncomingMessage } from './observables/ws-incoming-message'
+import { rtcRestart } from './observables/rtc-restart'
+import { wsConnect } from './observables/ws-connect'
 
 export type ApplicationSubscriptionsInput = {
-  webRtc: WebRtcClient
+  webRtc: WebRtcClientType
   signalingSubjects: SignalingSubjectsType
   storageSubjects: StorageSubjectsType
-  messageSubjects: MessageSubjectsType
 }
 export const ApplicationSubscriptions = (
   input: ApplicationSubscriptionsInput
@@ -25,26 +23,26 @@ export const ApplicationSubscriptions = (
   )
 
   subscriptions.add(
-    sendSdpAndIcecandidate(
+    wsSendMessage(input.signalingSubjects, input.webRtc.subjects).subscribe()
+  )
+
+  subscriptions.add(
+    wsIncomingMessage(
       input.signalingSubjects,
       input.webRtc.subjects
     ).subscribe()
   )
 
   subscriptions.add(
-    messageQueue(input.messageSubjects, input.webRtc.subjects).subscribe()
-  )
-
-  subscriptions.add(
-    incomingMessage(input.signalingSubjects, input.webRtc.subjects).subscribe()
-  )
-
-  subscriptions.add(
     rtcRestart(
       input.webRtc.subjects,
       input.signalingSubjects,
-      input.webRtc.webRtc.createPeerConnection
+      input.webRtc.createPeerConnection
     ).subscribe()
+  )
+
+  subscriptions.add(
+    wsConnect(input.webRtc.subjects, input.signalingSubjects).subscribe()
   )
 
   return subscriptions

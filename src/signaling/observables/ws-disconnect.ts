@@ -9,7 +9,7 @@ import {
 } from 'rxjs'
 import { SignalingSubjectsType } from 'signaling/subjects'
 
-export const disconnect = (
+export const wsDisconnect = (
   subjects: SignalingSubjectsType,
   disconnect: () => void
 ) =>

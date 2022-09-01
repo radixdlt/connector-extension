@@ -1,5 +1,5 @@
 import { WebRtcSubjectsType } from 'webrtc/subjects'
-import log from 'loglevel'
+import { Logger } from 'loglevel'
 import { ResultAsync } from 'neverthrow'
 import { switchMap, tap } from 'rxjs'
 
@@ -11,14 +11,16 @@ export const rtcCreateOffer = (
   >,
   setLocalDescription: (
     sessionDescription: RTCSessionDescriptionInit
-  ) => ResultAsync<RTCSessionDescriptionInit, Error>
+  ) => ResultAsync<RTCSessionDescriptionInit, Error>,
+  logger: Logger
+  // eslint-disable-next-line max-params
 ) =>
   subjects.rtcCreateOfferSubject.pipe(
     switchMap(() => createPeerConnectionOffer().andThen(setLocalDescription)),
     tap((result) => {
       // TODO: handle error
       if (result.isErr()) {
-        return log.error(result.error)
+        return logger.error(result.error)
       }
       subjects.rtcLocalOfferSubject.next(result.value)
     })

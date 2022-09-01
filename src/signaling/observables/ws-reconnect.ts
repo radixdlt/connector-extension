@@ -1,5 +1,5 @@
 import { config } from 'config'
-import log from 'loglevel'
+import { Logger } from 'loglevel'
 import {
   combineLatest,
   skip,
@@ -12,7 +12,7 @@ import {
 } from 'rxjs'
 import { SignalingSubjectsType } from 'signaling/subjects'
 
-export const reconnect = (subjects: SignalingSubjectsType) =>
+export const wsReconnect = (subjects: SignalingSubjectsType, logger: Logger) =>
   combineLatest([subjects.wsStatusSubject, subjects.wsConnectSubject]).pipe(
     skip(1),
     filter(
@@ -26,7 +26,7 @@ export const reconnect = (subjects: SignalingSubjectsType) =>
             shouldConnect && status === 'disconnected'
         ),
         filter(([index, , status]) => {
-          log.debug(
+          logger.debug(
             `🔄 lost connection to signaling server, attempting to reconnect... status: ${status}, attempt: ${
               index + 1
             }`
@@ -35,7 +35,7 @@ export const reconnect = (subjects: SignalingSubjectsType) =>
           return status === 'connected'
         }),
         tap(() => {
-          log.debug('🤙 successfully reconnected to signaling server')
+          logger.debug('🤙 successfully reconnected to signaling server')
         }),
         first()
       )

@@ -1,7 +1,8 @@
+import log from 'loglevel'
 import { generateConnectionPasswordAndDeriveSecrets } from '../secrets'
 describe('signaling server secrets', () => {
   it('should generate connection password and derive secrets', async () => {
-    const result = await generateConnectionPasswordAndDeriveSecrets(5)
+    const result = await generateConnectionPasswordAndDeriveSecrets(5, log)
 
     if (result.isErr()) throw result.error
 

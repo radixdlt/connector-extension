@@ -1,7 +1,5 @@
 import { config } from 'config'
 import log, { LogLevelDesc } from 'loglevel'
-import { MessageClient } from 'messages/message-client'
-import { MessageSubjects, MessageSubjectsType } from 'messages/subjects'
 import {
   SignalingServerClient,
   SignalingServerClientInput,
@@ -12,63 +10,80 @@ import { StorageClient, StorageInput } from '../storage/storage-client'
 import { ApplicationSubscriptions } from './subscriptions'
 import { setupConnectionPassword } from './setup-connection-password'
 import { WebRtcSubjects, WebRtcSubjectsType } from 'webrtc/subjects'
-import { WebRtcClientInput, WebRtcClient } from 'webrtc/webrtc-client'
+import { WebRtcClient, WebRtcClientInput } from 'webrtc/webrtc-client'
 
 export type BootstrapType = ReturnType<typeof Bootstrap>
 
 export type BootstrapInput = Partial<{
+  id: string
+  logger: log.Logger
   logLevel: LogLevelDesc
+  signalingLogLevel: LogLevelDesc
+  webRtcLoglevel: LogLevelDesc
+  storageLogLevel: LogLevelDesc
   webRtcSubjects: WebRtcSubjectsType
-  webRtcClientOptions: Omit<
-    WebRtcClientInput,
-    'signalingServerOptions' | 'subjects'
-  >
   signalingSubjects: SignalingSubjectsType
-  signalingServerOptions: Omit<SignalingServerClientInput, 'subjects'>
-  messageSubjects: MessageSubjectsType
   storageSubjects: StorageSubjectsType
-  storageOptions: Omit<StorageInput, 'subjects'>
+  webRtcClientOptions: Omit<WebRtcClientInput, 'subjects' | 'logger'>
+  signalingClientOptions: Omit<
+    SignalingServerClientInput,
+    'subjects' | 'logger'
+  >
+  storageOptions: Omit<StorageInput, 'subjects' | 'logger'>
 }>
 
 export const Bootstrap = ({
+  id = crypto.randomUUID(),
+  logger = log.getLogger(`${id}-connector`),
   logLevel = config.logLevel,
+  signalingLogLevel = config.logLevel,
+  webRtcLoglevel = config.logLevel,
+  storageLogLevel = config.logLevel,
   webRtcSubjects = WebRtcSubjects(),
   signalingSubjects = SignalingSubjects(),
-  messageSubjects = MessageSubjects(),
   storageSubjects = StorageSubjects(),
   webRtcClientOptions = {
-    webRtcOptions: {
-      peerConnectionConfig: config.webRTC.peerConnectionConfig,
-      dataChannelConfig: config.webRTC.dataChannelConfig,
-    },
+    peerConnectionConfig: config.webRTC.peerConnectionConfig,
+    dataChannelConfig: config.webRTC.dataChannelConfig,
   },
-  signalingServerOptions = {
+  signalingClientOptions = {
     baseUrl: config.signalingServer.baseUrl,
   },
   storageOptions = { id: 'radix' },
 }: BootstrapInput) => {
-  log.setLevel(logLevel)
+  logger.setLevel(logLevel)
 
-  log.info(
-    `🏃‍♂️ running in: '${process.env.NODE_ENV}' mode, logLevel: '${config.logLevel}'`
+  logger.info(
+    `🏃‍♂️ running in: '${process.env.NODE_ENV}' mode, logLevel: '${logLevel}'`
   )
 
+  const signalingLogger = log.getLogger(`${id}-signaling`)
+  signalingLogger.setLevel(signalingLogLevel)
+
+  const signaling = SignalingServerClient({
+    ...signalingClientOptions,
+    logger: signalingLogger,
+    subjects: signalingSubjects,
+  })
+
+  const webRtcLogger = log.getLogger(`${id}-webRtc`)
+  webRtcLogger.setLevel(webRtcLoglevel)
+
   const webRtc = WebRtcClient({
-    ...webRtcClientOptions,
+    peerConnectionConfig: webRtcClientOptions.peerConnectionConfig,
+    dataChannelConfig: webRtcClientOptions.dataChannelConfig,
+    logger: webRtcLogger,
     subjects: webRtcSubjects,
   })
 
-  const signaling = SignalingServerClient({
-    ...signalingServerOptions,
-    subjects: signalingSubjects,
-  })
+  const storageLogger = log.getLogger(`${id}-storage`)
+  storageLogger.setLevel(storageLogLevel)
 
   const storage = StorageClient({
     ...storageOptions,
     subjects: storageSubjects,
+    logger: storageLogger,
   })
-
-  const message = MessageClient(messageSubjects)
 
   setupConnectionPassword(storage.getConnectionPassword, signaling.subjects)
 
@@ -78,14 +93,12 @@ export const Bootstrap = ({
     webRtc: webRtc,
     signalingSubjects: signaling.subjects,
     storageSubjects: storage.subjects,
-    messageSubjects: message.subjects,
   })
 
   const destroy = () => {
     webRtc.destroy()
     signaling.destroy()
     storage.destroy()
-    message.destroy()
     applicationSubscriptions.unsubscribe()
   }
 
@@ -93,7 +106,7 @@ export const Bootstrap = ({
     webRtc,
     signaling,
     storage,
-    message,
     destroy,
+    logger,
   }
 }

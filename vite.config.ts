@@ -23,6 +23,10 @@ const manifest = defineManifest(async (env) => ({
     service_worker: 'src/chrome/background.ts',
     type: 'module',
   },
+  options_ui: {
+    page: 'index.html',
+    open_in_tab: false,
+  },
   content_scripts: [
     {
       matches: ['http://*/*', 'https://*/*'],

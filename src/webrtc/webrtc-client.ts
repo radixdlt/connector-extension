@@ -1,33 +1,65 @@
-import { WebRtcSubjectsType } from 'webrtc/subjects'
+import { Logger } from 'loglevel'
 import { WebRtcSubscriptions } from 'webrtc/subscriptions'
-import { WebRtc } from 'webrtc/webrtc'
+import { PeerConnectionType, PeerConnection } from './peer-connection'
+import { WebRtcSubjectsType } from './subjects'
 
-export type WebRtcClient = ReturnType<typeof WebRtcClient>
+export type WebRtcClientType = ReturnType<typeof WebRtcClient>
 export type WebRtcClientInput = {
+  logger: Logger
+  peerConnectionConfig: RTCConfiguration
+  dataChannelConfig: RTCDataChannelInit
   subjects: WebRtcSubjectsType
-  webRtcOptions: Omit<Parameters<typeof WebRtc>[0], 'subjects'>
 }
-
 export const WebRtcClient = (input: WebRtcClientInput) => {
   const subjects = input.subjects
 
-  const webRtc = WebRtc({
-    subjects,
-    peerConnectionConfig: input.webRtcOptions.peerConnectionConfig,
-    dataChannelConfig: input.webRtcOptions.dataChannelConfig,
-  })
+  let peerConnectionInstance: PeerConnectionType | undefined
 
-  const subscriptions = WebRtcSubscriptions(subjects, webRtc)
+  const createPeerConnection = () => {
+    peerConnectionInstance?.destroy()
+    peerConnectionInstance = PeerConnection(
+      subjects,
+      input.peerConnectionConfig,
+      input.dataChannelConfig,
+      input.logger
+    )
+  }
+
+  const closePeerConnection = () => {
+    peerConnectionInstance?.peerConnection.close()
+    peerConnectionInstance?.dataChannel.close()
+  }
+
+  const getPeerConnectionInstance = () => peerConnectionInstance
+
+  const destroyPeerConnectionInstance = () => {
+    if (peerConnectionInstance) {
+      peerConnectionInstance.destroy()
+    }
+  }
+
+  const dependencies = {
+    closePeerConnection,
+    createPeerConnection,
+    destroy: destroyPeerConnectionInstance,
+    getPeerConnectionInstance,
+  }
+
+  const subscriptions = WebRtcSubscriptions(
+    subjects,
+    dependencies,
+    input.logger
+  )
 
   const destroy = () => {
     subjects.rtcConnectSubject.next(false)
-    webRtc.destroy()
+    destroyPeerConnectionInstance()
     subscriptions.unsubscribe()
   }
 
   return {
     subjects,
-    webRtc,
     destroy,
+    createPeerConnection,
   }
 }

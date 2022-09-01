@@ -105,7 +105,6 @@ const handleIncomingMessage =
 
         case 'invalidMessageError':
         case 'missingRemoteClientError':
-        case 'remoteClientDisconnected':
         case 'validationError': {
           signalingSubjects.wsServerErrorResponseSubject.next(message)
           return err(message)
@@ -120,7 +119,7 @@ const handleIncomingMessage =
       return ok(undefined)
     })
 
-export const incomingMessage = (
+export const wsIncomingMessage = (
   signalingSubjects: SignalingSubjectsType,
   webRtcSubjects: WebRtcSubjectsType
 ) =>

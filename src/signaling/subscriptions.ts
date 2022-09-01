@@ -1,13 +1,14 @@
 import { Subscription } from 'rxjs'
-import { sendMessage } from './observables/send-message'
-import { connect } from './observables/connect'
-import { disconnect } from './observables/disconnect'
-import { reconnect } from './observables/reconnect'
+import { wsSendMessage } from './observables/ws-send-message'
+import { wsConnect } from './observables/ws-connect'
+import { wsDisconnect } from './observables/ws-disconnect'
+import { wsReconnect } from './observables/ws-reconnect'
 import {
-  generateConnectionSecrets,
-  connectionPassword,
-} from './observables/connection-secrets'
+  wsGenerateConnectionSecrets,
+  wsConnectionPassword,
+} from './observables/ws-connection-secrets'
 import { SignalingSubjectsType } from './subjects'
+import { Logger } from 'loglevel'
 
 export type SignalingSubscriptionsDependencies = {
   sendMessage: (message: string) => void
@@ -18,22 +19,23 @@ export type SignalingSubscriptionsDependencies = {
 
 export const SignalingSubscriptions = (
   subjects: SignalingSubjectsType,
-  dependencies: SignalingSubscriptionsDependencies
+  dependencies: SignalingSubscriptionsDependencies,
+  logger: Logger
 ) => {
   const subscriptions = new Subscription()
 
   subscriptions.add(
-    sendMessage(
+    wsSendMessage(
       subjects,
       dependencies.sendMessage,
       dependencies.getWs
     ).subscribe()
   )
-  subscriptions.add(connect(subjects, dependencies.connect).subscribe())
-  subscriptions.add(disconnect(subjects, dependencies.disconnect).subscribe())
-  subscriptions.add(reconnect(subjects).subscribe())
-  subscriptions.add(generateConnectionSecrets(subjects).subscribe())
-  subscriptions.add(connectionPassword(subjects).subscribe())
+  subscriptions.add(wsConnect(subjects, dependencies.connect).subscribe())
+  subscriptions.add(wsDisconnect(subjects, dependencies.disconnect).subscribe())
+  subscriptions.add(wsReconnect(subjects, logger).subscribe())
+  subscriptions.add(wsGenerateConnectionSecrets(subjects).subscribe())
+  subscriptions.add(wsConnectionPassword(subjects, logger).subscribe())
 
   return subscriptions
 }

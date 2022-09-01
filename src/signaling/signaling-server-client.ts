@@ -1,4 +1,4 @@
-import log from 'loglevel'
+import { Logger } from 'loglevel'
 import { track } from 'mixpanel'
 import { SignalingSubjectsType } from './subjects'
 import { SignalingSubscriptions } from './subscriptions'
@@ -7,6 +7,7 @@ type Source = 'wallet' | 'extension'
 
 export type SignalingServerClientType = ReturnType<typeof SignalingServerClient>
 export type SignalingServerClientInput = {
+  logger: Logger
   baseUrl: string
   target?: Source
   source?: Source
@@ -14,6 +15,7 @@ export type SignalingServerClientInput = {
 }
 
 export const SignalingServerClient = ({
+  logger,
   baseUrl,
   target = 'wallet',
   source = 'extension',
@@ -22,7 +24,7 @@ export const SignalingServerClient = ({
   const sendMessageDirection = `[${source} => ${target}]`
   let t0 = 0
   let t1 = 0
-  log.debug(
+  logger.debug(
     `📡 created instance of signalingServerClient with baseUrl:\n${baseUrl}`
   )
   let ws: WebSocket | undefined
@@ -30,7 +32,7 @@ export const SignalingServerClient = ({
 
   const connect = (connectionId: string) => {
     track('ws_connecting')
-    log.debug(
+    logger.debug(
       `📡 connecting to signaling server url:\n${baseUrl}/${connectionId}?target=${target}&source=${source}`
     )
     subjects.wsStatusSubject.next('connecting')
@@ -43,7 +45,7 @@ export const SignalingServerClient = ({
   }
 
   const disconnect = () => {
-    log.debug(`🧹 disconnecting from signaling server...`)
+    logger.debug(`🧹 disconnecting from signaling server...`)
     subjects.wsStatusSubject.next('disconnecting')
     ws?.close()
     removeListeners()
@@ -67,13 +69,13 @@ export const SignalingServerClient = ({
   }
 
   const onMessage = (event: MessageEvent<string>) => {
-    log.debug(`⬇️ incoming ws message:\n${event.data}`)
+    logger.debug(`⬇️ incoming ws message:\n${event.data}`)
     subjects.wsIncomingRawMessageSubject.next(event)
   }
 
   const onOpen = () => {
     t1 = performance.now()
-    log.debug(
+    logger.info(
       `🟢 connected to signaling server\ntarget=${target}&source=${source}\nconnect time: ${(
         t1 - t0
       ).toFixed(0)} ms`
@@ -83,29 +85,33 @@ export const SignalingServerClient = ({
   }
 
   const onClose = () => {
-    log.debug('🔴 disconnected from signaling server')
+    logger.info('🔴 disconnected from signaling server')
     subjects.wsStatusSubject.next('disconnected')
   }
 
   const onError = (event: Event) => {
-    log.error(`❌ got websocket error`)
-    log.trace(event)
+    logger.error(`❌ got websocket error`)
+    logger.trace(event)
     subjects.wsErrorSubject.next(event)
   }
 
   const sendMessage = (message: string) => {
-    log.debug(`⬆️ ${sendMessageDirection} sending ws message:\n${message}`)
+    logger.debug(`⬆️ ${sendMessageDirection} sending ws message:\n${message}`)
     ws?.send(message)
   }
 
   const getWs = () => ws
 
-  const subscriptions = SignalingSubscriptions(subjects, {
-    sendMessage,
-    connect,
-    disconnect,
-    getWs,
-  })
+  const subscriptions = SignalingSubscriptions(
+    subjects,
+    {
+      sendMessage,
+      connect,
+      disconnect,
+      getWs,
+    },
+    logger
+  )
 
   const destroy = () => {
     subjects.wsConnectSubject.next(false)

@@ -1,10 +1,11 @@
 import { WebRtcSubjectsType } from 'webrtc/subjects'
-import log from 'loglevel'
+import { Logger } from 'loglevel'
 import { map, merge, tap } from 'rxjs'
 
 export const rtcSendMessage = (
   subjects: WebRtcSubjectsType,
-  sendMessage: (message: string) => void
+  sendMessage: (message: string) => void,
+  logger: Logger
 ) =>
   merge(
     subjects.rtcOutgoingChunkedMessageSubject,
@@ -13,7 +14,7 @@ export const rtcSendMessage = (
     ),
     subjects.rtcOutgoingConfirmationMessageSubject.pipe(
       tap((message) => {
-        log.debug(
+        logger.debug(
           `👌 sending webRTC data channel confirmation for messageId: ${message.messageId}`
         )
       }),

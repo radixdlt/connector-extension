@@ -1,6 +1,6 @@
 import { config } from 'config'
 import { sha256 } from 'crypto/sha256'
-import log from 'loglevel'
+import { Logger } from 'loglevel'
 import { err, ok, Result } from 'neverthrow'
 import { bufferToChunks } from 'utils'
 import { Buffer } from 'buffer'
@@ -42,6 +42,7 @@ export type ChunkedMessageType =
 
 export const messageToChunked = (
   message: Buffer,
+  logger: Logger,
   chunkSize = config.webRTC.chunkSize
 ) => {
   const messageId = crypto.randomUUID()
@@ -70,7 +71,7 @@ export const messageToChunked = (
     )
 }
 
-export const Chunked = (metaData: MetaData) => {
+export const Chunked = (metaData: MetaData, logger: Logger) => {
   const chunks: MessageChunk[] = []
 
   const addChunk = (chunk: MessageChunk) => {
@@ -81,7 +82,7 @@ export const Chunked = (metaData: MetaData) => {
       return err(Error('expected chunks received'))
 
     chunks.push(chunk)
-    log.debug(`🍞 incoming chunk: ${chunks.length}/${metaData.chunkCount}`)
+    logger.debug(`🍞 incoming chunk: ${chunks.length}/${metaData.chunkCount}`)
     return ok(undefined)
   }
 
@@ -95,7 +96,7 @@ export const Chunked = (metaData: MetaData) => {
           .join('')
       )
     } catch (error) {
-      log.error(error)
+      logger.error(error)
       return err(Error('failed to decode chunked messages'))
     }
   }

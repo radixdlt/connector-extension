@@ -55,16 +55,15 @@ let extension: BootstrapType
 describe('webRTC flow', () => {
   beforeEach(async () => {
     extension = Bootstrap({
-      logLevel: 'silent',
+      signalingLogLevel: 'silent',
       storageOptions: { id: crypto.randomUUID() },
     })
 
     wallet = Bootstrap({
-      logLevel: 'silent',
-      webRtcClientOptions: {
-        webRtcOptions: config.webRTC,
-      },
-      signalingServerOptions: {
+      signalingLogLevel: 'silent',
+      webRtcLoglevel: 'silent',
+      webRtcClientOptions: config.webRTC,
+      signalingClientOptions: {
         ...config.signalingServer,
         source: 'wallet',
         target: 'extension',
@@ -83,7 +82,6 @@ describe('webRTC flow', () => {
   })
 
   it('should send message over data channel between two clients', async () => {
-    log.setLevel('debug')
     wallet.webRtc.subjects.rtcConnectSubject.next(true)
     extension.webRtc.subjects.rtcConnectSubject.next(true)
 
@@ -110,8 +108,8 @@ describe('webRTC flow', () => {
       extension.signaling.subjects.wsStatusSubject
     )
 
-    wallet.message.subjects.addMessageSubject.next(message)
-    extension.message.subjects.addMessageSubject.next('hello from extension')
+    wallet.webRtc.subjects.rtcAddMessageToQueue.next(message)
+    extension.webRtc.subjects.rtcAddMessageToQueue.next('hello from extension')
 
     await delayAsync()
 
@@ -166,7 +164,7 @@ describe('webRTC flow', () => {
       wallet.webRtc.subjects.rtcIncomingMessageSubject
     )
 
-    extension.message.subjects.addMessageSubject.next('hello from extension')
+    extension.webRtc.subjects.rtcAddMessageToQueue.next('hello from extension')
 
     await delayAsync()
 

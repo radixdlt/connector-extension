@@ -1,11 +1,11 @@
 import { DataTypes } from 'io-types/types'
-import log from 'loglevel'
+import { Logger } from 'loglevel'
 import { err, ok, Result } from 'neverthrow'
 import { merge, Observable, of, tap, filter, map, timer, first } from 'rxjs'
 import { SignalingSubjectsType } from 'signaling/subjects'
 
-export const messageConfirmation =
-  (subjects: SignalingSubjectsType) =>
+export const wsMessageConfirmation =
+  (subjects: SignalingSubjectsType, logger: Logger) =>
   (
     messageResult: Result<Omit<DataTypes, 'payload'>, Error>,
     timeout = 3000
@@ -20,7 +20,7 @@ export const messageConfirmation =
     return merge(
       subjects.wsIncomingMessageConfirmationSubject.pipe(
         tap((message) =>
-          log.debug(`👌 got message confirmation:\n${message.requestId}`)
+          logger.debug(`👌 got message confirmation:\n${message.requestId}`)
         ),
         filter(
           (incomingMessage) => message.requestId === incomingMessage.requestId

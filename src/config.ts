@@ -9,11 +9,14 @@ export const config = {
   secrets: {
     connectionPasswordByteLength: 32,
   },
+  storage: { key: 'radix' },
   signalingServer: {
     baseUrl: import.meta.env.VITE_APP_SIGNALING_SERVER_BASE_URL,
     reconnect: {
       interval: 1000,
     },
+    useBatchedIceCandidates: false,
+    iceCandidatesBatchTime: 2000,
   },
   webRTC: {
     peerConnectionConfig: {

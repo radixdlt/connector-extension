@@ -1,7 +1,7 @@
 import { config } from 'config'
 import { secureRandom } from 'crypto/secure-random'
 import { sha256 } from 'crypto/sha256'
-import log from 'loglevel'
+import { Logger } from 'loglevel'
 import { ResultAsync } from 'neverthrow'
 import { Buffer } from 'buffer'
 
@@ -11,14 +11,15 @@ export type Secrets = {
 }
 
 export const deriveSecretsFromConnectionPassword = (
-  encryptionKey: Buffer
+  encryptionKey: Buffer,
+  logger: Logger
 ): ResultAsync<Secrets, Error> =>
   sha256(encryptionKey).map((connectionId) => {
     const secrets = {
       connectionId,
       encryptionKey,
     }
-    log.debug(
+    logger.debug(
       `🔐 encryptionKey:\n[${
         encryptionKey.toJSON().data
       }]\nconnection ID:\n${connectionId.toString('hex')}`
@@ -27,6 +28,9 @@ export const deriveSecretsFromConnectionPassword = (
   })
 
 export const generateConnectionPasswordAndDeriveSecrets = (
-  byteCount = config.secrets.connectionPasswordByteLength
+  byteCount = config.secrets.connectionPasswordByteLength,
+  logger: Logger
 ): ResultAsync<Secrets, Error> =>
-  secureRandom(byteCount).asyncAndThen(deriveSecretsFromConnectionPassword)
+  secureRandom(byteCount).asyncAndThen((buffer) =>
+    deriveSecretsFromConnectionPassword(buffer, logger)
+  )

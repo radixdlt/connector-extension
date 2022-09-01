@@ -4,6 +4,6 @@ import { useContext } from 'react'
 export const useWebRtcSendMessage = () => {
   const webRtc = useContext(WebRtcContext)
   return (message: string) => {
-    webRtc?.message.subjects.addMessageSubject.next(message)
+    webRtc?.webRtc.subjects.rtcAddMessageToQueue.next(message)
   }
 }

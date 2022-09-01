@@ -1,9 +1,9 @@
 import { config } from 'config'
 import { messageToChunked } from 'webrtc/data-chunking'
 import { WebRtcSubjectsType } from 'webrtc/subjects'
-import log from 'loglevel'
+import { Logger } from 'loglevel'
 import { track } from 'mixpanel'
-import { Result } from 'neverthrow'
+import { err, Result } from 'neverthrow'
 import {
   concatMap,
   from,
@@ -20,8 +20,9 @@ import { toBuffer } from 'utils/to-buffer'
 import { rtcParsedIncomingMessage } from './rtc-incoming-message'
 
 const dataChannelConfirmation =
-  (subjects: WebRtcSubjectsType) => (messageIdResult: Result<string, Error>) =>
-    rtcParsedIncomingMessage(subjects).pipe(
+  (subjects: WebRtcSubjectsType, logger: Logger) =>
+  (messageIdResult: Result<string, Error>) =>
+    rtcParsedIncomingMessage(subjects, logger).pipe(
       filter(
         (messageResult) =>
           messageIdResult.isOk() &&
@@ -32,18 +33,21 @@ const dataChannelConfirmation =
       tap(() => {
         const messageId = messageIdResult._unsafeUnwrap()
         track('webrtc_message_send_confirmed', { messageId })
-        return log.debug(
+        return logger.debug(
           `👌 received message confirmation for messageId: '${messageId}'`
         )
       })
     )
 
-export const rtcOutgoingMessage = (subjects: WebRtcSubjectsType) =>
+export const rtcOutgoingMessage = (
+  subjects: WebRtcSubjectsType,
+  logger: Logger
+) =>
   subjects.rtcOutgoingMessageSubject.pipe(
     share(),
     concatMap((rawMessage) =>
       from(
-        messageToChunked(toBuffer(rawMessage)).map((message) => {
+        messageToChunked(toBuffer(rawMessage), logger).map((message) => {
           track('webrtc_message_send', {
             messageId: message.metaData.messageId,
             size: rawMessage.length,
@@ -60,7 +64,7 @@ export const rtcOutgoingMessage = (subjects: WebRtcSubjectsType) =>
       ).pipe(
         mergeMap((result) =>
           merge(
-            dataChannelConfirmation(subjects)(result),
+            dataChannelConfirmation(subjects, logger)(result),
             timer(config.webRTC.confirmationTimeout).pipe(
               map(() =>
                 // eslint-disable-next-line max-nested-callbacks
@@ -69,9 +73,10 @@ export const rtcOutgoingMessage = (subjects: WebRtcSubjectsType) =>
                     reason: 'timeout',
                     messageId,
                   })
-                  return log.debug(
+                  logger.debug(
                     `❌ confirmation message timeout for messageId: '${messageId}'`
                   )
+                  return err({ error: 'timeout' })
                 })
               )
             )

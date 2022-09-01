@@ -12,7 +12,7 @@ export type ChromeApiType = ReturnType<typeof ChromeApi>
 
 export const ChromeApi = (id: string) => {
   const checkIfChromeContext = () =>
-    window?.chrome.storage
+    chrome.storage
       ? ok(undefined)
       : err(Error('could not detect chrome.storage in window object'))
 
