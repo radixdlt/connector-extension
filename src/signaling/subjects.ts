@@ -34,4 +34,6 @@ export const SignalingSubjects = () => ({
   wsServerErrorResponseSubject: new Subject<SignalingServerErrorResponse>(),
   wsIsSendingMessageSubject: new BehaviorSubject<boolean>(false),
   wsAutoConnect: new BehaviorSubject<boolean>(false),
+  wsLoadOrCreateConnectionPasswordSubject: new Subject<void>(),
+  wsRegenerateConnectionPassword: new Subject<void>(),
 })

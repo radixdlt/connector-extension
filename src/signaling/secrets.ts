@@ -20,9 +20,9 @@ export const deriveSecretsFromConnectionPassword = (
       encryptionKey,
     }
     logger.debug(
-      `🔐 encryptionKey:\n[${
-        encryptionKey.toJSON().data
-      }]\nconnection ID:\n${connectionId.toString('hex')}`
+      `🔐 encryptionKey:\n${encryptionKey.toString(
+        'hex'
+      )}\nconnection ID:\n${connectionId.toString('hex')}`
     )
     return secrets
   })

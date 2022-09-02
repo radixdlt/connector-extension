@@ -9,6 +9,7 @@ import {
 } from './observables/ws-connection-secrets'
 import { SignalingSubjectsType } from './subjects'
 import { Logger } from 'loglevel'
+import { wsUpdatedConnectionSecrets } from './observables/ws-updated-connection-secrets'
 
 export type SignalingSubscriptionsDependencies = {
   sendMessage: (message: string) => void
@@ -36,6 +37,13 @@ export const SignalingSubscriptions = (
   subscriptions.add(wsReconnect(subjects, logger).subscribe())
   subscriptions.add(wsGenerateConnectionSecrets(subjects).subscribe())
   subscriptions.add(wsConnectionPassword(subjects, logger).subscribe())
+  subscriptions.add(
+    wsUpdatedConnectionSecrets(
+      subjects,
+      dependencies.disconnect,
+      logger
+    ).subscribe()
+  )
 
   return subscriptions
 }

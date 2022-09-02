@@ -9,6 +9,9 @@ import { wsConnect } from './observables/ws-connect'
 import { wsConnectionPasswordChange } from './observables/ws-connection-password-change'
 import { Logger } from 'loglevel'
 import { StorageClientType } from 'storage/storage-client'
+import { loadOrGenerateConnectionPassword } from './observables/ws-load-or-create-connection-password'
+import { storeConnectionPassword } from './observables/store-connection-password'
+import { regenerateConnectionPassword } from './observables/regenerate-connection-password'
 
 export type ApplicationSubscriptionsInput = {
   webRtc: WebRtcClientType
@@ -53,6 +56,28 @@ export const ApplicationSubscriptions = (
     wsConnectionPasswordChange(
       input.storage.subjects,
       input.signalingSubjects
+    ).subscribe()
+  )
+
+  subscriptions.add(
+    loadOrGenerateConnectionPassword(
+      input.signalingSubjects,
+      input.storage.getConnectionPassword
+    ).subscribe()
+  )
+
+  subscriptions.add(
+    storeConnectionPassword(
+      input.webRtc.subjects,
+      input.signalingSubjects,
+      input.storage.subjects
+    ).subscribe()
+  )
+
+  subscriptions.add(
+    regenerateConnectionPassword(
+      input.signalingSubjects,
+      input.storage.subjects
     ).subscribe()
   )
 

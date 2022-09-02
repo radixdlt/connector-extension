@@ -2,6 +2,7 @@ import { ChromeApi } from 'chrome/chrome-api'
 import { Logger } from 'loglevel'
 import { StorageSubjectsType } from './subjects'
 import { storageSubscriptions } from './subscriptions'
+import { Buffer } from 'buffer'
 
 export const makeChromeApi = (id: string, logger: Logger) => {
   const chromeAPI = ChromeApi(id, logger)
@@ -30,7 +31,7 @@ export const StorageClient = (input: StorageInput) => {
   }) => {
     const value = changes[`${input.id}:connectionPassword`]
     if (changes[`${input.id}:connectionPassword`]) {
-      input.logger.info(`🔐 detected password change`)
+      input.logger.info(`🔐 detected password change\n${JSON.stringify(value)}`)
       input.subjects.onPasswordChange.next(
         value.newValue ? Buffer.from(value.newValue, 'hex') : undefined
       )

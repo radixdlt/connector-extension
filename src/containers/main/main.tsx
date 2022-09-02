@@ -1,7 +1,4 @@
-import Icon from 'components/icon'
 import Box from 'components/box'
-import Button from 'components/button'
-import Tooltip from 'components/tooltip'
 import Connecting from 'containers/connecting'
 import { animated, config, useTransition } from '@react-spring/web'
 import { useContext, useEffect, useState } from 'react'
@@ -11,7 +8,6 @@ import { ChatBox } from 'containers/chat-box/chat-box'
 import { EncryptionKey } from 'containers/encryptionkey'
 import logo from 'images/logo.png'
 import { useWebRtcDataChannelStatus } from 'hooks/use-rtc-data-channel-status'
-import { useSaveConnectionPassword } from 'hooks/use-save-connection-password'
 import { useConnectionSecrets } from 'hooks/use-connection-secrets'
 import { useAutoConnect } from 'hooks/use-auto-connect'
 import { WebRtcContext } from 'contexts/web-rtc-context'
@@ -26,7 +22,6 @@ const AnimatedBox = styled(animated.div, {
 
 export const Main = () => {
   const webRtc = useContext(WebRtcContext)
-  useSaveConnectionPassword()
   const connectionSecret = useConnectionSecrets()
   const autoConnect = useAutoConnect()
   const status = useWebRtcDataChannelStatus()
@@ -88,22 +83,6 @@ export const Main = () => {
             </Box>
           </Box>
         </Box>
-
-        <Tooltip description="Re-generate code">
-          <Button border="none" ghost size="iconSmall">
-            <Icon
-              color="$secondary"
-              size="small"
-              type="refresh"
-              onClick={() => {
-                setStep(1)
-                webRtc?.signaling.subjects.wsAutoConnect.next(false)
-                webRtc?.storage.subjects.removeConnectionPasswordSubject.next()
-                webRtc?.signaling.subjects.wsGenerateConnectionSecretsSubject.next()
-              }}
-            />
-          </Button>
-        </Tooltip>
       </Box>
 
       {transitions((styles, item) => (

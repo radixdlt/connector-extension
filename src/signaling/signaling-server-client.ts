@@ -24,16 +24,13 @@ export const SignalingServerClient = ({
   const sendMessageDirection = `[${source} => ${target}]`
   let t0 = 0
   let t1 = 0
-  logger.debug(
-    `📡 created instance of signalingServerClient with baseUrl:\n${baseUrl}`
-  )
   let ws: WebSocket | undefined
   subjects.wsSourceSubject.next(source)
 
   const connect = (connectionId: string) => {
     track('ws_connecting')
     logger.debug(
-      `📡 connecting to signaling server url:\n${baseUrl}/${connectionId}?target=${target}&source=${source}`
+      `📡⚪️ connecting to signaling server\n${baseUrl}/${connectionId}?target=${target}&source=${source}`
     )
     subjects.wsStatusSubject.next('connecting')
     removeListeners()
@@ -45,7 +42,7 @@ export const SignalingServerClient = ({
   }
 
   const disconnect = () => {
-    logger.debug(`🧹 disconnecting from signaling server...`)
+    logger.debug(`📡🧹 disconnecting from signaling server...`)
     subjects.wsStatusSubject.next('disconnecting')
     ws?.close()
     removeListeners()
@@ -69,14 +66,14 @@ export const SignalingServerClient = ({
   }
 
   const onMessage = (event: MessageEvent<string>) => {
-    logger.debug(`⬇️ incoming ws message:\n${event.data}`)
+    logger.debug(`📡⬇️ incoming ws message:\n${event.data}`)
     subjects.wsIncomingRawMessageSubject.next(event)
   }
 
   const onOpen = () => {
     t1 = performance.now()
     logger.info(
-      `🟢 connected to signaling server\ntarget=${target}&source=${source}\nconnect time: ${(
+      `📡🟢 connected to signaling server\ntarget=${target}&source=${source}\nconnect time: ${(
         t1 - t0
       ).toFixed(0)} ms`
     )
@@ -85,18 +82,18 @@ export const SignalingServerClient = ({
   }
 
   const onClose = () => {
-    logger.info('🔴 disconnected from signaling server')
+    logger.info('📡🔴 disconnected from signaling server')
     subjects.wsStatusSubject.next('disconnected')
   }
 
   const onError = (event: Event) => {
-    logger.error(`❌ got websocket error`)
+    logger.error(`📡❌ got websocket error`)
     logger.trace(event)
     subjects.wsErrorSubject.next(event)
   }
 
   const sendMessage = (message: string) => {
-    logger.debug(`⬆️ ${sendMessageDirection} sending ws message:\n${message}`)
+    logger.debug(`📡⬆️ ${sendMessageDirection} sending ws message:\n${message}`)
     ws?.send(message)
   }
 

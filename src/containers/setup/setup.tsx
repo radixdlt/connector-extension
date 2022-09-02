@@ -10,10 +10,9 @@ import { styled } from 'stitches.config'
 import { Connected } from 'containers/connected/connected'
 import { EncryptionKey } from 'containers/encryptionkey'
 import logo from 'images/logo.png'
-import { useSaveConnectionPassword } from 'hooks/use-save-connection-password'
 import { WebRtcContext } from 'contexts/web-rtc-context'
 import { config as appConfig } from '../../config'
-import { Subscription, tap } from 'rxjs'
+import { tap } from 'rxjs'
 
 const AnimatedBox = styled(animated.div, {
   position: 'absolute',
@@ -25,46 +24,34 @@ const AnimatedBox = styled(animated.div, {
 
 export const Setup = () => {
   const webRtc = useContext(WebRtcContext)
-  useSaveConnectionPassword()
   const [step, setStep] = useState<keyof typeof steps>(1)
   const prevStep = usePrevious(step)
 
   useEffect(() => {
-    webRtc?.storage.getConnectionPassword().map((secret) => {
-      if (!secret)
-        webRtc.signaling.subjects.wsGenerateConnectionSecretsSubject.next()
+    if (!webRtc) return
+    webRtc.signaling.subjects.wsLoadOrCreateConnectionPasswordSubject.next()
+    const subscription = webRtc.webRtc.subjects.rtcStatusSubject
+      .pipe(
+        tap((status) => {
+          if (status === 'connected') {
+            setStep(3)
+            setTimeout(() => {
+              window.close()
+            }, 1000)
+          }
+        })
+      )
+      .subscribe()
 
-      return undefined
-    })
-
-    const subscriptions = new Subscription()
-
-    subscriptions.add()
-
-    subscriptions.add(
-      webRtc?.webRtc.subjects.rtcStatusSubject
-        .pipe(
-          tap((status) => {
-            if (status === 'connected') setStep(3)
-          })
-        )
-        .subscribe()
-    )
+    webRtc?.signaling.subjects.wsConnectSubject.next(true)
 
     return () => {
-      subscriptions?.unsubscribe()
+      subscription.unsubscribe()
     }
   }, [webRtc])
 
   const steps = {
-    1: (
-      <EncryptionKey
-        onNext={() => {
-          webRtc?.signaling.subjects.wsConnectSubject.next(true)
-          return setStep(2)
-        }}
-      />
-    ),
+    1: <EncryptionKey onNext={() => setStep(2)} showButton={false} />,
     2: <Connecting />,
     3: <Connected />,
   }
@@ -104,9 +91,9 @@ export const Setup = () => {
               color="$secondary"
               size="small"
               type="refresh"
-              onClick={async () => {
+              onClick={() => {
+                webRtc?.signaling.subjects.wsRegenerateConnectionPassword.next()
                 setStep(1)
-                await webRtc?.storage.removeConnectionPassword()
               }}
             />
           </Button>
