@@ -55,13 +55,18 @@ let extension: BootstrapType
 describe('webRTC flow', () => {
   beforeEach(async () => {
     extension = Bootstrap({
+      logLevel: 'silent',
       signalingLogLevel: 'silent',
+      webRtcLoglevel: 'silent',
+      storageLogLevel: 'silent',
       storageOptions: { id: crypto.randomUUID() },
     })
 
     wallet = Bootstrap({
+      logLevel: 'silent',
       signalingLogLevel: 'silent',
       webRtcLoglevel: 'silent',
+      storageLogLevel: 'silent',
       webRtcClientOptions: config.webRTC,
       signalingClientOptions: {
         ...config.signalingServer,
