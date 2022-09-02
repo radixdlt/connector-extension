@@ -150,16 +150,15 @@ export const wsSendMessage = (
       : localIceCandidate$
   ).pipe(
     withLatestFrom(signalingSubjects.wsSourceSubject, connectionSecrets$),
-    concatMap(([{ payload, method }, source, secretsResult]) => {
-      if (method === 'iceCandidates') console.log(payload)
-      return from(
+    concatMap(([{ payload, method }, source, secretsResult]) =>
+      from(
         secretsResult.asyncAndThen((secrets) =>
           wsCreateMessage({ method, source, payload }, secrets)
         )
       ).pipe(
         mergeMap((result) => wsMessageConfirmation(signalingSubjects, result))
       )
-    }),
+    ),
     tap((result) => {
       // TODO: handle error
       if (result.isErr()) log.error(result.error)
