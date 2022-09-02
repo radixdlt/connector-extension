@@ -117,6 +117,7 @@ export const wsSendMessage = (
         iceCandidate.sdpMLineIndex !== null
     ),
     bufferTime(config.signalingServer.iceCandidatesBatchTime),
+    filter((iceCandidates) => iceCandidates.length > 0),
     map((iceCandidates) => ({
       method: 'iceCandidates' as IceCandidates['method'],
       payload: iceCandidates as IceCandidates['payload'],
@@ -149,15 +150,16 @@ export const wsSendMessage = (
       : localIceCandidate$
   ).pipe(
     withLatestFrom(signalingSubjects.wsSourceSubject, connectionSecrets$),
-    concatMap(([{ payload, method }, source, secretsResult]) =>
-      from(
+    concatMap(([{ payload, method }, source, secretsResult]) => {
+      if (method === 'iceCandidates') console.log(payload)
+      return from(
         secretsResult.asyncAndThen((secrets) =>
           wsCreateMessage({ method, source, payload }, secrets)
         )
       ).pipe(
         mergeMap((result) => wsMessageConfirmation(signalingSubjects, result))
       )
-    ),
+    }),
     tap((result) => {
       // TODO: handle error
       if (result.isErr()) log.error(result.error)
