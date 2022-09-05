@@ -12,7 +12,7 @@ export const rtcRemoteIceCandidate = (
 ) =>
   subjects.rtcRemoteIceCandidateSubject.pipe(
     concatMap((iceCandidate) => {
-      logger.debug(`🕸⬇️🧊 adding remote ice candidate`)
+      logger.debug(`🕸⬇️🥶 adding ice candidate`)
       return addIceCandidate(new RTCIceCandidate(iceCandidate))
     }),
     tap((result) => {

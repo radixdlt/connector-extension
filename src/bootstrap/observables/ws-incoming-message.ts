@@ -32,7 +32,7 @@ const distributeMessage =
       }
 
       case 'offer':
-        logger.debug(`📡⬇️🤜 received remote offer`)
+        logger.debug(`📡⬇️🤜 received offer`)
         subjects.rtcRemoteOfferSubject.next({
           ...message.payload,
           type: 'offer',

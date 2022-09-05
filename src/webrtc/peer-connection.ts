@@ -48,7 +48,7 @@ export const PeerConnection = (
   const setRemoteDescription = (
     sessionDescription: RTCSessionDescriptionInit
   ): ResultAsync<void, Error> => {
-    logger.debug(
+    logger.trace(
       `🕸👾 setting remote webRTC description: ${sessionDescription.type}`
     )
     logger.trace(sessionDescription)
@@ -61,7 +61,7 @@ export const PeerConnection = (
   const setLocalDescription = (
     sessionDescription: RTCSessionDescriptionInit
   ) => {
-    logger.debug(
+    logger.trace(
       `🕸👊 setting local webRTC description: ${sessionDescription.type}`
     )
     return ResultAsync.fromPromise(
@@ -74,7 +74,7 @@ export const PeerConnection = (
     RTCSessionDescriptionInit,
     Error
   > => {
-    logger.debug(`🕸⬆️🤛 creating local webRTC answer`)
+    logger.debug(`🕸⬆️🤛 creating answer`)
     return ResultAsync.fromPromise(peerConnection.createAnswer(), errorIdentity)
   }
 
@@ -82,7 +82,7 @@ export const PeerConnection = (
     RTCSessionDescriptionInit,
     Error
   > => {
-    logger.debug(`🕸⬆️🤜 creating local webRTC offer`)
+    logger.debug(`🕸⬆️🤜 creating offer`)
     return ResultAsync.fromPromise(peerConnection.createOffer(), errorIdentity)
   }
 
