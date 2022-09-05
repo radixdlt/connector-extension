@@ -56,7 +56,7 @@ const wsMessageConfirmation = (
 
   const success$ = subjects.wsIncomingMessageConfirmationSubject.pipe(
     tap((message) =>
-      log.debug(`👌 got message confirmation:\n${message.requestId}`)
+      log.debug(`📡⬇️👌 got message confirmation:\n${message.requestId}`)
     ),
     filter(
       (incomingMessage) => message.requestId === incomingMessage.requestId

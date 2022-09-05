@@ -20,7 +20,7 @@ export const wsMessageConfirmation =
     return merge(
       subjects.wsIncomingMessageConfirmationSubject.pipe(
         tap((message) =>
-          logger.debug(`👌 got message confirmation:\n${message.requestId}`)
+          logger.debug(`📡⬇️👌 got message confirmation:\n${message.requestId}`)
         ),
         filter(
           (incomingMessage) => message.requestId === incomingMessage.requestId
