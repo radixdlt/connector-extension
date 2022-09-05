@@ -23,7 +23,9 @@ export const rtcMessageQueue = (
                   `📱💬⬆️ sending message to wallet\n${JSON.stringify(message)}`
                 )
                 webRtcSubjects.rtcOutgoingMessageSubject.next(
-                  JSON.stringify(message)
+                  typeof message === 'string'
+                    ? message
+                    : JSON.stringify(message)
                 )
               }),
               filter(() => false)

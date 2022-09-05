@@ -9,14 +9,21 @@ import {
   exhaustMap,
   tap,
   first,
+  mergeMap,
 } from 'rxjs'
 import { SignalingSubjectsType } from 'signaling/subjects'
 
 export const wsReconnect = (subjects: SignalingSubjectsType, logger: Logger) =>
-  combineLatest([subjects.wsStatusSubject, subjects.wsConnectSubject]).pipe(
+  combineLatest([
+    subjects.wsStatusSubject,
+    subjects.wsConnectSubject,
+    subjects.wsConnectionSecretsSubject,
+  ]).pipe(
     skip(1),
-    filter(
-      ([status, shouldConnect]) => status === 'disconnected' && shouldConnect
+    filter(([status, shouldConnect, connectionSecretsResult]) =>
+      status === 'disconnected' && shouldConnect && connectionSecretsResult
+        ? connectionSecretsResult.isOk()
+        : false
     ),
     exhaustMap(() =>
       interval(config.signalingServer.reconnect.interval).pipe(
@@ -25,18 +32,27 @@ export const wsReconnect = (subjects: SignalingSubjectsType, logger: Logger) =>
           ([, shouldConnect, status]) =>
             shouldConnect && status === 'disconnected'
         ),
-        filter(([index, , status]) => {
-          logger.debug(
-            `📡🔄 lost connection to signaling server, attempting to reconnect... status: ${status}, attempt: ${
-              index + 1
-            }`
+        mergeMap(([index]) =>
+          subjects.wsStatusSubject.pipe(
+            filter((status) => {
+              if (index > 0)
+                logger.debug(
+                  `📡🔄 lost connection to signaling server, attempting to reconnect... status: ${status}, attempt: ${
+                    index + 1
+                  }`
+                )
+
+              subjects.wsConnectSubject.next(true)
+              return status === 'connected'
+            }),
+            tap(() => {
+              if (index > 0)
+                logger.debug(
+                  '📡🤙 successfully reconnected to signaling server'
+                )
+            })
           )
-          subjects.wsConnectSubject.next(true)
-          return status === 'connected'
-        }),
-        tap(() => {
-          logger.debug('📡🤙 successfully reconnected to signaling server')
-        }),
+        ),
         first()
       )
     )

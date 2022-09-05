@@ -118,12 +118,8 @@ describe('webRTC flow', () => {
 
     await delayAsync()
 
-    expect(extensionIncomingMessage.getValues()).toEqual([
-      JSON.stringify(message),
-    ])
-    expect(walletIncomingMessage.getValues()).toEqual([
-      JSON.stringify('hello from extension'),
-    ])
+    expect(extensionIncomingMessage.getValues()).toEqual([message])
+    expect(walletIncomingMessage.getValues()).toEqual(['hello from extension'])
   }, 30_000)
 
   it('should reconnect if a client disconnects', async () => {
@@ -173,8 +169,6 @@ describe('webRTC flow', () => {
 
     await delayAsync()
 
-    expect(walletIncomingMessage.getValues()).toEqual([
-      JSON.stringify('hello from extension'),
-    ])
+    expect(walletIncomingMessage.getValues()).toEqual(['hello from extension'])
   }, 30_000)
 })
