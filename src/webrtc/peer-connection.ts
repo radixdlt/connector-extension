@@ -29,13 +29,13 @@ export const PeerConnection = (
 
   const onicecandidate = (e: RTCPeerConnectionIceEvent) => {
     if (e.candidate) {
-      logger.debug(`🧊 got local ice candidate`)
+      logger.debug(`🕸⬆️🧊 got local ice candidate`)
       subjects.rtcLocalIceCandidateSubject.next(e.candidate)
     }
   }
 
   const oniceconnectionstatechange = () => {
-    logger.debug(`🧊 iceConnectionState: ${peerConnection.iceConnectionState}`)
+    logger.debug(`🕸🧊 iceConnectionState: ${peerConnection.iceConnectionState}`)
     subjects.rtcIceConnectionStateSubject.next(
       peerConnection.iceConnectionState
     )
@@ -49,7 +49,7 @@ export const PeerConnection = (
     sessionDescription: RTCSessionDescriptionInit
   ): ResultAsync<void, Error> => {
     logger.debug(
-      `👾 setting remote webRTC description: ${sessionDescription.type}`
+      `🕸👾 setting remote webRTC description: ${sessionDescription.type}`
     )
     logger.trace(sessionDescription)
     return ResultAsync.fromPromise(
@@ -62,7 +62,7 @@ export const PeerConnection = (
     sessionDescription: RTCSessionDescriptionInit
   ) => {
     logger.debug(
-      `👾 setting local webRTC description: ${sessionDescription.type}`
+      `🕸👊 setting local webRTC description: ${sessionDescription.type}`
     )
     return ResultAsync.fromPromise(
       peerConnection.setLocalDescription(sessionDescription),
@@ -74,7 +74,7 @@ export const PeerConnection = (
     RTCSessionDescriptionInit,
     Error
   > => {
-    logger.debug(`🗣 creating local webRTC answer`)
+    logger.debug(`🕸⬆️🤛 creating local webRTC answer`)
     return ResultAsync.fromPromise(peerConnection.createAnswer(), errorIdentity)
   }
 
@@ -82,7 +82,7 @@ export const PeerConnection = (
     RTCSessionDescriptionInit,
     Error
   > => {
-    logger.debug(`🗣 creating local webRTC offer`)
+    logger.debug(`🕸⬆️🤜 creating local webRTC offer`)
     return ResultAsync.fromPromise(peerConnection.createOffer(), errorIdentity)
   }
 
@@ -97,7 +97,7 @@ export const PeerConnection = (
     dataChannelConfig
   )
 
-  logger.trace(`🤌 created webRTC data channel with`)
+  logger.trace(`🕸🤌 created webRTC data channel with`)
   logger.trace(dataChannelConfig)
 
   const onmessage = (ev: MessageEvent<ArrayBuffer | string>) => {
@@ -105,13 +105,13 @@ export const PeerConnection = (
   }
 
   const onopen = () => {
-    logger.info(`🔊 webRTC data channel open`)
+    logger.info(`🕸🟢 webRTC data channel open`)
     track('webrtc_connected')
     subjects.rtcStatusSubject.next('connected')
   }
 
   const onclose = () => {
-    logger.info(`🔇 webRTC data channel closed`)
+    logger.info(`🕸🔴 webRTC data channel closed`)
     subjects.rtcStatusSubject.next('disconnected')
   }
 
@@ -121,7 +121,7 @@ export const PeerConnection = (
 
   const sendMessage = (message: string) => {
     logger.debug(
-      `⬆️ outgoing data channel message:\nsize: ${message.length} Bytes\n${message}`
+      `🕸⬆️🔪💬 sending chunked message:\nsize: ${message.length} Bytes\n${message}`
     )
     dataChannel.send(message)
   }

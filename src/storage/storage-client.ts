@@ -31,7 +31,9 @@ export const StorageClient = (input: StorageInput) => {
   }) => {
     const value = changes[`${input.id}:connectionPassword`]
     if (changes[`${input.id}:connectionPassword`]) {
-      input.logger.info(`🔐 detected password change\n${JSON.stringify(value)}`)
+      input.logger.debug(
+        `🔐 detected password change\n${JSON.stringify(value)}`
+      )
       input.subjects.onPasswordChange.next(
         value.newValue ? Buffer.from(value.newValue, 'hex') : undefined
       )

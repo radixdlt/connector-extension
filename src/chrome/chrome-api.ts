@@ -17,7 +17,7 @@ export const ChromeApi = (id: string, logger: Logger) => {
       : err(Error('could not detect chrome.storage in window object'))
 
   const setItem = (key: string, value: string) => {
-    logger.debug(`📦 storing item:\n{${key}: '${value}'}`)
+    logger.debug(`📦⬇️ storing item:\n{${key}: '${value}'}`)
     return checkIfChromeContext().asyncAndThen(() =>
       ResultAsync.fromPromise(
         chrome.storage.local.set({ [`${id}:${key}`]: value }),
@@ -30,11 +30,12 @@ export const ChromeApi = (id: string, logger: Logger) => {
     checkIfChromeContext().asyncAndThen(() =>
       ResultAsync.fromPromise(
         new Promise((resolve) => {
-          logger.debug(`📦 getting item with key: '${key}'`)
           chrome.storage.local.get(
             `${id}:${key}`,
             (data: Record<string, T>) => {
-              resolve(data[`${id}:${key}`])
+              const value = data[`${id}:${key}`]
+              logger.debug(`📦⬆️ getting item: {${key}: ${value}}`)
+              resolve(value)
             }
           )
         }),

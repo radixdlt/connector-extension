@@ -29,7 +29,7 @@ export const SignalingServerClient = ({
 
   const connect = (connectionId: string) => {
     track('ws_connecting')
-    logger.debug(
+    logger.info(
       `📡⚪️ connecting to signaling server\n${baseUrl}/${connectionId}?target=${target}&source=${source}`
     )
     subjects.wsStatusSubject.next('connecting')
@@ -42,7 +42,7 @@ export const SignalingServerClient = ({
   }
 
   const disconnect = () => {
-    logger.debug(`📡🧹 disconnecting from signaling server...`)
+    logger.debug(`📡⚪️ disconnecting from signaling server`)
     subjects.wsStatusSubject.next('disconnecting')
     ws?.close()
     removeListeners()
@@ -66,7 +66,6 @@ export const SignalingServerClient = ({
   }
 
   const onMessage = (event: MessageEvent<string>) => {
-    logger.debug(`📡⬇️ incoming ws message:\n${event.data}`)
     subjects.wsIncomingRawMessageSubject.next(event)
   }
 
@@ -93,7 +92,9 @@ export const SignalingServerClient = ({
   }
 
   const sendMessage = (message: string) => {
-    logger.debug(`📡⬆️ ${sendMessageDirection} sending ws message:\n${message}`)
+    logger.debug(
+      `📡⬆️💬 ${sendMessageDirection} sending ws message:\n${message}`
+    )
     ws?.send(message)
   }
 

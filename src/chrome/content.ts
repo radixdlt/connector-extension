@@ -1,9 +1,9 @@
 import { Bootstrap } from 'bootstrap/bootstrap'
 
 const application = Bootstrap({
-  logLevel: 'info',
-  signalingLogLevel: 'info',
-  webRtcLoglevel: 'info',
+  logLevel: 'debug',
+  signalingLogLevel: 'debug',
+  webRtcLoglevel: 'debug',
   storageLogLevel: 'debug',
 })
 

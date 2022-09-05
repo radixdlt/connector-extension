@@ -62,7 +62,8 @@ export const ApplicationSubscriptions = (
   subscriptions.add(
     loadOrGenerateConnectionPassword(
       input.signalingSubjects,
-      input.storage.getConnectionPassword
+      input.storage.getConnectionPassword,
+      input.logger
     ).subscribe()
   )
 

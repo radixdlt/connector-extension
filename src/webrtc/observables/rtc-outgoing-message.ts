@@ -34,7 +34,7 @@ const dataChannelConfirmation =
         const messageId = messageIdResult._unsafeUnwrap()
         track('webrtc_message_send_confirmed', { messageId })
         return logger.debug(
-          `👌 received message confirmation for messageId: '${messageId}'`
+          `🕸💬👌 received message confirmation for messageId: '${messageId}'`
         )
       })
     )

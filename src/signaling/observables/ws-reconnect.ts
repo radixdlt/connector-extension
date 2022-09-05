@@ -27,7 +27,7 @@ export const wsReconnect = (subjects: SignalingSubjectsType, logger: Logger) =>
         ),
         filter(([index, , status]) => {
           logger.debug(
-            `🔄 lost connection to signaling server, attempting to reconnect... status: ${status}, attempt: ${
+            `📡🔄 lost connection to signaling server, attempting to reconnect... status: ${status}, attempt: ${
               index + 1
             }`
           )
@@ -35,7 +35,7 @@ export const wsReconnect = (subjects: SignalingSubjectsType, logger: Logger) =>
           return status === 'connected'
         }),
         tap(() => {
-          logger.debug('🤙 successfully reconnected to signaling server')
+          logger.debug('📡🤙 successfully reconnected to signaling server')
         }),
         first()
       )

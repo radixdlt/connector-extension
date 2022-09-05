@@ -16,7 +16,7 @@ export const rtcParsedIncomingMessage = (
     map((rawMessage) => {
       const message = toBuffer(rawMessage).toString('utf-8')
       logger.debug(
-        `⬇️ incoming data channel message:\nsize: ${message.length} Bytes\n${message}`
+        `🕸⬇️🔪💬 incoming chunked message:\nsize: ${message.length} Bytes\n${message}`
       )
       return parseJSON<ChunkedMessageType>(message)
     }),

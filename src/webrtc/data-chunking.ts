@@ -10,6 +10,7 @@ type MetaData = {
   chunkCount: number
   hashOfMessage: string
   messageId: string
+  messageByteCount: number
 }
 
 type MessageChunk = {
@@ -63,6 +64,7 @@ export const messageToChunked = (
           (buffer): MetaData => ({
             packageType: 'metaData',
             chunkCount: chunks.length,
+            messageByteCount: message.byteLength,
             hashOfMessage: buffer.toString('hex'),
             messageId,
           })

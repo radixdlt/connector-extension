@@ -21,7 +21,7 @@ const distributeMessage =
   (message: DataTypes): Result<void, Error> => {
     switch (message.method) {
       case 'answer': {
-        logger.debug(`🚀 received remote answer:`)
+        logger.debug(`📡⬇️🤛 received remote answer:`)
         logger.trace(message.payload)
         subjects.rtcRemoteAnswerSubject.next({
           ...message.payload,
@@ -32,8 +32,7 @@ const distributeMessage =
       }
 
       case 'offer':
-        logger.debug(`🗿 received remote offer:`)
-        logger.trace(JSON.stringify(message.payload))
+        logger.debug(`📡⬇️🤜 received remote offer`)
         subjects.rtcRemoteOfferSubject.next({
           ...message.payload,
           type: 'offer',
@@ -41,7 +40,7 @@ const distributeMessage =
         return ok(undefined)
 
       case 'iceCandidate':
-        logger.debug(`🥶 received remote iceCandidate`)
+        logger.debug(`📡⬇️🥶 received remote iceCandidate`)
         logger.trace(message.payload)
         subjects.rtcRemoteIceCandidateSubject.next(
           new RTCIceCandidate(message.payload)
@@ -49,7 +48,7 @@ const distributeMessage =
         return ok(undefined)
 
       case 'iceCandidates':
-        logger.debug(`🥶 received remote iceCandidates`)
+        logger.debug(`📡⬇️🥶 received remote iceCandidates`)
         logger.trace(message.payload)
         message.payload.forEach((item) =>
           subjects.rtcRemoteIceCandidateSubject.next(new RTCIceCandidate(item))
@@ -59,7 +58,7 @@ const distributeMessage =
 
       default:
         logger.error(
-          `❌ received unsupported method: \n ${JSON.stringify(message)}`
+          `📡❌ received unsupported method: \n ${JSON.stringify(message)}`
         )
         return err(Error('invalid message method'))
     }
@@ -69,29 +68,31 @@ const decryptMessagePayload = (
   message: DataTypes,
   encryptionKey: Buffer,
   logger: Logger
-): ResultAsync<DataTypes, Error> => {
-  logger.debug(`🧩 attempting to decrypt message payload`)
-  return transformBufferToSealbox(Buffer.from(message.encryptedPayload, 'hex'))
+): ResultAsync<DataTypes, Error> =>
+  transformBufferToSealbox(Buffer.from(message.encryptedPayload, 'hex'))
     .asyncAndThen(({ ciphertextAndAuthTag, iv }) =>
       decrypt(ciphertextAndAuthTag, encryptionKey, iv).mapErr((error) => {
-        logger.debug(`❌ failed to decrypt payload`)
+        logger.debug(`📡❌ failed to decrypt payload`)
         return error
       })
     )
     .andThen((decrypted) =>
       parseJSON<DataTypes['payload']>(decrypted.toString('utf8')).mapErr(
         (error) => {
-          logger.debug(`❌ failed to parse decrypted payload: \n ${decrypted}`)
+          logger.debug(
+            `📡❌ failed to parse decrypted payload: \n ${decrypted}`
+          )
           return error
         }
       )
     )
     .map((payload: DataTypes['payload']) => {
-      logger.debug(`✅ successfully decrypted payload`)
+      logger.debug(
+        `📡💬✅ successfully decrypted payload\n${JSON.stringify(payload)}`
+      )
       logger.trace(payload)
       return { ...message, payload } as unknown as DataTypes
     })
-}
 
 const handleIncomingMessage =
   (signalingSubjects: SignalingSubjectsType) =>
@@ -128,25 +129,16 @@ export const wsIncomingMessage = (
   signalingSubjects.wsIncomingRawMessageSubject.pipe(
     map((messageEvent) => messageEvent.data),
     map((rawMessage) =>
-      parseJSON<SignalingServerResponse>(rawMessage)
-        .mapErr((error): InvalidMessageError => {
-          logger.error(`❌ could not parse message: \n '${rawMessage}' `)
+      parseJSON<SignalingServerResponse>(rawMessage).mapErr(
+        (error): InvalidMessageError => {
+          logger.error(`📡❌ could not parse message: \n '${rawMessage}' `)
           return {
             info: 'invalidMessageError',
             data: rawMessage,
             error: error.message,
           }
-        })
-        .map((message) => {
-          logger.debug(
-            `🐍 parsed message:\ninfo: '${message.info}'\nrequestId: '${
-              (message as any)?.requestId
-            }`
-          )
-          logger.trace(message)
-
-          return message
-        })
+        }
+      )
     ),
     map((result) =>
       handleIncomingMessage(signalingSubjects)(result).andThen((message) =>

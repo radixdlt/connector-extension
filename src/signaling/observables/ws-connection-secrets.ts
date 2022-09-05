@@ -7,9 +7,13 @@ import { tap, switchMap, share } from 'rxjs'
 import { SignalingSubjectsType } from 'signaling/subjects'
 import { Logger } from 'loglevel'
 
-export const wsGenerateConnectionSecrets = (subjects: SignalingSubjectsType) =>
+export const wsGenerateConnectionSecrets = (
+  subjects: SignalingSubjectsType,
+  logger: Logger
+) =>
   subjects.wsGenerateConnectionSecretsSubject.pipe(
     tap(() => {
+      logger.debug(`📡🔐 generating connection secrets`)
       secureRandom(config.secrets.connectionPasswordByteLength).map((buffer) =>
         subjects.wsConnectionPasswordSubject.next(buffer)
       )
@@ -30,6 +34,7 @@ export const wsConnectionPassword = (
     tap((result) => {
       if (result.isOk())
         setConnectionId(result.value.connectionId.toString('hex'))
+
       return subjects.wsConnectionSecretsSubject.next(result)
     })
   )

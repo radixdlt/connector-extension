@@ -25,7 +25,7 @@ const manifest = defineManifest(async (env) => ({
   },
   options_ui: {
     page: 'src/chrome/setup.html',
-    open_in_tab: false,
+    open_in_tab: true,
   },
   content_scripts: [
     {

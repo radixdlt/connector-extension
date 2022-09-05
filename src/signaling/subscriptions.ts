@@ -35,7 +35,7 @@ export const SignalingSubscriptions = (
   subscriptions.add(wsConnect(subjects, dependencies.connect).subscribe())
   subscriptions.add(wsDisconnect(subjects, dependencies.disconnect).subscribe())
   subscriptions.add(wsReconnect(subjects, logger).subscribe())
-  subscriptions.add(wsGenerateConnectionSecrets(subjects).subscribe())
+  subscriptions.add(wsGenerateConnectionSecrets(subjects, logger).subscribe())
   subscriptions.add(wsConnectionPassword(subjects, logger).subscribe())
   subscriptions.add(
     wsUpdatedConnectionSecrets(

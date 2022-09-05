@@ -38,10 +38,11 @@ describe('Signaling server client', () => {
       signalingClientOptions: {
         baseUrl: url,
       },
+      storageOptions: { id: crypto.randomUUID() },
+      logLevel: 'debug',
     })
     signalingServerClient = application.signaling
     signalingSubjects = signalingServerClient.subjects
-
     webRtcSubjects = application.webRtc.subjects
 
     signalingSubjects.wsConnectionPasswordSubject.next(
@@ -171,12 +172,6 @@ describe('Signaling server client', () => {
   })
 
   describe('decrypt message payload', () => {
-    beforeEach(() => {
-      signalingSubjects.wsGenerateConnectionSecretsSubject.next()
-    })
-    afterEach(() => {
-      signalingSubjects.wsConnectionPasswordSubject.next(undefined)
-    })
     it('should decrypt payload and send to offer subject', async () => {
       const wsConnectionSecretsSpy = subscribeSpyTo(
         signalingSubjects.wsConnectionSecretsSubject

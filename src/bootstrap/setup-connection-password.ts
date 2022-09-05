@@ -10,19 +10,11 @@ export const setupConnectionPassword = (
 ) =>
   getConnectionPassword().map((connectionPassword) => {
     if (connectionPassword) {
-      logger.debug(
-        `🔑 found connection password in storage: ${connectionPassword}`
-      )
+      logger.debug(`🔐 setting connectionPassword`)
       signalingSubjects.wsConnectionPasswordSubject.next(
         Buffer.from(connectionPassword, 'hex')
       )
       signalingSubjects.wsAutoConnect.next(true)
     }
-    // else {
-    //   logger.debug(
-    //     `🔑 did not find connection password in storage, generating new password`
-    //   )
-    //   signalingSubjects.wsGenerateConnectionSecretsSubject.next()
-    // }
     return undefined
   })

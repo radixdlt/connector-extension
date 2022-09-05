@@ -7,12 +7,9 @@ export const wsUpdatedConnectionSecrets = (
   disconnect: () => void,
   logger: Logger
 ) =>
-  subjects.wsConnectionPasswordSubject.pipe(
-    withLatestFrom(subjects.wsConnectSubject, subjects.wsStatusSubject),
-    filter(
-      ([, shouldConnect, status]) =>
-        shouldConnect && ['connected', 'connecting'].includes(status)
-    ),
+  subjects.wsConnectionSecretsSubject.pipe(
+    withLatestFrom(subjects.wsConnectSubject),
+    filter(([, shouldConnect]) => shouldConnect),
     tap(() => {
       logger.debug(`📡🔄 secrets updated, reconnecting`)
       disconnect()
