@@ -40,6 +40,7 @@ const manifest = defineManifest(async (env) => ({
     'storage',
     'tabs',
     'unlimitedStorage',
+    'contextMenus',
   ],
   content_security_policy: {
     extension_pages: "script-src 'self' 'wasm-unsafe-eval'; object-src 'self'",

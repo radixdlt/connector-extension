@@ -2,6 +2,28 @@ import { config } from 'config'
 import { getLogger } from 'loglevel'
 import { makeChromeApi } from 'storage/storage-client'
 
+const setupDevTools = () => {
+  chrome.contextMenus.create({
+    id: 'radix-dev-tools',
+    title: 'Radix dev tools',
+    contexts: ['all'],
+  })
+
+  chrome.contextMenus.onClicked.addListener(async () => {
+    const devToolsUrl = chrome.runtime.getURL('src/chrome/dev-tools.html')
+    const tabs = await chrome.tabs.query({})
+    const devToolsTab = tabs.find((tab) => tab.url === devToolsUrl)
+
+    if (devToolsTab?.id) {
+      chrome.tabs.update(devToolsTab.id, { active: true })
+    } else {
+      chrome.tabs.create({
+        url: chrome.runtime.getURL('src/chrome/dev-tools.html'),
+      })
+    }
+  })
+}
+
 const chromeAPI = makeChromeApi(config.storage.key, getLogger('background'))
 
 chrome.runtime.onMessage.addListener((_, __, sendResponse) => {
@@ -10,4 +32,8 @@ chrome.runtime.onMessage.addListener((_, __, sendResponse) => {
     sendResponse(true)
     return chrome.runtime.openOptionsPage()
   })
+})
+
+chrome.runtime.onInstalled.addListener(() => {
+  if (config.devTools) setupDevTools()
 })

@@ -3,6 +3,7 @@ import packageJson from '../package.json'
 const { version } = packageJson
 
 export const config = {
+  devTools: true,
   environment: process.env.NODE_ENV,
   logLevel: import.meta.env.VITE_APP_LOG_LEVEL as LogLevelDesc,
   version,
