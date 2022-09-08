@@ -49,4 +49,11 @@ const manifest = defineManifest(async (env) => ({
 
 export default defineConfig({
   plugins: [react(), crx({ manifest }), tsconfigPaths()],
+  build: {
+    rollupOptions: {
+      input: {
+        welcome: 'src/chrome/dev-tools.html',
+      },
+    },
+  },
 })
