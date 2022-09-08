@@ -15,9 +15,9 @@ const setupDevTools = () => {
     const devToolsTab = tabs.find((tab) => tab.url === devToolsUrl)
 
     if (devToolsTab?.id) {
-      chrome.tabs.update(devToolsTab.id, { active: true })
+      await chrome.tabs.update(devToolsTab.id, { active: true })
     } else {
-      chrome.tabs.create({
+      await chrome.tabs.create({
         url: chrome.runtime.getURL('src/chrome/dev-tools.html'),
       })
     }
