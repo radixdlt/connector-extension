@@ -18,11 +18,12 @@ const setupDevTools = () => {
       await chrome.tabs.update(devToolsTab.id, { active: true })
     } else {
       await chrome.tabs.create({
-        url: chrome.runtime.getURL('src/chrome/dev-tools.html'),
+        url: devToolsUrl,
       })
     }
   })
 }
+if (config.devTools) setupDevTools()
 
 const chromeAPI = makeChromeApi(config.storage.key, getLogger('background'))
 
@@ -32,8 +33,4 @@ chrome.runtime.onMessage.addListener((_, __, sendResponse) => {
     sendResponse(true)
     return chrome.runtime.openOptionsPage()
   })
-})
-
-chrome.runtime.onInstalled.addListener(() => {
-  if (config.devTools) setupDevTools()
 })
