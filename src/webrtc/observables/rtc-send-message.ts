@@ -15,7 +15,7 @@ export const rtcSendMessage = (
     subjects.rtcOutgoingConfirmationMessageSubject.pipe(
       tap((message) => {
         logger.debug(
-          `👌 sending webRTC data channel confirmation for messageId: ${message.messageId}`
+          `🕸💬👌 sending webRTC data channel confirmation for messageId: ${message.messageId}`
         )
       }),
       map((message) => JSON.stringify(message))
