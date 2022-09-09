@@ -1,7 +1,7 @@
 import { Secrets } from 'signaling/secrets'
 import { WebRtcSubjectsType } from 'webrtc/subjects'
 import { IceCandidate, IceCandidates } from 'io-types/types'
-import log from 'loglevel'
+import { Logger } from 'loglevel'
 import { Result, err, ok } from 'neverthrow'
 import {
   merge,
@@ -44,9 +44,11 @@ const wsCreateMessage = (
 const wsMessageConfirmation = (
   subjects: SignalingSubjectsType,
   messageResult: Result<Omit<DataTypes, 'payload'>, Error>,
+  logger: Logger,
   timeout = 3000
 ): Observable<
   Result<boolean, Error | { requestId: string; reason: string }>
+  // eslint-disable-next-line max-params
 > => {
   if (messageResult.isErr()) return of(err(messageResult.error))
 
@@ -56,7 +58,7 @@ const wsMessageConfirmation = (
 
   const success$ = subjects.wsIncomingMessageConfirmationSubject.pipe(
     tap((message) =>
-      log.debug(`📡⬇️👌 got message confirmation:\n${message.requestId}`)
+      logger.debug(`📡⬇️👌 got message confirmation:\n${message.requestId}`)
     ),
     filter(
       (incomingMessage) => message.requestId === incomingMessage.requestId
@@ -83,7 +85,8 @@ const wsMessageConfirmation = (
 
 export const wsSendMessage = (
   signalingSubjects: SignalingSubjectsType,
-  webRtcSubjects: WebRtcSubjectsType
+  webRtcSubjects: WebRtcSubjectsType,
+  logger: Logger
 ) => {
   const localOffer$ = webRtcSubjects.rtcLocalOfferSubject.pipe(
     filter(
@@ -156,12 +159,14 @@ export const wsSendMessage = (
           wsCreateMessage({ method, source, payload }, secrets)
         )
       ).pipe(
-        mergeMap((result) => wsMessageConfirmation(signalingSubjects, result))
+        mergeMap((result) =>
+          wsMessageConfirmation(signalingSubjects, result, logger)
+        )
       )
     ),
     tap((result) => {
       // TODO: handle error
-      if (result.isErr()) log.error(result.error)
+      if (result.isErr()) logger.error(result.error)
     })
   )
 }

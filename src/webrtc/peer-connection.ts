@@ -97,21 +97,18 @@ export const PeerConnection = (
     dataChannelConfig
   )
 
-  logger.trace(`🕸🤌 created webRTC data channel with`)
-  logger.trace(dataChannelConfig)
-
   const onmessage = (ev: MessageEvent<ArrayBuffer | string>) => {
     subjects.rtcIncomingChunkedMessageSubject.next(ev.data)
   }
 
   const onopen = () => {
-    logger.info(`🕸🟢 webRTC data channel open`)
+    logger.debug(`🕸🟢 webRTC data channel open`)
     track('webrtc_connected')
     subjects.rtcStatusSubject.next('connected')
   }
 
   const onclose = () => {
-    logger.info(`🕸🔴 webRTC data channel closed`)
+    logger.debug(`🕸🔴 webRTC data channel closed`)
     subjects.rtcStatusSubject.next('disconnected')
   }
 

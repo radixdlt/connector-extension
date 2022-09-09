@@ -36,9 +36,9 @@ export const Bootstrap = ({
   id = crypto.randomUUID(),
   logger = log.getLogger(`${id}-connector`),
   logLevel = config.logLevel,
-  signalingLogLevel = config.logLevel,
-  webRtcLoglevel = config.logLevel,
-  storageLogLevel = config.logLevel,
+  signalingLogLevel,
+  webRtcLoglevel,
+  storageLogLevel,
   webRtcSubjects = WebRtcSubjects(),
   signalingSubjects = SignalingSubjects(),
   storageSubjects = StorageSubjects(),
@@ -53,12 +53,12 @@ export const Bootstrap = ({
 }: BootstrapInput) => {
   logger.setLevel(logLevel)
 
-  logger.info(
-    `🏃‍♂️ running in: '${process.env.NODE_ENV}' mode, logLevel: '${logLevel}'`
+  logger.debug(
+    `🏃‍♂️ connector extension running in: '${process.env.NODE_ENV}' mode, logLevel: '${logLevel}'`
   )
 
   const signalingLogger = log.getLogger(`${id}-signaling`)
-  signalingLogger.setLevel(signalingLogLevel)
+  signalingLogger.setLevel(signalingLogLevel || logLevel)
 
   const signaling = SignalingServerClient({
     ...signalingClientOptions,
@@ -67,7 +67,7 @@ export const Bootstrap = ({
   })
 
   const webRtcLogger = log.getLogger(`${id}-webRtc`)
-  webRtcLogger.setLevel(webRtcLoglevel)
+  webRtcLogger.setLevel(webRtcLoglevel || logLevel)
 
   const webRtc = WebRtcClient({
     peerConnectionConfig: webRtcClientOptions.peerConnectionConfig,
@@ -77,7 +77,7 @@ export const Bootstrap = ({
   })
 
   const storageLogger = log.getLogger(`${id}-storage`)
-  storageLogger.setLevel(storageLogLevel)
+  storageLogger.setLevel(storageLogLevel || logLevel)
 
   const storage = StorageClient({
     ...storageOptions,

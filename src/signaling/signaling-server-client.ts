@@ -29,7 +29,7 @@ export const SignalingServerClient = ({
 
   const connect = (connectionId: string) => {
     track('ws_connecting')
-    logger.info(
+    logger.debug(
       `📡⚪️ connecting to signaling server\n${baseUrl}/${connectionId}?target=${target}&source=${source}`
     )
     subjects.wsStatusSubject.next('connecting')
@@ -71,7 +71,7 @@ export const SignalingServerClient = ({
 
   const onOpen = () => {
     t1 = performance.now()
-    logger.info(
+    logger.debug(
       `📡🟢 connected to signaling server\ntarget=${target}&source=${source}\nconnect time: ${(
         t1 - t0
       ).toFixed(0)} ms`
@@ -81,7 +81,7 @@ export const SignalingServerClient = ({
   }
 
   const onClose = () => {
-    logger.info('📡🔴 disconnected from signaling server')
+    logger.debug('📡🔴 disconnected from signaling server')
     subjects.wsStatusSubject.next('disconnected')
   }
 

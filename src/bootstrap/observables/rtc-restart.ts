@@ -10,8 +10,8 @@ export const rtcRestart = (
 ) =>
   webRtcSubjects.rtcRestartSubject.pipe(
     withLatestFrom(signalingSubjects.wsSourceSubject),
-    tap(([, wsSourceSubject]) => {
-      log.debug(`🔄 [${wsSourceSubject}] restarting webRTC...`)
+    tap(([, source]) => {
+      log.debug(`🕸🔄 [${source}] restarting webRTC...`)
       createPeerConnection()
       signalingSubjects.wsConnectSubject.next(true)
     })

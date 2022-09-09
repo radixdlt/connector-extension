@@ -1,12 +1,7 @@
 import { Bootstrap } from 'bootstrap/bootstrap'
 import { parseJSON } from 'utils'
 
-const application = Bootstrap({
-  logLevel: 'debug',
-  signalingLogLevel: 'debug',
-  webRtcLoglevel: 'debug',
-  storageLogLevel: 'debug',
-})
+const application = Bootstrap({ logLevel: 'debug' })
 
 window.addEventListener('radix#chromeExtension#send', (event) => {
   const { detail: message } = event as CustomEvent<any>

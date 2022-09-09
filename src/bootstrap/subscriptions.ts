@@ -29,7 +29,11 @@ export const ApplicationSubscriptions = (
   )
 
   subscriptions.add(
-    wsSendMessage(input.signalingSubjects, input.webRtc.subjects).subscribe()
+    wsSendMessage(
+      input.signalingSubjects,
+      input.webRtc.subjects,
+      input.logger
+    ).subscribe()
   )
 
   subscriptions.add(

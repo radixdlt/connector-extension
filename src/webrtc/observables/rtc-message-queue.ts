@@ -9,7 +9,7 @@ export const rtcMessageQueue = (
 ) =>
   webRtcSubjects.rtcAddMessageToQueue.pipe(
     tap((message) =>
-      logger.info(`📱💬⏸ message added to queue\n${JSON.stringify(message)}`)
+      logger.debug(`📱💬⏸ message added to queue\n${JSON.stringify(message)}`)
     ),
     concatMap((message) =>
       webRtcSubjects.rtcStatusSubject.pipe(
@@ -19,7 +19,7 @@ export const rtcMessageQueue = (
             rtcOutgoingMessage(webRtcSubjects, logger),
             of(true).pipe(
               tap(() => {
-                logger.info(
+                logger.debug(
                   `📱💬⬆️ sending message to wallet\n${JSON.stringify(message)}`
                 )
                 webRtcSubjects.rtcOutgoingMessageSubject.next(
@@ -37,7 +37,7 @@ export const rtcMessageQueue = (
           if (typeof result === 'boolean') return
 
           result.map(() =>
-            logger.info(
+            logger.debug(
               `📱💬⬇️ wallet confirmed message\n${JSON.stringify(message)}`
             )
           )
