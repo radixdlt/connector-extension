@@ -12,7 +12,7 @@ type trackers =
   | 'ws_connected'
   | 'ws_disconnected'
 
-mx.init(config.mixpanel.token, { debug: true })
+mx.init(config.mixpanel.token, { secure_cookie: true })
 
 export const setConnectionId = (connectionId: string) => {
   if (process.env.NODE_ENV !== 'production') return
