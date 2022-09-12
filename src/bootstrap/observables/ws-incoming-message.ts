@@ -21,8 +21,7 @@ const distributeMessage =
   (message: DataTypes): Result<void, Error> => {
     switch (message.method) {
       case 'answer': {
-        logger.debug(`📡⬇️🤛 received remote answer:`)
-        logger.trace(message.payload)
+        logger.debug(`📡⬇️🤛 received answer`)
         subjects.rtcRemoteAnswerSubject.next({
           ...message.payload,
           type: 'answer',
@@ -40,16 +39,14 @@ const distributeMessage =
         return ok(undefined)
 
       case 'iceCandidate':
-        logger.debug(`📡⬇️🥶 received remote iceCandidate`)
-        logger.trace(message.payload)
+        logger.debug(`📡⬇️🥶 received iceCandidate`)
         subjects.rtcRemoteIceCandidateSubject.next(
           new RTCIceCandidate(message.payload)
         )
         return ok(undefined)
 
       case 'iceCandidates':
-        logger.debug(`📡⬇️🥶 received remote iceCandidates`)
-        logger.trace(message.payload)
+        logger.debug(`📡⬇️🥶 received iceCandidates`)
         message.payload.forEach((item) =>
           subjects.rtcRemoteIceCandidateSubject.next(new RTCIceCandidate(item))
         )
@@ -58,7 +55,7 @@ const distributeMessage =
 
       default:
         logger.error(
-          `📡❌ received unsupported method: \n ${JSON.stringify(message)}`
+          `📡⬇️❌ received unsupported method\n ${JSON.stringify(message)}`
         )
         return err(Error('invalid message method'))
     }
@@ -72,7 +69,7 @@ const decryptMessagePayload = (
   transformBufferToSealbox(Buffer.from(message.encryptedPayload, 'hex'))
     .asyncAndThen(({ ciphertextAndAuthTag, iv }) =>
       decrypt(ciphertextAndAuthTag, encryptionKey, iv).mapErr((error) => {
-        logger.debug(`📡❌ failed to decrypt payload`)
+        logger.debug(`📡🧩❌ failed to decrypt payload`)
         return error
       })
     )
@@ -80,7 +77,7 @@ const decryptMessagePayload = (
       parseJSON<DataTypes['payload']>(decrypted.toString('utf8')).mapErr(
         (error) => {
           logger.debug(
-            `📡❌ failed to parse decrypted payload: \n ${decrypted}`
+            `📡🐍❌ failed to parse decrypted payload: \n ${decrypted}`
           )
           return error
         }

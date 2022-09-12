@@ -1,5 +1,5 @@
 import { Subscription } from 'rxjs'
-import { wsSendMessage } from './observables/ws-send-message'
+import { wsOutgoingMessage } from './observables/ws-outgoing-message'
 import { wsConnect } from './observables/ws-connect'
 import { wsDisconnect } from './observables/ws-disconnect'
 import { wsReconnect } from './observables/ws-reconnect'
@@ -26,7 +26,7 @@ export const SignalingSubscriptions = (
   const subscriptions = new Subscription()
 
   subscriptions.add(
-    wsSendMessage(
+    wsOutgoingMessage(
       subjects,
       dependencies.sendMessage,
       dependencies.getWs

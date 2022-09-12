@@ -92,9 +92,7 @@ export const SignalingServerClient = ({
   }
 
   const sendMessage = (message: string) => {
-    logger.debug(
-      `📡⬆️💬 ${sendMessageDirection} sending ws message:\n${message}`
-    )
+    logger.debug(`📡⬆️💬 ${sendMessageDirection} sending ws message`)
     ws?.send(message)
   }
 

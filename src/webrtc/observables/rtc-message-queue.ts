@@ -9,7 +9,7 @@ export const rtcMessageQueue = (
 ) =>
   webRtcSubjects.rtcAddMessageToQueue.pipe(
     tap((message) =>
-      logger.debug(`📱💬⏸ message added to queue\n${JSON.stringify(message)}`)
+      logger.debug(`🕸💬⏸ message added to queue\n${JSON.stringify(message)}`)
     ),
     concatMap((message) =>
       webRtcSubjects.rtcStatusSubject.pipe(

@@ -10,7 +10,7 @@ import {
 } from 'rxjs'
 import { SignalingSubjectsType } from 'signaling/subjects'
 
-export const wsSendMessage = (
+export const wsOutgoingMessage = (
   subjects: SignalingSubjectsType,
   sendMessage: (message: string) => void,
   getWs: () => WebSocket | undefined
