@@ -2,7 +2,7 @@ import Icon from '../icon'
 import Box from 'components/box'
 import Text from 'components/text'
 
-interface ClipboardType {
+type ClipboardType = {
   value: string
 }
 
@@ -15,10 +15,11 @@ const Clipboard = ({ value }: ClipboardType) => (
     justify="between"
     items="center"
     flex="row"
+    css={{ boxSizing: 'border-box' }}
   >
     <Box css={{ overflow: 'hidden' }} py="none" items="center">
       <Text
-        css={{ overflow: 'hidden', maxWidth: '120px' }}
+        css={{ overflow: 'hidden' }}
         highlight={false}
         ellipsis
         size="small"

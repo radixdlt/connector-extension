@@ -30,5 +30,15 @@ jobs:
 
       - uses: actions/upload-artifact@v3
         with:
-          name: babylon-browser-extension.${{ github.sha }}
+          name: connector-extension.${{ github.sha }}
+          path: dist/
+
+      - name: Build extension with dev tools
+        run: yarn build
+        env:
+          DEV_TOOLS: true
+
+      - uses: actions/upload-artifact@v3
+        with:
+          name: connector-extension-dev-tools.${{ github.sha }}
           path: dist/

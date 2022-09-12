@@ -5,6 +5,8 @@ import { chrome } from 'jest-chrome'
 
 global.crypto = new Crypto()
 global.chrome = chrome
+global.chrome.storage.local.get = () => Promise.resolve()
+global.chrome.storage.local.set = () => Promise.resolve()
 
 import(process.env.CI ? 'wrtc' : '@koush/wrtc').then((webRTC) => {
   global.RTCPeerConnection = webRTC.RTCPeerConnection

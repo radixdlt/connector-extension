@@ -6,9 +6,13 @@ import { useOverlayClipboard } from 'hooks'
 
 type EncryptionKeyProps = {
   onNext: () => void
+  showButton?: boolean
 }
 
-export const EncryptionKey = ({ onNext }: EncryptionKeyProps) => {
+export const EncryptionKey = ({
+  onNext,
+  showButton = true,
+}: EncryptionKeyProps) => {
   const secretsResult = useConnectionSecrets()
   const secrets = secretsResult?.isOk() ? secretsResult.value : undefined
   const password = secrets?.encryptionKey.toString('hex') || ''
@@ -26,9 +30,11 @@ export const EncryptionKey = ({ onNext }: EncryptionKeyProps) => {
     <>
       {QR}
       {Password}
-      <Button full onClick={onNext} size="small">
-        Connect
-      </Button>
+      {showButton && (
+        <Button full onClick={onNext} size="small">
+          Connect
+        </Button>
+      )}
     </>
   )
 }

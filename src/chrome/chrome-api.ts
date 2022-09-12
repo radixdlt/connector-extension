@@ -1,4 +1,4 @@
-import log from 'loglevel'
+import { Logger } from 'loglevel'
 import { err, ok, ResultAsync } from 'neverthrow'
 import { errorIdentity } from 'utils/error-identity'
 
@@ -10,14 +10,14 @@ type SendMessageInput = Parameters<typeof chrome['tabs']['sendMessage']>
 
 export type ChromeApiType = ReturnType<typeof ChromeApi>
 
-export const ChromeApi = (id: string) => {
+export const ChromeApi = (id: string, logger: Logger) => {
   const checkIfChromeContext = () =>
-    window?.chrome.storage
+    chrome.storage
       ? ok(undefined)
       : err(Error('could not detect chrome.storage in window object'))
 
   const setItem = (key: string, value: string) => {
-    log.debug(`📦 storing item: {${key}: '${value}'}`)
+    logger.debug(`📦⬇️ storing item:\n{${key}: '${value}'}`)
     return checkIfChromeContext().asyncAndThen(() =>
       ResultAsync.fromPromise(
         chrome.storage.local.set({ [`${id}:${key}`]: value }),
@@ -30,11 +30,12 @@ export const ChromeApi = (id: string) => {
     checkIfChromeContext().asyncAndThen(() =>
       ResultAsync.fromPromise(
         new Promise((resolve) => {
-          log.debug(`📦 getting item with key: '${key}'`)
           chrome.storage.local.get(
             `${id}:${key}`,
             (data: Record<string, T>) => {
-              resolve(data[`${id}:${key}`])
+              const value = data[`${id}:${key}`]
+              logger.debug(`📦⬆️ getting item: {${key}: ${value}}`)
+              resolve(value)
             }
           )
         }),
@@ -65,7 +66,7 @@ export const ChromeApi = (id: string) => {
     )
 
   const removeItem = (key: string | string[]) => {
-    log.debug(`📦 removing item with key: '${key}'`)
+    logger.debug(`📦 removing item with key: '${key}'`)
     return checkIfChromeContext().asyncAndThen(() =>
       ResultAsync.fromPromise(
         chrome.storage.local.remove(`${id}:${key}`),

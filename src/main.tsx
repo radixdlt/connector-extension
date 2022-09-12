@@ -2,13 +2,15 @@ import React from 'react'
 import ReactDOM from 'react-dom/client'
 import { Main } from './containers/main/main'
 import '../fonts.css'
-import { bootstrapApplication } from 'bootstrap-application'
-import { subjects } from 'connections'
+import { Bootstrap } from 'bootstrap/bootstrap'
+import { WebRtcContext } from 'contexts/web-rtc-context'
 
-bootstrapApplication(subjects)
+chrome.runtime.sendMessage({})
 
 ReactDOM.createRoot(document.getElementById('root')!).render(
   <React.StrictMode>
-    <Main />
+    <WebRtcContext.Provider value={Bootstrap({})}>
+      <Main />
+    </WebRtcContext.Provider>
   </React.StrictMode>
 )

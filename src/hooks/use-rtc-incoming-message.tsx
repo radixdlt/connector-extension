@@ -1,12 +1,14 @@
-import { subjects } from 'connections'
-import { useEffect, useState } from 'react'
+import { WebRtcContext } from 'contexts/web-rtc-context'
+import { useEffect, useState, useContext } from 'react'
 import { tap } from 'rxjs'
 
 export const useWebRtcIncomingMessage = () => {
+  const webRtc = useContext(WebRtcContext)
   const [message, setMessage] = useState<string>()
 
   useEffect(() => {
-    const subscription = subjects.rtcIncomingMessageSubject
+    if (!webRtc) return
+    const subscription = webRtc.webRtc.subjects.rtcIncomingMessageSubject
       .pipe(tap((message) => setMessage(message)))
       .subscribe()
 
