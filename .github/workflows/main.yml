@@ -34,7 +34,9 @@ jobs:
           path: dist/
 
       - name: Build extension with dev tools
-        run: yarn build:dev-tools
+        run: yarn build
+        env:
+          DEV_TOOLS: true
 
       - uses: actions/upload-artifact@v3
         with:
