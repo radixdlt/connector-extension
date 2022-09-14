@@ -33,13 +33,12 @@ const waitUntilStatus = async (status: Status) =>
 
 describe('Signaling server client', () => {
   beforeEach(async () => {
-    log.setLevel('debug')
     application = Bootstrap({
       signalingClientOptions: {
         baseUrl: url,
       },
       storageOptions: { id: crypto.randomUUID() },
-      logLevel: 'debug',
+      logLevel: 'silent',
     })
     signalingServerClient = application.signaling
     signalingSubjects = signalingServerClient.subjects
