@@ -78,7 +78,7 @@ describe('webRTC flow', () => {
 
     await WebRtcTestHelper.bootstrap(wallet)
     await WebRtcTestHelper.bootstrap(extension)
-  })
+  }, 30_000)
 
   afterEach(async () => {
     log.setLevel('silent')
