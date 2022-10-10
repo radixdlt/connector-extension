@@ -1,6 +1,7 @@
-import { styled } from 'stitches.config'
+import { mb } from '../variants/mb'
+import { styled } from '../../stitches.config'
 
-const Text = styled('p', {
+export const Text = styled('p', {
   variants: {
     interactive: {
       true: {
@@ -23,6 +24,9 @@ const Text = styled('p', {
       },
     },
     size: {
+      xSmall: {
+        fontSize: '$xs',
+      },
       small: {
         fontSize: '$sm',
       },
@@ -32,6 +36,9 @@ const Text = styled('p', {
       large: {
         fontSize: '$lg',
       },
+    },
+    color: {
+      radixGrey2: { color: '$radixGrey2' },
     },
     bold: {
       true: {
@@ -82,7 +89,6 @@ const Text = styled('p', {
         ml: '$0',
       },
     },
+    mb,
   },
 })
-
-export default Text

@@ -19,16 +19,12 @@ const manifest = defineManifest(async () => ({
   name: 'Radix Connector Extension',
   version: `${major}.${minor}.${patch}.${label}`,
   version_name: version,
-  action: { default_popup: 'index.html' },
+  action: { default_popup: 'src/pairing/index.html' },
   background: {
     service_worker: `src/chrome/background${
       isDevToolsActive ? '-with-dev-tools' : ''
     }.ts`,
     type: 'module',
-  },
-  options_ui: {
-    page: 'src/chrome/setup/setup.html',
-    open_in_tab: true,
   },
   content_scripts: [
     {
@@ -44,6 +40,7 @@ const manifest = defineManifest(async () => ({
     'tabs',
     'unlimitedStorage',
     'contextMenus',
+    'system.display',
   ],
   content_security_policy: {
     extension_pages: "script-src 'self' 'wasm-unsafe-eval'; object-src 'self'",

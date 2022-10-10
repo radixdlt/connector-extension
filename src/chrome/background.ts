@@ -1,1 +1,1 @@
-import './setup/setup-background'
+import './pairing/background'

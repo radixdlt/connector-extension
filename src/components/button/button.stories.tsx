@@ -1,5 +1,4 @@
-import ButtonC from './button'
-import Icon from '../icon'
+import { Button as ButtonC } from './button'
 
 export const Button = () => (
   <>
@@ -9,9 +8,5 @@ export const Button = () => (
     <ButtonC>Buy Radix</ButtonC>
     <h3>Ghost</h3>
     <ButtonC ghost>Buy Radix</ButtonC>
-    <h3>With icon</h3>
-    <ButtonC size="iconSmall">
-      <Icon size="small" type="refresh" />
-    </ButtonC>
   </>
 )

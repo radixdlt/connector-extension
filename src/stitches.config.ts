@@ -1,6 +1,7 @@
 import { createStitches } from '@stitches/react'
 
 const colors = {
+  black: 'black',
   darkBlue: '#003057',
   blue: '#052CC0',
   white: '#fff',
@@ -9,6 +10,7 @@ const colors = {
   darkGrey: '#6e7781',
   red: 'red',
   orange: 'orange',
+  'Radix-Grey-2': '#8A8FA4',
 }
 
 const space = {
@@ -42,7 +44,7 @@ export const {
     colors: {
       background: colors.white,
       action: colors.darkBlue,
-      primary: colors.darkBlue,
+      primary: colors.black,
       secondary: colors.green,
       error: colors.red,
       info: colors.blue,
@@ -58,6 +60,7 @@ export const {
       borderColor: colors.grey,
       grey: colors.grey,
       muted: colors.darkGrey,
+      radixGrey2: colors['Radix-Grey-2'],
     },
     fontSizes: {
       xs: '12px',
@@ -134,8 +137,10 @@ export const {
 })
 
 globalCss({
-  '*': {
+  '*, body': {
     fontFamily: 'IBM Plex Sans',
     fontWeight: '400',
+    margin: 0,
+    fontSize: '100%',
   },
 })()
