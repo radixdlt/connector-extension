@@ -1,8 +1,10 @@
-import { styled } from 'stitches.config'
+import { styled } from '../../stitches.config'
+import { mb } from '../variants/mb'
 
-const Box = styled('div', {
+export const Box = styled('div', {
   borderWidth: '$sm',
   backgroundColor: 'transparent',
+  boxSizing: 'border-box',
   py: '$sm',
   variants: {
     full: {
@@ -79,7 +81,6 @@ const Box = styled('div', {
       true: {
         borderColor: '$borderColor',
         borderStyle: 'solid',
-        borderRadius: '$sm',
       },
     },
     flex: {
@@ -144,7 +145,11 @@ const Box = styled('div', {
         position: 'absolute',
       },
     },
+    textAlign: {
+      left: { textAlign: 'left' },
+      center: { textAlign: 'center' },
+      right: { textAlign: 'right' },
+    },
+    mb,
   },
 })
-
-export default Box

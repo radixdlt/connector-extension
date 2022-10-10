@@ -1,2 +1,2 @@
 import './dev-tools/background'
-import './setup/setup-background'
+import './pairing/background'

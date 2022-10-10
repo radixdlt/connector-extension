@@ -1,6 +1,6 @@
-import { styled } from 'stitches.config'
+import { styled } from '../../stitches.config'
 
-const Button = styled('button', {
+export const Button = styled('button', {
   backgroundColor: '$primaryButton',
   borderWidth: '$sm',
   borderColor: '$borderColor',
@@ -47,5 +47,3 @@ const Button = styled('button', {
     },
   },
 })
-
-export default Button

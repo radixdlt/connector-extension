@@ -1,7 +1,5 @@
 import { useHover, useCopyToClipboard } from 'react-use'
-import Overlay from 'components/overlay'
-import Text from 'components/text'
-import Box from 'components/box'
+import { Text, Box } from 'components'
 import React from 'react'
 
 const useOverlayClipboard = (
@@ -19,7 +17,6 @@ const useOverlayClipboard = (
       py="small"
       justify="center"
     >
-      <Overlay show={hovered} />
       {hovered && (
         <Text
           size={small ? 'small' : 'medium'}

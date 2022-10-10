@@ -1,4 +1,4 @@
-import BoxC from './box'
+import { Box as BoxC } from './box'
 
 export const Box = () => (
   <BoxC justify="center">

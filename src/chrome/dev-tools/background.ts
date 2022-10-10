@@ -1,15 +1,20 @@
+import { getExtensionTabsByUrl } from 'chrome/helpers/get-extension-tabs-by-url'
+import { config } from 'config'
+
 chrome.contextMenus.create({
   id: 'radix-dev-tools',
   title: 'Radix dev tools',
   contexts: ['all'],
 })
 
-chrome.contextMenus.onClicked.addListener(async () => {
-  const devToolsUrl = chrome.runtime.getURL(
-    'src/chrome/dev-tools/dev-tools.html'
-  )
-  const tabs = await chrome.tabs.query({})
-  const devToolsTab = tabs.find((tab) => tab.url === devToolsUrl)
+const openRadixDevToolsPage = async () => {
+  const devToolsUrl = chrome.runtime.getURL(config.popup.pages.devTools)
+
+  const result = await getExtensionTabsByUrl(config.popup.pages.devTools)
+
+  if (result.isErr()) return
+
+  const [devToolsTab] = result.value
 
   if (devToolsTab?.id) {
     await chrome.tabs.update(devToolsTab.id, { active: true })
@@ -18,4 +23,6 @@ chrome.contextMenus.onClicked.addListener(async () => {
       url: devToolsUrl,
     })
   }
-})
+}
+
+chrome.contextMenus.onClicked.addListener(async () => openRadixDevToolsPage())

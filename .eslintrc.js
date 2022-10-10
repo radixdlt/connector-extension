@@ -5,6 +5,7 @@ module.exports = {
     'unused-imports/no-unused-imports': 'error',
     'no-undef': 'off',
     '@typescript-eslint/consistent-type-definitions': ['error', 'type'],
+    'array-callback-return': 'off',
   },
   extends: [
     'alloy',

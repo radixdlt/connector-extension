@@ -15,7 +15,7 @@ export const config = {
     reconnect: {
       interval: 1000,
     },
-    useBatchedIceCandidates: true,
+    useBatchedIceCandidates: false,
     iceCandidatesBatchTime: 2000,
   },
   webRTC: {
@@ -40,4 +40,13 @@ export const config = {
     confirmationTimeout: 3_000,
   },
   mixpanel: { token: 'b85738f974413421c9aa247d1cc18150' },
+  popup: {
+    width: 257,
+    height: 505,
+    offsetTop: 0,
+    pages: {
+      pairing: 'src/pairing/index.html',
+      devTools: 'src/chrome/dev-tools/dev-tools.html',
+    },
+  },
 }
