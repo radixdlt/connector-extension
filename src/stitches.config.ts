@@ -7,7 +7,7 @@ const colors = {
   white: '#fff',
   green: '#00ab84',
   grey: '#f4f5f9',
-  darkGrey: '#6e7781',
+  darkGrey: '#535353',
   red: 'red',
   orange: 'orange',
   'Radix-Grey-2': '#8A8FA4',
@@ -50,7 +50,7 @@ export const {
       info: colors.blue,
       success: colors.green,
       warning: colors.orange,
-      primaryButton: colors.darkBlue,
+      primaryButton: colors.darkGrey,
       primaryButtonHover: colors.green,
       primaryButtonText: colors.white,
       primaryGhostButton: colors.white,
@@ -81,8 +81,9 @@ export const {
       '12xl': '84px',
       '13xl': '92px',
     },
+
     radii: {
-      sm: '3px',
+      sm: '4px',
       md: '10px',
       lg: '50%',
     },
@@ -90,6 +91,7 @@ export const {
     fontWeights: {
       200: '200',
       400: '400',
+      500: '500',
       600: '600',
     },
     sizes: {

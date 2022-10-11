@@ -3,6 +3,7 @@ import { Logger } from 'loglevel'
 import { StorageSubjectsType } from './subjects'
 import { storageSubscriptions } from './subscriptions'
 import { Buffer } from 'buffer'
+import { sessionStore } from 'chrome/helpers/set-item'
 
 export const makeChromeApi = (id: string, logger: Logger) => {
   const chromeAPI = ChromeApi(id, logger)
@@ -21,7 +22,6 @@ export type StorageInput = {
 }
 export const StorageClient = (input: StorageInput) => {
   input.logger.debug(`📦 storage client with id: '${input.id}' initiated`)
-  // TODO: Support more browsers
   const { chromeAPI, getConnectionPassword, removeConnectionPassword } =
     makeChromeApi(input.id, input.logger)
   const subscription = storageSubscriptions(input.subjects, chromeAPI)
@@ -40,10 +40,38 @@ export const StorageClient = (input: StorageInput) => {
     }
   }
 
+  const onActiveConnectionsChange = (changes: {
+    [key: string]: chrome.storage.StorageChange
+  }) => {
+    if (!changes) return
+    const activeConnections = Object.entries(changes).filter(
+      ([key, value]) => key.includes('connection:') && value.newValue
+    )
+    input.logger.debug(
+      `📦🔌 active connections\n ${JSON.stringify(changes, null, 2)}`
+    )
+    input.subjects.activeConnections.next(activeConnections.length > 0)
+  }
+
+  sessionStore.getItem(null).map((items) => {
+    if (!items) return
+    const activeConnections = Object.entries(items).filter(
+      ([key, value]) => key.includes('connection:') && value
+    )
+    input.logger.debug(
+      `📦🔌 active connections ${JSON.stringify(items, null, 2)}`
+    )
+    input.subjects.activeConnections.next(activeConnections.length > 0)
+  })
+
+  chrome.storage.session.onChanged.addListener((changes) =>
+    onActiveConnectionsChange(changes)
+  )
   chromeAPI.storage.addListener(onPasswordChange)
 
   const destroy = () => {
     chromeAPI.storage.removeListener(onPasswordChange)
+    chrome.storage.session.onChanged.removeListener(onActiveConnectionsChange)
     subscription.unsubscribe()
   }
 

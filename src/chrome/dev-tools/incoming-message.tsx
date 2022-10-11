@@ -36,23 +36,21 @@ export const IncomingMessage = () => {
                   ? {
                       ...item,
                       addresses: [
-                        [
-                          {
-                            label: 'Main account',
-                            address:
-                              'account_tdx_a_1qv3jfqugkm70ely0trae20wcwealxmj5zsacnhkllhgqlccnrp',
-                          },
-                          {
-                            label: "NFT's",
-                            address:
-                              'account_tdx_a_1qd5svul20u30qnq408zhj2tw5evqrunq48eg0jsjf9qsx5t8qu',
-                          },
-                          {
-                            label: 'Savings',
-                            address:
-                              'account_tdx_a_1qwz8dwm79jpq8fagt9vx0mug22ckznh3g45mfv4lmq2sjlwzqj',
-                          },
-                        ],
+                        {
+                          label: 'Main account',
+                          address:
+                            'account_tdx_a_1qv3jfqugkm70ely0trae20wcwealxmj5zsacnhkllhgqlccnrp',
+                        },
+                        {
+                          label: "NFT's",
+                          address:
+                            'account_tdx_a_1qd5svul20u30qnq408zhj2tw5evqrunq48eg0jsjf9qsx5t8qu',
+                        },
+                        {
+                          label: 'Savings',
+                          address:
+                            'account_tdx_a_1qwz8dwm79jpq8fagt9vx0mug22ckznh3g45mfv4lmq2sjlwzqj',
+                        },
                       ],
                     }
                   : item

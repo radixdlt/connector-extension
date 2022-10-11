@@ -25,7 +25,12 @@ export const config = {
           urls: 'stun:stun.stunprotocol.org',
         },
         {
-          urls: 'turn:k8s-signalin-turnserv-46e371bfb0-ed89a06c3bcabcd8.elb.eu-west-2.amazonaws.com:80',
+          urls: 'turn:turn-dev-tcp.rdx-works-main.extratools.works',
+          username: 'username',
+          credential: 'password',
+        },
+        {
+          urls: 'turn:turn-dev-udp.rdx-works-main.extratools.works',
           username: 'username',
           credential: 'password',
         },

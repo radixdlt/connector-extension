@@ -7,6 +7,13 @@
 
 @font-face {
   font-family: 'IBM Plex Sans';
+  src: url('assets/fonts/IBMPlexSans-Medium.ttf') format('truetype');
+  font-weight: 500;
+  font-style: normal;
+}
+
+@font-face {
+  font-family: 'IBM Plex Sans';
   src: url('assets/fonts/IBMPlexSans-Regular.ttf') format('truetype');
   font-weight: 400;
   font-style: normal;

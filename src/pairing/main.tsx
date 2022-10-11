@@ -7,7 +7,7 @@ import { Paring } from 'pairing/pairing'
 
 ReactDOM.createRoot(document.getElementById('root')!).render(
   <React.StrictMode>
-    <WebRtcContext.Provider value={Bootstrap({ logLevel: 'debug' })}>
+    <WebRtcContext.Provider value={Bootstrap({})}>
       <Paring />
     </WebRtcContext.Provider>
   </React.StrictMode>
