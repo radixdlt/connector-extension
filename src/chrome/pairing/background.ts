@@ -43,14 +43,14 @@ const createOrFocusPopupWindow = () =>
   })
 
 chrome.runtime.onMessage.addListener(async (message, sender, sendResponse) => {
-  chromeAPI.getConnectionPassword().andThen((password) => {
-    if (password) return okAsync(true)
-    sendResponse(true)
-    return createOrFocusPopupWindow()
-  })
-
   if ('connectionStatus' in message && sender.tab?.id)
     await handleActiveConnection(message.connectionStatus, sender.tab.id)
+  else
+    await chromeAPI.getConnectionPassword().andThen((password) => {
+      if (password) return okAsync(true)
+      return createOrFocusPopupWindow()
+    })
+
   sendResponse(true)
 })
 
