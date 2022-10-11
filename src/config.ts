@@ -25,12 +25,12 @@ export const config = {
           urls: 'stun:stun.stunprotocol.org',
         },
         {
-          urls: 'turn:turn-dev-tcp.rdx-works-main.extratools.works',
+          urls: 'turn:turn-dev-tcp.rdx-works-main.extratools.works:80',
           username: 'username',
           credential: 'password',
         },
         {
-          urls: 'turn:turn-dev-udp.rdx-works-main.extratools.works',
+          urls: 'turn:turn-dev-udp.rdx-works-main.extratools.works:80',
           username: 'username',
           credential: 'password',
         },
