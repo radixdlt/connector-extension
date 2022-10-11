@@ -19,7 +19,7 @@ export const useConnectionSecrets = () => {
     return () => {
       subscription.unsubscribe()
     }
-  }, [])
+  }, [webRtc])
 
   return secrets
 }

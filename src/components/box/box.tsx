@@ -1,5 +1,5 @@
 import { styled } from '../../stitches.config'
-import { mb } from '../variants/mb'
+import { mb, mt } from '../variants'
 
 export const Box = styled('div', {
   borderWidth: '$sm',
@@ -151,5 +151,6 @@ export const Box = styled('div', {
       right: { textAlign: 'right' },
     },
     mb,
+    mt,
   },
 })

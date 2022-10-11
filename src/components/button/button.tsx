@@ -2,18 +2,22 @@ import { styled } from '../../stitches.config'
 
 export const Button = styled('button', {
   backgroundColor: '$primaryButton',
-  borderWidth: '$sm',
+  borderWidth: 0,
   borderColor: '$borderColor',
   borderStyle: 'solid',
   cursor: 'pointer',
   borderRadius: '$sm',
-  fontSize: '$md',
+  fontSize: '$xs',
+  fontWeight: '$600',
   color: '$primaryButtonText',
-  padding: '$md $2xl',
+  px: '$lg',
+  py: '$sm',
   transition: 'color .2s,border-color .2s,background-color .2s',
   '&:hover': {
     backgroundColor: '$primaryButtonHover',
   },
+  lineHeight: 1.5,
+  boxShadow: '0px 4px 4px rgba(0, 0, 0, 0.25)',
   variants: {
     full: {
       true: {

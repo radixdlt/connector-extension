@@ -16,21 +16,28 @@ export const ChromeApi = (id: string, logger: Logger) => {
       ? ok(undefined)
       : err(Error('could not detect chrome.storage in window object'))
 
-  const setItem = (key: string, value: string) => {
+  const setItem = (
+    key: string,
+    value: string,
+    storeType: 'local' | 'session' = 'local'
+  ) => {
     logger.debug(`📦⬇️ storing item:\n{${key}: '${value}'}`)
     return checkIfChromeContext().asyncAndThen(() =>
       ResultAsync.fromPromise(
-        chrome.storage.local.set({ [`${id}:${key}`]: value }),
+        chrome.storage[storeType].set({ [`${id}:${key}`]: value }),
         errorIdentity
       )
     )
   }
 
-  const getItem = <T>(key: string): ResultAsync<T, Error> =>
+  const getItem = <T>(
+    key: string,
+    storeType: 'local' | 'session' = 'local'
+  ): ResultAsync<T, Error> =>
     checkIfChromeContext().asyncAndThen(() =>
       ResultAsync.fromPromise(
         new Promise((resolve) => {
-          chrome.storage.local.get(
+          chrome.storage[storeType].get(
             `${id}:${key}`,
             (data: Record<string, T>) => {
               const value = data[`${id}:${key}`]
@@ -65,11 +72,14 @@ export const ChromeApi = (id: string, logger: Logger) => {
       )
     )
 
-  const removeItem = (key: string | string[]) => {
+  const removeItem = (
+    key: string | string[],
+    storeType: 'local' | 'session' = 'local'
+  ) => {
     logger.debug(`📦 removing item with key: '${key}'`)
     return checkIfChromeContext().asyncAndThen(() =>
       ResultAsync.fromPromise(
-        chrome.storage.local.remove(`${id}:${key}`),
+        chrome.storage[storeType].remove(`${id}:${key}`),
         errorIdentity
       )
     )

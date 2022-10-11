@@ -45,6 +45,11 @@ export const Text = styled('p', {
         fontWeight: '$600',
       },
     },
+    medium: {
+      true: {
+        fontWeight: '$500',
+      },
+    },
     muted: {
       true: {
         color: '$muted',
