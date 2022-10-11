@@ -2,20 +2,23 @@ import { Box } from 'components'
 import { SignalingServer } from './signaling-server'
 import { WebRtc } from './web-rtc'
 import { IncomingMessage } from './incoming-message'
-import { ConnectionSecret } from './connection-secret'
 import { Bootstrap } from 'bootstrap/bootstrap'
 import { WebRtcContext } from 'contexts/web-rtc-context'
 import { config } from 'config'
 import { Paring } from 'pairing/pairing'
-import { useState } from 'react'
+import { useContext } from 'react'
+import { Buffer } from 'buffer'
 import { usePairingState } from 'hooks/use-paring-state'
 
-const PairingLoader = ({
-  setConnectionPassword,
-}: {
-  setConnectionPassword: (password: string) => void
-}) => {
+const PairingLoader = () => {
   const pairingState = usePairingState()
+  const webRtc = useContext(WebRtcContext)
+
+  const setConnectionPassword = (password: string) => {
+    webRtc?.signaling.subjects.wsConnectionPasswordSubject.next(
+      Buffer.from(password, 'hex')
+    )
+  }
 
   if (pairingState === 'loading' || pairingState === 'paired') return null
 
@@ -23,7 +26,7 @@ const PairingLoader = ({
     <Box style={{ display: 'none' }}>
       <WebRtcContext.Provider
         value={Bootstrap({
-          logLevel: 'debug',
+          logLevel: 'silent',
         })}
       >
         <Paring
@@ -36,33 +39,27 @@ const PairingLoader = ({
   )
 }
 
-const DevTools = ({ connectionPassword }: { connectionPassword?: string }) => (
+const DevTools = () => (
   <Box>
     <SignalingServer />
     <WebRtc />
     <IncomingMessage />
-    <ConnectionSecret connectionPassword={connectionPassword} />
   </Box>
 )
-export const DevToolsWrapper = () => {
-  const [connectionPassword, setConnectionPassword] = useState<
-    string | undefined
-  >()
-  return (
-    <Box p="medium">
-      <WebRtcContext.Provider
-        value={Bootstrap({
-          logLevel: 'debug',
-          signalingClientOptions: {
-            ...config.signalingServer,
-            source: 'wallet',
-            target: 'extension',
-          },
-        })}
-      >
-        <DevTools connectionPassword={connectionPassword} />
-        <PairingLoader setConnectionPassword={setConnectionPassword} />
-      </WebRtcContext.Provider>
-    </Box>
-  )
-}
+export const DevToolsWrapper = () => (
+  <Box p="medium">
+    <WebRtcContext.Provider
+      value={Bootstrap({
+        logLevel: 'debug',
+        signalingClientOptions: {
+          ...config.signalingServer,
+          source: 'wallet',
+          target: 'extension',
+        },
+      })}
+    >
+      <DevTools />
+      <PairingLoader />
+    </WebRtcContext.Provider>
+  </Box>
+)
