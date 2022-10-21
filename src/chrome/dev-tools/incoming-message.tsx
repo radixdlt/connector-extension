@@ -1,12 +1,12 @@
 import { Box, Button, Text } from 'components'
-import { WebRtcContext } from 'contexts/web-rtc-context'
+import { ConnectorContext } from 'contexts/connector-context'
 import { useContext, useEffect, useState } from 'react'
 import { Subscription } from 'rxjs'
-import { Status } from 'signaling/subjects'
+import { Status } from '../../connector'
 import { parseJSON } from 'utils'
 
 export const IncomingMessage = () => {
-  const webRtc = useContext(WebRtcContext)
+  const webRtc = useContext(ConnectorContext)
   const [status, setStatus] = useState<Status>()
   const [text, setText] = useState<string>('')
   const [incomingMessage, setIncomingMessage] = useState<any>()

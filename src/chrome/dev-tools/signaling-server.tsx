@@ -1,28 +1,28 @@
 import { Text } from 'components'
-import { WebRtcContext } from 'contexts/web-rtc-context'
-import { useContext, useEffect, useState } from 'react'
+import { useConnector } from 'hooks/use-connector'
+import { useEffect, useState } from 'react'
 import { Subscription } from 'rxjs'
-import { Status } from 'signaling/subjects'
+import { Status } from '../../connector'
 
 export const SignalingServer = () => {
-  const webRtc = useContext(WebRtcContext)
+  const connector = useConnector()
   const [status, setStatus] = useState<Status>()
 
   useEffect(() => {
-    if (!webRtc) return
+    if (!connector) return
 
-    webRtc?.signaling.subjects.wsConnectSubject.next(true)
+    connector?.signaling.subjects.wsConnectSubject.next(true)
 
     const subscription = new Subscription()
 
     subscription.add(
-      webRtc.signaling.subjects.wsStatusSubject.subscribe((status) => {
+      connector.signaling.subjects.wsStatusSubject.subscribe((status) => {
         setStatus(status)
       })
     )
 
     subscription.add(
-      webRtc?.signaling.subjects.wsIncomingRawMessageSubject.subscribe(
+      connector?.signaling.subjects.wsIncomingRawMessageSubject.subscribe(
         (raw) => {
           const message = JSON.parse(raw.data)
           if (
@@ -31,7 +31,7 @@ export const SignalingServer = () => {
               'remoteClientIsAlreadyConnected',
             ].includes(message.info)
           ) {
-            webRtc?.webRtc.subjects.rtcCreateOfferSubject.next()
+            connector?.webRtc.subjects.rtcCreateOfferSubject.next()
           }
         }
       )
@@ -40,7 +40,7 @@ export const SignalingServer = () => {
     return () => {
       subscription.unsubscribe()
     }
-  }, [webRtc])
+  }, [connector])
 
   return (
     <Text>

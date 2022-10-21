@@ -122,3 +122,15 @@ export const ChromeApi = (id: string, logger: Logger) => {
 
   return { storage, sendMessage, id }
 }
+
+export const createChromeApi = (id: string, logger: Logger) => {
+  const chromeAPI = ChromeApi(id, logger)
+
+  const getConnectionPassword = () =>
+    chromeAPI.storage.getItem<string>('connectionPassword')
+
+  const removeConnectionPassword = () =>
+    chromeAPI.storage.removeItem('connectionPassword')
+
+  return { chromeAPI, getConnectionPassword, removeConnectionPassword }
+}

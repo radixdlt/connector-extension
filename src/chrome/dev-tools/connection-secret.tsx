@@ -1,23 +1,29 @@
-import { WebRtcContext } from 'contexts/web-rtc-context'
-import { useContext, useEffect } from 'react'
-import { Buffer } from 'buffer'
+import { ConnectorContext } from 'contexts/connector-context'
+import { useContext, useState } from 'react'
+import { Box, Button } from 'components'
 
-type ConnectionSecretProps = {
-  connectionPassword?: string
-}
+export const ConnectionSecret = () => {
+  const connector = useContext(ConnectorContext)
+  const [text, setText] = useState<string>('')
 
-export const ConnectionSecret = ({
-  connectionPassword,
-}: ConnectionSecretProps) => {
-  const webRtc = useContext(WebRtcContext)
+  const onSubmit = () => {
+    connector?.setConnectionPassword(text)
+    setText('')
+  }
 
-  useEffect(() => {
-    if (!webRtc || !connectionPassword) return
+  return (
+    <Box style={{ width: '500px' }}>
+      <Box>
+        <input
+          style={{ width: '100%', boxSizing: 'border-box' }}
+          onChange={(ev) => setText(ev.target.value)}
+          value={text}
+        />
+      </Box>
 
-    webRtc?.signaling.subjects.wsConnectionPasswordSubject.next(
-      Buffer.from(connectionPassword, 'hex')
-    )
-  }, [webRtc, connectionPassword])
-
-  return null
+      <Button full size="small" type="submit" onClick={() => onSubmit()}>
+        Set connection password
+      </Button>
+    </Box>
+  )
 }
