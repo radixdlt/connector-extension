@@ -1,11 +1,11 @@
-import { ScanQrCode as ScanQrCodeC } from './components/scan-qr'
+import { ConnectionPassword as ConnectionPasswordC } from './components/connection-password'
 import { ConnectionStatus as ConnectionStatusC } from './components/connection-status'
 import { config } from '../config'
 import { Box } from '../components'
 
-export const ScanQrCode = () => (
+export const ConnectionPassword = () => (
   <Box style={{ width: config.popup.width }}>
-    <ScanQrCodeC connectionPassword="abc" />
+    <ConnectionPasswordC value="abc" />
   </Box>
 )
 
