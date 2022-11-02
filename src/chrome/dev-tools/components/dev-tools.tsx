@@ -1,14 +1,14 @@
 import { Box } from 'components'
 import { SignalingServer } from './signaling-server'
 import { ConnectionStatus } from './connection-status'
-import { IncomingMessage } from './incoming-message'
+import { Message } from './message'
 import { ConnectionSecret } from './connection-secret'
 
-export const DevToolsWrapper = () => (
+export const DevTools = () => (
   <Box p="medium">
     <SignalingServer />
     <ConnectionStatus />
     <ConnectionSecret />
-    <IncomingMessage />
+    <Message />
   </Box>
 )
