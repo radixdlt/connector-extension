@@ -2,7 +2,7 @@ import { Text } from 'components'
 import { useConnector } from 'hooks/use-connector'
 import { useEffect, useState } from 'react'
 import { Subscription } from 'rxjs'
-import { Status } from '../../connector'
+import { Status } from '../../../connector'
 
 export const SignalingServer = () => {
   const connector = useConnector()

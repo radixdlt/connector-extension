@@ -1,11 +1,11 @@
-import { dAppClient } from 'dapp/dapp-client'
 import { ChromeConnectorClient } from './chrome-connector-client'
+import { chromeDAppClient } from './chrome-dapp-client'
+import { decorateMessage } from './helpers/decorate-message'
 
-const connectorClient = ChromeConnectorClient()
+const connectorClient = ChromeConnectorClient('debug')
 
-dAppClient.chrome.messageListener((message) => {
-  connectorClient
-    .getConnector()
-    .sendMessage(message)
+chromeDAppClient.messageListener((message) => {
+  decorateMessage(message)
+    .map(connectorClient.getConnector().sendMessage)
     .map(chrome.runtime.sendMessage)
 })

@@ -31,13 +31,15 @@ const createOrFocusPopupWindow = () =>
         ).andThen((popup) => setPopupId(popup?.id))
   })
 
-chrome.runtime.onMessage.addListener(async (_, __, sendResponse) => {
-  await chromeAPI.getConnectionPassword().andThen((password) => {
+const handleIncomingMessage = () =>
+  chromeAPI.getConnectionPassword().andThen((password) => {
     if (password) return okAsync(true)
     return createOrFocusPopupWindow()
   })
 
+chrome.runtime.onMessage.addListener(async (_, __, sendResponse) => {
+  await handleIncomingMessage()
   sendResponse(true)
 })
 
-chrome.runtime.onInstalled.addListener(async () => createOrFocusPopupWindow())
+chrome.runtime.onInstalled.addListener(handleIncomingMessage)

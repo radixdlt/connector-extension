@@ -1,14 +1,17 @@
 import { Connector, ConnectorType } from 'connector/connector'
-import { dAppClient } from 'dapp/dapp-client'
-import { Subscription } from 'rxjs'
+import { LogLevelDesc } from 'loglevel'
+import { map, Subscription } from 'rxjs'
+import { chromeDAppClient } from './chrome-dapp-client'
 
-export const ChromeConnectorClient = () => {
+export const ChromeConnectorClient = (logLevel: LogLevelDesc) => {
   let connector: ConnectorType | undefined
   let subscriptions: Subscription | undefined
 
   const createConnector = () => {
-    connector = Connector({ logLevel: 'debug' })
-    subscriptions = connector.message$.subscribe(dAppClient.chrome.sendMessage)
+    connector = Connector({ logLevel })
+    subscriptions = connector.message$
+      .pipe(map((result) => result.map(chromeDAppClient.sendMessage)))
+      .subscribe()
   }
 
   const destroy = () => {
