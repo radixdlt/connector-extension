@@ -1,7 +1,9 @@
 import { Connector, ConnectorType } from 'connector/connector'
 import { LogLevelDesc } from 'loglevel'
 import { map, Subscription } from 'rxjs'
-import { chromeDAppClient } from './chrome-dapp-client'
+import { ChromeDAppClient } from './chrome-dapp-client'
+
+const chromeDAppClient = ChromeDAppClient()
 
 export const ChromeConnectorClient = (logLevel: LogLevelDesc) => {
   let connector: ConnectorType | undefined
