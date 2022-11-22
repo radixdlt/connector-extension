@@ -16,7 +16,7 @@ export const config = {
       interval: 1000,
     },
     useBatchedIceCandidates: true,
-    iceCandidatesBatchTime: 2000,
+    iceCandidatesBatchTime: 400,
   },
   webRTC: {
     peerConnectionConfig: {
