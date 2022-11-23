@@ -6,8 +6,9 @@ import { getPopupId } from 'chrome/helpers/get-popup-id'
 import { setPopupId } from 'chrome/helpers/set-popup-id'
 import { config } from 'config'
 import { getLogger } from 'loglevel'
-import { ok, okAsync, ResultAsync } from 'neverthrow'
+import { ok, ResultAsync } from 'neverthrow'
 import { createChromeApi } from './chrome-api'
+import { closePopup } from './helpers/close-popup'
 
 const logger = getLogger('background')
 
@@ -32,14 +33,24 @@ const createOrFocusPopupWindow = () =>
   })
 
 const handleIncomingMessage = () =>
-  chromeAPI.getConnectionPassword().andThen((password) => {
-    if (password) return okAsync(true)
-    return createOrFocusPopupWindow()
-  })
+  chromeAPI
+    .getConnectionPassword()
+    .andThen((connectionPassword) =>
+      connectionPassword ? closePopup() : createOrFocusPopupWindow()
+    )
 
-chrome.runtime.onMessage.addListener(async (_, __, sendResponse) => {
-  await handleIncomingMessage()
-  sendResponse(true)
-})
+const handleConnectionPasswordChange = async (changes: {
+  [key: string]: chrome.storage.StorageChange
+}) => {
+  const connectionPasswordKey = Object.keys(changes).find((key) =>
+    key.includes(':connectionPassword')
+  )
+  if (connectionPasswordKey && changes[connectionPasswordKey].newValue) {
+    await closePopup()
+  }
+}
 
+chrome.runtime.onMessage.addListener(handleIncomingMessage)
 chrome.runtime.onInstalled.addListener(handleIncomingMessage)
+chrome.storage.onChanged.addListener(handleConnectionPasswordChange)
+chrome.action.onClicked.addListener(createOrFocusPopupWindow)
