@@ -19,7 +19,7 @@ const manifest = defineManifest(async () => ({
   name: 'Radix Connector Extension',
   version: `${major}.${minor}.${patch}.${label}`,
   version_name: version,
-  action: { default_popup: 'src/pairing/index.html' },
+  action: {},
   background: {
     service_worker: `src/chrome/background${
       isDevToolsActive ? '-with-dev-tools' : ''
