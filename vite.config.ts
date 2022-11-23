@@ -52,14 +52,15 @@ const buildConfig: UserConfigExport = {
   build: {
     rollupOptions: {
       input: {
-        devTools: 'src/chrome/dev-tools/dev-tools.html',
+        pairing: 'src/pairing/index.html',
       },
     },
   },
 }
 
 if (!isDevToolsActive) {
-  delete buildConfig['build']
+  buildConfig.build.rollupOptions.input['devTools'] =
+    'src/chrome/dev-tools/dev-tools.html'
 }
 
 export default defineConfig(buildConfig)
