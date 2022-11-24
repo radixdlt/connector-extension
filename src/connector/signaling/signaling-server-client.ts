@@ -1,25 +1,26 @@
-import { Logger } from 'loglevel'
+import { config } from 'config'
+import log, { Logger } from 'loglevel'
 import { track } from 'mixpanel'
-import { SignalingSubjectsType } from './subjects'
+import { SignalingSubjectsType, SignalingSubjects } from './subjects'
 import { SignalingSubscriptions } from './subscriptions'
 
 type Source = 'wallet' | 'extension'
 
 export type SignalingServerClientType = ReturnType<typeof SignalingServerClient>
 export type SignalingServerClientInput = {
-  logger: Logger
-  baseUrl: string
+  logger?: Logger
+  baseUrl?: string
   target?: Source
   source?: Source
-  subjects: SignalingSubjectsType
+  subjects?: SignalingSubjectsType
 }
 
 export const SignalingServerClient = ({
-  logger,
-  baseUrl,
+  logger = log,
+  baseUrl = config.signalingServer.baseUrl,
   target = 'wallet',
   source = 'extension',
-  subjects,
+  subjects = SignalingSubjects(),
 }: SignalingServerClientInput) => {
   const sendMessageDirection = `[${source} => ${target}]`
   let t0 = 0
@@ -100,6 +101,7 @@ export const SignalingServerClient = ({
 
   const subscriptions = SignalingSubscriptions(
     subjects,
+
     {
       sendMessage,
       connect,
@@ -118,5 +120,6 @@ export const SignalingServerClient = ({
   return {
     destroy,
     subjects,
+    connect: (value: boolean) => subjects.wsConnectSubject.next(value),
   }
 }

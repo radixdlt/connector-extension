@@ -1,4 +1,6 @@
 import { Connector, ConnectorType } from 'connector/connector'
+import { StorageClient } from 'connector/storage/storage-client'
+import { config } from 'config'
 import { LogLevelDesc } from 'loglevel'
 import { map, Subscription } from 'rxjs'
 import { ChromeDAppClient } from './chrome-dapp-client'
@@ -10,7 +12,11 @@ export const ChromeConnectorClient = (logLevel: LogLevelDesc) => {
   let subscriptions: Subscription | undefined
 
   const createConnector = () => {
-    connector = Connector({ logLevel })
+    connector = Connector({
+      logLevel,
+      storageClient: StorageClient({ id: config.storage.key }),
+      generateConnectionPassword: false,
+    })
     subscriptions = connector.message$
       .pipe(map((result) => result.map(chromeDAppClient.sendMessage)))
       .subscribe()

@@ -1,18 +1,14 @@
 import { combineLatest, tap } from 'rxjs'
-import { SignalingSubjectsType } from 'connector/signaling/subjects'
-import { WebRtcSubjectsType } from 'connector/webrtc/subjects'
+import { ConnectorSubscriptionsInput } from 'connector/_types'
 
-export const connection = (
-  signalingSubjects: SignalingSubjectsType,
-  webRtcSubjects: WebRtcSubjectsType
-) =>
+export const connection = (input: ConnectorSubscriptionsInput) =>
   combineLatest([
-    webRtcSubjects.rtcStatusSubject,
-    signalingSubjects.wsConnectSubject,
+    input.webRtcClient.subjects.rtcStatusSubject,
+    input.signalingServerClient.subjects.wsConnectSubject,
   ]).pipe(
     tap(([webRtcStatus, shouldSignalingServerConnect]) => {
       if (webRtcStatus === 'connected' && shouldSignalingServerConnect) {
-        signalingSubjects.wsConnectSubject.next(false)
+        input.signalingServerClient.subjects.wsConnectSubject.next(false)
       }
     })
   )

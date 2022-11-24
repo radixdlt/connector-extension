@@ -1,27 +1,31 @@
-import { Logger } from 'loglevel'
+import log, { Logger } from 'loglevel'
 import { WebRtcSubscriptions } from 'connector/webrtc/subscriptions'
 import { PeerConnectionType, PeerConnection } from './peer-connection'
-import { WebRtcSubjectsType } from './subjects'
+import { WebRtcSubjectsType, WebRtcSubjects } from './subjects'
+import { config } from 'config'
 
 export type WebRtcClientType = ReturnType<typeof WebRtcClient>
 export type WebRtcClientInput = {
-  logger: Logger
-  peerConnectionConfig: RTCConfiguration
-  dataChannelConfig: RTCDataChannelInit
-  subjects: WebRtcSubjectsType
+  logger?: Logger
+  peerConnectionConfig?: RTCConfiguration
+  dataChannelConfig?: RTCDataChannelInit
+  subjects?: WebRtcSubjectsType
 }
-export const WebRtcClient = (input: WebRtcClientInput) => {
-  const subjects = input.subjects
-
+export const WebRtcClient = ({
+  peerConnectionConfig = config.webRTC.peerConnectionConfig,
+  dataChannelConfig = config.webRTC.dataChannelConfig,
+  subjects = WebRtcSubjects(),
+  logger = log,
+}: WebRtcClientInput) => {
   let peerConnectionInstance: PeerConnectionType | undefined
 
   const createPeerConnection = () => {
     peerConnectionInstance?.destroy()
     peerConnectionInstance = PeerConnection(
       subjects,
-      input.peerConnectionConfig,
-      input.dataChannelConfig,
-      input.logger
+      peerConnectionConfig,
+      dataChannelConfig,
+      logger
     )
   }
 
@@ -45,11 +49,7 @@ export const WebRtcClient = (input: WebRtcClientInput) => {
     getPeerConnectionInstance,
   }
 
-  const subscriptions = WebRtcSubscriptions(
-    subjects,
-    dependencies,
-    input.logger
-  )
+  const subscriptions = WebRtcSubscriptions(subjects, dependencies, logger)
 
   const destroy = () => {
     subjects.rtcConnectSubject.next(false)
@@ -58,6 +58,7 @@ export const WebRtcClient = (input: WebRtcClientInput) => {
   }
 
   return {
+    connect: (value: boolean) => subjects.rtcConnectSubject.next(value),
     subjects,
     destroy,
     createPeerConnection,

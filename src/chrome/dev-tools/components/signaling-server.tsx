@@ -11,18 +11,20 @@ export const SignalingServer = () => {
   useEffect(() => {
     if (!connector) return
 
-    connector?.signaling.subjects.wsConnectSubject.next(true)
+    connector?.signalingServerClient.subjects.wsConnectSubject.next(true)
 
     const subscription = new Subscription()
 
     subscription.add(
-      connector.signaling.subjects.wsStatusSubject.subscribe((status) => {
-        setStatus(status)
-      })
+      connector.signalingServerClient.subjects.wsStatusSubject.subscribe(
+        (status) => {
+          setStatus(status)
+        }
+      )
     )
 
     subscription.add(
-      connector?.signaling.subjects.wsIncomingRawMessageSubject.subscribe(
+      connector?.signalingServerClient.subjects.wsIncomingRawMessageSubject.subscribe(
         (raw) => {
           const message = JSON.parse(raw.data)
           if (
@@ -31,7 +33,7 @@ export const SignalingServer = () => {
               'remoteClientIsAlreadyConnected',
             ].includes(message.info)
           ) {
-            connector?.webRtc.subjects.rtcCreateOfferSubject.next()
+            connector?.webRtcClient.subjects.rtcCreateOfferSubject.next()
           }
         }
       )

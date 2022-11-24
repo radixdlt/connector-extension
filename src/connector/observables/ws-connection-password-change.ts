@@ -1,11 +1,13 @@
-import { SignalingSubjectsType } from 'connector/signaling/subjects'
-import { StorageSubjectsType } from 'connector/storage/subjects'
+import { ConnectorSubscriptionsInput } from 'connector/_types'
 import { tap } from 'rxjs'
 
 export const wsConnectionPasswordChange = (
-  storageSubjects: StorageSubjectsType,
-  signalingSubjects: SignalingSubjectsType
+  input: ConnectorSubscriptionsInput
 ) =>
-  storageSubjects.onPasswordChange.pipe(
-    tap((buffer) => signalingSubjects.wsConnectionPasswordSubject.next(buffer))
+  input.storageClient.subjects.onPasswordChange.pipe(
+    tap((buffer) =>
+      input.signalingServerClient.subjects.wsConnectionPasswordSubject.next(
+        buffer
+      )
+    )
   )

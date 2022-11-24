@@ -1,12 +1,11 @@
 import { filter, withLatestFrom, tap } from 'rxjs'
-import { SignalingSubjectsType } from 'connector/signaling/subjects'
-import { WebRtcSubjectsType } from 'connector/webrtc/subjects'
+import { ConnectorSubscriptionsInput } from 'connector/_types'
 
-export const wsConnect = (
-  webRtcSubjects: WebRtcSubjectsType,
-  signalingSubjects: SignalingSubjectsType
-) =>
-  webRtcSubjects.rtcAddMessageToQueue.pipe(
+export const wsConnect = (input: ConnectorSubscriptionsInput) => {
+  const signalingSubjects = input.signalingServerClient.subjects
+  const webRtcSubjects = input.webRtcClient.subjects
+
+  return webRtcSubjects.rtcAddMessageToQueue.pipe(
     withLatestFrom(
       webRtcSubjects.rtcStatusSubject,
       signalingSubjects.wsStatusSubject
@@ -19,3 +18,4 @@ export const wsConnect = (
       signalingSubjects.wsConnectSubject.next(true)
     })
   )
+}

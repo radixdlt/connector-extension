@@ -10,8 +10,7 @@ describe('data chunking', () => {
     it('should transform a message to a chunked message', async () => {
       const message = 'foobar'
       const chunkedResult = await messageToChunked(
-        Buffer.from(message, 'utf-8'),
-        log
+        Buffer.from(message, 'utf-8')
       )
       if (chunkedResult.isErr()) throw chunkedResult.error
       expect(chunkedResult.value).toHaveProperty('chunks')
@@ -29,7 +28,6 @@ All of this provides Cerberus with practically infinite 'linear' scalability. Th
 
       const chunkedResult = await messageToChunked(
         Buffer.from(message, 'utf-8'),
-        log,
         400
       )
       if (chunkedResult.isErr()) throw chunkedResult.error
