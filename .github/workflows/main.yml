@@ -4,6 +4,8 @@ on:
   push:
     branches: ['**']
   workflow_dispatch:
+  release:
+    types: [published]
 
 jobs:
   test_and_lint:
@@ -27,18 +29,51 @@ jobs:
 
       - name: Build extension
         run: yarn build
+      
+      - name: Get release
+        id: get_release
+        uses: bruceadams/get-release@74c3d60f5a28f358ccf241a00c9021ea16f0569f
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        if: ${{ github.event_name == 'release' }}
 
       - uses: actions/upload-artifact@v3
+        if: ${{ github.event_name != 'release' }}
         with:
           name: connector-extension.${{ github.sha }}
           path: dist/
+      
+      - name: Upload Connector
+        if: ${{ github.event_name == 'release' }}
+        uses: actions/upload-release-asset@e8f9f06c4b078e705bd2ea027f0926603fc9b4d5
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ steps.get_release.outputs.upload_url }}
+          asset_path: dist/connector-extension.${{ github.sha }}
+          asset_name: connector-extension-${{steps.get_release.outputs.tag_name}}.zip
+          asset_content_type: application/zip
+        
 
       - name: Build extension with dev tools
         run: yarn build
         env:
           DEV_TOOLS: true
-
+      
+      - name: Upload Connector with dev tools
+        if: ${{ github.event_name == 'release' }}
+        uses: actions/upload-release-asset@e8f9f06c4b078e705bd2ea027f0926603fc9b4d5
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ steps.get_release.outputs.upload_url }}
+          asset_path: dist/connector-extension-dev-tools.${{ github.sha }}
+          asset_name: connector-extension-dev-tools-${{steps.get_release.outputs.tag_name}}.zip
+          asset_content_type: application/zip
+        
       - uses: actions/upload-artifact@v3
+        if: ${{ github.event_name != 'release' }}
         with:
           name: connector-extension-dev-tools.${{ github.sha }}
           path: dist/
+     
