@@ -7,7 +7,10 @@ import log from 'loglevel'
 import { createIV, encrypt } from 'crypto/encryption'
 import { delayAsync } from 'test-utils/delay-async'
 import { SignalingSubjectsType } from 'connector/signaling/subjects'
-import { SignalingServerClientType } from 'connector/signaling/signaling-server-client'
+import {
+  SignalingServerClient,
+  SignalingServerClientType,
+} from 'connector/signaling/signaling-server-client'
 import { wsMessageConfirmation } from 'connector/signaling/observables/ws-message-confirmation'
 import { Connector, ConnectorType, Status } from 'connector'
 
@@ -34,15 +37,14 @@ const waitUntilStatus = async (status: Status) =>
 describe('Signaling server client', () => {
   beforeEach(async () => {
     application = Connector({
-      signalingClientOptions: {
-        baseUrl: url,
-      },
-      storageOptions: { id: crypto.randomUUID() },
       logLevel: 'silent',
+      signalingServerClient: SignalingServerClient({
+        baseUrl: url,
+      }),
     })
-    signalingServerClient = application.signaling
+    signalingServerClient = application.signalingServerClient
     signalingSubjects = signalingServerClient.subjects
-    webRtcSubjects = application.webRtc.subjects
+    webRtcSubjects = application.webRtcClient.subjects
 
     signalingSubjects.wsConnectionPasswordSubject.next(
       Buffer.from([

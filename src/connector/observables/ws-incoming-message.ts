@@ -1,4 +1,4 @@
-import { Secrets } from '../_types'
+import { ConnectorSubscriptionsInput, Secrets } from '../_types'
 import { WebRtcSubjectsType } from 'connector/webrtc/subjects'
 import { decrypt } from 'crypto/encryption'
 import { transformBufferToSealbox } from 'crypto/sealbox'
@@ -118,12 +118,12 @@ const handleIncomingMessage =
       return ok(undefined)
     })
 
-export const wsIncomingMessage = (
-  signalingSubjects: SignalingSubjectsType,
-  webRtcSubjects: WebRtcSubjectsType,
-  logger: Logger
-) =>
-  signalingSubjects.wsIncomingRawMessageSubject.pipe(
+export const wsIncomingMessage = (input: ConnectorSubscriptionsInput) => {
+  const signalingSubjects = input.signalingServerClient.subjects
+  const webRtcSubjects = input.webRtcClient.subjects
+  const logger = input.logger
+
+  return signalingSubjects.wsIncomingRawMessageSubject.pipe(
     map((messageEvent) => messageEvent.data),
     map((rawMessage) =>
       parseJSON<SignalingServerResponse>(rawMessage).mapErr(
@@ -165,3 +165,4 @@ export const wsIncomingMessage = (
     ),
     share()
   )
+}

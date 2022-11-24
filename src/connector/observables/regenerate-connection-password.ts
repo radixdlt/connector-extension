@@ -1,18 +1,16 @@
-import { SignalingSubjectsType } from 'connector/signaling/subjects'
-import { StorageSubjectsType } from 'connector/storage/subjects'
-import { WebRtcSubjectsType } from 'connector/webrtc/subjects'
+import { ConnectorSubscriptionsInput } from 'connector/_types'
 import { delay, tap } from 'rxjs'
 
 export const regenerateConnectionPassword = (
-  signalingSubjects: SignalingSubjectsType,
-  storageSubjects: StorageSubjectsType,
-  webRtcSubjects: WebRtcSubjectsType
+  input: ConnectorSubscriptionsInput
 ) =>
-  signalingSubjects.wsRegenerateConnectionPassword.pipe(
+  input.signalingServerClient.subjects.wsRegenerateConnectionPassword.pipe(
     tap(() => {
-      storageSubjects.removeConnectionPasswordSubject.next()
-      webRtcSubjects.rtcRestartSubject.next()
+      input.storageClient.subjects.removeConnectionPasswordSubject.next()
+      input.webRtcClient.subjects.rtcRestartSubject.next()
     }),
     delay(0),
-    tap(() => signalingSubjects.wsGenerateConnectionSecretsSubject.next())
+    tap(() =>
+      input.signalingServerClient.subjects.wsGenerateConnectionSecretsSubject.next()
+    )
   )

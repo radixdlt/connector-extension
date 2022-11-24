@@ -1,139 +1,76 @@
-import { config } from 'config'
 import log, { LogLevelDesc } from 'loglevel'
 import {
   SignalingServerClient,
-  SignalingServerClientInput,
+  SignalingServerClientType,
 } from 'connector/signaling/signaling-server-client'
-import {
-  SignalingSubjects,
-  SignalingSubjectsType,
-} from 'connector/signaling/subjects'
-import {
-  StorageSubjects,
-  StorageSubjectsType,
-} from 'connector/storage/subjects'
-import { StorageClient, StorageInput } from './storage/storage-client'
-import { ApplicationSubscriptions } from './subscriptions'
-import { WebRtcSubjects, WebRtcSubjectsType } from 'connector/webrtc/subjects'
-import { WebRtcClient, WebRtcClientInput } from 'connector/webrtc/webrtc-client'
+import { StorageClient, StorageClientType } from './storage/storage-client'
+import { ConnectorSubscriptions } from './subscriptions'
+import { WebRtcClient, WebRtcClientType } from 'connector/webrtc/webrtc-client'
 import { map } from 'rxjs/operators'
 import { parseJSON } from 'utils'
-import { ok } from 'neverthrow'
 import { ConnectorSubjects, ConnectorSubjectsType } from './subjects'
 import { Buffer } from 'buffer'
+import { config } from 'config'
 
 export type ConnectorType = ReturnType<typeof Connector>
 
-export type ConnectorInput = Partial<{
-  id: string
-  logger: log.Logger
-  logLevel: LogLevelDesc
-  signalingLogLevel: LogLevelDesc
-  webRtcLoglevel: LogLevelDesc
-  storageLogLevel: LogLevelDesc
-  webRtcSubjects: WebRtcSubjectsType
-  signalingSubjects: SignalingSubjectsType
-  storageSubjects: StorageSubjectsType
-  connectorSubjects: ConnectorSubjectsType
-  webRtcClientOptions: Omit<WebRtcClientInput, 'subjects' | 'logger'>
-  signalingClientOptions: Omit<
-    SignalingServerClientInput,
-    'subjects' | 'logger'
-  >
-  storageOptions: Omit<StorageInput, 'subjects' | 'logger'>
-}>
+export type ConnectorInput = {
+  id?: string
+  logger?: log.Logger
+  connectorSubjects?: ConnectorSubjectsType
+  signalingServerClient?: SignalingServerClientType
+  webRtcClient?: WebRtcClientType
+  storageClient?: StorageClientType
+  logLevel?: LogLevelDesc
+  generateConnectionPassword?: boolean
+}
 
 export const Connector = ({
   id = crypto.randomUUID(),
-  logger = log.getLogger(`${id}-connector`),
   logLevel = config.logLevel,
-  signalingLogLevel,
-  webRtcLoglevel,
-  storageLogLevel,
-  webRtcSubjects = WebRtcSubjects(),
-  signalingSubjects = SignalingSubjects(),
-  storageSubjects = StorageSubjects(),
+  logger = log,
   connectorSubjects = ConnectorSubjects(),
-  webRtcClientOptions = {
-    peerConnectionConfig: config.webRTC.peerConnectionConfig,
-    dataChannelConfig: config.webRTC.dataChannelConfig,
-  },
-  signalingClientOptions = {
-    baseUrl: config.signalingServer.baseUrl,
-  },
-  storageOptions = { id: 'radix' },
+  signalingServerClient = SignalingServerClient({
+    logger: log.getLogger(`${id}-signalingServerClient`),
+  }),
+  webRtcClient = WebRtcClient({ logger: log.getLogger(`${id}-webRtcClient`) }),
+  storageClient = StorageClient({
+    logger: log.getLogger(`${id}-storageClient`),
+  }),
+  generateConnectionPassword = true,
 }: ConnectorInput) => {
   logger.setLevel(logLevel)
-
   logger.debug(
-    `🏃‍♂️ connector extension running in: '${process.env.NODE_ENV}' mode, logLevel: '${logLevel}'`
+    `🏃‍♂️ connector extension running in: '${process.env.NODE_ENV}' mode`
   )
 
-  const signalingLogger = log.getLogger(`${id}-signaling`)
-  signalingLogger.setLevel(signalingLogLevel || logLevel)
-
-  const signaling = SignalingServerClient({
-    ...signalingClientOptions,
-    logger: signalingLogger,
-    subjects: signalingSubjects,
-  })
-
-  const webRtcLogger = log.getLogger(`${id}-webRtc`)
-  webRtcLogger.setLevel(webRtcLoglevel || logLevel)
-
-  const webRtc = WebRtcClient({
-    peerConnectionConfig: webRtcClientOptions.peerConnectionConfig,
-    dataChannelConfig: webRtcClientOptions.dataChannelConfig,
-    logger: webRtcLogger,
-    subjects: webRtcSubjects,
-  })
-
-  const storageLogger = log.getLogger(`${id}-storage`)
-  storageLogger.setLevel(storageLogLevel || logLevel)
-
-  const storage = StorageClient({
-    ...storageOptions,
-    subjects: storageSubjects,
-    logger: storageLogger,
-  })
-
-  webRtc.subjects.rtcConnectSubject.next(true)
-
-  const applicationSubscriptions = ApplicationSubscriptions({
-    webRtc,
-    storage,
-    signalingSubjects: signaling.subjects,
+  const connectorSubscriptions = ConnectorSubscriptions({
+    webRtcClient,
+    storageClient,
+    signalingServerClient,
     connectorSubjects,
     logger,
   })
 
-  const sendMessage = (message: Record<string, any>) => {
-    webRtc.subjects.rtcAddMessageToQueue.next(message)
-    return ok(true)
-  }
-
   const connect = (value: boolean) => {
-    signaling.subjects.wsConnectSubject.next(value)
-    webRtc.subjects.rtcConnectSubject.next(value)
-  }
-
-  const setConnectionPassword = (password: string) => {
-    signaling.subjects.wsConnectionPasswordSubject.next(
-      Buffer.from(password, 'hex')
-    )
+    signalingServerClient.connect(value)
+    webRtcClient.connect(value)
   }
 
   const init = () => {
-    storage.getConnectionPassword().map((connectionPassword) => {
+    webRtcClient.connect(true)
+    storageClient.getConnectionPassword().map((connectionPassword) => {
       if (connectionPassword) {
         logger.debug(`🔐 setting connectionPassword`)
-        signalingSubjects.wsConnectionPasswordSubject.next(
+        signalingServerClient.subjects.wsConnectionPasswordSubject.next(
           Buffer.from(connectionPassword, 'hex')
         )
-        signalingSubjects.wsAutoConnect.next(true)
+        signalingServerClient.subjects.wsAutoConnect.next(true)
         connectorSubjects.pairingStateSubject.next('paired')
       } else {
-        signalingSubjects.wsGenerateConnectionSecretsSubject.next()
+        if (generateConnectionPassword) {
+          signalingServerClient.subjects.wsGenerateConnectionSecretsSubject.next()
+        }
         connectorSubjects.pairingStateSubject.next('notPaired')
       }
     })
@@ -142,29 +79,35 @@ export const Connector = ({
   init()
 
   const destroy = () => {
-    webRtc.destroy()
-    signaling.destroy()
-    storage.destroy()
-    applicationSubscriptions.unsubscribe()
+    webRtcClient.destroy()
+    signalingServerClient.destroy()
+    storageClient.destroy()
+    connectorSubscriptions.unsubscribe()
   }
 
   return {
-    webRtc,
-    signaling,
-    storage,
+    webRtcClient,
+    signalingServerClient,
+    storageClient,
     destroy,
     logger,
-    sendMessage,
+    sendMessage: (message: Record<string, any>) => {
+      webRtcClient.subjects.rtcAddMessageToQueue.next(message)
+    },
     generateConnectionPassword: () =>
-      signaling.subjects.wsRegenerateConnectionPassword.next(),
-    setConnectionPassword,
+      signalingServerClient.subjects.wsRegenerateConnectionPassword.next(),
+    setConnectionPassword: (password: string) => {
+      signalingServerClient.subjects.wsConnectionPasswordSubject.next(
+        Buffer.from(password, 'hex')
+      )
+    },
     connect: () => connect(true),
-    disconnect: () => connect(false),
-
-    message$: webRtc.subjects.rtcIncomingMessageSubject
+    message$: webRtcClient.subjects.rtcIncomingMessageSubject
       .asObservable()
       .pipe(map(parseJSON)),
-    connectionStatus$: webRtc.subjects.rtcStatusSubject.asObservable(),
+    connectionSecrets$:
+      signalingServerClient.subjects.wsConnectionSecretsSubject.asObservable(),
+    connectionStatus$: webRtcClient.subjects.rtcStatusSubject.asObservable(),
     pairingState$: connectorSubjects.pairingStateSubject.asObservable(),
   }
 }

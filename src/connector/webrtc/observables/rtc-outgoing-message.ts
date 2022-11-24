@@ -47,7 +47,7 @@ export const rtcOutgoingMessage = (
     share(),
     concatMap((rawMessage) =>
       from(
-        messageToChunked(toBuffer(rawMessage), logger).map((message) => {
+        messageToChunked(toBuffer(rawMessage)).map((message) => {
           track('webrtc_message_send', {
             messageId: message.metaData.messageId,
             size: rawMessage.length,

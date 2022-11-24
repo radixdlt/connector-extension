@@ -1,5 +1,4 @@
-import { Secrets } from '../_types'
-import { WebRtcSubjectsType } from 'connector/webrtc/subjects'
+import { ConnectorSubscriptionsInput, Secrets } from '../_types'
 import { IceCandidate, IceCandidates, DataTypes } from 'io-types/types'
 import { Logger } from 'loglevel'
 import { Result, err, ok, ResultAsync } from 'neverthrow'
@@ -81,11 +80,10 @@ const wsMessageConfirmation = (
   return merge(success$, serverError$, timeout$, websocketError$).pipe(first())
 }
 
-export const wsSendMessage = (
-  signalingSubjects: SignalingSubjectsType,
-  webRtcSubjects: WebRtcSubjectsType,
-  logger: Logger
-) => {
+export const wsSendMessage = (input: ConnectorSubscriptionsInput) => {
+  const signalingSubjects = input.signalingServerClient.subjects
+  const webRtcSubjects = input.webRtcClient.subjects
+  const logger = input.logger
   const localOffer$ = webRtcSubjects.rtcLocalOfferSubject.pipe(
     filter(
       (

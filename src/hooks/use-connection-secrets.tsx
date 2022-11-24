@@ -12,7 +12,7 @@ export const useConnectionSecrets = () => {
 
   useEffect(() => {
     if (!connector) return
-    const subscription = connector.signaling.subjects.wsConnectionSecretsSubject
+    const subscription = connector.connectionSecrets$
       .pipe(tap((result) => setSecrets(result)))
       .subscribe()
 

@@ -43,7 +43,6 @@ export type ChunkedMessageType =
 
 export const messageToChunked = (
   message: Buffer,
-  logger: Logger,
   chunkSize = config.webRTC.chunkSize
 ) => {
   const messageId = crypto.randomUUID()
