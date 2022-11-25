@@ -141,7 +141,11 @@
           "assets": [
             {
               "path": "radix-connect.zip",
-              "label": "Radix Connect"
+              "label": "radix-connect"
+            },
+            {
+              "path": "radix-connect-dev.zip",
+              "label": "radix-connect-dev.zip"
             }
           ]
         }

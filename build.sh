@@ -2,10 +2,19 @@
 
 set -e
 
+NAME="radix-connect"
+DEV_NAME="radix-connect-dev"
+
 yarn build
-
-NAME="radix-connect-$1"
-
 mv dist $NAME
 
-zip -9 -y -r -q ${NAME}.zip ${NAME}/
+DEV_TOOLS=true
+yarn build
+mv dist $DEV_NAME
+
+zip --recurse-paths ${NAME}.zip ${NAME}
+zip --recurse-paths ${DEV_NAME}.zip ${DEV_NAME}
+
+
+
+
