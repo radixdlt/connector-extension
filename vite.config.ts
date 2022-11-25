@@ -58,7 +58,7 @@ const buildConfig: UserConfigExport = {
   },
 }
 
-if (!isDevToolsActive) {
+if (isDevToolsActive) {
   buildConfig.build.rollupOptions.input['devTools'] =
     'src/chrome/dev-tools/dev-tools.html'
 }
