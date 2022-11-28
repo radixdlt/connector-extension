@@ -1,9 +1,18 @@
-/* eslint-disable @typescript-eslint/no-require-imports */
-const { readFileSync } = require('fs')
-const { join } = require('path')
-
 module.exports = {
-  branches: ['main'],
+  branches: [
+    'main',
+    'next',
+    {
+      name: 'rc',
+      channel: 'rc',
+      prerelease: 'rc',
+    },
+    {
+      name: 'beta',
+      channel: 'beta',
+      prerelease: 'beta',
+    },
+  ],
   plugins: [
     [
       '@semantic-release/commit-analyzer',
@@ -11,11 +20,16 @@ module.exports = {
         preset: 'conventionalcommits',
         releaseRules: [
           {
-            type: 'docs',
+            type: 'refactor',
             release: 'patch',
           },
           {
-            type: 'refactor',
+            type: 'docs',
+            scope: 'README',
+            release: 'patch',
+          },
+          {
+            type: 'test',
             release: 'patch',
           },
           {
@@ -23,12 +37,24 @@ module.exports = {
             release: 'patch',
           },
           {
+            type: 'perf',
+            release: 'patch',
+          },
+          {
+            type: 'ci',
+            release: 'patch',
+          },
+          {
+            type: 'build',
+            release: 'patch',
+          },
+          {
             type: 'chore',
             release: 'patch',
           },
           {
-            type: 'perf',
-            release: 'patch',
+            type: 'no-release',
+            release: false,
           },
         ],
         parserOpts: {
@@ -39,8 +65,66 @@ module.exports = {
     [
       '@semantic-release/release-notes-generator',
       {
+        preset: 'conventionalcommits',
+        parserOpts: {
+          noteKeywords: ['BREAKING CHANGE', 'BREAKING CHANGES'],
+        },
         writerOpts: {
-          commitPartial: readFileSync(join(__dirname, 'commit.hbs'), 'utf-8'),
+          commitsSort: ['subject', 'scope'],
+        },
+        presetConfig: {
+          types: [
+            {
+              type: 'feat',
+              section: ':sparkles: Features',
+              hidden: false,
+            },
+            {
+              type: 'fix',
+              section: ':bug: Fixes',
+              hidden: false,
+            },
+            {
+              type: 'docs',
+              section: ':memo: Documentation',
+              hidden: false,
+            },
+            {
+              type: 'style',
+              section: ':barber: Code-style',
+              hidden: false,
+            },
+            {
+              type: 'refactor',
+              section: ':zap: Refactor',
+              hidden: false,
+            },
+            {
+              type: 'perf',
+              section: ':fast_forward: Performance',
+              hidden: false,
+            },
+            {
+              type: 'test',
+              section: ':white_check_mark: Tests',
+              hidden: false,
+            },
+            {
+              type: 'ci',
+              section: ':repeat: CI',
+              hidden: false,
+            },
+            {
+              type: 'chore',
+              section: ':repeat: Chore',
+              hidden: false,
+            },
+            {
+              type: 'build',
+              section: ':wrench: Build',
+              hidden: false,
+            },
+          ],
         },
       },
     ],
@@ -62,7 +146,7 @@ module.exports = {
         assets: [
           {
             path: 'radix-connect.zip',
-            label: 'radix-connect',
+            label: 'radix-connect.zip',
           },
           {
             path: 'radix-connect-dev.zip',
