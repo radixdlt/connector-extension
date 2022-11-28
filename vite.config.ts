@@ -5,7 +5,7 @@ import tsconfigPaths from 'vite-tsconfig-paths'
 import packageJson from './package.json'
 const { version } = packageJson
 
-const isDevToolsActive = process.env.DEV_TOOLS === 'true'
+const isDevToolsActive = !!process.env.DEV_TOOLS
 
 // Convert from Semver (example: 0.1.0-beta6)
 const [major, minor, patch, label = '0'] = version
@@ -14,38 +14,37 @@ const [major, minor, patch, label = '0'] = version
   // split into version parts
   .split(/[.-]/)
 
-const manifest = defineManifest(async () => ({
-  manifest_version: 3,
-  name: 'Radix Connector Extension',
-  version: `${major}.${minor}.${patch}.${label}`,
-  version_name: version,
-  action: {},
-  background: {
-    service_worker: `src/chrome/background${
-      isDevToolsActive ? '-with-dev-tools' : ''
-    }.ts`,
-    type: 'module',
-  },
-  content_scripts: [
-    {
-      matches: ['http://*/*', 'https://*/*'],
-      js: ['src/chrome/content.ts'],
-      run_at: 'document_start',
+const manifest = defineManifest(async () => {
+  const permissions = ['storage', 'tabs', 'system.display']
+  const matches = ['https://*/*']
+
+  if (isDevToolsActive) {
+    permissions.push('contextMenus')
+    matches.push('http://*/*')
+  }
+
+  return {
+    manifest_version: 3,
+    name: 'Radix Connect',
+    version: `${major}.${minor}.${patch}.${label}`,
+    version_name: version,
+    action: {},
+    background: {
+      service_worker: `src/chrome/background${
+        isDevToolsActive ? '-with-dev-tools' : ''
+      }.ts`,
+      type: 'module',
     },
-  ],
-  permissions: [
-    'activeTab',
-    'scripting',
-    'storage',
-    'tabs',
-    'unlimitedStorage',
-    'contextMenus',
-    'system.display',
-  ],
-  content_security_policy: {
-    extension_pages: "script-src 'self' 'wasm-unsafe-eval'; object-src 'self'",
-  },
-}))
+    content_scripts: [
+      {
+        matches,
+        js: ['src/chrome/content.ts'],
+        run_at: 'document_start',
+      },
+    ],
+    permissions,
+  }
+})
 
 const buildConfig: UserConfigExport = {
   plugins: [react(), crx({ manifest }), tsconfigPaths()],
