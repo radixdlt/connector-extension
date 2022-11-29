@@ -46,7 +46,9 @@ const handleConnectionPasswordChange = async (changes: {
     key.includes(':connectionPassword')
   )
   if (connectionPasswordKey && changes[connectionPasswordKey].newValue) {
-    await closePopup()
+    setTimeout(() => {
+      closePopup()
+    }, config.popup.closeDelayTime)
   }
 }
 

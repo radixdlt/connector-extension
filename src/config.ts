@@ -53,5 +53,6 @@ export const config = {
       pairing: 'src/pairing/index.html',
       devTools: 'src/chrome/dev-tools/dev-tools.html',
     },
+    closeDelayTime: 700,
   },
 }
