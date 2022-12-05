@@ -2,7 +2,6 @@ import { config } from 'config'
 import { messageToChunked } from 'connector/webrtc/data-chunking'
 import { WebRtcSubjectsType } from 'connector/webrtc/subjects'
 import { Logger } from 'loglevel'
-import { track } from 'mixpanel'
 import { err, Result } from 'neverthrow'
 import {
   concatMap,
@@ -32,7 +31,6 @@ const dataChannelConfirmation =
       ),
       tap(() => {
         const messageId = messageIdResult._unsafeUnwrap()
-        track('webrtc_message_send_confirmed', { messageId })
         return logger.debug(
           `🕸💬👌 received message confirmation for messageId:\n'${messageId}'`
         )
@@ -48,10 +46,6 @@ export const rtcOutgoingMessage = (
     concatMap((rawMessage) =>
       from(
         messageToChunked(toBuffer(rawMessage)).map((message) => {
-          track('webrtc_message_send', {
-            messageId: message.metaData.messageId,
-            size: rawMessage.length,
-          })
           const chunks = [
             JSON.stringify(message.metaData),
             ...message.chunks.map((chunk) => JSON.stringify(chunk)),
@@ -69,10 +63,6 @@ export const rtcOutgoingMessage = (
               map(() =>
                 // eslint-disable-next-line max-nested-callbacks
                 result.map((messageId) => {
-                  track('webrtc_message_send_failed', {
-                    reason: 'timeout',
-                    messageId,
-                  })
                   logger.debug(
                     `❌ confirmation message timeout for messageId: '${messageId}'`
                   )

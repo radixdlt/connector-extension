@@ -19,12 +19,10 @@
   },
   "dependencies": {
     "@stitches/react": "^1.2.8",
-    "@types/mixpanel-browser": "^2.38.0",
     "bech32": "^2.0.0",
     "buffer": "^6.0.3",
     "lodash.chunk": "^4.2.0",
     "loglevel": "^1.8.0",
-    "mixpanel-browser": "^2.45.0",
     "neverthrow": "^5.0.1",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",

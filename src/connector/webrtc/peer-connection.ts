@@ -2,7 +2,6 @@ import { Logger } from 'loglevel'
 import { ResultAsync } from 'neverthrow'
 import { Subscription } from 'rxjs'
 import { errorIdentity } from 'utils/error-identity'
-import { track } from 'mixpanel'
 import {
   rtcRemoteIceCandidate,
   rtcRemoteOfferSubject,
@@ -21,7 +20,6 @@ export const PeerConnection = (
   logger: Logger
   // eslint-disable-next-line max-params
 ) => {
-  track('webrtc_connecting')
   subjects.rtcStatusSubject.next('connecting')
   const peerConnection = new RTCPeerConnection(peerConnectionConfig)
   logger.debug(`🕸 created webRTC peer connection instance`)
@@ -103,7 +101,6 @@ export const PeerConnection = (
 
   const onopen = () => {
     logger.debug(`🕸🟢 webRTC data channel open`)
-    track('webrtc_connected')
     subjects.rtcStatusSubject.next('connected')
   }
 
@@ -136,8 +133,6 @@ export const PeerConnection = (
     dataChannel.removeEventListener('message', onmessage)
     dataChannel.removeEventListener('open', onopen)
     dataChannel.removeEventListener('close', onclose)
-
-    track('webrtc_disconnected')
   }
 
   const subscriptions = new Subscription()
