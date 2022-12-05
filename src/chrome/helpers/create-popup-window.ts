@@ -1,7 +1,15 @@
 import { config } from 'config'
 import { ResultAsync } from 'neverthrow'
 
-export const createPopupWindow = (pagePath: string, screenWidth: number) =>
+export const createPopupWindow = (
+  pagePath: string,
+  {
+    left = 0,
+    width,
+    height,
+    top = 0,
+  }: Partial<{ left: number; top: number; height: number; width: number }>
+) =>
   ResultAsync.fromPromise<chrome.windows.Window | undefined, Error>(
     new Promise((resolve) => {
       chrome.windows.create(
@@ -10,8 +18,9 @@ export const createPopupWindow = (pagePath: string, screenWidth: number) =>
           type: 'popup',
           width: config.popup.width,
           height: config.popup.height,
-          top: config.popup.offsetTop,
-          left: screenWidth - config.popup.width,
+          top: height !== undefined ? top + config.popup.offsetTop : undefined,
+          left:
+            width !== undefined ? width + left - config.popup.width : undefined,
         },
         resolve
       )

@@ -15,7 +15,7 @@ const [major, minor, patch, label = '0'] = version
   .split(/[.-]/)
 
 const manifest = defineManifest(async () => {
-  const permissions = ['storage', 'tabs', 'system.display']
+  const permissions = ['storage', 'tabs']
   const matches = ['https://*/*']
 
   if (isDevToolsActive) {
