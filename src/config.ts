@@ -54,5 +54,6 @@ export const config = {
       devTools: 'src/chrome/dev-tools/dev-tools.html',
     },
     closeDelayTime: 700,
+    showOnInstall: false,
   },
 }

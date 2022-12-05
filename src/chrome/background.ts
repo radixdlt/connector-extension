@@ -53,6 +53,9 @@ const handleConnectionPasswordChange = async (changes: {
 }
 
 chrome.runtime.onMessage.addListener(handleIncomingMessage)
-chrome.runtime.onInstalled.addListener(handleIncomingMessage)
 chrome.storage.onChanged.addListener(handleConnectionPasswordChange)
 chrome.action.onClicked.addListener(createOrFocusPopupWindow)
+
+if (config.popup.showOnInstall) {
+  chrome.runtime.onInstalled.addListener(handleIncomingMessage)
+}
