@@ -102,6 +102,7 @@ export const Connector = ({
       )
     },
     connect: () => connect(true),
+    getConnectionPassword: storageClient.getConnectionPassword,
     message$: webRtcClient.subjects.rtcIncomingMessageSubject
       .asObservable()
       .pipe(map(parseJSON)),

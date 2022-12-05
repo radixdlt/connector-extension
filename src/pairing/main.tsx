@@ -13,7 +13,9 @@ const PairingWrapper = () => {
 
   useEffect(() => {
     if (!connector) return
-    connector.connect()
+    connector.getConnectionPassword().map((password) => {
+      if (!password) connector.connect()
+    })
   }, [connector])
 
   return <Paring />

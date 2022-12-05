@@ -1,6 +1,5 @@
 import { Box, Button } from '../../components'
 import { PairingHeader } from './pairing-header'
-import { StatusIndicator } from './status-indicator'
 
 type ConnectionStatusProps = {
   activeConnection: boolean
@@ -15,12 +14,7 @@ export const ConnectionStatus = ({
     <PairingHeader header="Radix Wallet Connector">
       This Wallet Connector extension is connected to a Radix Wallet.
     </PairingHeader>
-    <Box mb="3xl" mt="md" flex="row">
-      <StatusIndicator active={activeConnection}>
-        Connection {activeConnection ? 'active' : 'inactive'}
-      </StatusIndicator>
-    </Box>
-    <Box px="medium">
+    <Box px="medium" mt="3xl">
       <Button full onClick={onForgetWallet}>
         Forget this Radix Wallet
       </Button>

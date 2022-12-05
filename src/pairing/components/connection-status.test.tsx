@@ -3,26 +3,6 @@ import '@testing-library/jest-dom'
 
 import { ConnectionStatus } from './connection-status'
 
-test('should render inactive connection state', () => {
-  render(
-    <ConnectionStatus activeConnection={false} onForgetWallet={() => {}} />
-  )
-
-  const connectionStatus: HTMLAnchorElement =
-    screen.getByText(`Connection inactive`)
-
-  expect(connectionStatus).not.toBeEmptyDOMElement()
-})
-
-test('should render active connection state', () => {
-  render(<ConnectionStatus activeConnection={true} onForgetWallet={() => {}} />)
-
-  const connectionStatus: HTMLAnchorElement =
-    screen.getByText(`Connection active`)
-
-  expect(connectionStatus).not.toBeEmptyDOMElement()
-})
-
 test('should render forget wallet button', () => {
   const onForgetWalletSpy = jest.fn()
   render(
