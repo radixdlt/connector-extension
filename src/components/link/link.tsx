@@ -1,8 +1,9 @@
 import { styled } from '../../stitches.config'
 
 export const Link = styled('a', {
-  textDecoration: 'underline',
-  fontSize: '$sm',
+  textDecoration: 'none',
+  fontSize: '16px',
+  color: 'white',
   '&:visited': {
     color: '$primary',
   },

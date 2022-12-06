@@ -43,6 +43,11 @@ const manifest = defineManifest(async () => {
       },
     ],
     permissions,
+    icons: {
+      '16': 'radix-icon_16x16.png',
+      '48': 'radix-icon_48x48.png',
+      '128': 'radix-icon_128x128.png',
+    },
   }
 })
 

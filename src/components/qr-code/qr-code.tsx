@@ -6,10 +6,13 @@ type QrCodeProps = {
 }
 
 export const QrCode = ({ value }: QrCodeProps) => (
-  <Box justify="center" p="none" mb="2xl">
+  <Box justify="center" p="none" mb="xl">
     <Box
-      p="medium"
-      style={{ background: '#ECECEC', borderColor: 'black' }}
+      style={{
+        background: '#ECECEC',
+        borderRadius: '16px',
+        padding: '20px',
+      }}
       border="true"
     >
       <QRCode bgColor="#ECECEC" size={162} value={value} />
