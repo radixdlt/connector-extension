@@ -2,6 +2,8 @@
 
 set -e
 
+rm -rf radix-connect radix-connect-dev radix-connect.zip radix-connect-dev.zip
+
 NAME="radix-connect"
 DEV_NAME="radix-connect-dev"
 
