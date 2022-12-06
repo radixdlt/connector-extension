@@ -45,8 +45,8 @@ export const config = {
     confirmationTimeout: 3_000,
   },
   popup: {
-    width: 257,
-    height: 505,
+    width: 375,
+    height: 559,
     offsetTop: 0,
     pages: {
       pairing: 'src/pairing/index.html',

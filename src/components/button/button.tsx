@@ -49,5 +49,16 @@ export const Button = styled('button', {
         },
       },
     },
+    text: {
+      true: {
+        backgroundColor: 'rgba(0,0,0,0)',
+        boxShadow: '0px 4px 4px rgba(0, 0, 0, 0)',
+        color: '$primaryGhostButton',
+        '&:hover': {
+          backgroundColor: 'rgba(0,0,0,0)',
+          color: '$primaryGhostButton',
+        },
+      },
+    },
   },
 })

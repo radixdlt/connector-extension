@@ -1,0 +1,8 @@
+html {
+  background-image: url('assets/popup-bg-gradient.svg');
+  background-repeat: no-repeat;
+  background-position: center;
+}
+body {
+  box-sizing: border-box;
+}

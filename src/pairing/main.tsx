@@ -7,6 +7,7 @@ import { Paring } from 'pairing/pairing'
 import { useConnector } from 'hooks/use-connector'
 import { StorageClient } from 'connector/storage/storage-client'
 import { config } from 'config'
+import './style.css'
 
 const PairingWrapper = () => {
   const connector = useConnector()
