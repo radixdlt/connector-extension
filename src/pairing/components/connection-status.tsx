@@ -34,9 +34,9 @@ export const ConnectionStatus = ({
               fontWeight: '600',
             }}
           >
-            Radix Wallet found
+            Radix Wallet linked
           </Text>
-          <Text style={{ color: '#8A8FA4' }}>via Radix Connect</Text>
+          <Text style={{ color: '#8A8FA4' }}>to this web browser</Text>
         </Box>
       </Box>
     </Box>
