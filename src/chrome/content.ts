@@ -2,7 +2,7 @@ import { ChromeConnectorClient } from './chrome-connector-client'
 import { ChromeDAppClient, messageLifeCycleEvent } from './chrome-dapp-client'
 import { decorateMessage } from './helpers/decorate-message'
 
-const connectorClient = ChromeConnectorClient('debug')
+const connectorClient = ChromeConnectorClient('TRACE')
 const chromeDAppClient = ChromeDAppClient()
 
 chromeDAppClient.messageListener((message) => {
