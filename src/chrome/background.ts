@@ -8,7 +8,6 @@ import { getLogger } from 'loglevel'
 import { ok } from 'neverthrow'
 import { createChromeApi } from './chrome-api'
 import { closePopup } from './helpers/close-popup'
-import { getActiveTab } from './helpers/get-active-tab'
 import { getActiveWindow } from './helpers/get-active-window'
 
 const logger = getLogger('background')
@@ -35,9 +34,7 @@ const handleIncomingMessage = () =>
   chromeAPI
     .getConnectionPassword()
     .andThen((connectionPassword) =>
-      connectionPassword
-        ? closePopup()
-        : getActiveTab().andThen(createOrFocusPopupWindow)
+      connectionPassword ? closePopup() : createOrFocusPopupWindow()
     )
 
 const handleConnectionPasswordChange = async (changes: {

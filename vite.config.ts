@@ -28,7 +28,9 @@ const manifest = defineManifest(async () => {
     name: 'Radix Connect',
     version: `${major}.${minor}.${patch}.${label}`,
     version_name: version,
-    action: {},
+    action: {
+      default_popup: 'src/pairing/index.html',
+    },
     background: {
       service_worker: `src/chrome/background${
         isDevToolsActive ? '-with-dev-tools' : ''
