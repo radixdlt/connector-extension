@@ -22,5 +22,6 @@ export const WebRtcSubjects = () => ({
   rtcCreateOfferSubject: new Subject<void>(),
   rtcIceConnectionStateSubject: new Subject<RTCIceConnectionState>(),
   rtcRestartSubject: new Subject<void>(),
-  rtcAddMessageToQueue: new Subject<any>(),
+  rtcAddMessageToQueueSubject: new Subject<any>(),
+  rtcSendMessageRetrySubject: new Subject<any>(),
 })

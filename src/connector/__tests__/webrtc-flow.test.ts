@@ -112,8 +112,8 @@ describe('webRTC flow', () => {
       extension.signalingServerClient.subjects.wsStatusSubject
     )
 
-    wallet.webRtcClient.subjects.rtcAddMessageToQueue.next(message)
-    extension.webRtcClient.subjects.rtcAddMessageToQueue.next(
+    wallet.webRtcClient.subjects.rtcAddMessageToQueueSubject.next(message)
+    extension.webRtcClient.subjects.rtcAddMessageToQueueSubject.next(
       'hello from extension'
     )
 
@@ -181,7 +181,7 @@ describe('webRTC flow', () => {
       wallet.webRtcClient.subjects.rtcIncomingMessageSubject
     )
 
-    extension.webRtcClient.subjects.rtcAddMessageToQueue.next(
+    extension.webRtcClient.subjects.rtcAddMessageToQueueSubject.next(
       'hello from extension'
     )
 

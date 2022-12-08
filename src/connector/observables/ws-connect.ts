@@ -5,7 +5,7 @@ export const wsConnect = (input: ConnectorSubscriptionsInput) => {
   const signalingSubjects = input.signalingServerClient.subjects
   const webRtcSubjects = input.webRtcClient.subjects
 
-  return webRtcSubjects.rtcAddMessageToQueue.pipe(
+  return webRtcSubjects.rtcAddMessageToQueueSubject.pipe(
     withLatestFrom(
       webRtcSubjects.rtcStatusSubject,
       signalingSubjects.wsStatusSubject
