@@ -1,5 +1,8 @@
 import { config } from 'config'
-import { messageToChunked } from 'connector/webrtc/data-chunking'
+import {
+  ChunkedMessageType,
+  messageToChunked,
+} from 'connector/webrtc/data-chunking'
 import { WebRtcSubjectsType } from 'connector/webrtc/subjects'
 import { Logger } from 'loglevel'
 import { err, Result } from 'neverthrow'
@@ -13,64 +16,80 @@ import {
   filter,
   tap,
   merge,
-  share,
+  Observable,
 } from 'rxjs'
 import { toBuffer } from 'utils/to-buffer'
-import { rtcParsedIncomingMessage } from './rtc-incoming-message'
 
-const dataChannelConfirmation =
-  (subjects: WebRtcSubjectsType, logger: Logger) =>
-  (messageIdResult: Result<string, Error>) =>
-    rtcParsedIncomingMessage(subjects, logger).pipe(
-      filter(
-        (messageResult) =>
-          messageIdResult.isOk() &&
-          messageResult.isOk() &&
-          messageResult.value.packageType === 'receiveMessageConfirmation' &&
-          messageResult.value.messageId === messageIdResult.value
-      ),
-      tap(() => {
-        const messageId = messageIdResult._unsafeUnwrap()
-        return logger.debug(
-          `🕸💬👌 received message confirmation for messageId:\n'${messageId}'`
+const dataChannelConfirmation = (
+  messageIdResult: Result<string, Error>,
+  rtcParsedIncomingMessage$: Observable<Result<ChunkedMessageType, Error>>,
+  logger: Logger
+) =>
+  rtcParsedIncomingMessage$.pipe(
+    filter(
+      (messageResult) =>
+        messageIdResult.isOk() &&
+        messageResult.isOk() &&
+        messageResult.value.packageType === 'receiveMessageConfirmation' &&
+        messageResult.value.messageId === messageIdResult.value
+    ),
+    tap(() => {
+      const messageId = messageIdResult._unsafeUnwrap()
+      return logger.debug(
+        `🕸💬👌 received message confirmation for messageId:\n'${messageId}'`
+      )
+    })
+  )
+
+const prepareAndSendMessage = (
+  rawMessage: string,
+  subjects: WebRtcSubjectsType
+) =>
+  from(
+    messageToChunked(toBuffer(rawMessage)).map((message) => {
+      const chunks = [
+        JSON.stringify(message.metaData),
+        ...message.chunks.map((chunk) => JSON.stringify(chunk)),
+      ]
+      chunks.forEach((chunk) =>
+        subjects.rtcOutgoingChunkedMessageSubject.next(chunk)
+      )
+      return message.metaData.messageId
+    })
+  )
+
+const messageTimeout = (result: Result<string, Error>, logger: Logger) =>
+  timer(config.webRTC.confirmationTimeout).pipe(
+    map(() =>
+      result.andThen((messageId) => {
+        logger.debug(
+          `🕸💬❌ confirmation message timeout for messageId:\n'${messageId}'`
         )
+        return err('timeout')
       })
     )
+  )
+
+const waitForMessageConfirmation = (
+  result: Result<string, Error>,
+  rtcParsedIncomingMessage$: Observable<Result<ChunkedMessageType, Error>>,
+  logger: Logger
+) =>
+  merge(
+    dataChannelConfirmation(result, rtcParsedIncomingMessage$, logger),
+    messageTimeout(result, logger)
+  )
 
 export const rtcOutgoingMessage = (
   subjects: WebRtcSubjectsType,
+  rtcParsedIncomingMessage$: Observable<Result<ChunkedMessageType, Error>>,
   logger: Logger
 ) =>
   subjects.rtcOutgoingMessageSubject.pipe(
-    share(),
     concatMap((rawMessage) =>
-      from(
-        messageToChunked(toBuffer(rawMessage)).map((message) => {
-          const chunks = [
-            JSON.stringify(message.metaData),
-            ...message.chunks.map((chunk) => JSON.stringify(chunk)),
-          ]
-          chunks.forEach((chunk) =>
-            subjects.rtcOutgoingChunkedMessageSubject.next(chunk)
-          )
-          return message.metaData.messageId
-        })
-      ).pipe(
+      prepareAndSendMessage(rawMessage, subjects).pipe(
         mergeMap((result) =>
-          merge(
-            dataChannelConfirmation(subjects, logger)(result),
-            timer(config.webRTC.confirmationTimeout).pipe(
-              map(() =>
-                // eslint-disable-next-line max-nested-callbacks
-                result.map((messageId) => {
-                  logger.debug(
-                    `❌ confirmation message timeout for messageId: '${messageId}'`
-                  )
-                  return err({ error: 'timeout' })
-                })
-              )
-            )
-          )
+          waitForMessageConfirmation(result, rtcParsedIncomingMessage$, logger)
         ),
         first()
       )
