@@ -11,9 +11,6 @@ on:
         options:
         - "no"
         - "yes"
-  push:
-    branches:
-      - "DO-1043-use-gh-pages-action"
 
 jobs:
 
