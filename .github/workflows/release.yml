@@ -23,6 +23,7 @@ jobs:
         uses: actions/checkout@v3
         with:
           fetch-depth: 0
+
       - name: Use Node.js
         uses: actions/setup-node@v3
         with:
@@ -49,6 +50,11 @@ jobs:
           uses: actions/checkout@v3
           with:
             fetch-depth: 0
+
+        - name: Use Node.js
+          uses: actions/setup-node@v3
+          with:
+            node-version: '18.x'
 
         - name: Install dependencies
           run: npm pkg delete scripts.prepare && yarn
@@ -82,6 +88,11 @@ jobs:
           uses: actions/checkout@v3
           with:
             fetch-depth: 0
+
+        - name: Use Node.js
+          uses: actions/setup-node@v3
+          with:
+            node-version: '18.x'
 
         - name: Install dependencies
           run: npm pkg delete scripts.prepare && yarn
