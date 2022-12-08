@@ -67,19 +67,18 @@ jobs:
             chmod +x gh_pages_build.sh
             ./gh_pages_build.sh
 
-        - name: Push to release branch
-          env:
-            GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          uses: EndBug/add-and-commit@v9 # You can change this to use a specific version.
+        - name: Deploy to GitHub Pages
+          uses: JamesIves/github-pages-deploy-action@4.1.1
           with:
-            author_name: github-actions
-            add: '[docs/]'
-            new_branch: release
-            message: "ci: new gh page version available"
+            folder: "docs/"
+            target-folder: "docs/"
+            branch: 'gh-pages'
+            clean: false
+            commit-message: "ci: publish documentation for ${{ github.sha }}"
 
   only_github_pages_release:
       if: >
-        ( github.event.inputs.publish_public_only == 'yes' && github.event_name == 'workflow_dispatch' )
+       ( github.event.inputs.publish_public_only == 'yes' && github.event_name == 'workflow_dispatch' )
       runs-on: ubuntu-latest
       name: Only GitHub Pages release
       
@@ -105,12 +104,11 @@ jobs:
             chmod +x gh_pages_build.sh
             ./gh_pages_build.sh
 
-        - name: Push to release branch
-          env:
-            GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          uses: EndBug/add-and-commit@v9 # You can change this to use a specific version.
+        - name: Deploy to GitHub Pages
+          uses: JamesIves/github-pages-deploy-action@4.1.1
           with:
-            author_name: github-actions
-            add: '[docs/]'
-            new_branch: release
-            message: "ci: new gh page version available"
+            folder: "docs/"
+            target-folder: "docs/"
+            branch: 'gh-pages'
+            clean: false
+            commit-message: "ci: publish documentation for ${{ github.sha }}"
