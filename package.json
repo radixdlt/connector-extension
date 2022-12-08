@@ -7,7 +7,7 @@
   },
   "scripts": {
     "dev": "DEV_TOOLS=true vite",
-    "build:dev": "tsc && vite build",
+    "build:dev": "tsc && vite build --mode development",
     "build:beta": "tsc && vite build --mode beta",
     "preview": "vite preview",
     "prettier": "prettier --write src",
