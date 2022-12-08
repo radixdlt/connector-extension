@@ -37,12 +37,12 @@ export const config = {
           urls: 'stun:stun4.l.google.com:19302',
         },
         {
-          urls: 'turn:turn-dev-udp.rdx-works-main.extratools.works:80',
+          urls: 'turn:turn-dev-udp.rdx-works-main.extratools.works:80?transport=udp',
           username: 'username',
           credential: 'password',
         },
         {
-          urls: 'turn:turn-dev-tcp.rdx-works-main.extratools.works:80',
+          urls: 'turn:turn-dev-tcp.rdx-works-main.extratools.works:80?transport=tcp',
           username: 'username',
           credential: 'password',
         },
