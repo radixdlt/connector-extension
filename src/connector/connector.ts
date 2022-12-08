@@ -92,7 +92,7 @@ export const Connector = ({
     destroy,
     logger,
     sendMessage: (message: Record<string, any>) => {
-      webRtcClient.subjects.rtcAddMessageToQueue.next(message)
+      webRtcClient.subjects.rtcAddMessageToQueueSubject.next(message)
     },
     generateConnectionPassword: () =>
       signalingServerClient.subjects.wsRegenerateConnectionPassword.next(),
