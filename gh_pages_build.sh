@@ -7,10 +7,10 @@ DEV_NAME="radix-connect-dev"
 
 LATEST_TAG=$(git describe --tags `git rev-list --tags --max-count=1`)
 
-yarn build
+yarn build:beta
 mv dist $NAME
 
-DEV_TOOLS=true yarn build
+DEV_TOOLS=true yarn build:beta
 mv dist $DEV_NAME
 
 zip --recurse-paths ${NAME}-${LATEST_TAG}.zip ${NAME}
