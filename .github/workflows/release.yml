@@ -2,16 +2,28 @@ name: Release
 
 on:
   workflow_dispatch:
+    inputs:
+      publish_public_only:
+        description: "Do you want to run only public release?"
+        required: true
+        default: "no"
+        type: choice
+        options:
+        - "no"
+        - "yes"
 
 jobs:
-  release:
-    runs-on: ubuntu-latest
 
+  release:
+
+    if: ( github.event.inputs.publish_public_only == 'no' && github.event_name == 'workflow_dispatch' )
+    runs-on: ubuntu-latest
     steps:
       - name: Checkout
         uses: actions/checkout@v3
         with:
           fetch-depth: 0
+
       - name: Use Node.js
         uses: actions/setup-node@v3
         with:
@@ -26,10 +38,51 @@ jobs:
         run: npx semantic-release
 
   github_pages_release:
+      if: >
+        ( github.event.inputs.publish_public_only == 'no' && github.event_name == 'workflow_dispatch' )
       runs-on: ubuntu-latest
       name: GitHub Pages release
       needs:
       - release
+      
+      steps:
+        - name: Checkout
+          uses: actions/checkout@v3
+          with:
+            fetch-depth: 0
+
+        - name: Use Node.js
+          uses: actions/setup-node@v3
+          with:
+            node-version: '18.x'
+
+        - name: Install dependencies
+          run: npm pkg delete scripts.prepare && yarn
+
+        - name: Install dependencies
+          run: yarn install
+
+        - name: Build zip
+          run: |
+            chmod +x gh_pages_build.sh
+            ./gh_pages_build.sh
+
+        - name: Push to release branch
+          env:
+            GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          uses: EndBug/add-and-commit@v9 # You can change this to use a specific version.
+          with:
+            author_name: github-actions
+            add: '[docs/]'
+            new_branch: release
+            message: "ci: new gh page version available"
+
+  only_github_pages_release:
+      if: >
+        ( github.event.inputs.publish_public_only == 'yes' && github.event_name == 'workflow_dispatch' )
+      runs-on: ubuntu-latest
+      name: Only GitHub Pages release
+      
       steps:
         - name: Checkout
           uses: actions/checkout@v3
