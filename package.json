@@ -7,7 +7,8 @@
   },
   "scripts": {
     "dev": "DEV_TOOLS=true vite",
-    "build": "tsc && vite build",
+    "build:dev": "tsc && vite build",
+    "build:beta": "tsc && vite build --mode beta",
     "preview": "vite preview",
     "prettier": "prettier --write src",
     "testrtc": "NODE_ENV=test karma start",

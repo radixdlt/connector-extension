@@ -3,8 +3,9 @@
 import dotenv from 'dotenv'
 import { randomUUID, webcrypto } from 'node:crypto'
 import { chrome } from 'jest-chrome'
+import path from 'node:path'
 
-dotenv.config()
+dotenv.config({ path: path.join(__dirname, '../.env.development') })
 
 global.chrome = chrome
 global.chrome.storage = {
