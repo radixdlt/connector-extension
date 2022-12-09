@@ -16,6 +16,7 @@
     "prepare": "husky install",
     "ladle": "ladle serve",
     "test": "jest --forceExit",
+    "test:beta": "MODE=beta jest --forceExit",
     "test:watch": "jest --watch"
   },
   "dependencies": {
