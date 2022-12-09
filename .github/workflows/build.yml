@@ -60,7 +60,7 @@ jobs:
         run: yarn lint
 
       - name: Running unit tests
-        run: yarn test
+        run: yarn test:beta
 
       - name: Build dev extension
         run: yarn build:beta

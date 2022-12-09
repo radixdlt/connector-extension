@@ -5,7 +5,11 @@ import { randomUUID, webcrypto } from 'node:crypto'
 import { chrome } from 'jest-chrome'
 import path from 'node:path'
 
-dotenv.config({ path: path.join(__dirname, '../.env.development') })
+const mode = process.env['MODE'] || 'development'
+
+dotenv.config({
+  path: path.join(__dirname, `../.env.${mode}`),
+})
 
 global.chrome = chrome
 global.chrome.storage = {
