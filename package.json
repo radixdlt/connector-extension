@@ -6,7 +6,8 @@
     "node": ">=18 <19"
   },
   "scripts": {
-    "dev": "DEV_TOOLS=true vite",
+    "start": "DEV_TOOLS=true vite",
+    "start:beta": "DEV_TOOLS=true vite --mode beta",
     "build:dev": "tsc && vite build --mode development",
     "build:beta": "tsc && vite build --mode beta",
     "preview": "vite preview",

@@ -8,28 +8,43 @@ import { useConnector } from 'hooks/use-connector'
 import { StorageClient } from 'connector/storage/storage-client'
 import { config } from 'config'
 import './style.css'
+import { filter, first, Subscription, tap } from 'rxjs'
 
 const PairingWrapper = () => {
   const connector = useConnector()
 
   useEffect(() => {
     if (!connector) return
+    const subscription = new Subscription()
     connector.getConnectionPassword().map((password) => {
       if (!password) connector.connect()
     })
+
+    subscription.add(
+      connector.connectionStatus$
+        .pipe(
+          filter((status) => status === 'connected'),
+          first(),
+          tap(() => connector.disconnect())
+        )
+        .subscribe()
+    )
+
+    return () => {
+      subscription.unsubscribe()
+      connector.destroy()
+    }
   }, [connector])
 
   return <Paring />
 }
 
 ReactDOM.createRoot(document.getElementById('root')!).render(
-  <React.StrictMode>
-    <ConnectorContext.Provider
-      value={Connector({
-        storageClient: StorageClient({ id: config.storage.key }),
-      })}
-    >
-      <PairingWrapper />
-    </ConnectorContext.Provider>
-  </React.StrictMode>
+  <ConnectorContext.Provider
+    value={Connector({
+      storageClient: StorageClient({ id: config.storage.key }),
+    })}
+  >
+    <PairingWrapper />
+  </ConnectorContext.Provider>
 )

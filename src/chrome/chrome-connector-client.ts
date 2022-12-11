@@ -17,6 +17,7 @@ export const ChromeConnectorClient = (logLevel: LogLevelDesc) => {
       storageClient: StorageClient({ id: config.storage.key }),
       generateConnectionPassword: false,
     })
+    connector.connect()
     subscriptions = connector.message$
       .pipe(map((result) => result.map(chromeDAppClient.sendMessage)))
       .subscribe()

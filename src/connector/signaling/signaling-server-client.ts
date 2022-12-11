@@ -117,5 +117,6 @@ export const SignalingServerClient = ({
     destroy,
     subjects,
     connect: (value: boolean) => subjects.wsConnectSubject.next(value),
+    disconnect,
   }
 }
