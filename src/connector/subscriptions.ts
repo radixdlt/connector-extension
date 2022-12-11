@@ -1,5 +1,8 @@
 import { Observable, Subscription } from 'rxjs'
-import { connection } from './observables/connection'
+import {
+  connection,
+  killSignalingServerConnection,
+} from './observables/connection'
 import { wsSendMessage } from './observables/ws-send-message'
 import { wsIncomingMessage } from './observables/ws-incoming-message'
 import { rtcRestart } from './observables/rtc-restart'
@@ -23,6 +26,7 @@ export const ConnectorSubscriptions = (input: ConnectorSubscriptionsInput) => {
     storeConnectionPassword,
     regenerateConnectionPassword,
     pairingState,
+    killSignalingServerConnection,
   ]
 
   observables.forEach(

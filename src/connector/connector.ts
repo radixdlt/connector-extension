@@ -58,7 +58,6 @@ export const Connector = ({
   }
 
   const init = () => {
-    webRtcClient.connect(true)
     storageClient.getConnectionPassword().map((connectionPassword) => {
       if (connectionPassword) {
         logger.debug(`🔐 setting connectionPassword`)
@@ -102,6 +101,7 @@ export const Connector = ({
       )
     },
     connect: () => connect(true),
+    disconnect: () => connect(false),
     getConnectionPassword: storageClient.getConnectionPassword,
     message$: webRtcClient.subjects.rtcIncomingMessageSubject
       .asObservable()

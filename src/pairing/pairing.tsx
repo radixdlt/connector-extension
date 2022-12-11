@@ -22,6 +22,7 @@ export const Paring = () => {
           activeConnection={connectionStatus === 'connected'}
           onForgetWallet={() => {
             connector?.generateConnectionPassword()
+            connector?.connect()
           }}
         />
       )}
