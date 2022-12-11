@@ -1,4 +1,4 @@
-import { combineLatest, tap } from 'rxjs'
+import { combineLatest, filter, tap } from 'rxjs'
 import { ConnectorSubscriptionsInput } from 'connector/_types'
 
 export const connection = (input: ConnectorSubscriptionsInput) =>
@@ -11,4 +11,12 @@ export const connection = (input: ConnectorSubscriptionsInput) =>
         input.signalingServerClient.subjects.wsConnectSubject.next(false)
       }
     })
+  )
+
+export const killSignalingServerConnection = (
+  input: ConnectorSubscriptionsInput
+) =>
+  input.webRtcClient.subjects.rtcStatusSubject.pipe(
+    filter((status) => status === 'connected'),
+    tap(() => input.signalingServerClient.disconnect())
   )

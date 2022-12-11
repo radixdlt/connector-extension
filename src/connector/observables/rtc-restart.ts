@@ -16,13 +16,19 @@ export const rtcRestart = (input: ConnectorSubscriptionsInput) => {
 
   return merge(
     forceRestart$,
-    restartActiveConnectionWhenConnectionPasswordChanged$
+    restartActiveConnectionWhenConnectionPasswordChanged$,
+    input.webRtcClient.subjects.rtcConnectSubject
   ).pipe(
-    withLatestFrom(signalingSubjects.wsSourceSubject),
-    tap(([, source]) => {
-      log.debug(`🕸🔄 [${source}] restarting webRTC...`)
-      input.webRtcClient.createPeerConnection()
-      signalingSubjects.wsConnectSubject.next(true)
+    withLatestFrom(
+      signalingSubjects.wsSourceSubject,
+      input.webRtcClient.subjects.rtcConnectSubject
+    ),
+    tap(([, source, shouldConnect]) => {
+      if (shouldConnect) {
+        log.debug(`🕸🔄 [${source}] restarting webRTC...`)
+        input.webRtcClient.createPeerConnection()
+        signalingSubjects.wsConnectSubject.next(true)
+      }
     })
   )
 }
