@@ -25,7 +25,7 @@ const manifest = defineManifest(async () => {
 
   return {
     manifest_version: 3,
-    name: 'Radix Connect',
+    name: 'Radix Wallet Connector',
     version: `${major}.${minor}.${patch}.${label}`,
     version_name: version,
     action: {

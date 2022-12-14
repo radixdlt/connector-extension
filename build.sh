@@ -2,10 +2,10 @@
 
 set -e
 
-rm -rf radix-connect radix-connect-dev radix-connect.zip radix-connect-dev.zip
+rm -rf radix-connector radix-connector-dev radix-connector.zip radix-connector-dev.zip
 
-NAME="radix-connect"
-DEV_NAME="radix-connect-dev"
+NAME="radix-connector"
+DEV_NAME="radix-connector-dev"
 
 yarn build:beta
 mv dist $NAME
