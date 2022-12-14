@@ -145,12 +145,12 @@ module.exports = {
       {
         assets: [
           {
-            path: 'radix-connect.zip',
-            label: 'radix-connect.zip',
+            path: 'radix-connector.zip',
+            label: 'radix-connector.zip',
           },
           {
-            path: 'radix-connect-dev.zip',
-            label: 'radix-connect-dev.zip',
+            path: 'radix-connector-dev.zip',
+            label: 'radix-connector-dev.zip',
           },
         ],
       },
