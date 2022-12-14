@@ -2,8 +2,8 @@
 
 set -e
 
-NAME="radix-connect"
-DEV_NAME="radix-connect-dev"
+NAME="radix-connector"
+DEV_NAME="radix-connector-dev"
 
 LATEST_TAG=$(git describe --tags `git rev-list --tags --max-count=1`)
 
@@ -19,4 +19,4 @@ zip --recurse-paths ${DEV_NAME}-${LATEST_TAG}.zip ${DEV_NAME}
 zip --recurse-paths ${NAME}.zip ${NAME}
 zip --recurse-paths ${DEV_NAME}.zip ${DEV_NAME}
 
-mv radix-connect*.zip docs/
+mv radix-connector*.zip docs/
