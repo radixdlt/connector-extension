@@ -56,7 +56,7 @@ export const config = {
     reconnect: {
       interval: 1000,
     },
-    useBatchedIceCandidates: true,
+    useBatchedIceCandidates: false,
     iceCandidatesBatchTime: 2000,
   },
   webRTC: {
