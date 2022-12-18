@@ -86,7 +86,7 @@ export const config = {
       ordered: true,
     },
     chunkSize: 11_500,
-    confirmationTimeout: 3_000,
+    confirmationTimeout: 1_000,
   },
   popup: {
     width: 375,
