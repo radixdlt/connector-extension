@@ -1,6 +1,9 @@
 import { LogLevelDesc } from 'loglevel'
 import packageJson from '../package.json'
 const { version } = packageJson
+import { Buffer } from 'buffer'
+
+globalThis.Buffer = Buffer
 
 const turnServers = {
   test: [

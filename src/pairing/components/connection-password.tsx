@@ -1,12 +1,12 @@
 import { Box, Link, QrCode } from '../../components'
 import { PairingHeader } from './pairing-header'
 
-type ConnectionPasswordProps = {
-  value: string | undefined
-}
-
-export const ConnectionPassword = ({ value }: ConnectionPasswordProps) => {
-  if (!value || value === 'unset') return null
+export const ConnectionPassword = ({
+  connectionPassword,
+}: {
+  connectionPassword?: string
+}) => {
+  if (!connectionPassword) return null
 
   return (
     <>
@@ -15,7 +15,7 @@ export const ConnectionPassword = ({ value }: ConnectionPasswordProps) => {
         using it with dApps in this web browser.
       </PairingHeader>
       <Box mt="3xl" p="none">
-        <QrCode value={value} data-testid="custom-element" />
+        <QrCode value={connectionPassword} data-testid="custom-element" />
       </Box>
       <Box textAlign="center">
         <Link

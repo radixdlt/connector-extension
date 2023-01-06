@@ -7,7 +7,7 @@ const IceCandidates = literal('iceCandidates')
 
 const Types = union([Offer, Answer, IceCandidate, IceCandidates])
 
-const Sources = union([literal('wallet'), literal('extension')])
+export const Sources = union([literal('wallet'), literal('extension')])
 
 export const AnswerIO = object({
   requestId: string(),
@@ -69,10 +69,10 @@ export type Confirmation = {
   requestId: DataTypes['requestId']
 }
 
-export type RemoteData = {
+export type RemoteData<T extends DataTypes = DataTypes> = {
   info: 'remoteData'
-  requestId: DataTypes['requestId']
-  data: DataTypes
+  requestId: T['requestId']
+  data: T
 }
 
 export type RemoteClientDisconnected = {

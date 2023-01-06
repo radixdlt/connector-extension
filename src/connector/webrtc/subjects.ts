@@ -1,27 +1,26 @@
-import { Status } from '../_types'
-import { BehaviorSubject, Subject } from 'rxjs'
-import { MessageConfirmation, MessageErrorTypes } from './data-chunking'
+import { Answer, Offer } from 'io-types/types'
+import { BehaviorSubject, ReplaySubject, Subject } from 'rxjs'
+import { IceCandidateMessage } from 'connector/_types'
+import { ChunkedMessageType } from 'connector/helpers'
 
 export type WebRtcSubjectsType = ReturnType<typeof WebRtcSubjects>
 
 export const WebRtcSubjects = () => ({
-  rtcConnectSubject: new BehaviorSubject<boolean>(false),
-  rtcStatusSubject: new BehaviorSubject<Status>('disconnected'),
-  rtcIncomingChunkedMessageSubject: new Subject<ArrayBuffer | string>(),
-  rtcIncomingMessageSubject: new Subject<string>(),
-  rtcOutgoingMessageSubject: new Subject<string>(),
-  rtcOutgoingConfirmationMessageSubject: new Subject<MessageConfirmation>(),
-  rtcOutgoingErrorMessageSubject: new Subject<MessageErrorTypes>(),
-  rtcOutgoingChunkedMessageSubject: new Subject<string>(),
-  rtcLocalIceCandidateSubject: new Subject<RTCIceCandidate>(),
-  rtcLocalAnswerSubject: new Subject<RTCSessionDescriptionInit>(),
-  rtcLocalOfferSubject: new Subject<RTCSessionDescriptionInit>(),
-  rtcRemoteOfferSubject: new Subject<RTCSessionDescriptionInit>(),
-  rtcRemoteAnswerSubject: new Subject<RTCSessionDescriptionInit>(),
-  rtcRemoteIceCandidateSubject: new Subject<RTCIceCandidate>(),
-  rtcCreateOfferSubject: new Subject<void>(),
-  rtcIceConnectionStateSubject: new Subject<RTCIceConnectionState>(),
-  rtcRestartSubject: new Subject<void>(),
-  rtcAddMessageToQueueSubject: new Subject<any>(),
-  rtcSendMessageRetrySubject: new Subject<any>(),
+  onNegotiationNeededSubject: new Subject<void>(),
+  onIceCandidateSubject: new Subject<RTCIceCandidate>(),
+  iceCandidatesSubject: new BehaviorSubject<IceCandidateMessage[]>([]),
+  onRemoteIceCandidateSubject: new Subject<RTCIceCandidate>(),
+  remoteIceCandidatesSubject: new BehaviorSubject<RTCIceCandidate[]>([]),
+  offerSubject: new ReplaySubject<
+    Pick<Offer, 'method' | 'payload' | 'source'>
+  >(),
+  answerSubject: new ReplaySubject<
+    Pick<Answer, 'method' | 'payload' | 'source'>
+  >(),
+  onRemoteAnswerSubject: new Subject<void>(),
+  onSignalingStateChangeSubject: new Subject<RTCSignalingState>(),
+  dataChannelStatusSubject: new BehaviorSubject<'open' | 'closed'>('closed'),
+  onDataChannelMessageSubject: new Subject<ChunkedMessageType>(),
+  sendMessageOverDataChannelSubject: new Subject<string>(),
+  iceConnectionStateSubject: new Subject<RTCIceConnectionState>(),
 })
