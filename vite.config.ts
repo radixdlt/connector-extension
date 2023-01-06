@@ -19,7 +19,6 @@ const manifest = defineManifest(async () => {
   const matches = ['https://*/*']
 
   if (isDevToolsActive) {
-    permissions.push('contextMenus')
     matches.push('http://*/*')
   }
 
@@ -32,9 +31,7 @@ const manifest = defineManifest(async () => {
       default_popup: 'src/pairing/index.html',
     },
     background: {
-      service_worker: `src/chrome/background${
-        isDevToolsActive ? '-with-dev-tools' : ''
-      }.ts`,
+      service_worker: `src/chrome/background.ts`,
       type: 'module',
     },
     content_scripts: [
@@ -62,11 +59,6 @@ const buildConfig: UserConfigExport = {
       },
     },
   },
-}
-
-if (isDevToolsActive) {
-  buildConfig.build.rollupOptions.input['devTools'] =
-    'src/chrome/dev-tools/dev-tools.html'
 }
 
 export default defineConfig(buildConfig)

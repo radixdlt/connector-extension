@@ -1,26 +1,43 @@
-import { Logger } from 'loglevel'
-import { SignalingServerClientType } from './signaling/signaling-server-client'
-import { StorageClientType } from './storage/storage-client'
-import { ConnectorSubjectsType } from './subjects'
-import { WebRtcClientType } from './webrtc/webrtc-client'
+import { IceCandidate, MessageSources } from 'io-types/types'
+import { SignalingClientType } from './signaling/signaling-client'
+import { WebRtcClient } from './webrtc/webrtc-client'
 
-export type Status =
-  | 'connecting'
-  | 'connected'
-  | 'disconnected'
-  | 'disconnecting'
+export const remoteClientState = {
+  remoteClientIsAlreadyConnected: 'remoteClientIsAlreadyConnected',
+  remoteClientDisconnected: 'remoteClientDisconnected',
+  remoteClientJustConnected: 'remoteClientJustConnected',
+} as const
+
+export const remoteClientConnected = new Set<string>([
+  remoteClientState.remoteClientIsAlreadyConnected,
+  remoteClientState.remoteClientJustConnected,
+])
+
+export const remoteClientDisconnected = new Set<string>([
+  remoteClientState.remoteClientDisconnected,
+])
+
+export type Dependencies = {
+  secrets: Secrets
+  signalingClient: SignalingClientType
+  webRtcClient: WebRtcClient
+  source: MessageSources
+}
+
+export type IceCandidateMessage = Pick<
+  IceCandidate,
+  'method' | 'payload' | 'source'
+>
+
+export type Message = Record<string, any>
 
 export type Secrets = {
   encryptionKey: Buffer
   connectionId: Buffer
 }
 
-export type PairingState = 'paired' | 'notPaired' | 'loading'
-
-export type ConnectorSubscriptionsInput = {
-  webRtcClient: WebRtcClientType
-  storageClient: StorageClientType
-  signalingServerClient: SignalingServerClientType
-  connectorSubjects: ConnectorSubjectsType
-  logger: Logger
-}
+export type Status =
+  | 'connecting'
+  | 'connected'
+  | 'disconnected'
+  | 'disconnecting'

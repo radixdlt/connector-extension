@@ -3,14 +3,10 @@ import { PairingHeader } from './pairing-header'
 import WalletConnectedIcon from '../assets/wallet-connect-active-icon.svg'
 
 type ConnectionStatusProps = {
-  activeConnection: boolean
   onForgetWallet: () => void
 }
 
-export const ConnectionStatus = ({
-  activeConnection,
-  onForgetWallet,
-}: ConnectionStatusProps) => (
+export const ConnectionStatus = ({ onForgetWallet }: ConnectionStatusProps) => (
   <>
     <Box>
       <PairingHeader header="Radix Wallet Connector" />

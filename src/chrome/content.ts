@@ -1,9 +1,8 @@
-import { config } from 'config'
 import { ChromeConnectorClient } from './chrome-connector-client'
 import { ChromeDAppClient, messageLifeCycleEvent } from './chrome-dapp-client'
 import { decorateMessage } from './helpers/decorate-message'
 
-const connectorClient = ChromeConnectorClient(config.logLevel)
+const connectorClient = ChromeConnectorClient()
 const chromeDAppClient = ChromeDAppClient()
 
 chromeDAppClient.messageListener((message) => {
