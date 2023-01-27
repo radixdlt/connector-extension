@@ -20,11 +20,11 @@ export const ChromeDAppClient = () => {
   }
 
   const sendMessageEvent = (
-    requestId: string,
+    interactionId: string,
     eventType: keyof typeof messageLifeCycleEvent
   ) =>
     sendMessage({
-      requestId,
+      interactionId,
       eventType,
     })
 
