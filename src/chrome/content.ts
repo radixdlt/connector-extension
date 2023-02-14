@@ -19,7 +19,7 @@ chromeDAppClient.messageListener((message) => {
       .map(chrome.runtime.sendMessage)
       .andThen(() =>
         chromeDAppClient.sendMessageEvent(
-          message.requestId,
+          message.interactionId,
           messageLifeCycleEvent.receivedByExtension
         )
       )
