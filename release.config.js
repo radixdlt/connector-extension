@@ -3,14 +3,9 @@ module.exports = {
     'main',
     'next',
     {
-      name: 'rc',
-      channel: 'rc',
-      prerelease: 'rc',
-    },
-    {
-      name: 'beta',
-      channel: 'beta',
-      prerelease: 'beta',
+      name: 'develop',
+      channel: 'alpha',
+      prerelease: 'alpha',
     },
   ],
   plugins: [
