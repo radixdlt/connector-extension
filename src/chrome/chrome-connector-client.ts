@@ -1,6 +1,14 @@
 import { ConnectorClient } from 'connector/connector-client'
 import { config } from 'config'
-import { map, Subscription } from 'rxjs'
+import {
+  distinctUntilChanged,
+  first,
+  interval,
+  map,
+  Subscription,
+  switchMap,
+  tap,
+} from 'rxjs'
 import { ChromeDAppClient } from './chrome-dapp-client'
 import { Logger } from 'tslog'
 import { chromeLocalStore } from './helpers/chrome-local-store'
@@ -9,25 +17,49 @@ const chromeDAppClient = ChromeDAppClient()
 
 export const ChromeConnectorClient = () => {
   let connector: ConnectorClient | undefined
-  let subscriptions: Subscription | undefined
+  const subscriptions = new Subscription()
 
   const createConnector = () => {
+    const logger = new Logger({
+      prettyLogTemplate: '{{hh}}:{{MM}}:{{ss}}:{{ms}}\t{{logLevelName}}\t',
+      minLevel: 2,
+    })
     connector = ConnectorClient({
       source: 'extension',
       target: 'wallet',
       signalingServerBaseUrl: config.signalingServer.baseUrl,
       isInitiator: false,
-      logger: new Logger({
-        prettyLogTemplate: '{{hh}}:{{MM}}:{{ss}}:{{ms}}\t{{logLevelName}}\t',
-        minLevel: 2,
-      }),
+      logger,
     })
 
-    connector.connect()
+    const hiddenDetection$ = interval(1000).pipe(
+      map(() => document.hidden),
+      distinctUntilChanged()
+    )
 
-    subscriptions = connector.onMessage$
-      .pipe(map((message) => chromeDAppClient.sendMessage(message)))
-      .subscribe()
+    subscriptions.add(
+      connector.shouldConnect$
+        .pipe(
+          first(),
+          switchMap(() =>
+            hiddenDetection$.pipe(
+              tap((isHidden) => {
+                if (isHidden) connector?.disconnect()
+                else connector?.connect()
+              })
+            )
+          )
+        )
+        .subscribe()
+    )
+
+    subscriptions.add(
+      connector.onMessage$
+        .pipe(map((message) => chromeDAppClient.sendMessage(message)))
+        .subscribe()
+    )
+
+    connector.connect()
 
     chromeLocalStore
       .getItem('connectionPassword')
@@ -57,8 +89,7 @@ export const ChromeConnectorClient = () => {
   chrome.storage.onChanged.addListener(onChange)
 
   const destroy = () => {
-    subscriptions?.unsubscribe()
-    subscriptions = undefined
+    subscriptions.unsubscribe()
     connector?.destroy()
     chrome.storage.onChanged.removeListener(onChange)
     connector = undefined
