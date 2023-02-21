@@ -134,6 +134,7 @@ export const ConnectorClient = (input: {
     generateConnectionPassword: () => secretsClient.generateConnectionSecrets(),
     connect: () => shouldConnectSubject.next(true),
     disconnect: () => shouldConnectSubject.next(false),
+    shouldConnect$: shouldConnectSubject.asObservable(),
     sendMessage: (message: Record<string, any>) =>
       messageClient.addToQueue(message),
     onMessage$: onMessageSubject.asObservable(),
