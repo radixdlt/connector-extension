@@ -21,7 +21,7 @@ export const Paring = () => {
       source: 'extension',
       target: 'wallet',
       signalingServerBaseUrl: config.signalingServer.baseUrl,
-      isInitiator: false,
+      isInitiator: config.webRTC.isInitiator,
       logger: new Logger({
         prettyLogTemplate: '{{hh}}:{{MM}}:{{ss}}:{{ms}}\t{{logLevelName}}\t',
         minLevel: 2,
