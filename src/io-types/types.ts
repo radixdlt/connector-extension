@@ -15,6 +15,7 @@ export const AnswerIO = object({
   source: Sources,
   connectionId: string(),
   encryptedPayload: string(),
+  targetClientId: string(),
   payload: object({
     sdp: string(),
   }),
@@ -26,6 +27,7 @@ export const OfferIO = object({
   source: Sources,
   connectionId: string(),
   encryptedPayload: string(),
+  targetClientId: string(),
   payload: object({
     sdp: string(),
   }),
@@ -43,6 +45,7 @@ export const IceCandidateIO = object({
   source: Sources,
   connectionId: string(),
   encryptedPayload: string(),
+  targetClientId: string(),
   payload: IceCandidatePayloadIO,
 })
 
@@ -52,6 +55,7 @@ export const IceCandidatesIO = object({
   source: Sources,
   connectionId: string(),
   encryptedPayload: string(),
+  targetClientId: string(),
   payload: array(IceCandidatePayloadIO),
 })
 
@@ -71,20 +75,24 @@ export type Confirmation = {
 
 export type RemoteData<T extends DataTypes = DataTypes> = {
   info: 'remoteData'
+  remoteClientId: string
   requestId: T['requestId']
   data: T
 }
 
 export type RemoteClientDisconnected = {
   info: 'remoteClientDisconnected'
+  remoteClientId: string
 }
 
 export type RemoteClientJustConnected = {
   info: 'remoteClientJustConnected'
+  remoteClientId: string
 }
 
 export type RemoteClientIsAlreadyConnected = {
   info: 'remoteClientIsAlreadyConnected'
+  remoteClientId: string
 }
 
 export type MissingRemoteClientError = {
