@@ -22,7 +22,7 @@ export const ChromeConnectorClient = () => {
   const createConnector = () => {
     const logger = new Logger({
       prettyLogTemplate: '{{hh}}:{{MM}}:{{ss}}:{{ms}}\t{{logLevelName}}\t',
-      minLevel: 2,
+      minLevel: config.logLevel,
     })
     connector = ConnectorClient({
       source: 'extension',
