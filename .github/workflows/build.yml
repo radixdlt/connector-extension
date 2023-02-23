@@ -23,6 +23,7 @@ jobs:
         run: yarn lint
 
       - name: Running unit tests
+        if: ${{ github.base_ref == 'develop' }}
         run: yarn test
 
       - name: Build dev extension
@@ -60,6 +61,7 @@ jobs:
         run: yarn lint
 
       - name: Running unit tests
+        if: ${{ github.base_ref == 'main' }}
         run: yarn test:beta
 
       - name: Build dev extension
