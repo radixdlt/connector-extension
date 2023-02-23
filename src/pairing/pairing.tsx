@@ -24,7 +24,7 @@ export const Paring = () => {
       isInitiator: config.webRTC.isInitiator,
       logger: new Logger({
         prettyLogTemplate: '{{hh}}:{{MM}}:{{ss}}:{{ms}}\t{{logLevelName}}\t',
-        minLevel: 2,
+        minLevel: config.logLevel,
       }),
     })
 

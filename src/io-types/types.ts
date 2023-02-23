@@ -13,7 +13,7 @@ export const SignalingServerMessage = object({
   requestId: string(),
   targetClientId: string(),
   encryptedPayload: string(),
-  source: Sources.optional(), // redundant, to be removed 
+  source: Sources.optional(), // redundant, to be removed
   connectionId: string().optional(), // redundant, to be removed
 })
 
