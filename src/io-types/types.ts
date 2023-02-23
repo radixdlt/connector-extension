@@ -9,25 +9,23 @@ const Types = union([Offer, Answer, IceCandidate, IceCandidates])
 
 export const Sources = union([literal('wallet'), literal('extension')])
 
-export const AnswerIO = object({
+export const SignalingServerMessage = object({
   requestId: string(),
-  method: Answer,
-  source: Sources,
-  connectionId: string(),
-  encryptedPayload: string(),
   targetClientId: string(),
+  encryptedPayload: string(),
+  source: Sources.optional(), // redundant, to be removed 
+  connectionId: string().optional(), // redundant, to be removed
+})
+
+export const AnswerIO = SignalingServerMessage.extend({
+  method: Answer,
   payload: object({
     sdp: string(),
   }),
 })
 
-export const OfferIO = object({
-  requestId: string(),
+export const OfferIO = SignalingServerMessage.extend({
   method: Offer,
-  source: Sources,
-  connectionId: string(),
-  encryptedPayload: string(),
-  targetClientId: string(),
   payload: object({
     sdp: string(),
   }),
@@ -39,23 +37,13 @@ const IceCandidatePayloadIO = object({
   sdpMLineIndex: number(),
 })
 
-export const IceCandidateIO = object({
-  requestId: string(),
+export const IceCandidateIO = SignalingServerMessage.extend({
   method: IceCandidate,
-  source: Sources,
-  connectionId: string(),
-  encryptedPayload: string(),
-  targetClientId: string(),
   payload: IceCandidatePayloadIO,
 })
 
-export const IceCandidatesIO = object({
-  requestId: string(),
+export const IceCandidatesIO = SignalingServerMessage.extend({
   method: IceCandidates,
-  source: Sources,
-  connectionId: string(),
-  encryptedPayload: string(),
-  targetClientId: string(),
   payload: array(IceCandidatePayloadIO),
 })
 
