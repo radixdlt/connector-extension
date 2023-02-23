@@ -4,7 +4,12 @@ import { DataTypes } from 'io-types/types'
 import { ResultAsync } from 'neverthrow'
 
 export const prepareMessage = (
-  { payload, method, source }: Pick<DataTypes, 'payload' | 'method' | 'source'>,
+  {
+    payload,
+    method,
+    source,
+    targetClientId,
+  }: Pick<DataTypes, 'payload' | 'method' | 'source' | 'targetClientId'>,
   { encryptionKey, connectionId }: Secrets
 ): ResultAsync<Omit<DataTypes, 'payload'>, Error> =>
   createIV()
@@ -15,6 +20,7 @@ export const prepareMessage = (
       requestId: crypto.randomUUID(),
       connectionId: connectionId.toString('hex'),
       encryptedPayload: encrypted.combined.toString('hex'),
+      targetClientId,
       method,
       source,
     }))

@@ -1,4 +1,11 @@
-import { IceCandidate, MessageSources } from 'io-types/types'
+import {
+  IceCandidate,
+  MessageSources,
+  RemoteClientDisconnected,
+  RemoteClientIsAlreadyConnected,
+  RemoteClientJustConnected,
+  SignalingServerResponse,
+} from 'io-types/types'
 import { SignalingClientType } from './signaling/signaling-client'
 import { WebRtcClient } from './webrtc/webrtc-client'
 
@@ -16,6 +23,15 @@ export const remoteClientConnected = new Set<string>([
 export const remoteClientDisconnected = new Set<string>([
   remoteClientState.remoteClientDisconnected,
 ])
+
+export const isRemoteClientConnectionUpdate = (
+  message: SignalingServerResponse
+): message is
+  | RemoteClientJustConnected
+  | RemoteClientIsAlreadyConnected
+  | RemoteClientDisconnected =>
+  remoteClientConnected.has(message.info) ||
+  remoteClientDisconnected.has(message.info)
 
 export type Dependencies = {
   secrets: Secrets

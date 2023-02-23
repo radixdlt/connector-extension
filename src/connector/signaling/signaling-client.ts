@@ -18,14 +18,17 @@ import {
   mergeMap,
   Observable,
   of,
+  Subscription,
   switchMap,
   tap,
 } from 'rxjs'
 import { parseRawMessage } from '../helpers/parse-raw-message'
 import { SignalingSubjectsType } from './subjects'
 import {
+  isRemoteClientConnectionUpdate,
   remoteClientConnected,
   remoteClientDisconnected,
+  remoteClientState,
   Secrets,
 } from 'connector/_types'
 import { decryptMessagePayload } from 'connector/helpers'
@@ -45,6 +48,7 @@ export const SignalingClient = (input: {
 }) => {
   const logger = input.logger
   const subjects = input.subjects
+  const subscription = new Subscription()
   const connectionId = Buffer.from(input.secrets.connectionId).toString('hex')
   const url = `${input.baseUrl}/${connectionId}?target=${input.target}&source=${input.source}`
 
@@ -95,10 +99,11 @@ export const SignalingClient = (input: {
     payload,
     method,
     source,
-  }: Pick<DataTypes, 'payload' | 'method' | 'source'>): ResultAsync<
-    Omit<DataTypes, 'payload'>,
-    Error
-  > =>
+    targetClientId,
+  }: Pick<
+    DataTypes,
+    'payload' | 'method' | 'source' | 'targetClientId'
+  >): ResultAsync<Omit<DataTypes, 'payload'>, Error> =>
     createIV()
       .asyncAndThen((iv) =>
         encrypt(
@@ -110,13 +115,14 @@ export const SignalingClient = (input: {
       .map((encrypted) => ({
         requestId: crypto.randomUUID(),
         connectionId: connectionId,
+        targetClientId,
         encryptedPayload: encrypted.combined.toString('hex'),
         method,
         source,
       }))
 
   const sendMessage = (
-    message: Pick<DataTypes, 'payload' | 'method' | 'source'>
+    message: Pick<DataTypes, 'payload' | 'method' | 'source' | 'targetClientId'>
   ): Observable<Result<undefined, Error>> =>
     from(prepareMessage(message)).pipe(
       mergeMap((result) => {
@@ -207,6 +213,20 @@ export const SignalingClient = (input: {
     map((result) => new RTCIceCandidate(result.value))
   )
 
+  const onRemoteClientConnectionStateChange$ =
+    input.subjects.onMessageSubject.pipe(
+      filter(isRemoteClientConnectionUpdate),
+      tap((message) => {
+        subjects.targetClientIdSubject.next(
+          message.info === remoteClientState.remoteClientDisconnected
+            ? undefined
+            : message.remoteClientId
+        )
+      })
+    )
+
+  subscription.add(onRemoteClientConnectionStateChange$.subscribe())
+
   ws.onmessage = onMessage
   ws.onopen = onOpen
   ws.onclose = onClose
@@ -215,7 +235,13 @@ export const SignalingClient = (input: {
   return {
     remoteClientConnected$: waitForRemoteClient(remoteClientConnected),
     remoteClientDisconnected$: waitForRemoteClient(remoteClientDisconnected),
-    sendMessage,
+    sendMessage: (message: Pick<DataTypes, 'payload' | 'method' | 'source'>) =>
+      subjects.targetClientIdSubject.pipe(
+        filter(Boolean),
+        switchMap((targetClientId) =>
+          sendMessage({ ...message, targetClientId })
+        )
+      ),
     status$: subjects.statusSubject.asObservable(),
     onError$: subjects.onErrorSubject.asObservable(),
     onConnect$: subjects.statusSubject.pipe(
@@ -232,6 +258,7 @@ export const SignalingClient = (input: {
       ws.close()
     },
     destroy: () => {
+      subscription.unsubscribe()
       ws.close()
       ws.removeEventListener('message', onMessage)
       ws.removeEventListener('close', onClose)
