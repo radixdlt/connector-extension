@@ -28,7 +28,7 @@ export const ChromeConnectorClient = () => {
       source: 'extension',
       target: 'wallet',
       signalingServerBaseUrl: config.signalingServer.baseUrl,
-      isInitiator: false,
+      isInitiator: config.webRTC.isInitiator,
       logger,
     })
 

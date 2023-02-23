@@ -63,6 +63,7 @@ export const config = {
     iceCandidatesBatchTime: 2000,
   },
   webRTC: {
+    isInitiator: import.meta.env.VITE_APP_IS_INITIATOR === 'true',
     peerConnectionConfig: {
       iceServers: [
         {
