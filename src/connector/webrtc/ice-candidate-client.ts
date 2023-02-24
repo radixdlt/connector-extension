@@ -74,10 +74,15 @@ export const IceCandidateClient = (input: {
     )
   )
 
+  const haveLocalOffer$ = subjects.onSignalingStateChangeSubject.pipe(
+    filter((value) => value === 'have-local-offer')
+  )
+
   const haveRemoteOffer$ = subjects.onSignalingStateChangeSubject.pipe(
     filter((value) => value === 'have-remote-offer')
   )
   const waitForRemoteDescription$ = merge(
+    haveLocalOffer$,
     haveRemoteOffer$,
     subjects.onRemoteAnswerSubject
   )
