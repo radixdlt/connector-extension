@@ -4,6 +4,7 @@ import { SignalingClient } from 'connector/signaling/signaling-client'
 import { Message } from 'connector/_types'
 import {
   BehaviorSubject,
+  distinctUntilChanged,
   filter,
   finalize,
   first,
@@ -61,7 +62,12 @@ export const ConnectorClient = (input: {
     map(([, shouldConnect]) => shouldConnect),
     tap(() => logger?.debug(`🔌🔄 restarting connector client`))
   )
-  const triggerConnection$ = merge(shouldConnectSubject, triggerRestart$)
+  const triggerConnection$ = merge(
+    shouldConnectSubject.pipe(
+      distinctUntilChanged((oldValue, newValue) => oldValue === newValue)
+    ),
+    triggerRestart$
+  )
 
   const subscriptions = new Subscription()
 
