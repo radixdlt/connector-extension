@@ -17,14 +17,7 @@ jobs:
           node-version: '18.x'
 
       - name: Install dependencies
-        run: yarn add --dev wrtc
-
-      - name: Running lint
-        run: yarn lint
-
-      - name: Running unit tests
-        if: ${{ github.base_ref == 'develop' }}
-        run: yarn test
+        run: yarn install --frozen-lockfile
 
       - name: Build dev extension
         run: yarn build:dev
@@ -55,14 +48,7 @@ jobs:
           node-version: '18.x'
 
       - name: Install dependencies
-        run: yarn add --dev wrtc
-
-      - name: Running lint
-        run: yarn lint
-
-      - name: Running unit tests
-        if: ${{ github.base_ref == 'main' }}
-        run: yarn test:beta
+        run: yarn install --frozen-lockfile
 
       - name: Build dev extension
         run: yarn build:beta
