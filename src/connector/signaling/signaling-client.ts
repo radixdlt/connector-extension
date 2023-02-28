@@ -238,6 +238,7 @@ export const SignalingClient = (input: {
     sendMessage: (message: Pick<DataTypes, 'payload' | 'method' | 'source'>) =>
       subjects.targetClientIdSubject.pipe(
         filter(Boolean),
+        first(),
         switchMap((targetClientId) =>
           sendMessage({ ...message, targetClientId })
         )
