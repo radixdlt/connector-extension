@@ -35,6 +35,7 @@ import { decryptMessagePayload } from 'connector/helpers'
 import { err, ok, Ok, Result, ResultAsync } from 'neverthrow'
 import { createIV, encrypt } from 'crypto/encryption'
 import { stringify } from 'utils/stringify'
+import { config } from 'config'
 
 export type SignalingClientType = ReturnType<typeof SignalingClient>
 
@@ -236,13 +237,15 @@ export const SignalingClient = (input: {
     remoteClientConnected$: waitForRemoteClient(remoteClientConnected),
     remoteClientDisconnected$: waitForRemoteClient(remoteClientDisconnected),
     sendMessage: (message: Pick<DataTypes, 'payload' | 'method' | 'source'>) =>
-      subjects.targetClientIdSubject.pipe(
-        filter(Boolean),
-        first(),
-        switchMap((targetClientId) =>
-          sendMessage({ ...message, targetClientId })
-        )
-      ),
+      config.signalingServer.useTargetClientId
+        ? subjects.targetClientIdSubject.pipe(
+            filter(Boolean),
+            first(),
+            switchMap((targetClientId) =>
+              sendMessage({ ...message, targetClientId })
+            )
+          )
+        : sendMessage({ ...message, targetClientId: '' }),
     status$: subjects.statusSubject.asObservable(),
     onError$: subjects.onErrorSubject.asObservable(),
     onConnect$: subjects.statusSubject.pipe(
