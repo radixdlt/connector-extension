@@ -5,8 +5,8 @@ import { useEffect, useState } from 'react'
 import { chromeLocalStore } from 'chrome/helpers/chrome-local-store'
 import { ConnectorClient } from 'connector/connector-client'
 import { config } from 'config'
-import { Logger } from 'tslog'
 import { ok } from 'neverthrow'
+import { logger } from 'utils/logger'
 
 export const Paring = () => {
   const [pairingState, setPairingState] = useState<
@@ -22,10 +22,7 @@ export const Paring = () => {
       target: 'wallet',
       signalingServerBaseUrl: config.signalingServer.baseUrl,
       isInitiator: config.webRTC.isInitiator,
-      logger: new Logger({
-        prettyLogTemplate: '{{hh}}:{{MM}}:{{ss}}:{{ms}}\t{{logLevelName}}\t',
-        minLevel: config.logLevel,
-      }),
+      logger,
     })
 
     chrome.storage.onChanged.addListener((changes, area) => {
