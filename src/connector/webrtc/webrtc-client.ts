@@ -14,7 +14,6 @@ import {
   Subscription,
   switchMap,
   tap,
-  withLatestFrom,
 } from 'rxjs'
 import { Message } from 'connector/_types'
 import { SignalingClientType } from 'connector/signaling/signaling-client'
@@ -102,8 +101,10 @@ export const WebRtcClient = (
         filter((status) => status === 'connected'),
         first(),
         switchMap(() =>
-          signalingClient.status$.pipe(
-            withLatestFrom(dataChannelClient.subjects.dataChannelStatusSubject),
+          combineLatest([
+            signalingClient.status$,
+            dataChannelClient.subjects.dataChannelStatusSubject,
+          ]).pipe(
             filter(
               ([signalingServerStatus, dataChannelStatus]) =>
                 signalingServerStatus === 'disconnected' &&
