@@ -10,8 +10,8 @@ import {
   tap,
 } from 'rxjs'
 import { ChromeDAppClient } from './chrome-dapp-client'
-import { Logger } from 'tslog'
 import { chromeLocalStore } from './helpers/chrome-local-store'
+import { logger } from 'utils/logger'
 
 const chromeDAppClient = ChromeDAppClient()
 
@@ -20,10 +20,6 @@ export const ChromeConnectorClient = () => {
   const subscriptions = new Subscription()
 
   const createConnector = () => {
-    const logger = new Logger({
-      prettyLogTemplate: '{{hh}}:{{MM}}:{{ss}}:{{ms}}\t{{logLevelName}}\t',
-      minLevel: config.logLevel,
-    })
     connector = ConnectorClient({
       source: 'extension',
       target: 'wallet',
