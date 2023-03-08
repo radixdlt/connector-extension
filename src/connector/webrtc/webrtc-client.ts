@@ -10,6 +10,7 @@ import {
   filter,
   first,
   merge,
+  mergeMap,
   Subject,
   Subscription,
   switchMap,
@@ -78,6 +79,17 @@ export const WebRtcClient = (
   const onLocalAnswer$ = subjects.answerSubject
 
   const subscriptions = new Subscription()
+
+  subscriptions.add(
+    signalingClient.remoteClientConnected$
+      .pipe(
+        first(),
+        mergeMap(() =>
+          signalingClient.remoteClientDisconnected$.pipe(tap(() => restart()))
+        )
+      )
+      .subscribe()
+  )
 
   subscriptions.add(
     merge(onLocalOffer$, onLocalAnswer$, onLocalIceCandidate$)

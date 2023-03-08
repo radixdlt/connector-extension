@@ -121,6 +121,10 @@ export const SignalingClient = (input: {
         method,
         source,
       }))
+      .mapErr((err) => {
+        logger?.error(`prepareMessage`, err)
+        return err
+      })
 
   const sendMessage = (
     message: Pick<DataTypes, 'payload' | 'method' | 'source' | 'targetClientId'>
