@@ -13,6 +13,7 @@
   "license": "Apache-2.0",
   "scripts": {
     "start": "DEV_TOOLS=true vite",
+    "start:local": "DEV_TOOLS=true vite --mode localhost",
     "start:beta": "DEV_TOOLS=true vite --mode beta",
     "build:dev": "tsc && vite build --mode development",
     "build:beta": "tsc && vite build --mode beta",

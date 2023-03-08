@@ -43,7 +43,9 @@ export const Paring = () => {
         .getItem('connectionPassword')
         .andThen(({ connectionPassword }) => {
           if (connectionPassword) {
-            connectorClient.setConnectionPassword(connectionPassword)
+            connectorClient.setConnectionPassword(
+              Buffer.from(connectionPassword, 'hex')
+            )
             return ok(null)
           } else {
             connectorClient.connect()

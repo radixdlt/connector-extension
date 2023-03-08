@@ -1,5 +1,5 @@
 import { Logger } from 'tslog'
-import { ReplaySubject, share, tap } from 'rxjs'
+import { ReplaySubject } from 'rxjs'
 import { deriveSecretsFromPassword } from './helpers/derive-secrets-from-connection-password'
 import { generateConnectionPassword } from './helpers/generate-connection-password'
 import { Secrets } from './_types'
@@ -23,11 +23,6 @@ export const SecretsClient = (input: { logger?: Logger<unknown> }) => {
       deriveSecretsFromPassword(password).map((secrets) => {
         secretsSubject.next(secrets)
       }),
-    secrets$: secretsSubject.pipe(
-      tap(() => {
-        logger?.debug(`🔐💾 connection password set`)
-      }),
-      share()
-    ),
+    secrets$: secretsSubject,
   }
 }
