@@ -85,7 +85,10 @@ export const WebRtcClient = (
       .pipe(
         first(),
         mergeMap(() =>
-          signalingClient.remoteClientDisconnected$.pipe(tap(() => restart()))
+          merge(
+            signalingClient.remoteClientDisconnected$,
+            signalingClient.remoteClientConnected$
+          ).pipe(tap(() => restart()))
         )
       )
       .subscribe()
