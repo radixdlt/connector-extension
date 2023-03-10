@@ -15,6 +15,7 @@ import {
   Subscription,
   switchMap,
   tap,
+  timer,
 } from 'rxjs'
 import { Message } from 'connector/_types'
 import { SignalingClientType } from 'connector/signaling/signaling-client'
@@ -87,7 +88,9 @@ export const WebRtcClient = (
         mergeMap(() =>
           merge(
             signalingClient.remoteClientDisconnected$,
-            signalingClient.remoteClientConnected$
+            timer(100).pipe(
+              switchMap(() => signalingClient.remoteClientConnected$)
+            )
           ).pipe(tap(() => restart()))
         )
       )
