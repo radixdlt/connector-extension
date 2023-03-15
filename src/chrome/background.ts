@@ -8,6 +8,8 @@ import { ok } from 'neverthrow'
 import { closePopup } from './helpers/close-popup'
 import { getActiveWindow } from './helpers/get-active-window'
 import { chromeLocalStore } from './helpers/chrome-local-store'
+// @ts-ignore
+import content from './content?script'
 
 const createOrFocusPopupWindow = () =>
   getExtensionTabsByUrl(config.popup.pages.pairing)
@@ -49,3 +51,18 @@ chrome.action.onClicked.addListener(createOrFocusPopupWindow)
 if (config.popup.showOnInstall) {
   chrome.runtime.onInstalled.addListener(handleIncomingMessage)
 }
+
+chrome.runtime.onInstalled.addListener(async () => {
+  for (const tab of await chrome.tabs.query({})) {
+    try {
+      if (tab.id) {
+        await chrome.scripting.executeScript({
+          target: {
+            tabId: tab.id,
+          },
+          files: [content],
+        })
+      }
+    } catch (err) {}
+  }
+})
