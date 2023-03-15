@@ -15,7 +15,7 @@ const [major, minor, patch, label = '0'] = version
   .split(/[.-]/)
 
 const manifest = defineManifest(async () => {
-  const permissions = ['storage', 'tabs']
+  const permissions = ['storage', 'tabs', 'scripting']
   const matches = ['https://*/*']
 
   if (isDevToolsActive) {
@@ -41,6 +41,7 @@ const manifest = defineManifest(async () => {
         run_at: 'document_start',
       },
     ],
+    host_permissions: matches,
     permissions,
     icons: {
       '16': 'radix-icon_16x16.png',
