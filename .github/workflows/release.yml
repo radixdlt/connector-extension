@@ -1,22 +1,13 @@
 name: Release
 
 on:
+  push:
+    branches:
+      - develop
   workflow_dispatch:
-    inputs:
-      publish_public_only:
-        description: "Do you want to run only public release?"
-        required: true
-        default: "no"
-        type: choice
-        options:
-        - "no"
-        - "yes"
 
 jobs:
-
   release:
-
-    if: ( github.event.inputs.publish_public_only == 'no' && github.event_name == 'workflow_dispatch' )
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -36,79 +27,3 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: npx semantic-release
-
-  github_pages_release:
-      if: >
-        ( github.event.inputs.publish_public_only == 'no' && github.event_name == 'workflow_dispatch' )
-      runs-on: ubuntu-latest
-      name: GitHub Pages release
-      needs:
-      - release
-      
-      steps:
-        - name: Checkout
-          uses: actions/checkout@v3
-          with:
-            fetch-depth: 0
-
-        - name: Use Node.js
-          uses: actions/setup-node@v3
-          with:
-            node-version: '18.x'
-
-        - name: Install dependencies
-          run: npm pkg delete scripts.prepare && yarn
-
-        - name: Install dependencies
-          run: yarn install
-
-        - name: Build zip
-          run: |
-            chmod +x gh_pages_build.sh
-            ./gh_pages_build.sh
-
-        - name: Deploy to GitHub Pages
-          uses: JamesIves/github-pages-deploy-action@4.1.1
-          with:
-            folder: "docs/"
-            target-folder: "docs/"
-            branch: 'gh-pages'
-            clean: false
-            commit-message: "ci: publish documentation for ${{ github.sha }}"
-
-  only_github_pages_release:
-      if: >
-       ( github.event.inputs.publish_public_only == 'yes' && github.event_name == 'workflow_dispatch' )
-      runs-on: ubuntu-latest
-      name: Only GitHub Pages release
-      
-      steps:
-        - name: Checkout
-          uses: actions/checkout@v3
-          with:
-            fetch-depth: 0
-
-        - name: Use Node.js
-          uses: actions/setup-node@v3
-          with:
-            node-version: '18.x'
-
-        - name: Install dependencies
-          run: npm pkg delete scripts.prepare && yarn
-
-        - name: Install dependencies
-          run: yarn install
-
-        - name: Build zip
-          run: |
-            chmod +x gh_pages_build.sh
-            ./gh_pages_build.sh
-
-        - name: Deploy to GitHub Pages
-          uses: JamesIves/github-pages-deploy-action@4.1.1
-          with:
-            folder: "docs/"
-            target-folder: "docs/"
-            branch: 'gh-pages'
-            clean: false
-            commit-message: "ci: publish documentation for ${{ github.sha }}"
