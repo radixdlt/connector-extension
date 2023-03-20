@@ -13,6 +13,7 @@ const [major, minor, patch, label = '0'] = version
   .replace(/[^\d.-]+/g, '')
   // split into version parts
   .split(/[.-]/)
+  .filter(Boolean)
 
 const manifest = defineManifest(async () => {
   const permissions = ['storage', 'tabs', 'scripting']
