@@ -2,20 +2,16 @@
 
 set -e
 
-rm -rf radix-connector radix-connector-dev radix-connector.zip radix-connector-dev.zip
+ENV=$1
 
-NAME="radix-connector"
-DEV_NAME="radix-connector-dev"
+NAME="$ENV--radix-connector"
+DEV_NAME="$ENV--radix-connector-with-dev-tools"
 
-yarn build:beta
+yarn build:${ENV}
 mv dist $NAME
 
-DEV_TOOLS=true yarn build:beta
+DEV_TOOLS=true yarn build:${ENV}
 mv dist $DEV_NAME
 
 zip --recurse-paths ${NAME}.zip ${NAME}
 zip --recurse-paths ${DEV_NAME}.zip ${DEV_NAME}
-
-
-
-
