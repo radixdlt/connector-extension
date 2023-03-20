@@ -72,11 +72,11 @@ export const ChromeConnectorClient = () => {
   }: {
     [key: string]: chrome.storage.StorageChange
   }) => {
-    if (!connectionPassword.newValue) {
+    if (!connectionPassword?.newValue) {
       connector?.disconnect()
-    } else if (connectionPassword.newValue) {
+    } else if (connectionPassword?.newValue) {
       connector?.setConnectionPassword(
-        Buffer.from(connectionPassword.newValue, 'hex')
+        Buffer.from(connectionPassword?.newValue, 'hex')
       )
       connector?.connect()
     }
