@@ -5,7 +5,7 @@ export const decorateMessage = (
 ): Result<Record<string, any>, never> => {
   const metadata = {
     ...(message.metadata || {}),
-    origin: window.location.origin,
+    origin: 'INVALID_ORIGIN',
   }
   const decorated = { ...message, metadata }
   return ok(decorated)
