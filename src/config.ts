@@ -65,6 +65,7 @@ export const config = {
   },
   webRTC: {
     isInitiator: import.meta.env.VITE_APP_IS_INITIATOR === 'true',
+    disconnectOnVisibilityChange: false,
     peerConnectionConfig: {
       iceServers: [
         {

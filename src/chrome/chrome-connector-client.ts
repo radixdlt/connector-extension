@@ -2,7 +2,9 @@ import { ConnectorClient } from 'connector/connector-client'
 import { config } from 'config'
 import {
   distinctUntilChanged,
+  EMPTY,
   first,
+  iif,
   interval,
   map,
   Subscription,
@@ -33,16 +35,22 @@ export const ChromeConnectorClient = () => {
       distinctUntilChanged()
     )
 
+    const disconnectOnHidden$ = hiddenDetection$.pipe(
+      tap((isHidden) => {
+        if (isHidden) connector?.disconnect()
+        else connector?.connect()
+      })
+    )
+
     subscriptions.add(
       connector.shouldConnect$
         .pipe(
           first(),
           switchMap(() =>
-            hiddenDetection$.pipe(
-              tap((isHidden) => {
-                if (isHidden) connector?.disconnect()
-                else connector?.connect()
-              })
+            iif(
+              () => config.webRTC.disconnectOnVisibilityChange,
+              disconnectOnHidden$,
+              EMPTY
             )
           )
         )
