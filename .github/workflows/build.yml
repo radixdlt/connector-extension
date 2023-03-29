@@ -6,6 +6,37 @@ on:
   workflow_dispatch:
 
 jobs:
+  build_rcnet:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v3
+      - name: Use Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '18.x'
+
+      - name: Install dependencies
+        run: yarn install --frozen-lockfile
+
+      - name: Build dev extension
+        run: yarn build:rcnet
+
+      - uses: actions/upload-artifact@v3
+        with:
+          name: rcnet_connector-extension.${{ github.sha }}
+          path: dist/
+
+      - name: Build dev extension with dev tools
+        run: yarn build:rcnet
+        env:
+          DEV_TOOLS: true
+
+      - uses: actions/upload-artifact@v3
+        with:
+          name: rcnet_connector-extension-with-dev-tools.${{ github.sha }}
+          path: dist/
+
   build_dev:
     runs-on: ubuntu-latest
 
