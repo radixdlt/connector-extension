@@ -18,6 +18,18 @@ const turnServers = {
       credential: 'password',
     },
   ],
+  rcnet: [
+    {
+      urls: 'turn:turn-rcnet-udp.radixdlt.com:80?transport=udp',
+      username: 'username',
+      credential: 'password',
+    },
+    {
+      urls: 'turn:turn-rcnet-tcp.radixdlt.com:80?transport=tcp',
+      username: 'username',
+      credential: 'password',
+    },
+  ],
   development: [
     {
       urls: 'turn:turn-dev-udp.rdx-works-main.extratools.works:80?transport=udp',
