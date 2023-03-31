@@ -105,11 +105,16 @@ export const Chunked = (metaData: MetaData) => {
   const validate = () =>
     concatChunks()
       .asyncAndThen(sha256)
-      .andThen((sha256Hash) =>
-        sha256Hash.toString('hex') === metaData.hashOfMessage
+      .andThen((sha256Hash) => {
+        const expectedHash = sha256Hash.toString('hex')
+        return expectedHash === metaData.hashOfMessage
           ? ok(undefined)
-          : err(Error('chunked message hash does not match expected hash'))
-      )
+          : err(
+              Error(
+                `message hash "${metaData.hashOfMessage}" does not match expected hash "${expectedHash}"`
+              )
+            )
+      })
 
   const getMessage = () =>
     allChunksReceived().asyncAndThen(validate).andThen(concatChunks)
