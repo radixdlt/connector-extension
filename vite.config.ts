@@ -13,13 +13,13 @@ const [major, minor, patch, label = '0'] = version
   .replace(/[^\d.-]+/g, '')
   // split into version parts
   .split(/[.-]/)
+  .filter(Boolean)
 
 const manifest = defineManifest(async () => {
-  const permissions = ['storage', 'tabs']
+  const permissions = ['storage', 'tabs', 'scripting']
   const matches = ['https://*/*']
 
   if (isDevToolsActive) {
-    permissions.push('contextMenus')
     matches.push('http://*/*')
   }
 
@@ -32,9 +32,7 @@ const manifest = defineManifest(async () => {
       default_popup: 'src/pairing/index.html',
     },
     background: {
-      service_worker: `src/chrome/background${
-        isDevToolsActive ? '-with-dev-tools' : ''
-      }.ts`,
+      service_worker: `src/chrome/background.ts`,
       type: 'module',
     },
     content_scripts: [
@@ -44,6 +42,7 @@ const manifest = defineManifest(async () => {
         run_at: 'document_start',
       },
     ],
+    host_permissions: matches,
     permissions,
     icons: {
       '16': 'radix-icon_16x16.png',
@@ -62,11 +61,6 @@ const buildConfig: UserConfigExport = {
       },
     },
   },
-}
-
-if (isDevToolsActive) {
-  buildConfig.build.rollupOptions.input['devTools'] =
-    'src/chrome/dev-tools/dev-tools.html'
 }
 
 export default defineConfig(buildConfig)

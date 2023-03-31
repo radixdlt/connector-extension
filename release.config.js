@@ -1,16 +1,10 @@
 module.exports = {
   branches: [
     'main',
-    'next',
     {
-      name: 'rc',
-      channel: 'rc',
-      prerelease: 'rc',
-    },
-    {
-      name: 'beta',
-      channel: 'beta',
-      prerelease: 'beta',
+      name: 'develop',
+      channel: 'alpha',
+      prerelease: 'alpha',
     },
   ],
   plugins: [
@@ -137,7 +131,7 @@ module.exports = {
     [
       '@semantic-release/exec',
       {
-        publishCmd: './build.sh',
+        publishCmd: 'yarn build:cd',
       },
     ],
     [
@@ -145,12 +139,28 @@ module.exports = {
       {
         assets: [
           {
-            path: 'radix-connector.zip',
-            label: 'radix-connector.zip',
+            path: 'rcnet--radix-connector.zip',
+            label: 'rcnet--radix-connector.zip',
           },
           {
-            path: 'radix-connector-dev.zip',
-            label: 'radix-connector-dev.zip',
+            path: 'rcnet--radix-connector-with-dev-tools.zip',
+            label: 'rcnet--radix-connector-with-dev-tools.zip',
+          },
+          {
+            path: 'development--radix-connector.zip',
+            label: 'development--radix-connector.zip',
+          },
+          {
+            path: 'development--radix-connector-with-dev-tools.zip',
+            label: 'development--radix-connector-with-dev-tools.zip',
+          },
+          {
+            path: 'beta--radix-connector.zip',
+            label: 'beta--radix-connector.zip',
+          },
+          {
+            path: 'beta--radix-connector-with-dev-tools.zip',
+            label: 'beta--radix-connector-with-dev-tools.zip',
           },
         ],
       },

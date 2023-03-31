@@ -4,15 +4,12 @@ import { getExtensionTabsByUrl } from 'chrome/helpers/get-extension-tabs-by-url'
 import { getPopupId } from 'chrome/helpers/get-popup-id'
 import { setPopupId } from 'chrome/helpers/set-popup-id'
 import { config } from 'config'
-import { getLogger } from 'loglevel'
 import { ok } from 'neverthrow'
-import { createChromeApi } from './chrome-api'
 import { closePopup } from './helpers/close-popup'
 import { getActiveWindow } from './helpers/get-active-window'
-
-const logger = getLogger('background')
-
-const chromeAPI = createChromeApi(config.storage.key, logger)
+import { chromeLocalStore } from './helpers/chrome-local-store'
+// @ts-ignore
+import content from './content?script'
 
 const createOrFocusPopupWindow = () =>
   getExtensionTabsByUrl(config.popup.pages.pairing)
@@ -31,19 +28,16 @@ const createOrFocusPopupWindow = () =>
     )
 
 const handleIncomingMessage = () =>
-  chromeAPI
-    .getConnectionPassword()
-    .andThen((connectionPassword) =>
+  chromeLocalStore
+    .getItem('connectionPassword')
+    .andThen(({ connectionPassword }) =>
       connectionPassword ? closePopup() : createOrFocusPopupWindow()
     )
 
 const handleConnectionPasswordChange = async (changes: {
   [key: string]: chrome.storage.StorageChange
 }) => {
-  const connectionPasswordKey = Object.keys(changes).find((key) =>
-    key.includes(':connectionPassword')
-  )
-  if (connectionPasswordKey && changes[connectionPasswordKey].newValue) {
+  if (changes['connectionPassword']?.newValue) {
     setTimeout(() => {
       closePopup()
     }, config.popup.closeDelayTime)
@@ -57,3 +51,18 @@ chrome.action.onClicked.addListener(createOrFocusPopupWindow)
 if (config.popup.showOnInstall) {
   chrome.runtime.onInstalled.addListener(handleIncomingMessage)
 }
+
+chrome.runtime.onInstalled.addListener(async () => {
+  for (const tab of await chrome.tabs.query({})) {
+    try {
+      if (tab.id) {
+        await chrome.scripting.executeScript({
+          target: {
+            tabId: tab.id,
+          },
+          files: [content],
+        })
+      }
+    } catch (err) {}
+  }
+})

@@ -1,42 +1,101 @@
-import { Connector, ConnectorType } from 'connector/connector'
-import { StorageClient } from 'connector/storage/storage-client'
+import { ConnectorClient } from 'connector/connector-client'
 import { config } from 'config'
-import log, { LogLevelDesc } from 'loglevel'
-import { map, Subscription } from 'rxjs'
+import {
+  distinctUntilChanged,
+  EMPTY,
+  first,
+  iif,
+  interval,
+  map,
+  Subscription,
+  switchMap,
+  tap,
+} from 'rxjs'
 import { ChromeDAppClient } from './chrome-dapp-client'
+import { chromeLocalStore } from './helpers/chrome-local-store'
+import { logger } from 'utils/logger'
 
 const chromeDAppClient = ChromeDAppClient()
 
-export const ChromeConnectorClient = (logLevel: LogLevelDesc) => {
-  let connector: ConnectorType | undefined
-  let subscriptions: Subscription | undefined
-  const logger = log
-
-  chrome.storage.local.get('loglevel').then((value) => {
-    const storedLoglevel = value['loglevel']
-
-    if (storedLoglevel === 'DEBUG')
-      console.log(`Radix Connector loglevel: 'debug'`)
-
-    logger.setLevel(storedLoglevel || logLevel)
-  })
+export const ChromeConnectorClient = () => {
+  let connector: ConnectorClient | undefined
+  const subscriptions = new Subscription()
 
   const createConnector = () => {
-    connector = Connector({
+    connector = ConnectorClient({
+      source: 'extension',
+      target: 'wallet',
+      signalingServerBaseUrl: config.signalingServer.baseUrl,
+      isInitiator: config.webRTC.isInitiator,
       logger,
-      storageClient: StorageClient({ id: config.storage.key }),
-      generateConnectionPassword: false,
     })
+
+    const hiddenDetection$ = interval(1000).pipe(
+      map(() => document.hidden),
+      distinctUntilChanged()
+    )
+
+    const disconnectOnHidden$ = hiddenDetection$.pipe(
+      tap((isHidden) => {
+        if (isHidden) connector?.disconnect()
+        else connector?.connect()
+      })
+    )
+
+    subscriptions.add(
+      connector.shouldConnect$
+        .pipe(
+          first(),
+          switchMap(() =>
+            iif(
+              () => config.webRTC.disconnectOnVisibilityChange,
+              disconnectOnHidden$,
+              EMPTY
+            )
+          )
+        )
+        .subscribe()
+    )
+
+    subscriptions.add(
+      connector.onMessage$
+        .pipe(map((message) => chromeDAppClient.sendMessage(message)))
+        .subscribe()
+    )
+
     connector.connect()
-    subscriptions = connector.message$
-      .pipe(map((result) => result.map(chromeDAppClient.sendMessage)))
-      .subscribe()
+
+    chromeLocalStore
+      .getItem('connectionPassword')
+      .map(({ connectionPassword }) => {
+        if (connectionPassword)
+          connector?.setConnectionPassword(
+            Buffer.from(connectionPassword, 'hex')
+          )
+      })
   }
 
+  const onChange = ({
+    connectionPassword,
+  }: {
+    [key: string]: chrome.storage.StorageChange
+  }) => {
+    if (!connectionPassword?.newValue) {
+      connector?.disconnect()
+    } else if (connectionPassword?.newValue) {
+      connector?.setConnectionPassword(
+        Buffer.from(connectionPassword?.newValue, 'hex')
+      )
+      connector?.connect()
+    }
+  }
+
+  chrome.storage.onChanged.addListener(onChange)
+
   const destroy = () => {
-    subscriptions?.unsubscribe()
-    subscriptions = undefined
+    subscriptions.unsubscribe()
     connector?.destroy()
+    chrome.storage.onChanged.removeListener(onChange)
     connector = undefined
   }
 

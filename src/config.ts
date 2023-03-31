@@ -1,6 +1,9 @@
-import { LogLevelDesc } from 'loglevel'
+import { LogLevelNumbers } from 'loglevel'
 import packageJson from '../package.json'
 const { version } = packageJson
+import { Buffer } from 'buffer'
+
+globalThis.Buffer = Buffer
 
 const turnServers = {
   test: [
@@ -11,6 +14,18 @@ const turnServers = {
     },
     {
       urls: 'turn:turn-dev-tcp.rdx-works-main.extratools.works:80?transport=tcp',
+      username: 'username',
+      credential: 'password',
+    },
+  ],
+  rcnet: [
+    {
+      urls: 'turn:turn-rcnet-udp.radixdlt.com:80?transport=udp',
+      username: 'username',
+      credential: 'password',
+    },
+    {
+      urls: 'turn:turn-rcnet-tcp.radixdlt.com:80?transport=tcp',
       username: 'username',
       credential: 'password',
     },
@@ -45,7 +60,7 @@ const mode = import.meta.env.MODE as 'test' | 'development' | 'beta'
 
 export const config = {
   environment: process.env.NODE_ENV,
-  logLevel: import.meta.env.VITE_APP_LOG_LEVEL as LogLevelDesc,
+  logLevel: import.meta.env.VITE_APP_LOG_LEVEL as LogLevelNumbers,
   version,
   secrets: {
     connectionPasswordByteLength: 32,
@@ -58,8 +73,11 @@ export const config = {
     },
     useBatchedIceCandidates: false,
     iceCandidatesBatchTime: 2000,
+    useTargetClientId: import.meta.env.VITE_APP_USE_TARGET_CLIENT_ID === 'true',
   },
   webRTC: {
+    isInitiator: import.meta.env.VITE_APP_IS_INITIATOR === 'true',
+    disconnectOnVisibilityChange: false,
     peerConnectionConfig: {
       iceServers: [
         {
