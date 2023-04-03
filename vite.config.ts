@@ -16,7 +16,7 @@ const [major, minor, patch, label = '0'] = version
   .filter(Boolean)
 
 const manifest = defineManifest(async () => {
-  const permissions = ['storage', 'tabs', 'scripting']
+  const permissions = ['storage', 'tabs', 'offscreen', 'scripting']
   const matches = ['https://*/*']
 
   if (isDevToolsActive) {
@@ -58,6 +58,7 @@ const buildConfig: UserConfigExport = {
     rollupOptions: {
       input: {
         pairing: 'src/pairing/index.html',
+        offscreen: 'src/chrome/offscreen/index.html',
       },
     },
   },
