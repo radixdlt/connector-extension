@@ -75,6 +75,9 @@ export const config = {
     iceCandidatesBatchTime: 2000,
     useTargetClientId: import.meta.env.VITE_APP_USE_TARGET_CLIENT_ID === 'true',
   },
+  offscreen: {
+    url: 'src/offscreen/index.html',
+  },
   webRTC: {
     isInitiator: import.meta.env.VITE_APP_IS_INITIATOR === 'true',
     disconnectOnVisibilityChange: false,
