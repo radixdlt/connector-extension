@@ -35,7 +35,10 @@ export const IceCandidateClient = (input: {
   const logger = input.logger
 
   const onIcecandidate = (event: RTCPeerConnectionIceEvent) => {
-    if (event.candidate) subjects.onIceCandidateSubject.next(event.candidate)
+    if (event.candidate) {
+      logger?.trace(`🕸🧊 onIceCandidate`, event.candidate)
+      subjects.onIceCandidateSubject.next(event.candidate)
+    }
   }
   const onIceconnectionStateChange = () => {
     logger?.debug(
