@@ -75,4 +75,6 @@ chrome.runtime.onInstalled.addListener(async () => {
   }
 })
 
-createOffscreen()
+if (config.offscreen.hasOffscreen) {
+  createOffscreen()
+}
