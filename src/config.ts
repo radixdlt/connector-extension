@@ -21,26 +21,36 @@ const turnServers = {
   ],
   rcnet: [
     {
-      urls: 'turn:turn-rcnet-udp.radixdlt.com:80?transport=udp',
-      username: 'username',
-      credential: 'password',
+      urls: 'turn:relay.metered.ca:80',
+      username: '51253affa7c2960189ce8cb6',
+      credential: '3HWkp3Wgg2cujD2g',
     },
     {
-      urls: 'turn:turn-rcnet-tcp.radixdlt.com:80?transport=tcp',
-      username: 'username',
-      credential: 'password',
+      urls: 'turn:relay.metered.ca:443',
+      username: '51253affa7c2960189ce8cb6',
+      credential: '3HWkp3Wgg2cujD2g',
+    },
+    {
+      urls: 'turn:relay.metered.ca:443?transport=tcp',
+      username: '51253affa7c2960189ce8cb6',
+      credential: '3HWkp3Wgg2cujD2g',
     },
   ],
   development: [
     {
-      urls: 'turn:turn-dev-udp.rdx-works-main.extratools.works:80?transport=udp',
-      username: 'username',
-      credential: 'password',
+      urls: 'turn:relay.metered.ca:80',
+      username: '51253affa7c2960189ce8cb6',
+      credential: '3HWkp3Wgg2cujD2g',
     },
     {
-      urls: 'turn:turn-dev-tcp.rdx-works-main.extratools.works:80?transport=tcp',
-      username: 'username',
-      credential: 'password',
+      urls: 'turn:relay.metered.ca:443',
+      username: '51253affa7c2960189ce8cb6',
+      credential: '3HWkp3Wgg2cujD2g',
+    },
+    {
+      urls: 'turn:relay.metered.ca:443?transport=tcp',
+      username: '51253affa7c2960189ce8cb6',
+      credential: '3HWkp3Wgg2cujD2g',
     },
   ],
   beta: [
