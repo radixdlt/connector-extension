@@ -70,7 +70,7 @@ const turnServers = {
 const mode = import.meta.env.MODE as 'test' | 'development' | 'beta'
 
 const peerConnectionConfig: RTCConfiguration = {
-  iceTransportPolicy: 'all',
+  iceTransportPolicy: 'relay',
   iceServers: [
     // {
     //   urls: 'stun:stun.l.google.com:19302',
