@@ -2,6 +2,7 @@ import { LogLevelNumbers } from 'loglevel'
 import packageJson from '../package.json'
 const { version } = packageJson
 import { Buffer } from 'buffer'
+import { Logger } from 'tslog'
 
 globalThis.Buffer = Buffer
 
@@ -121,3 +122,10 @@ export const config = {
     showOnInstall: false,
   },
 }
+
+const logger = new Logger({
+  prettyLogTemplate: '{{hh}}:{{MM}}:{{ss}}:{{ms}}\t{{logLevelName}}\t',
+  minLevel: config.logLevel,
+})
+
+logger.trace('🛠 loaded config', config)
