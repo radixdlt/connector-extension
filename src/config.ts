@@ -77,7 +77,7 @@ export const config = {
   },
   offscreen: {
     hasOffscreen: import.meta.env.VITE_APP_HAS_OFFSCREEN === 'true',
-    url: 'src/offscreen/index.html',
+    url: 'src/chrome/offscreen/index.html',
   },
   webRTC: {
     isInitiator: import.meta.env.VITE_APP_IS_INITIATOR === 'true',
