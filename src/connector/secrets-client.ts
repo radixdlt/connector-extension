@@ -6,7 +6,7 @@ import { Secrets } from './_types'
 
 export const SecretsClient = (input: { logger?: Logger<unknown> }) => {
   const logger = input.logger
-  const secretsSubject = new ReplaySubject<Secrets>()
+  const secretsSubject = new ReplaySubject<Secrets>(1)
 
   const generateConnectionSecrets = () =>
     generateConnectionPassword().asyncAndThen((password) =>
