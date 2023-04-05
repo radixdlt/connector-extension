@@ -1,26 +1,35 @@
-import { ChromeConnectorClient } from './chrome-connector-client'
+import { ResultAsync } from 'neverthrow'
 import { ChromeDAppClient, messageLifeCycleEvent } from './chrome-dapp-client'
 import { decorateMessage } from './helpers/decorate-message'
+import { sendMessage } from './helpers/send-message'
+import { ContentScriptMessageHandler } from './messages/content-script-messages'
+import { createMessage } from './messages/create-message'
+import { MessageHandler } from './messages/message-handler'
+import { ContentScriptMessage } from './messages/_types'
 
-const connectorClient = ChromeConnectorClient()
 const chromeDAppClient = ChromeDAppClient()
 
 chromeDAppClient.messageListener((message) => {
-  if (message.type === 'debugMode') {
-    const loglevel = message.value ? 'DEBUG' : 'INFO'
-    console.log(
-      `🛠 Setting loglevel to: ${loglevel}, reload the window for effects to take place`
+  chromeDAppClient
+    .sendMessageEvent(
+      message.interactionId,
+      messageLifeCycleEvent.receivedByExtension
     )
-    chrome.storage.local.set({ loglevel })
-  } else {
-    decorateMessage(message)
-      .map(connectorClient.getConnector().sendMessage)
-      .map(chrome.runtime.sendMessage)
-      .andThen(() =>
-        chromeDAppClient.sendMessageEvent(
-          message.interactionId,
-          messageLifeCycleEvent.receivedByExtension
-        )
-      )
-  }
+    .andThen(() => decorateMessage(message))
+    .asyncAndThen((message) =>
+      ResultAsync.combine([
+        sendMessage(createMessage.dAppRequest(message)),
+        sendMessage(createMessage.detectWalletLink()),
+      ])
+    )
 })
+
+const messageHandler = MessageHandler({
+  contentScriptMessageHandler: ContentScriptMessageHandler(chromeDAppClient),
+})
+
+chrome.runtime.onMessage.addListener((message: ContentScriptMessage) => {
+  messageHandler.onMessage(message)
+})
+
+sendMessage(createMessage.getConnectionPassword())

@@ -12,7 +12,7 @@
   "bugs": "https://github.com/radixdlt/connector-extension/issues",
   "license": "Apache-2.0",
   "scripts": {
-    "start": "DEV_TOOLS=true vite",
+    "start": "DEV_TOOLS=true vite --mode rcnet",
     "start:local": "DEV_TOOLS=true vite --mode localhost",
     "start:beta": "DEV_TOOLS=true vite --mode beta",
     "build:development": "tsc && vite build --mode development",

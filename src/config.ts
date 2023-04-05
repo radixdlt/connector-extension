@@ -76,7 +76,6 @@ export const config = {
     useTargetClientId: import.meta.env.VITE_APP_USE_TARGET_CLIENT_ID === 'true',
   },
   offscreen: {
-    hasOffscreen: import.meta.env.VITE_APP_HAS_OFFSCREEN === 'true',
     url: 'src/chrome/offscreen/index.html',
   },
   webRTC: {

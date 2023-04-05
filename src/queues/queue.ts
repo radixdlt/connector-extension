@@ -25,12 +25,13 @@ import {
 import { Worker } from './worker'
 import { Logger } from 'tslog'
 import { QueueSubjects } from './queue-subjects'
+import { InMemoryStorage } from './storage/in-memory-storage'
 
 export type QueueOptions<T> = {
-  storage: StorageProvider
   key: string
-  logger?: Logger<unknown>
   worker: Worker<T>
+  storage?: StorageProvider
+  logger?: Logger<unknown>
   subjects?: QueueSubjects<T>
   paused?: boolean
 }
@@ -38,7 +39,7 @@ export type QueueOptions<T> = {
 export type Queue<T = any> = ReturnType<typeof Queue<T>>
 
 export const Queue = <T>({
-  storage,
+  storage = InMemoryStorage(),
   key,
   worker,
   logger,
