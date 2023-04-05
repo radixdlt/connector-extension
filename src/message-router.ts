@@ -1,56 +1,34 @@
-import { errAsync, ResultAsync } from 'neverthrow'
-import { Logger } from 'tslog'
-import { logger as utilLogger } from 'utils/logger'
+import { getTabById } from 'chrome/helpers/get-tab-by-id'
+import { sendMessageToTab } from 'chrome/helpers/send-message-to-tab'
+import { errAsync, ok, okAsync, ResultAsync } from 'neverthrow'
 
-export type MessageRouterOptions = {
-  logger?: Logger<unknown>
-}
+export type MessagesRouter = ReturnType<typeof MessagesRouter>
 
-export const MessagesRouter = ({
-  logger = utilLogger,
-}: MessageRouterOptions = {}) => {
+export const MessagesRouter = () => {
   const store = new Map<string, number>()
 
   const add = (tabId: number, interactionId: string) => {
-    logger.debug('Storing data in messages router', { interactionId, tabId })
     store.set(interactionId, tabId)
+    return ok(undefined)
   }
 
-  const send = (message: { interactionId: string }) => {
-    const tabId = store.get(message.interactionId)
-    if (!tabId) {
-      return errAsync(new Error('No tab matching interactionId found'))
-    }
-
-    return ResultAsync.fromPromise(
-      chrome.tabs.get(tabId),
-      (err) => err
-    ).andThen((tab) => {
-      if (tab) {
-        return ResultAsync.fromPromise(
-          new Promise((resolve) => {
-            chrome.tabs.sendMessage(tabId, message, (response) => {
-              if (response) {
-                logger.debug(
-                  'Message received by tab',
-                  tabId,
-                  message.interactionId
-                )
-                store.delete(message.interactionId)
-                return resolve(undefined)
-              }
-            })
-          }),
-          (err) => err
-        )
-      } else {
-        return errAsync(new Error('No tab found'))
-      }
-    })
+  const getTabId = (interactionId: string): ResultAsync<number, Error> => {
+    const tabId = store.get(interactionId)
+    return tabId ? okAsync(tabId) : errAsync(new Error('No tab found'))
   }
+
+  const send = (interactionId: string, message: any) =>
+    getTabId(interactionId).andThen((tabId) =>
+      getTabById(tabId)
+        .andThen(() => sendMessageToTab(tabId, message))
+        .map(() => {
+          store.delete(interactionId)
+        })
+    )
 
   return {
     add,
+    getTabId,
     send,
   }
 }

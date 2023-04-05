@@ -16,6 +16,7 @@ import {
   Subscription,
   switchMap,
   tap,
+  timer,
   withLatestFrom,
 } from 'rxjs'
 import { WebRtcClient } from './webrtc/webrtc-client'
@@ -26,7 +27,7 @@ import { SignalingSubjects, SignalingSubjectsType } from './signaling/subjects'
 import { MessageClient } from './messages/message-client'
 import { waitForDataChannelStatus } from './webrtc/helpers/wait-for-data-channel-status'
 import { sendMessage } from './messages/helpers/send-message'
-import { ResultAsync } from 'neverthrow'
+import { err, ok, ResultAsync } from 'neverthrow'
 import { errorIdentity } from 'utils/error-identity'
 
 export type ConnectorClient = ReturnType<typeof ConnectorClient>
@@ -148,5 +149,19 @@ export const ConnectorClient = (input: {
       logger?.debug('🔌🧹 destroying connector client')
       subscriptions.unsubscribe()
     },
+    connectionPassword: (): ResultAsync<string, Error> =>
+      ResultAsync.fromPromise(
+        firstValueFrom(
+          merge(
+            secretsClient.secrets$.pipe(
+              map((secrets) => ok(secrets.encryptionKey.toString('hex')))
+            ),
+            timer(100).pipe(
+              map(() => err(new Error('missing connection password')))
+            )
+          )
+        ),
+        (error) => error as Error
+      ).andThen((result) => result),
   }
 }
