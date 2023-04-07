@@ -32,14 +32,14 @@ const manifest = defineManifest(async () => {
       default_popup: 'src/pairing/index.html',
     },
     background: {
-      service_worker: `src/chrome/background.ts`,
+      service_worker: `src/chrome/background/background.ts`,
       type: 'module',
     },
     content_scripts: [
       {
         matches,
-        js: ['src/chrome/content.ts'],
-        run_at: 'document_start',
+        js: ['src/chrome/content-script/content-script.ts'],
+        run_at: 'document_idle',
       },
     ],
     host_permissions: matches,

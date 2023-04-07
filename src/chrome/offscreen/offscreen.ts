@@ -6,10 +6,10 @@ import { Worker } from 'queues/worker'
 import { okAsync } from 'neverthrow'
 import { MessagesRouter } from 'message-router'
 import { createMessage } from 'chrome/messages/create-message'
-import { OffscreenMessageHandler } from 'chrome/messages/offscreen-messages'
-import { OffScreenMessage } from 'chrome/messages/_types'
-import { sendMessage } from 'chrome/helpers/send-message'
-import { MessageHandler } from 'chrome/messages/message-handler'
+import { OffscreenMessageHandler } from 'chrome/offscreen/message-handler'
+import { MessageClient } from 'chrome/messages/message-client'
+import { Message } from 'chrome/messages/_types'
+import { filter, switchMap, timer, withLatestFrom } from 'rxjs'
 
 const messageRouter = MessagesRouter()
 
@@ -28,25 +28,10 @@ const dAppRequestQueue = Queue<any>({
   logger,
   paused: true,
   worker: Worker((job) => {
+    // TODO: extract message queue logic from connectorClient
     connectorClient.sendMessage(job.data)
     return okAsync(undefined)
   }),
-})
-
-const walletResponseQueue = Queue<any>({
-  key: 'walletResponseQueue',
-  logger,
-  paused: false,
-  worker: Worker((job) =>
-    messageRouter
-      .getTabId(job.data.interactionId)
-      .map((tabId) => createMessage.sendMessageToTab(tabId, job.data))
-      .andThen(sendMessage)
-      .mapErr((error) => {
-        logger.error(`walletResponseQueueError`, { error, job })
-        return { error, shouldRetry: false }
-      })
-  ),
 })
 
 connectorClient.connected$.subscribe((connected) => {
@@ -57,20 +42,57 @@ connectorClient.connected$.subscribe((connected) => {
   }
 })
 
-const messageHandler = MessageHandler({
-  offscreenMessageHandler: OffscreenMessageHandler({
+const messageClient = MessageClient(
+  OffscreenMessageHandler({
     connectorClient,
-    logger,
     dAppRequestQueue,
-    walletResponseQueue,
     messageRouter,
+    logger,
   }),
-})
-
-connectorClient.onMessage$.subscribe((message) =>
-  walletResponseQueue.add(message, message.interactionId)
+  'offScreen',
+  {}
 )
 
-chrome.runtime.onMessage.addListener((message: OffScreenMessage, sender) => {
-  messageHandler.onMessage(message, sender.tab?.id)
+const incomingWalletMessageQueue = Queue<Record<string, any>>({
+  key: 'incomingWalletMessageQueue',
+  logger,
+  paused: false,
+  worker: Worker((job) =>
+    messageClient
+      .handleMessage(createMessage.incomingWalletMessage('wallet', job.data))
+      .mapErr((err) => ({
+        ...err,
+        shouldRetry: false,
+      }))
+  ),
 })
+
+connectorClient.onMessage$.subscribe((message) => {
+  incomingWalletMessageQueue.add(message, message.interactionId)
+})
+
+chrome.runtime.onMessage.addListener((message: Message, sender) => {
+  messageClient.onMessage(message, sender.tab?.id)
+})
+
+const TWO_MINUTES = 120_000
+const everyTwoMinute$ = timer(0, TWO_MINUTES)
+
+everyTwoMinute$
+  .pipe(
+    withLatestFrom(connectorClient.connected$, connectorClient.shouldConnect$),
+    filter(([, connected, shouldConnect]) => !connected && shouldConnect),
+    switchMap(() =>
+      messageClient
+        .sendMessageAndWaitForConfirmation<{ connectionPassword: string }>(
+          createMessage.getConnectionPassword('offScreen')
+        )
+        .map(({ connectionPassword }) => connectionPassword)
+        .andThen((connectionPassword) =>
+          messageClient.handleMessage(
+            createMessage.setConnectionPassword('offScreen', connectionPassword)
+          )
+        )
+    )
+  )
+  .subscribe()

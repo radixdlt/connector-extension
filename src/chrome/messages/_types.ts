@@ -1,103 +1,120 @@
-import { err, ok, Result } from 'neverthrow'
+import { ResultAsync } from 'neverthrow'
 
 export const messageDiscriminator = {
   getConnectionPassword: 'getConnectionPassword',
-  connectionPasswordChange: 'connectionPasswordChange',
+  setConnectionPassword: 'setConnectionPassword',
   dAppRequest: 'dAppRequest',
   ledgerResponse: 'ledgerResponse',
   walletRequest: 'walletRequest',
   walletResponse: 'walletResponse',
+  toContentScript: 'toContentScript',
+  walletMessage: 'walletMessage',
   sendMessageToTab: 'sendMessageToTab',
   detectWalletLink: 'detectWalletLink',
+  confirmation: 'confirmation',
+  incomingDappMessage: 'incomingDappMessage',
+  incomingWalletMessage: 'incomingWalletMessage',
 } as const
 
 export type MessageDiscriminator = typeof messageDiscriminator
 
-export const messageTarget = {
+export const messageSource = {
   offScreen: 'offScreen',
   background: 'background',
   contentScript: 'contentScript',
+  dApp: 'dapp',
+  ledger: 'ledger',
+  wallet: 'wallet',
+  any: 'any',
 } as const
 
-export type MessageTarget = keyof typeof messageTarget
+export type MessageSource = keyof typeof messageSource
 
 export type MessageBuilder<
   D extends keyof typeof messageDiscriminator,
-  Target extends MessageTarget,
-  Payload
+  Content
 > = {
-  target: Target
+  source: MessageSource
   discriminator: D
   messageId: string
-} & Payload
+} & Content
 
-export type OffScreenMessages = {
-  [messageDiscriminator.connectionPasswordChange]: MessageBuilder<
-    MessageDiscriminator['connectionPasswordChange'],
-    'offScreen',
+export type ConfirmationMessageSuccess<T = any> = MessageBuilder<
+  MessageDiscriminator['confirmation'],
+  { success: true; data: T }
+>
+export type ConfirmationMessageError = MessageBuilder<
+  MessageDiscriminator['confirmation'],
+  {
+    success: false
+    error: { reason: string; message?: string; jsError?: Error }
+  }
+>
+
+export type SendMessageWithConfirmation<T = any> = (
+  message: Message,
+  tabId?: number
+) => ResultAsync<
+  ConfirmationMessageSuccess<T>['data'],
+  ConfirmationMessageError['error']
+>
+
+export type Messages = {
+  [messageDiscriminator.confirmation]:
+    | ConfirmationMessageSuccess
+    | ConfirmationMessageError
+
+  [messageDiscriminator.getConnectionPassword]: MessageBuilder<
+    MessageDiscriminator['getConnectionPassword'],
+    {}
+  >
+  [messageDiscriminator.setConnectionPassword]: MessageBuilder<
+    MessageDiscriminator['setConnectionPassword'],
     { connectionPassword?: string }
-  >
-  [messageDiscriminator.dAppRequest]: MessageBuilder<
-    MessageDiscriminator['dAppRequest'],
-    'offScreen',
-    { data: Record<string, any> }
-  >
-  [messageDiscriminator.walletResponse]: MessageBuilder<
-    MessageDiscriminator['walletResponse'],
-    'contentScript',
-    { data: Record<string, any> }
-  >
-}
-
-export type ContentScriptMessages = {
-  [messageDiscriminator.walletResponse]: MessageBuilder<
-    MessageDiscriminator['walletResponse'],
-    'contentScript',
-    { data: Record<string, any> }
-  >
-}
-
-export type BackgroundMessages = {
-  [messageDiscriminator.getConnectionPassword]: MessageBuilder<
-    MessageDiscriminator['getConnectionPassword'],
-    'background',
-    {}
-  >
-  [messageDiscriminator.getConnectionPassword]: MessageBuilder<
-    MessageDiscriminator['getConnectionPassword'],
-    'background',
-    {}
   >
   [messageDiscriminator.sendMessageToTab]: MessageBuilder<
     MessageDiscriminator['sendMessageToTab'],
-    'background',
-    { data: any; tabId: number }
+    { data: Message; tabId: number }
   >
   [messageDiscriminator.detectWalletLink]: MessageBuilder<
     MessageDiscriminator['detectWalletLink'],
-    'background',
     {}
+  >
+  [messageDiscriminator.toContentScript]: MessageBuilder<
+    MessageDiscriminator['toContentScript'],
+    { data: Record<string, any> }
+  >
+  [messageDiscriminator.walletResponse]: MessageBuilder<
+    MessageDiscriminator['walletResponse'],
+    { data: Record<string, any> }
+  >
+  [messageDiscriminator.incomingDappMessage]: MessageBuilder<
+    MessageDiscriminator['incomingDappMessage'],
+    { data: Record<string, any> }
+  >
+  [messageDiscriminator.dAppRequest]: MessageBuilder<
+    MessageDiscriminator['dAppRequest'],
+    { data: Record<string, any> }
+  >
+  [messageDiscriminator.walletMessage]: MessageBuilder<
+    MessageDiscriminator['walletMessage'],
+    { data: Record<string, any> }
+  >
+  [messageDiscriminator.incomingWalletMessage]: MessageBuilder<
+    MessageDiscriminator['incomingWalletMessage'],
+    { data: Record<string, any> }
   >
 }
 
-export type Messages = OffScreenMessages & BackgroundMessages
-
 export type Message = Messages[keyof Messages]
-export type OffScreenMessage = Messages[keyof OffScreenMessages]
-export type BackgroundMessage = Messages[keyof BackgroundMessages]
-export type ContentScriptMessage = Messages[keyof ContentScriptMessages]
 
-export const isOffScreenMessage = (
-  message: any
-): Result<OffScreenMessages, undefined> =>
-  message.target === messageTarget.offScreen ? ok(message) : err(undefined)
+export type MessageHandlerOutput = ReturnType<MessageHandler>
 
-export const isBackgroundMessage = (
-  message: any
-): Result<BackgroundMessages, undefined> =>
-  message.target === messageTarget.background ? ok(message) : err(undefined)
-
-export const isContentScriptMessage = (
-  message: any
-): Result<Message, undefined> =>
-  message.target === messageTarget.contentScript ? ok(message) : err(undefined)
+export type MessageHandler = (
+  message: Message,
+  sendMessageWithConfirmation: SendMessageWithConfirmation,
+  tabId?: number
+) => ResultAsync<
+  { sendConfirmation: boolean; data?: any },
+  ConfirmationMessageError['error']
+>
