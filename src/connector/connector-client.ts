@@ -112,7 +112,12 @@ export const ConnectorClient = (input: {
         webRtcClient.destroy()
       }
 
-      return observables$.pipe(finalize(() => destroy()))
+      return observables$.pipe(
+        finalize(() => {
+          connected.next(false)
+          return destroy()
+        })
+      )
     })
   )
 
@@ -149,19 +154,17 @@ export const ConnectorClient = (input: {
       logger?.debug('🔌🧹 destroying connector client')
       subscriptions.unsubscribe()
     },
-    connectionPassword: (): ResultAsync<string, Error> =>
+    connectionPassword: (): ResultAsync<string, string> =>
       ResultAsync.fromPromise(
         firstValueFrom(
           merge(
             secretsClient.secrets$.pipe(
               map((secrets) => ok(secrets.encryptionKey.toString('hex')))
             ),
-            timer(100).pipe(
-              map(() => err(new Error('missing connection password')))
-            )
+            timer(100).pipe(map(() => err('connectionPasswordNotSet')))
           )
         ),
-        (error) => error as Error
+        (error) => error as string
       ).andThen((result) => result),
   }
 }

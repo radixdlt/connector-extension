@@ -1,44 +1,106 @@
-import { Messages, messageTarget } from './_types'
+import {
+  Messages,
+  ConfirmationMessageError,
+  ConfirmationMessageSuccess,
+  MessageSource,
+  Message,
+} from './_types'
 
 export const createMessage = {
-  connectionPasswordChange: (
+  setConnectionPassword: (
+    source: MessageSource,
     connectionPassword?: string
-  ): Messages['connectionPasswordChange'] => ({
-    discriminator: 'connectionPasswordChange',
+  ): Messages['setConnectionPassword'] => ({
+    discriminator: 'setConnectionPassword',
     messageId: crypto.randomUUID(),
-    target: messageTarget.offScreen,
     connectionPassword,
+    source,
   }),
-  getConnectionPassword: (): Messages['getConnectionPassword'] => ({
+  getConnectionPassword: (
+    source: MessageSource
+  ): Messages['getConnectionPassword'] => ({
     discriminator: 'getConnectionPassword',
     messageId: crypto.randomUUID(),
-    target: messageTarget.background,
+    source,
   }),
-  detectWalletLink: (): Messages['detectWalletLink'] => ({
+  detectWalletLink: (source: MessageSource): Messages['detectWalletLink'] => ({
+    source,
     discriminator: 'detectWalletLink',
     messageId: crypto.randomUUID(),
-    target: messageTarget.background,
   }),
-  dAppRequest: (message: any): Messages['dAppRequest'] => ({
+  dAppRequest: (source: MessageSource, data: any): Messages['dAppRequest'] => ({
+    source,
     discriminator: 'dAppRequest',
     messageId: crypto.randomUUID(),
-    target: messageTarget.offScreen,
-    data: message,
+    data,
   }),
-  walletResponse: (message: any): Messages['walletResponse'] => ({
-    discriminator: 'walletResponse',
+  walletMessage: (
+    source: MessageSource,
+    message: any
+  ): Messages['walletMessage'] => ({
+    source,
+    discriminator: 'walletMessage',
     messageId: crypto.randomUUID(),
-    target: messageTarget.contentScript,
     data: message,
   }),
   sendMessageToTab: (
+    source: MessageSource,
     tabId: number,
-    data: any
+    data: Message
   ): Messages['sendMessageToTab'] => ({
+    source,
     discriminator: 'sendMessageToTab',
     messageId: crypto.randomUUID(),
-    target: messageTarget.background,
     data,
     tabId,
+  }),
+  confirmationSuccess: <T = any>(
+    source: MessageSource,
+    messageId: string,
+    data?: T
+  ): ConfirmationMessageSuccess => ({
+    source,
+    success: true,
+    discriminator: 'confirmation',
+    messageId,
+    data,
+  }),
+  confirmationError: (
+    source: MessageSource,
+    messageId: string,
+    error: ConfirmationMessageError['error']
+  ): ConfirmationMessageError => ({
+    source,
+    success: false,
+    discriminator: 'confirmation',
+    messageId,
+    error,
+  }),
+  walletResponse: (
+    source: MessageSource,
+    data: Record<string, any>
+  ): Messages['walletResponse'] => ({
+    source,
+    discriminator: 'walletResponse',
+    messageId: crypto.randomUUID(),
+    data,
+  }),
+  incomingDappMessage: (
+    source: MessageSource,
+    data: Record<string, any>
+  ): Messages['incomingDappMessage'] => ({
+    source,
+    discriminator: 'incomingDappMessage',
+    messageId: crypto.randomUUID(),
+    data,
+  }),
+  incomingWalletMessage: (
+    source: MessageSource,
+    data: Record<string, any>
+  ): Messages['incomingWalletMessage'] => ({
+    source,
+    discriminator: 'incomingWalletMessage',
+    messageId: crypto.randomUUID(),
+    data,
   }),
 } as const

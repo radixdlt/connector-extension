@@ -113,7 +113,7 @@ describe('Queue', () => {
       logger: undefined,
       worker: Worker((job: Job<any>) => {
         if (job.id === job1.id && job.numberOfRetries === 0)
-          return errAsync({ shouldRetry: true })
+          return errAsync({ shouldRetry: true, reason: '' })
 
         return okAsync(undefined)
       }),

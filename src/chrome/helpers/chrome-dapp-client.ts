@@ -9,6 +9,8 @@ export const messageLifeCycleEvent = {
   receivedByExtension: 'receivedByExtension',
 } as const
 
+export type MessageLifeCycleEvent = keyof typeof messageLifeCycleEvent
+
 export type ChromeDAppClient = ReturnType<typeof ChromeDAppClient>
 export const ChromeDAppClient = () => {
   const sendMessage = (message: Record<string, any>) => {
