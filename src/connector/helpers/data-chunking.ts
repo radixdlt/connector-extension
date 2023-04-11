@@ -1,8 +1,8 @@
 import { config } from 'config'
-import { sha256 } from 'crypto/sha256'
 import { err, ok, Result } from 'neverthrow'
 import { bufferToChunks } from 'utils'
 import { Buffer } from 'buffer'
+import { blake2b } from 'crypto/blake2b'
 
 export type MetaData = {
   packageType: 'metaData'
@@ -57,7 +57,7 @@ export const messageToChunked = (
       )
     )
     .asyncAndThen((chunks) =>
-      sha256(message)
+      blake2b(message)
         .map(
           (buffer): MetaData => ({
             packageType: 'metaData',
@@ -104,9 +104,9 @@ export const Chunked = (metaData: MetaData) => {
 
   const validate = () =>
     concatChunks()
-      .asyncAndThen(sha256)
-      .andThen((sha256Hash) => {
-        const expectedHash = sha256Hash.toString('hex')
+      .asyncAndThen((value) => blake2b(Buffer.from(value, 'utf-8')))
+      .andThen((hash) => {
+        const expectedHash = hash.toString('hex')
         return expectedHash === metaData.hashOfMessage
           ? ok(undefined)
           : err(
