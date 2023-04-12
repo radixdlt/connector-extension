@@ -1,7 +1,7 @@
 import { createMessage } from 'chrome/messages/create-message'
 import { ConnectorClient } from 'connector/connector-client'
 import { MessagesRouter } from 'message-router'
-import { errAsync, okAsync, ResultAsync } from 'neverthrow'
+import { errAsync, okAsync } from 'neverthrow'
 import { Queue } from 'queues/queue'
 import { AppLogger } from 'utils/logger'
 import {
@@ -47,18 +47,7 @@ export const OffscreenMessageHandler = (input: {
         const { interactionId } = message.data
         return messageRouter
           .add(tabId!, interactionId)
-          .asyncAndThen(() =>
-            ResultAsync.combine([
-              dAppRequestQueue.add(message.data, interactionId),
-              sendMessageWithConfirmation(
-                createMessage.getConnectionPassword('offScreen')
-              ).andThen((connectionPassword) =>
-                connectorClient
-                  .setConnectionPassword(connectionPassword)
-                  .mapErr(() => ({ reason: 'setConnectionPasswordError' }))
-              ),
-            ])
-          )
+          .asyncAndThen(() => dAppRequestQueue.add(message.data, interactionId))
           .andThen(() => okAsync({ sendConfirmation: true }))
       }
 
