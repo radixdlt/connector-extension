@@ -1,5 +1,11 @@
 import { config } from 'config'
 import { ConnectorClient } from 'connector/connector-client'
+import {
+  LedgerRequest,
+  LedgerResponse,
+  createLedgerErrorResponse,
+  isLedgerRequest,
+} from 'ledger/schemas'
 import { logger } from 'utils/logger'
 import { Queue } from 'queues/queue'
 import { Worker } from 'queues/worker'
@@ -34,10 +40,21 @@ const dAppRequestQueue = Queue<any>({
   }),
 })
 
+const ledgerToWalletQueue = Queue<LedgerResponse>({
+  key: 'ledgerToWallet',
+  logger,
+  worker: Worker((job) => {
+    connectorClient.sendMessage(job.data)
+    return okAsync(undefined)
+  }),
+})
+
 connectorClient.connected$.subscribe((connected) => {
   if (connected) {
+    ledgerToWalletQueue.start()
     dAppRequestQueue.start()
   } else {
+    ledgerToWalletQueue.stop()
     dAppRequestQueue.stop()
   }
 })
@@ -46,12 +63,33 @@ const messageClient = MessageClient(
   OffscreenMessageHandler({
     connectorClient,
     dAppRequestQueue,
+    ledgerToWalletQueue,
     messageRouter,
     logger,
   }),
   'offScreen',
   {}
 )
+
+const walletToLedgerQueue = Queue<LedgerRequest>({
+  key: 'walletToLedger',
+  logger,
+  worker: Worker((job) =>
+    messageClient
+      .sendMessageAndWaitForConfirmation(
+        createMessage.walletToLedger('offScreen', job.data)
+      )
+      .mapErr(() => {
+        ledgerToWalletQueue.add(
+          createLedgerErrorResponse(job.data, 'ledgerRequestCancelled'),
+          job.data.interactionId
+        )
+        return {
+          reason: 'ledgerRequestCancelled',
+        }
+      })
+  ),
+})
 
 const incomingWalletMessageQueue = Queue<Record<string, any>>({
   key: 'incomingWalletMessageQueue',
@@ -68,6 +106,11 @@ const incomingWalletMessageQueue = Queue<Record<string, any>>({
 })
 
 connectorClient.onMessage$.subscribe((message) => {
+  if (isLedgerRequest(message)) {
+    walletToLedgerQueue.add(message, message.interactionId)
+    return
+  }
+
   incomingWalletMessageQueue.add(message, message.interactionId)
 })
 

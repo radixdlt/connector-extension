@@ -26,6 +26,11 @@ export const Box = styled('div', {
         },
       },
     },
+    maxWidth: {
+      medium: {
+        maxWidth: '500px',
+      },
+    },
     p: {
       xsmall: {
         p: '$xs',
