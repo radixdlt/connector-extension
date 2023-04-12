@@ -1,3 +1,4 @@
+import { LedgerRequest, LedgerResponse } from 'ledger/schemas'
 import { ResultAsync } from 'neverthrow'
 
 export const messageDiscriminator = {
@@ -5,7 +6,7 @@ export const messageDiscriminator = {
   setConnectionPassword: 'setConnectionPassword',
   dAppRequest: 'dAppRequest',
   ledgerResponse: 'ledgerResponse',
-  walletRequest: 'walletRequest',
+  walletToLedger: 'walletToLedger',
   walletResponse: 'walletResponse',
   toContentScript: 'toContentScript',
   walletMessage: 'walletMessage',
@@ -103,6 +104,14 @@ export type Messages = {
   [messageDiscriminator.incomingWalletMessage]: MessageBuilder<
     MessageDiscriminator['incomingWalletMessage'],
     { data: Record<string, any> }
+  >
+  [messageDiscriminator.ledgerResponse]: MessageBuilder<
+    MessageDiscriminator['ledgerResponse'],
+    { data: LedgerResponse }
+  >
+  [messageDiscriminator.walletToLedger]: MessageBuilder<
+    MessageDiscriminator['walletToLedger'],
+    { data: LedgerRequest }
   >
 }
 

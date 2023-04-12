@@ -9,6 +9,10 @@ import {
   MessageHandlerOutput,
 } from '../messages/_types'
 import { getConnectionPassword as getConnectionPasswordFn } from '../helpers/get-connection-password'
+import { config } from 'config'
+import { createOrFocusTab } from 'chrome/helpers/create-or-focus-tab'
+import { sendMessage } from 'chrome/messages/send-message'
+import { createMessage } from 'chrome/messages/create-message'
 
 export type BackgroundMessageHandler = ReturnType<
   typeof BackgroundMessageHandler
@@ -65,6 +69,30 @@ export const BackgroundMessageHandler =
           sendConfirmation: true,
         }))
       }
+
+      case messageDiscriminator.walletToLedger:
+        return createOrFocusTab(config.popup.pages.ledger)
+          .map((tab) => {
+            const tabRemovedListener = (tabId: number) => {
+              if (tabId === tab.id) {
+                chrome.tabs.onRemoved.removeListener(tabRemovedListener)
+                sendMessage(
+                  createMessage.confirmationError('ledger', message.messageId, {
+                    reason: 'tabClosed',
+                  })
+                )
+              }
+            }
+
+            chrome.tabs.onRemoved.addListener(tabRemovedListener)
+
+            return sendMessageWithConfirmation(
+              { ...message, source: 'background' },
+              tab.id
+            )
+          })
+          .map(() => ({ sendConfirmation: true }))
+          .mapErr(() => ({ reason: 'failedToOpenLedgerTab' }))
 
       default:
         return errAsync({

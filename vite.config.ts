@@ -3,6 +3,7 @@ import react from '@vitejs/plugin-react'
 import { crx, defineManifest } from '@crxjs/vite-plugin'
 import tsconfigPaths from 'vite-tsconfig-paths'
 import packageJson from './package.json'
+
 const { version } = packageJson
 
 const isDevToolsActive = !!process.env.DEV_TOOLS
@@ -20,6 +21,7 @@ const manifest = defineManifest(async () => {
   const matches = ['https://*/*']
 
   if (isDevToolsActive) {
+    permissions.push('contextMenus')
     matches.push('http://*/*')
   }
 
@@ -32,7 +34,9 @@ const manifest = defineManifest(async () => {
       default_popup: 'src/pairing/index.html',
     },
     background: {
-      service_worker: `src/chrome/background/background.ts`,
+      service_worker: `src/chrome/background/background${
+        isDevToolsActive ? '-with-dev-tools' : ''
+      }.ts`,
       type: 'module',
     },
     content_scripts: [
@@ -54,14 +58,25 @@ const manifest = defineManifest(async () => {
 
 const buildConfig: UserConfigExport = {
   plugins: [react(), crx({ manifest }), tsconfigPaths()],
+  resolve: {
+    alias: {
+      stream: 'vite-compatible-readable-stream',
+    },
+  },
   build: {
     rollupOptions: {
       input: {
+        ledger: 'src/ledger/index.html',
         pairing: 'src/pairing/index.html',
         offscreen: 'src/chrome/offscreen/index.html',
       },
     },
   },
+}
+
+if (isDevToolsActive) {
+  buildConfig.build.rollupOptions.input['devTools'] =
+    'src/chrome/dev-tools/dev-tools.html'
 }
 
 export default defineConfig(buildConfig)

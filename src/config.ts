@@ -1,9 +1,7 @@
 import { LogLevelNumbers } from 'loglevel'
 import packageJson from '../package.json'
+import './buffer-shim'
 const { version } = packageJson
-import { Buffer } from 'buffer'
-
-globalThis.Buffer = Buffer
 
 const turnServers = {
   test: [
@@ -109,13 +107,16 @@ export const config = {
     chunkSize: 11_500,
     confirmationTimeout: 10_000,
   },
+  devTools: {
+    url: 'src/chrome/dev-tools/dev-tools.html',
+  },
   popup: {
     width: 375,
     height: 559,
     offsetTop: 0,
     pages: {
       pairing: 'src/pairing/index.html',
-      devTools: 'src/chrome/dev-tools/dev-tools.html',
+      ledger: 'src/ledger/index.html',
     },
     closeDelayTime: 700,
     showOnInstall: false,

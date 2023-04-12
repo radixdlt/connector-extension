@@ -9,4 +9,11 @@ export const PopupWindow = styled(Box, {
   display: 'flex',
   flexDirection: 'column',
   justifyContent: 'space-between',
+  variants: {
+    content: {
+      start: {
+        justifyContent: 'flex-start',
+      },
+    },
+  },
 })

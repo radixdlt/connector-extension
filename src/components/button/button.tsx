@@ -19,6 +19,26 @@ export const Button = styled('button', {
   lineHeight: 1.5,
   boxShadow: '0px 4px 4px rgba(0, 0, 0, 0.25)',
   variants: {
+    mt: {
+      large: {
+        marginTop: '$lg',
+      },
+    },
+    mb: {
+      small: {
+        marginBottom: '$sm',
+      },
+    },
+    mr: {
+      small: {
+        marginRight: '$sm',
+      },
+    },
+    ml: {
+      small: {
+        marginLeft: '$sm',
+      },
+    },
     full: {
       true: {
         width: '$1',

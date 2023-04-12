@@ -1,9 +1,11 @@
+import { LedgerRequest, LedgerResponse } from 'ledger/schemas'
 import {
   Messages,
   ConfirmationMessageError,
   ConfirmationMessageSuccess,
   MessageSource,
   Message,
+  messageDiscriminator,
 } from './_types'
 
 export const createMessage = {
@@ -40,6 +42,21 @@ export const createMessage = {
   ): Messages['walletMessage'] => ({
     source,
     discriminator: 'walletMessage',
+    messageId: crypto.randomUUID(),
+    data: message,
+  }),
+  walletToLedger: (
+    source: MessageSource,
+    message: LedgerRequest
+  ): Messages['walletToLedger'] => ({
+    source,
+    discriminator: messageDiscriminator.walletToLedger,
+    messageId: crypto.randomUUID(),
+    data: message,
+  }),
+  ledgerResponse: (message: LedgerResponse): Messages['ledgerResponse'] => ({
+    source: 'ledger',
+    discriminator: messageDiscriminator.ledgerResponse,
     messageId: crypto.randomUUID(),
     data: message,
   }),
