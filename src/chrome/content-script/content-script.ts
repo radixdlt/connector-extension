@@ -14,7 +14,6 @@ const chromeDAppClient = ChromeDAppClient()
 const sendMessageToDapp = (
   message: Record<string, any>
 ): ResultAsync<undefined, ConfirmationMessageError['error']> => {
-  logger.debug('content-script: sendMessageToDapp', { message })
   const result = chromeDAppClient.sendMessage(message)
 
   return result.isErr()
@@ -39,7 +38,7 @@ const messageHandler = MessageClient(
     logger: logger,
   }),
   'contentScript',
-  {}
+  { logger }
 )
 
 chromeDAppClient.messageListener((message) => {
@@ -47,6 +46,5 @@ chromeDAppClient.messageListener((message) => {
 })
 
 chrome.runtime.onMessage.addListener((message: Message) => {
-  logger.debug('content-script: received message', message)
   messageHandler.onMessage(message)
 })

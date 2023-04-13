@@ -1,10 +1,9 @@
-import { getTabById } from 'chrome/helpers/get-tab-by-id'
-import { sendMessageToTab } from 'chrome/helpers/send-message-to-tab'
 import { errAsync, ok, okAsync, ResultAsync } from 'neverthrow'
+import { AppLogger } from 'utils/logger'
 
 export type MessagesRouter = ReturnType<typeof MessagesRouter>
 
-export const MessagesRouter = () => {
+export const MessagesRouter = ({ logger }: { logger: AppLogger }) => {
   const store = new Map<string, number>()
 
   const add = (tabId: number, interactionId: string) => {
@@ -17,18 +16,9 @@ export const MessagesRouter = () => {
     return tabId ? okAsync(tabId) : errAsync(new Error('No tab found'))
   }
 
-  const send = (interactionId: string, message: any) =>
-    getTabId(interactionId).andThen((tabId) =>
-      getTabById(tabId)
-        .andThen(() => sendMessageToTab(tabId, message))
-        .map(() => {
-          store.delete(interactionId)
-        })
-    )
-
   return {
     add,
     getTabId,
-    send,
+    store,
   }
 }

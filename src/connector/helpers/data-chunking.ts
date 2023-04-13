@@ -3,42 +3,7 @@ import { err, ok, Result } from 'neverthrow'
 import { bufferToChunks } from 'utils'
 import { Buffer } from 'buffer'
 import { blake2b } from 'crypto/blake2b'
-
-export type MetaData = {
-  packageType: 'metaData'
-  chunkCount: number
-  hashOfMessage: string
-  messageId: string
-  messageByteCount: number
-}
-
-export type MessageChunk = {
-  packageType: 'chunk'
-  chunkIndex: number
-  chunkData: string
-  messageId: string
-}
-
-export type MessageConfirmation = {
-  packageType: 'receiveMessageConfirmation'
-  messageId: string
-}
-
-type MessageError = 'messageHashesMismatch'
-
-type ChunkedMessageReceiveMessageError = {
-  packageType: 'receiveMessageError'
-  messageId: string
-  error: MessageError
-}
-
-export type MessageErrorTypes = ChunkedMessageReceiveMessageError
-
-export type ChunkedMessageType =
-  | MetaData
-  | MessageChunk
-  | MessageConfirmation
-  | MessageErrorTypes
+import { MessageChunk, MetaData } from 'connector/_types'
 
 export const messageToChunked = (
   message: Buffer,

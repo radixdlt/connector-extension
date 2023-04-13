@@ -41,7 +41,7 @@ const handleStorageChange = (changes: {
 const messageHandler = MessageClient(
   BackgroundMessageHandler({ logger: backgroundLogger }),
   'background',
-  {}
+  { logger: backgroundLogger }
 )
 
 const handleConnectionPasswordChange = (connectionPassword?: string) =>
@@ -61,5 +61,8 @@ chrome.runtime.onMessage.addListener((message, sender) => {
 chrome.storage.onChanged.addListener(handleStorageChange)
 chrome.action.onClicked.addListener(openParingPopup)
 chrome.runtime.onInstalled.addListener(handleOnInstallExtension)
+chrome.runtime.onStartup.addListener(() => {
+  backgroundLogger.debug('onStartup')
+})
 
 createOffscreen()

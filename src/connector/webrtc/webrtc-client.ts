@@ -17,10 +17,9 @@ import {
   tap,
   timer,
 } from 'rxjs'
-import { Message } from 'connector/_types'
+import { ChunkedMessageType, Message } from 'connector/_types'
 import { SignalingClientType } from 'connector/signaling/signaling-client'
 import { MessageSources } from 'io-types/types'
-import { MessageClientType } from 'connector/messages/message-client'
 
 export type WebRtcClient = ReturnType<typeof WebRtcClient>
 
@@ -29,10 +28,11 @@ export const WebRtcClient = (
     shouldCreateOffer: boolean
     logger?: Logger<unknown>
     subjects: WebRtcSubjectsType
-    onMessageSubject: Subject<Message>
+    onDataChannelMessageSubject: Subject<ChunkedMessageType>
+    sendMessageOverDataChannelSubject: Subject<string>
+    onMessage: Subject<Message>
     signalingClient: SignalingClientType
     source: MessageSources
-    messageClient: MessageClientType
     restart: () => void
   }
 ) => {
@@ -64,7 +64,9 @@ export const WebRtcClient = (
     dataChannel,
     logger,
     subjects,
-    onMessageSubject: input.onMessageSubject,
+    onDataChannelMessageSubject: input.onDataChannelMessageSubject,
+    onMessage: input.onMessage,
+    sendMessageOverDataChannelSubject: input.sendMessageOverDataChannelSubject,
   })
 
   const iceCandidateClient = IceCandidateClient({

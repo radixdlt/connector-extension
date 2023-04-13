@@ -1,28 +1,25 @@
 import { err, ok, Result, ResultAsync } from 'neverthrow'
 import {
-  BehaviorSubject,
   filter,
   first,
   firstValueFrom,
   map,
-  merge,
   mergeMap,
-  of,
   Subscription,
-  switchMap,
-  tap,
 } from 'rxjs'
 import { createMessage } from './create-message'
 import {
   ConfirmationMessageError,
   ConfirmationMessageSuccess,
   Message,
+  messageDiscriminator,
   MessageHandler,
   Messages,
   MessageSource,
 } from './_types'
 import { MessageSubjects } from './subjects'
 import { sendMessage as sendMessageFn, SendMessage } from './send-message'
+import { AppLogger } from 'utils/logger'
 
 export type MessageClient = ReturnType<typeof MessageClient>
 
@@ -32,6 +29,7 @@ export const MessageClient = (
   input: {
     subjects?: MessageSubjects
     sendMessage?: SendMessage
+    logger: AppLogger
   }
 ) => {
   const subjects = input.subjects || MessageSubjects()
@@ -40,10 +38,15 @@ export const MessageClient = (
   const subscriptions = new Subscription()
 
   const sendMessageAndWaitForConfirmation = <T = undefined>(
-    message: Message,
+    value: Message,
     tabId?: number
-  ) => {
-    const sendSubject = new BehaviorSubject<number>(0)
+  ): ResultAsync<T, ConfirmationMessageError['error']> => {
+    const shouldProxyMessageThroughBackground =
+      value.source !== 'background' && tabId
+
+    const message = shouldProxyMessageThroughBackground
+      ? createMessage.sendMessageToTab(value.source, tabId, value)
+      : value
 
     const confirmation$ = subjects.messageSubject.pipe(
       filter(
@@ -67,22 +70,11 @@ export const MessageClient = (
       )
     )
 
-    return ResultAsync.fromPromise(
-      firstValueFrom(
-        sendSubject.pipe(
-          switchMap(() =>
-            merge(
-              of(message).pipe(
-                tap(() => sendMessage(message, tabId)),
-                filter((value): value is never => false)
-              ),
-              confirmation$
-            )
-          )
-        )
-      ),
-      (error) => error as ConfirmationMessageError['error']
+    const waitForConfirmation = ResultAsync.fromSafePromise(
+      firstValueFrom(confirmation$)
     ).andThen((result) => result)
+
+    return sendMessage(message, tabId).andThen(() => waitForConfirmation)
   }
 
   const sendConfirmationSuccess = <T = any>({
@@ -139,7 +131,11 @@ export const MessageClient = (
                   origin,
                   messageId: message.messageId,
                   error,
-                  tabId,
+                  tabId:
+                    message.discriminator ===
+                    messageDiscriminator.sendMessageToTab
+                      ? undefined
+                      : tabId,
                 })
             })
         )

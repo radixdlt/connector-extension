@@ -1,7 +1,6 @@
 import { Answer, Offer } from 'io-types/types'
 import { BehaviorSubject, ReplaySubject, Subject } from 'rxjs'
 import { IceCandidateMessage } from 'connector/_types'
-import { ChunkedMessageType } from 'connector/helpers'
 
 export type WebRtcSubjectsType = ReturnType<typeof WebRtcSubjects>
 
@@ -20,7 +19,5 @@ export const WebRtcSubjects = () => ({
   onRemoteAnswerSubject: new Subject<void>(),
   onSignalingStateChangeSubject: new Subject<RTCSignalingState>(),
   dataChannelStatusSubject: new BehaviorSubject<'open' | 'closed'>('closed'),
-  onDataChannelMessageSubject: new Subject<ChunkedMessageType>(),
-  sendMessageOverDataChannelSubject: new Subject<string>(),
   iceConnectionStateSubject: new Subject<RTCIceConnectionState>(),
 })

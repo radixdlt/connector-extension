@@ -1,18 +1,14 @@
 import { config } from 'config'
 import { SecretsClient } from 'connector/secrets-client'
 import { SignalingClient } from 'connector/signaling/signaling-client'
-import { Message } from 'connector/_types'
 import {
-  BehaviorSubject,
   distinctUntilChanged,
   filter,
   finalize,
-  first,
   firstValueFrom,
   iif,
   map,
   merge,
-  Subject,
   Subscription,
   switchMap,
   tap,
@@ -23,11 +19,11 @@ import { MessageSources } from 'io-types/types'
 import { Logger } from 'tslog'
 import { WebRtcSubjects, WebRtcSubjectsType } from './webrtc/subjects'
 import { SignalingSubjects, SignalingSubjectsType } from './signaling/subjects'
-import { MessageClient } from './messages/message-client'
-import { waitForDataChannelStatus } from './webrtc/helpers/wait-for-data-channel-status'
-import { sendMessage } from './messages/helpers/send-message'
-import { ResultAsync } from 'neverthrow'
+import { errAsync, ResultAsync } from 'neverthrow'
 import { errorIdentity } from 'utils/error-identity'
+import { sendMessageOverDataChannelAndWaitForConfirmation } from './webrtc/helpers/send-message-over-data-channel-and-wait-for-confirmation'
+import { ConnectorClientSubjects } from './subjects'
+import { MessageErrorReasons } from './_types'
 
 export type ConnectorClient = ReturnType<typeof ConnectorClient>
 
@@ -39,14 +35,19 @@ export const ConnectorClient = (input: {
   isInitiator: boolean
   createWebRtcSubjects?: () => WebRtcSubjectsType
   createSignalingSubjects?: () => SignalingSubjectsType
+  subjects?: ConnectorClientSubjects
 }) => {
   const logger = input.logger
   logger?.debug(`🔌✨ connector client initiated`)
 
-  const shouldConnectSubject = new BehaviorSubject<boolean>(false)
-  const connected = new BehaviorSubject<boolean>(false)
-  const triggerRestartSubject = new Subject<void>()
-  const onMessageSubject = new Subject<Message>()
+  const subjects = input.subjects || ConnectorClientSubjects()
+  const shouldConnectSubject = subjects.shouldConnectSubject
+  const connected = subjects.connected
+  const triggerRestartSubject = subjects.triggerRestartSubject
+  const onDataChannelMessageSubject = subjects.onDataChannelMessageSubject
+  const onMessage = subjects.onMessage
+  const sendMessageOverDataChannelSubject =
+    subjects.sendMessageOverDataChannelSubject
 
   const createWebRtcSubjects =
     input.createWebRtcSubjects || (() => WebRtcSubjects())
@@ -54,7 +55,6 @@ export const ConnectorClient = (input: {
   const createSignalingSubjects =
     input.createSignalingSubjects || (() => SignalingSubjects())
 
-  const messageClient = MessageClient({ logger })
   const secretsClient = SecretsClient({ logger })
 
   const triggerRestart$ = triggerRestartSubject.pipe(
@@ -87,31 +87,21 @@ export const ConnectorClient = (input: {
         logger,
         shouldCreateOffer: input.isInitiator,
         subjects: createWebRtcSubjects(),
-        onMessageSubject,
+        onDataChannelMessageSubject,
+        sendMessageOverDataChannelSubject,
+        onMessage,
         signalingClient,
         source: input.source,
-        messageClient,
         restart: () => triggerRestartSubject.next(),
       })
-
-      const sendMessages$ = waitForDataChannelStatus(webRtcClient, 'open').pipe(
-        first(),
-        switchMap(() => sendMessage({ messageClient, webRtcClient }))
-      )
-
-      const observables$ = merge(
-        sendMessages$,
-        webRtcClient.dataChannelClient.subjects.dataChannelStatusSubject.pipe(
-          tap((status) => connected.next(status === 'open'))
-        )
-      )
 
       const destroy = () => {
         signalingClient.destroy()
         webRtcClient.destroy()
       }
 
-      return observables$.pipe(
+      return webRtcClient.dataChannelClient.subjects.dataChannelStatusSubject.pipe(
+        tap((status) => connected.next(status === 'open')),
         finalize(() => {
           connected.next(false)
           return destroy()
@@ -146,9 +136,35 @@ export const ConnectorClient = (input: {
     connect: () => shouldConnectSubject.next(true),
     disconnect: () => shouldConnectSubject.next(false),
     shouldConnect$: shouldConnectSubject.asObservable(),
-    sendMessage: (message: Record<string, any>) =>
-      messageClient.addToQueue(message),
-    onMessage$: onMessageSubject.asObservable(),
+    sendMessage: (
+      message: Record<string, any>,
+      options?: Partial<{
+        messageEventCallback: (event: 'messageSent') => void
+        timeout: number
+      }>
+    ): ResultAsync<
+      undefined,
+      {
+        reason: MessageErrorReasons
+        jsError?: Error
+      }
+    > => {
+      if (!connected.getValue()) return errAsync({ reason: 'notConnected' })
+
+      const defaultMessageEventCallback = (event: 'messageSent') => {}
+
+      const messageEventCallback =
+        options?.messageEventCallback || defaultMessageEventCallback
+
+      return sendMessageOverDataChannelAndWaitForConfirmation({
+        message,
+        sendMessageOverDataChannelSubject,
+        onDataChannelMessageSubject,
+        messageEventCallback,
+        timeout: options?.timeout,
+      })
+    },
+    onMessage$: onMessage.asObservable(),
     destroy: () => {
       logger?.debug('🔌🧹 destroying connector client')
       subscriptions.unsubscribe()
