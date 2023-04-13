@@ -57,3 +57,46 @@ export type Status =
   | 'connected'
   | 'disconnected'
   | 'disconnecting'
+
+export type MetaData = {
+  packageType: 'metaData'
+  chunkCount: number
+  hashOfMessage: string
+  messageId: string
+  messageByteCount: number
+}
+
+export type MessageChunk = {
+  packageType: 'chunk'
+  chunkIndex: number
+  chunkData: string
+  messageId: string
+}
+
+export type MessageConfirmation = {
+  packageType: 'receiveMessageConfirmation'
+  messageId: string
+}
+
+export const messageErrorReasons = {
+  notConnected: 'notConnected',
+  failedToSendMessage: 'failedToSendMessage',
+  failedToPrepareMessage: 'failedToPrepareMessage',
+  timeout: 'timeout',
+} as const
+
+export type MessageErrorReasons = keyof typeof messageErrorReasons
+
+export type ChunkedMessageReceiveMessageError = {
+  packageType: 'receiveMessageError'
+  messageId: string
+  error: MessageErrorReasons
+}
+
+export type MessageErrorTypes = ChunkedMessageReceiveMessageError
+
+export type ChunkedMessageType =
+  | MetaData
+  | MessageChunk
+  | MessageConfirmation
+  | MessageErrorTypes

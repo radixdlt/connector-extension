@@ -24,7 +24,7 @@ export const BackgroundMessageHandler =
     closePopup = closePopupFn,
     openParingPopup = openParingPopupFn,
   }: Partial<{
-    logger: AppLogger
+    logger?: AppLogger
     getConnectionPassword: () => ResultAsync<any, Error>
     closePopup: () => ResultAsync<any, Error>
     openParingPopup: () => ResultAsync<any, Error>

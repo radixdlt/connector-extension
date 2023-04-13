@@ -4,20 +4,24 @@ import {
   SignalingSubjects,
   SignalingSubjectsType,
 } from 'connector/signaling/subjects'
+import { ConnectorClientSubjects } from 'connector/subjects'
 import { WebRtcSubjects, WebRtcSubjectsType } from 'connector/webrtc/subjects'
 import { Status } from 'connector/_types'
-import { filter, firstValueFrom } from 'rxjs'
+import { filter, firstValueFrom, Subject } from 'rxjs'
 import { delayAsync } from 'test-utils/delay-async'
 import { Logger } from 'tslog'
 
 describe('connector client', () => {
   let extensionLogger = new Logger({ name: 'extensionConnector', minLevel: 2 })
   let walletLogger = new Logger({ name: 'walletConnector', minLevel: 2 })
+  let walletConnectorSubjects: ConnectorClientSubjects
+  let extensionConnectorSubjects: ConnectorClientSubjects
   let extensionConnector: ConnectorClient
   let walletConnector: ConnectorClient
   let extensionWebRtcSubjects: WebRtcSubjectsType
   let walletWebRtcSubjects: WebRtcSubjectsType
   let extensionSignalingSubjects: SignalingSubjectsType
+
   const password = Buffer.from(
     '9e47e1afc8a02b626cb4db4c4c7d92a0f3a58949eded93f87b0a966bf9075b3f',
     'hex'
@@ -48,6 +52,7 @@ describe('connector client', () => {
       signalingServerBaseUrl: config.signalingServer.baseUrl,
       logger: extensionLogger,
       isInitiator: false,
+      subjects: extensionConnectorSubjects,
       createSignalingSubjects: () => extensionSignalingSubjects,
       createWebRtcSubjects: () => extensionWebRtcSubjects,
     })
@@ -59,6 +64,7 @@ describe('connector client', () => {
       target: 'extension',
       signalingServerBaseUrl: config.signalingServer.baseUrl,
       // logger: walletLogger,
+      subjects: walletConnectorSubjects,
       isInitiator: true,
       createWebRtcSubjects: () => walletWebRtcSubjects,
     })
@@ -68,6 +74,8 @@ describe('connector client', () => {
     extensionLogger.settings.minLevel = 2
     walletLogger.settings.minLevel = 2
 
+    walletConnectorSubjects = ConnectorClientSubjects()
+    extensionConnectorSubjects = ConnectorClientSubjects()
     extensionWebRtcSubjects = WebRtcSubjects()
     extensionSignalingSubjects = SignalingSubjects()
     walletWebRtcSubjects = WebRtcSubjects()
@@ -140,11 +148,13 @@ describe('connector client', () => {
     ).toBe('connected')
   })
 
-  it('should queue a message and send it after data channel has opened', async () => {
+  it('should fail to send a message if data channel is closed', async () => {
     createExtensionConnector()
     createWalletConnector()
 
-    extensionConnector.sendMessage({ foo: 'bar' })
+    const result = await extensionConnector.sendMessage({ foo: 'bar' })
+
+    expect(result.isErr() && result.error.reason).toBe('notConnected')
 
     extensionConnector.setConnectionPassword(password)
     extensionConnector.connect()
@@ -154,9 +164,9 @@ describe('connector client', () => {
 
     await waitForDataChannelStatus(extensionWebRtcSubjects, 'open')
 
-    expect(await firstValueFrom(walletConnector.onMessage$)).toEqual({
-      foo: 'bar',
-    })
+    const result2 = await extensionConnector.sendMessage({ foo: 'bar' })
+
+    expect(result2.isOk() && result2.value).toBe(undefined)
   })
 
   it('should open data channel and send message', async () => {
@@ -171,14 +181,23 @@ describe('connector client', () => {
 
     await waitForDataChannelStatus(extensionWebRtcSubjects, 'open')
 
-    extensionConnector.sendMessage({ foo: 'bar' })
+    const messageEventSubject = new Subject<string>()
 
-    await firstValueFrom(
-      extensionWebRtcSubjects.onDataChannelMessageSubject.pipe(
-        filter(
-          (message) => message.packageType === 'receiveMessageConfirmation'
+    await Promise.all([
+      extensionConnector.sendMessage(
+        { foo: 'bar' },
+        { messageEventCallback: (event) => messageEventSubject.next(event) }
+      ),
+      firstValueFrom(
+        messageEventSubject.pipe(filter((event) => event === 'messageSent'))
+      ),
+      firstValueFrom(
+        extensionConnectorSubjects.onDataChannelMessageSubject.pipe(
+          filter(
+            (message) => message.packageType === 'receiveMessageConfirmation'
+          )
         )
-      )
-    )
+      ),
+    ])
   })
 })

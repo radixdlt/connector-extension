@@ -100,7 +100,7 @@ export const Queue = <T>({
   ): ResultAsync<undefined, QueueInteractionError> =>
     transformState(state)
       .asyncAndThen((data) => {
-        logger?.trace('saveState', data.ids)
+        logger?.trace(`[${key}] saveState`, data.ids)
         return storage.setData(key, data)
       })
       .mapErr(() => ({ reason: 'SaveStateError' }))
@@ -109,7 +109,7 @@ export const Queue = <T>({
     job: Job<T>,
     state: QueueState<T>
   ): ResultAsync<QueueState<T>, never> => {
-    logger?.debug('addJob', { job })
+    logger?.debug(`[${key}] addJob`, { job })
     state.items.set(job.id, { ...job, updatedAt: Date.now() })
     state.ids.pending.add(job.id)
     return okAsync(state)
@@ -127,7 +127,7 @@ export const Queue = <T>({
     numberOfRetries?: number
   }): ResultAsync<QueueState<T>, QueueInteractionError> => {
     const jobId = job.id
-    logger?.debug('updateJobStatus', {
+    logger?.debug(`[${key}] updateJobStatus`, {
       jobId: job.id,
       fromStatus: job.status,
       toStatus: status,
@@ -148,7 +148,7 @@ export const Queue = <T>({
     jobId: string,
     state: QueueState<T>
   ): ResultAsync<QueueState<T>, QueueInteractionError> => {
-    logger?.debug('removeJob', {
+    logger?.debug(`[${key}] removeJob`, {
       jobId,
     })
 

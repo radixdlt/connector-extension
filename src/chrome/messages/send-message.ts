@@ -4,7 +4,6 @@ import { ConfirmationMessageError, Message } from './_types'
 import { getTabById } from 'chrome/helpers/get-tab-by-id'
 import { sendMessage as chromeSendMessage } from 'chrome/helpers/send-message'
 import { sendMessageToTab as chromeSendMessageToTab } from 'chrome/helpers/send-message-to-tab'
-import { createMessage } from './create-message'
 
 export type SendMessage = typeof sendMessage
 export const sendMessage = (
@@ -12,10 +11,8 @@ export const sendMessage = (
   tabId?: number
 ): ResultAsync<undefined, ConfirmationMessageError['error']> => {
   const canSendMessageToTab = message.source === 'background' && tabId
-  const shouldProxyMessageThroughBackground =
-    message.source !== 'background' && tabId
 
-  if (canSendMessageToTab)
+  if (canSendMessageToTab) {
     return getTabById(tabId)
       .mapErr((error) => ({
         reason: 'tabNotFound',
@@ -28,12 +25,9 @@ export const sendMessage = (
           jsError: error,
         }))
       )
+  }
 
-  return chromeSendMessage(
-    shouldProxyMessageThroughBackground
-      ? createMessage.sendMessageToTab(message.source, tabId, message)
-      : message
-  ).mapErr((error) => ({
+  return chromeSendMessage(message).mapErr((error) => ({
     reason: 'couldNotSendMessage',
     jsError: error,
   }))
