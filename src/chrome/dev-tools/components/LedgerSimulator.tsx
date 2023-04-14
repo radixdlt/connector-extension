@@ -18,10 +18,8 @@ import { compiledTxHex } from '../example'
 const secp256k1 = new Elliptic('secp256k1')
 const ed25519 = new Elliptic('ed25519')
 
-const buf2hex = (buffer: any) =>
-  [...new Uint8Array(buffer)]
-    .map((x) => x.toString(16).padStart(2, '0'))
-    .join('')
+const arrayBuffer2hex = (buffer: ArrayBuffer) =>
+  Buffer.from(new Uint8Array(buffer)).toString('hex')
 
 export const LedgerSimulator = () => {
   const [seed, setSeed] = useState<string>(
@@ -48,9 +46,10 @@ export const LedgerSimulator = () => {
       Buffer.from(publicKey, 'hex')
     )
     const hashed2 = await crypto.subtle.digest('SHA-256', hashed)
+
     const response = createLedgerDeviceIdResponse(
       { interactionId, discriminator: 'getDeviceInfo' },
-      buf2hex(hashed2),
+      arrayBuffer2hex(hashed2),
       device
     )
     sendMessage(createMessage.ledgerResponse(response))

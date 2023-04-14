@@ -49,27 +49,19 @@ const ledgerToWalletQueue = Queue<LedgerResponse>({
   }),
 })
 
-connectorClient.connected$.subscribe((connected) => {
-  if (connected) {
-    ledgerToWalletQueue.start()
-    dAppRequestQueue.start()
-  } else {
-    ledgerToWalletQueue.stop()
-    dAppRequestQueue.stop()
-  }
+const incomingWalletMessageQueue = Queue<Record<string, any>>({
+  key: 'incomingWalletMessageQueue',
+  logger,
+  paused: false,
+  worker: Worker((job) =>
+    messageClient
+      .handleMessage(createMessage.incomingWalletMessage('wallet', job.data))
+      .mapErr((err) => ({
+        ...err,
+        shouldRetry: false,
+      }))
+  ),
 })
-
-const messageClient = MessageClient(
-  OffscreenMessageHandler({
-    connectorClient,
-    dAppRequestQueue,
-    ledgerToWalletQueue,
-    messageRouter,
-    logger,
-  }),
-  'offScreen',
-  {}
-)
 
 const walletToLedgerQueue = Queue<LedgerRequest>({
   key: 'walletToLedger',
@@ -91,27 +83,32 @@ const walletToLedgerQueue = Queue<LedgerRequest>({
   ),
 })
 
-const incomingWalletMessageQueue = Queue<Record<string, any>>({
-  key: 'incomingWalletMessageQueue',
-  logger,
-  paused: false,
-  worker: Worker((job) =>
-    messageClient
-      .handleMessage(createMessage.incomingWalletMessage('wallet', job.data))
-      .mapErr((err) => ({
-        ...err,
-        shouldRetry: false,
-      }))
-  ),
+connectorClient.connected$.subscribe((connected) => {
+  if (connected) {
+    ledgerToWalletQueue.start()
+    dAppRequestQueue.start()
+  } else {
+    ledgerToWalletQueue.stop()
+    dAppRequestQueue.stop()
+  }
 })
 
-connectorClient.onMessage$.subscribe((message) => {
-  if (isLedgerRequest(message)) {
-    walletToLedgerQueue.add(message, message.interactionId)
-    return
-  }
+const messageClient = MessageClient(
+  OffscreenMessageHandler({
+    connectorClient,
+    dAppRequestQueue,
+    ledgerToWalletQueue,
+    walletToLedgerQueue,
+    incomingWalletMessageQueue,
+    messageRouter,
+    logger,
+  }),
+  'offScreen',
+  {}
+)
 
-  incomingWalletMessageQueue.add(message, message.interactionId)
+connectorClient.onMessage$.subscribe((message) => {
+  messageClient.onMessage(createMessage.walletMessage('wallet', message))
 })
 
 chrome.runtime.onMessage.addListener((message: Message, sender) => {
