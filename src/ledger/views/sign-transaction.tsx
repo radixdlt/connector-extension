@@ -15,8 +15,7 @@ export const SignTransaction = ({
   const [isLoading, setIsLoading] = useState<boolean>(false)
 
   const signTransaction = async () => {
-    setIsLoading(true)
-    setIsLoading(false)
+    // TODO: implement transaction signing on ledger
   }
 
   return (

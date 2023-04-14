@@ -72,7 +72,7 @@ export const BackgroundMessageHandler =
 
       case messageDiscriminator.walletToLedger:
         return createOrFocusTab(config.popup.pages.ledger)
-          .map((tab) => {
+          .andThen((tab) => {
             const tabRemovedListener = (tabId: number) => {
               if (tabId === tab.id) {
                 chrome.tabs.onRemoved.removeListener(tabRemovedListener)
