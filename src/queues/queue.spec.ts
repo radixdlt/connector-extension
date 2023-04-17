@@ -64,6 +64,26 @@ describe('Queue', () => {
     expect(result.value.ids.pending.has(job.id)).toBeFalsy()
   })
 
+  it('should cancel job', async () => {
+    const queue = CreateQueue({})
+    const job = createRandomJob()
+
+    await queue.add(job, job.id)
+
+    let result = await queue.getState()
+    if (result.isErr()) throw result.error
+
+    expect(result.value.ids.pending.has(job.id)).toBeTruthy()
+
+    await queue.cancel(job.id)
+
+    result = await queue.getState()
+    if (result.isErr()) throw result.error
+
+    expect(result.value.ids.completed.has(job.id)).toBeTruthy()
+    expect(result.value.items.get(job.id)?.canceled).toBeTruthy()
+  })
+
   it('should not add job with same id multiple times', async () => {
     const queue = CreateQueue({})
     const job = createRandomJob()

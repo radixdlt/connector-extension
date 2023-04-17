@@ -188,6 +188,20 @@ export const Queue = <T>({
               numberOfRetries: job.numberOfRetries + 1,
             })
           )
+
+        case queueInteractions.cancelJob:
+          return getJobById(interaction.jobId).andThen((job) => {
+            if (job.status === 'pending')
+              return updateJobStatusQueueInteraction({
+                job: { ...job, canceled: true },
+                state,
+                status: 'completed',
+              })
+
+            return errAsync({
+              reason: queueInteractionErrorType.FailedToCancelJobError,
+            })
+          })
       }
     }
 
@@ -209,6 +223,7 @@ export const Queue = <T>({
               numberOfRetries: 0,
               createdAt: Date.now(),
               updatedAt: Date.now(),
+              canceled: false,
             },
             jobId: id,
             interactionId: crypto.randomUUID(),
@@ -362,5 +377,15 @@ export const Queue = <T>({
     getState,
     destroy: () => subscriptions.unsubscribe(),
     subjects,
+    cancel: (jobId: string) =>
+      getJobById(jobId)
+        .andThen(() =>
+          addQueueInteractionAndWaitForStateUpdate({
+            interaction: 'cancelJob',
+            jobId,
+            interactionId: crypto.randomUUID(),
+          }).mapErr((err) => err.error)
+        )
+        .map(() => undefined),
   }
 }

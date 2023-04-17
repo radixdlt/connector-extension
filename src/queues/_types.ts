@@ -31,6 +31,7 @@ export type Job<T> = {
   numberOfRetries: number
   createdAt: number
   updatedAt: number
+  canceled: boolean
 }
 
 export const queueInteractions = {
@@ -38,6 +39,7 @@ export const queueInteractions = {
   removeJob: 'removeJob',
   updateJobStatus: 'updateJobStatus',
   retryJob: 'retryJob',
+  cancelJob: 'cancelJob',
 } as const
 
 export type QueueInteractions = typeof queueInteractions
@@ -50,6 +52,7 @@ export const queueInteractionErrorType = {
   UpdateJobStatusError: 'UpdateJobStatusError',
   JobAlreadyExistsError: 'JobAlreadyExistsError',
   JobNotFoundError: 'JobNotFoundError',
+  FailedToCancelJobError: 'FailedToCancelJobError',
 } as const
 
 export type QueueInteractionError = {
@@ -76,6 +79,11 @@ export type QueueInteraction<T> =
     }
   | {
       interaction: QueueInteractions['removeJob']
+      jobId: string
+      interactionId: string
+    }
+  | {
+      interaction: QueueInteractions['cancelJob']
       jobId: string
       interactionId: string
     }
