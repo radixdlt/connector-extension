@@ -1,3 +1,4 @@
+import { MessageLifeCycleEvent } from 'chrome/dapp/_types'
 import { LedgerRequest, LedgerResponse } from 'ledger/schemas'
 import { ResultAsync } from 'neverthrow'
 
@@ -15,6 +16,7 @@ export const messageDiscriminator = {
   confirmation: 'confirmation',
   incomingDappMessage: 'incomingDappMessage',
   incomingWalletMessage: 'incomingWalletMessage',
+  sendMessageEventToDapp: 'sendMessageEventToDapp',
 } as const
 
 export type MessageDiscriminator = typeof messageDiscriminator
@@ -64,6 +66,11 @@ export type Messages = {
   [messageDiscriminator.confirmation]:
     | ConfirmationMessageSuccess
     | ConfirmationMessageError
+
+  [messageDiscriminator.sendMessageEventToDapp]: MessageBuilder<
+    MessageDiscriminator['sendMessageEventToDapp'],
+    { messageEvent: MessageLifeCycleEvent; interactionId: string }
+  >
 
   [messageDiscriminator.getConnectionPassword]: MessageBuilder<
     MessageDiscriminator['getConnectionPassword'],

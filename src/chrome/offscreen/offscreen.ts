@@ -34,6 +34,20 @@ const dAppRequestQueue = Queue<any>({
   worker: Worker((job) =>
     connectorClient
       .sendMessage(job.data, { timeout: config.webRTC.confirmationTimeout })
+      .map(() =>
+        messageRouter
+          .getTabId(job.data.interactionId)
+          .andThen((tabId) =>
+            messageClient.sendMessageAndWaitForConfirmation(
+              createMessage.sendMessageEventToDapp(
+                'offScreen',
+                'receivedByWallet',
+                job.data.interactionId
+              ),
+              tabId
+            )
+          )
+      )
       .mapErr((error) => {
         const retryIfNotConnected = error.reason === 'notConnected'
         const retryIfMessageFailed = job.numberOfRetries < 3

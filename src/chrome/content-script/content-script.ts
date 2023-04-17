@@ -1,13 +1,11 @@
-import {
-  ChromeDAppClient,
-  MessageLifeCycleEvent,
-} from '../helpers/chrome-dapp-client'
+import { ChromeDAppClient } from '../dapp/dapp-client'
 import { ContentScriptMessageHandler } from './message-handler'
 import { createMessage } from '../messages/create-message'
 import { MessageClient } from '../messages/message-client'
 import { ConfirmationMessageError, Message } from '../messages/_types'
 import { errAsync, okAsync, ResultAsync } from 'neverthrow'
 import { logger } from 'utils/logger'
+import { MessageLifeCycleEvent } from 'chrome/dapp/_types'
 
 const chromeDAppClient = ChromeDAppClient()
 
