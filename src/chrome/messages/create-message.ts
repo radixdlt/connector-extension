@@ -7,6 +7,7 @@ import {
   Message,
   messageDiscriminator,
 } from './_types'
+import { MessageLifeCycleEvent } from 'chrome/dapp/_types'
 
 export const createMessage = {
   setConnectionPassword: (
@@ -119,5 +120,16 @@ export const createMessage = {
     discriminator: 'incomingWalletMessage',
     messageId: crypto.randomUUID(),
     data,
+  }),
+  sendMessageEventToDapp: (
+    source: MessageSource,
+    messageEvent: MessageLifeCycleEvent,
+    interactionId: string
+  ): Messages['sendMessageEventToDapp'] => ({
+    source,
+    discriminator: 'sendMessageEventToDapp',
+    messageId: crypto.randomUUID(),
+    messageEvent,
+    interactionId,
   }),
 } as const

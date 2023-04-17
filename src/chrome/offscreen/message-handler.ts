@@ -68,8 +68,24 @@ export const OffscreenMessageHandler = (input: {
         const { interactionId } = message.data
         return messageRouter
           .add(tabId!, interactionId)
-          .asyncAndThen(() => dAppRequestQueue.add(message.data, interactionId))
-          .andThen(() => okAsync({ sendConfirmation: true }))
+          .asyncAndThen(() => {
+            if (message.data?.items?.discriminator === 'cancelRequest')
+              return dAppRequestQueue
+                .cancel(interactionId)
+                .andThen(() =>
+                  sendMessageWithConfirmation(
+                    createMessage.sendMessageEventToDapp(
+                      'offScreen',
+                      'requestCancelSuccess',
+                      interactionId
+                    ),
+                    tabId!
+                  )
+                )
+
+            return dAppRequestQueue.add(message.data, interactionId)
+          })
+          .map(() => ({ sendConfirmation: true }))
       }
 
       case messageDiscriminator.incomingWalletMessage:

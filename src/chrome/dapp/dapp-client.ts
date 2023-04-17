@@ -1,15 +1,5 @@
+import { MessageLifeCycleEvent, dAppEvent } from 'chrome/dapp/_types'
 import { ok } from 'neverthrow'
-
-const dAppEvent = {
-  receive: 'radix#chromeExtension#receive',
-  send: 'radix#chromeExtension#send',
-} as const
-
-export const messageLifeCycleEvent = {
-  receivedByExtension: 'receivedByExtension',
-} as const
-
-export type MessageLifeCycleEvent = keyof typeof messageLifeCycleEvent
 
 export type ChromeDAppClient = ReturnType<typeof ChromeDAppClient>
 export const ChromeDAppClient = () => {
@@ -24,7 +14,7 @@ export const ChromeDAppClient = () => {
 
   const sendMessageEvent = (
     interactionId: string,
-    eventType: keyof typeof messageLifeCycleEvent
+    eventType: MessageLifeCycleEvent
   ) =>
     sendMessage({
       interactionId,

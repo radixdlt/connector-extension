@@ -1,4 +1,3 @@
-import { MessageLifeCycleEvent } from 'chrome/helpers/chrome-dapp-client'
 import { addMetadata } from 'chrome/helpers/add-metadata'
 import { errAsync, ResultAsync } from 'neverthrow'
 import { createMessage } from '../messages/create-message'
@@ -11,6 +10,7 @@ import {
   SendMessageWithConfirmation,
 } from '../messages/_types'
 import { AppLogger } from 'utils/logger'
+import { MessageLifeCycleEvent } from 'chrome/dapp/_types'
 
 export type ContentScriptMessageHandlerOptions = {
   logger?: AppLogger
@@ -36,6 +36,14 @@ export const ContentScriptMessageHandler =
     sendMessageWithConfirmation: SendMessageWithConfirmation
   ): MessageHandlerOutput => {
     switch (message.discriminator) {
+      case messageDiscriminator.sendMessageEventToDapp:
+        return sendMessageEventToDapp(
+          message.interactionId,
+          message.messageEvent
+        ).map(() => ({
+          sendConfirmation: true,
+        }))
+
       case messageDiscriminator.walletResponse: {
         return sendMessageToDapp(message.data).map(() => ({
           sendConfirmation: true,
