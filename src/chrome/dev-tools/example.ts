@@ -34,7 +34,7 @@ export const getDerivePublicKeyPayload = () => ({
   },
   ledgerDevice: {
     name: 'My Ledger Device',
-    model: '',
+    model: 'nanoS',
     id: '305495ba0fdfd3c400568ce7a2f4e4d446f3cd8b305a9d7b43f4e4257d71a248',
   },
 })
@@ -48,11 +48,11 @@ export const getSignTransactionPayload = () => ({
   },
   ledgerDevice: {
     name: 'My Ledger Device',
-    model: '',
+    model: 'nanoS',
     id: '305495ba0fdfd3c400568ce7a2f4e4d446f3cd8b305a9d7b43f4e4257d71a248',
   },
   compiledTransactionIntent: compiledTxHex.createAccount,
-  mode: 'verbose | summary',
+  mode: 'verbose',
 })
 
 export const getSignChallengePayload = () => ({
@@ -64,7 +64,7 @@ export const getSignChallengePayload = () => ({
   },
   ledgerDevice: {
     name: 'My Ledger Device',
-    model: '',
+    model: 'nanoS',
     id: '305495ba0fdfd3c400568ce7a2f4e4d446f3cd8b305a9d7b43f4e4257d71a248',
   },
   challenge: '',

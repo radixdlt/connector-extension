@@ -7,7 +7,7 @@ import {
 } from 'ledger/schemas'
 import { PairingHeader } from 'pairing/components/pairing-header'
 import { useState } from 'react'
-import { getDeviceInfo as ledgerGetDeviceInfo } from 'ledger/ledger-wrapper'
+import { ledger } from 'ledger/ledger-wrapper'
 
 export const NewHardwareWallet = ({
   message,
@@ -22,7 +22,7 @@ export const NewHardwareWallet = ({
   const getDeviceInfo = async () => {
     setIsLoading(true)
 
-    const deviceInfo = await ledgerGetDeviceInfo()
+    const deviceInfo = await ledger.getDeviceInfo()
 
     if (deviceInfo.isOk()) {
       respond(
