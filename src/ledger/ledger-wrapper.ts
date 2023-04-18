@@ -2,11 +2,19 @@ import { err, ok, okAsync, ResultAsync } from 'neverthrow'
 import {
   LedgerImportOlympiaDeviceRequest,
   LedgerPublicKeyRequest,
+  LedgerSignTransactionRequest,
 } from './schemas'
 import TransportWebHID from '@ledgerhq/hw-transport-webhid'
 import { logger } from 'utils/logger'
+import { bufferToChunks } from 'utils/buffer-to-chunks'
 
 type Values<T> = T[keyof T]
+
+const LedgerInstructionClass = {
+  aa: 'aa',
+  ab: 'ab',
+  ac: 'ac',
+}
 
 const LedgerErrorResponse = {
   FailedToCreateTransport: 'FailedToCreateTransport',
@@ -22,7 +30,10 @@ const LedgerInstructionCode = {
   GetDeviceId: '12',
   GetPubKeyEd25519: '21',
   GetPubKeySecp256k1: '31',
-  SignTx: '41',
+  SignTxEd255519: '41',
+  SignTxEd255519Smart: '42',
+  SignTxSecp256k1: '51',
+  SignTxSecp256k1Smart: '52',
 } as const
 
 type LedgerError = Values<typeof LedgerErrorResponse>
@@ -57,6 +68,9 @@ export const encodeHdPath = (hdPath: string) => {
   return `${length}${parts}`
 }
 
+export const getDataLength = (data: string) =>
+  Math.floor(data.length / 2).toString(16)
+
 const createLedgerTransport = () =>
   ResultAsync.fromPromise(
     TransportWebHID.list(),
@@ -74,9 +88,15 @@ const createLedgerTransport = () =>
         TransportWebHID.create(),
         () => errorResponses[LedgerErrorResponse.FailedToCreateTransport]
       ).map((transport) => {
-        const exchange = (command: LedgerInstruction, data = '') =>
+        const exchange = (
+          command: LedgerInstruction,
+          data = '',
+          instructionClass = LedgerInstructionClass.aa
+        ) =>
           ResultAsync.fromPromise(
-            transport.exchange(Buffer.from(`aa${command}0000${data}`, 'hex')),
+            transport.exchange(
+              Buffer.from(`${instructionClass}${command}0000${data}`, 'hex')
+            ),
             () => errorResponses[LedgerErrorResponse.FailedToExchangeData]
           ).andThen((buffer) => {
             const stringifiedResponse = buffer.toString('hex')
@@ -113,7 +133,7 @@ export const getOlympiaDeviceInfo = (
                 path
               ) => {
                 const bip32Data = encodeHdPath(path)
-                const dataLength = Math.floor(bip32Data.length / 2).toString(16)
+                const dataLength = getDataLength(bip32Data)
 
                 return acc.andThen((publicKeys: any) =>
                   exchange(
@@ -162,7 +182,7 @@ export const getPublicKey = (params: LedgerPublicKeyRequest) =>
           return err(errorResponses[LedgerErrorResponse.DeviceMismatch])
         }
         const bip32Data = encodeHdPath(params.keyParameters.derivationPath)
-        const dataLength = Math.floor(bip32Data.length / 2).toString(16)
+        const dataLength = getDataLength(bip32Data)
         return exchange(
           params.keyParameters.curve === 'curve25519'
             ? LedgerInstructionCode.GetPubKeyEd25519
@@ -176,3 +196,66 @@ export const getPublicKey = (params: LedgerPublicKeyRequest) =>
         return error
       })
   )
+
+export const signTransaction = (params: LedgerSignTransactionRequest) => {
+  let command: LedgerInstruction =
+    params.keyParameters.curve === 'curve25519'
+      ? LedgerInstructionCode.SignTxEd255519
+      : LedgerInstructionCode.SignTxSecp256k1
+
+  if (params.mode === 'summary') {
+    command = String(Number(command) + 1) as LedgerInstruction
+  }
+
+  return createLedgerTransport().andThen(({ closeTransport, exchange }) =>
+    exchange(LedgerInstructionCode.GetDeviceId)
+      .andThen((deviceId) => {
+        if (deviceId !== params.ledgerDevice.id) {
+          return err(errorResponses[LedgerErrorResponse.DeviceMismatch])
+        }
+
+        const bip32Data = encodeHdPath(params.keyParameters.derivationPath)
+        const dataLength = getDataLength(bip32Data)
+        const data = bufferToChunks(
+          Buffer.from(params.compiledTransactionIntent, 'hex'),
+          255
+        )
+        if (data.isErr()) return err('error chunking data')
+
+        const chunks = data.value.map((chunk, index) => ({
+          chunk: chunk.toString('hex'),
+          instructionClass:
+            index === data.value.length - 1
+              ? LedgerInstructionClass.ac
+              : LedgerInstructionClass.ab,
+        }))
+
+        return exchange(command, `${dataLength}${bip32Data}`)
+          .andThen(() =>
+            chunks.reduce(
+              (
+                acc: ResultAsync<string[], string>,
+                { chunk, instructionClass }
+              ) =>
+                acc.andThen((results) => {
+                  const chunkLength = getDataLength(chunk)
+
+                  return exchange(
+                    command,
+                    `${chunkLength}${chunk}`,
+                    instructionClass
+                  ).map((result) => [...results, result])
+                }),
+              okAsync([])
+            )
+          )
+          .map((results) => results.filter((result) => result !== ''))
+          .map((results) => results[0])
+      })
+      .andThen((result) => closeTransport().map(() => result))
+      .mapErr((error) => {
+        closeTransport()
+        return error
+      })
+  )
+}
