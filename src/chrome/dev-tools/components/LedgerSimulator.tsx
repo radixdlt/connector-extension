@@ -111,7 +111,7 @@ export const LedgerSimulator = () => {
   }
 
   const sendImportOlympiaDeviceResponse = async () => {
-    const wallet = createRadixWallet({ seed, curve: 'ed25519' })
+    const wallet = createRadixWallet({ seed, curve: 'secp256k1' })
     const id = arrayBuffer2hex(await getDeviceId(wallet))
 
     sendMessage(
