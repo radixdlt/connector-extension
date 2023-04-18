@@ -124,7 +124,7 @@ export const LedgerSimulator = () => {
             derivedPublicKeys:
               derivationPaths?.map((path) => ({
                 path,
-                publicKey: wallet.deriveFullPath(path).publicKey.slice(2),
+                publicKey: wallet.deriveFullPath(path).publicKey,
               })) || [],
           }
         )
