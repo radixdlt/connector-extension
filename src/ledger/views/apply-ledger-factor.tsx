@@ -1,6 +1,6 @@
 import { Box, Button, Header } from 'components'
 import { ErrorText } from '../components/error-text'
-import { getPublicKey as ledgerGetPublicKey } from 'ledger/ledger-wrapper'
+import { ledger } from 'ledger/ledger-wrapper'
 import {
   createLedgerPublicKeyResponse,
   LedgerPublicKeyRequest,
@@ -21,7 +21,7 @@ export const ApplyLedgerFactor = ({
 
   const getPublicKey = async () => {
     setIsLoading(true)
-    const publicKey = await ledgerGetPublicKey(message)
+    const publicKey = await ledger.getPublicKey(message)
 
     if (publicKey.isOk()) {
       respond(createLedgerPublicKeyResponse(message, publicKey.value))

@@ -26,7 +26,6 @@ export const LedgerSimulator = () => {
   const [seed, setSeed] = useState<string>(
     'equip will roof matter pink blind book anxiety banner elbow sun young'
   )
-  const [message, setMessage] = useState()
   const [derivationPaths, setDerivationPaths] = useState<string[]>()
   const [interactionId, setInteractionId] = useState<string>(
     crypto.randomUUID()
@@ -42,15 +41,16 @@ export const LedgerSimulator = () => {
     const onMessage = (message: any) => {
       if (message?.discriminator !== 'walletToLedger') return
 
-      setMessage(message)
       if (message?.data?.interactionId) {
         setInteractionId(message.data.interactionId)
       }
 
-      switch (message.data.discriminator) {
-        case 'importOlympiaDevice':
-          setDerivationPaths(message.data.derivationPaths.map((path: string) => path.split('H').join(`'`)))
-          return
+      if (message?.data?.discriminator === 'importOlympiaDevice') {
+        setDerivationPaths(
+          message.data.derivationPaths.map((path: string) =>
+            path.split('H').join(`'`)
+          )
+        )
       }
     }
 

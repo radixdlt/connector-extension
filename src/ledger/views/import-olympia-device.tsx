@@ -1,6 +1,6 @@
 import { Button } from 'components'
 import { ErrorText } from '../components/error-text'
-import { getOlympiaDeviceInfo } from 'ledger/ledger-wrapper'
+import { ledger } from 'ledger/ledger-wrapper'
 import {
   LedgerImportOlympiaDeviceRequest,
   LedgerResponse,
@@ -21,7 +21,7 @@ export const ImportOlympiaDevice = ({
 
   const importOlympiaFromLedger = async () => {
     setIsLoading(true)
-    const olympiaDevice = await getOlympiaDeviceInfo(message)
+    const olympiaDevice = await ledger.getOlympiaDeviceInfo(message)
 
     if (olympiaDevice.isOk()) {
       respond(createLedgerOlympiaDeviceResponse(message, olympiaDevice.value))

@@ -1,6 +1,6 @@
 import { Button, Header, Box } from 'components'
 import { ErrorText } from 'ledger/components/error-text'
-import { signTransaction } from 'ledger/ledger-wrapper'
+import { ledger } from 'ledger/ledger-wrapper'
 import {
   LedgerResponse,
   LedgerSignTransactionRequest,
@@ -21,7 +21,7 @@ export const SignTransaction = ({
 
   const sign = async () => {
     setIsLoading(true)
-    const signedTx = await signTransaction(message)
+    const signedTx = await ledger.signTransaction(message)
 
     if (signedTx.isOk()) {
       respond(createSignTxResponse(message, signedTx.value, ''))
