@@ -137,7 +137,7 @@ export const getOlympiaDeviceInfo = (
 
                 return acc.andThen((publicKeys: any) =>
                   exchange(
-                    LedgerInstructionCode.GetPubKeyEd25519,
+                    LedgerInstructionCode.GetPubKeySecp256k1,
                     `${dataLength}${bip32Data}`
                   ).map((publicKey) => [...publicKeys, { publicKey, path }])
                 )
