@@ -2,11 +2,12 @@ import { generateMnemonic } from 'bip39'
 import { Box, Button, Header, Text } from 'components'
 import {
   createLedgerDeviceIdResponse,
+  createLedgerOlympiaDeviceResponse,
   createLedgerPublicKeyResponse,
   createLedgerSignedTransactionResponse,
 } from 'ledger/schemas'
-import { useState } from 'react'
-import { createRadixWallet } from '../hd-wallet/hd-wallet'
+import { useEffect, useState } from 'react'
+import { BaseHdWallet, createRadixWallet } from '../hd-wallet/hd-wallet'
 import { Curve } from '../hd-wallet/models'
 import { ec as Elliptic } from 'elliptic'
 import blake2b from 'blake2b'
@@ -25,31 +26,62 @@ export const LedgerSimulator = () => {
   const [seed, setSeed] = useState<string>(
     'equip will roof matter pink blind book anxiety banner elbow sun young'
   )
+  const [message, setMessage] = useState()
+  const [derivationPaths, setDerivationPaths] = useState<string[]>()
   const [interactionId, setInteractionId] = useState<string>(
     crypto.randomUUID()
   )
-  const [device, setDevice] = useState<string>('0')
+  const [device, setDevice] = useState<string>('00')
   const [curve, setCurve] = useState<keyof typeof Curve>('secp256k1')
   const [txIntent, setTxIntent] = useState<string>(
     compiledTxHex.createFungibleResourceWithInitialSupply
   )
   const [hdPath, setHdPath] = useState<string>(`m/44'/1022'/10'/525'/0'/1238'`)
+
+  useEffect(() => {
+    const onMessage = (message: any) => {
+      if (message?.discriminator !== 'walletToLedger') return
+
+      setMessage(message)
+      if (message?.data?.interactionId) {
+        setInteractionId(message.data.interactionId)
+      }
+
+      switch (message.data.discriminator) {
+        case 'importOlympiaDevice':
+          setDerivationPaths(message.data.derivationPaths)
+          return
+      }
+    }
+
+    chrome.runtime.onMessage.addListener(onMessage)
+
+    return () => {
+      chrome.runtime.onMessage.removeListener(onMessage)
+    }
+  }, [])
+
   const updateMnemonic = () => {
     setSeed(generateMnemonic())
   }
 
-  const sendDeviceIdResponse = async () => {
-    const wallet = createRadixWallet({ seed, curve: 'ed25519' })
+  const getDeviceId = async (wallet: BaseHdWallet) => {
     const publicKey = wallet.derivePath(`365'`).publicKey.slice(2)
     const hashed = await crypto.subtle.digest(
       'SHA-256',
       Buffer.from(publicKey, 'hex')
     )
     const hashed2 = await crypto.subtle.digest('SHA-256', hashed)
+    return hashed2
+  }
+
+  const sendDeviceIdResponse = async () => {
+    const wallet = createRadixWallet({ seed, curve: 'ed25519' })
+    const hashed = await getDeviceId(wallet)
 
     const response = createLedgerDeviceIdResponse(
       { interactionId, discriminator: 'getDeviceInfo' },
-      arrayBuffer2hex(hashed2),
+      arrayBuffer2hex(hashed),
       device
     )
     sendMessage(createMessage.ledgerResponse(response))
@@ -65,6 +97,39 @@ export const LedgerSimulator = () => {
     )
     sendMessage(createMessage.ledgerResponse(response))
     setInteractionId(crypto.randomUUID())
+  }
+
+  const renderDerivationPaths = () => {
+    if (!derivationPaths) return null
+
+    return (
+      <Box flex="row" items="center">
+        <Text bold>Olympia Derivation Paths</Text>
+        <Text>{derivationPaths?.join(', ')}</Text>
+      </Box>
+    )
+  }
+
+  const sendImportOlympiaDeviceResponse = async () => {
+    const wallet = createRadixWallet({ seed, curve: 'ed25519' })
+    const id = arrayBuffer2hex(await getDeviceId(wallet))
+
+    sendMessage(
+      createMessage.ledgerResponse(
+        createLedgerOlympiaDeviceResponse(
+          { interactionId, discriminator: 'importOlympiaDevice' },
+          {
+            id,
+            model: device,
+            derivedPublicKeys:
+              derivationPaths?.map((path) => ({
+                path,
+                publicKey: wallet.deriveFullPath(path).publicKey.slice(2),
+              })) || [],
+          }
+        )
+      )
+    )
   }
 
   const signTx = async () => {
@@ -138,6 +203,7 @@ export const LedgerSimulator = () => {
           Regenerate
         </Button>
       </Box>
+      {renderDerivationPaths()}
       <Box flex="row" items="center">
         <Text bold css={{ minWidth: '140px' }}>
           Derivation Path
@@ -161,8 +227,8 @@ export const LedgerSimulator = () => {
         <Box flex="row">
           <textarea
             name="compiled_intent"
-            cols={70}
-            rows={12}
+            cols={90}
+            rows={7}
             value={txIntent}
             onInput={(ev) => {
               // @ts-ignore
@@ -182,9 +248,9 @@ export const LedgerSimulator = () => {
         <Box>
           <Text bold>Ledger model</Text>
           <select onChange={(ev) => setDevice(ev.target.value)}>
-            <option value="0">Nano S</option>
-            <option value="1">Nano S Plus</option>
-            <option value="2">Nano X</option>
+            <option value="00">Nano S</option>
+            <option value="01">Nano S Plus</option>
+            <option value="02">Nano X</option>
           </select>
         </Box>
         <Box>
@@ -193,13 +259,18 @@ export const LedgerSimulator = () => {
             onChange={(ev) => setCurve(ev.target.value as keyof typeof Curve)}
           >
             <option value="secp256k1">secp256k1</option>
-            <option value="curve25519">curve25519</option>
+            <option value="ed25519">curve25519</option>
           </select>
         </Box>
       </Box>
       <Box>
         <Text bold>Actions</Text>
-        <Button onClick={sendDeviceIdResponse}>Send Device ID Response</Button>
+        <Button onClick={sendImportOlympiaDeviceResponse}>
+          Send Olympia Import Response
+        </Button>
+        <Button onClick={sendDeviceIdResponse} ml="small">
+          Send Device ID Response
+        </Button>
         <Button onClick={sendPublicKeyResponse} ml="small">
           Send Public Key Response
         </Button>

@@ -1,7 +1,5 @@
 import { config } from 'config'
-import { chromeLocalStore } from 'chrome/helpers/chrome-local-store'
 import { ConnectorClient } from 'connector/connector-client'
-import { ok } from 'neverthrow'
 import { useState, useEffect } from 'react'
 import { logger } from 'utils/logger'
 import { Box, Button, Header, Text } from 'components'
@@ -12,6 +10,7 @@ import {
   getSignChallengePayload,
   getImportFromOlympiaPayload,
 } from '../example'
+import { getConnectionPassword } from 'chrome/helpers/get-connection-password'
 export const WalletSimulator = () => {
   const [connector, setConnector] =
     useState<ReturnType<typeof ConnectorClient>>()
@@ -37,17 +36,13 @@ export const WalletSimulator = () => {
       logger,
     })
 
-    chromeLocalStore
-      .getItem('connectionPassword')
-      .andThen(({ connectionPassword }) => {
-        if (connectionPassword) {
-          connectorClient.setConnectionPassword(
-            Buffer.from(connectionPassword, 'hex')
-          )
-        }
-
-        return ok(undefined)
-      })
+    getConnectionPassword().map((connectionPassword) => {
+      if (connectionPassword) {
+        connectorClient.setConnectionPassword(
+          Buffer.from(connectionPassword, 'hex')
+        )
+      }
+    })
 
     const subscription =
       connectorClient.connected$.subscribe(setConnectorStatus)

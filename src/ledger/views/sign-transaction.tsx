@@ -1,6 +1,11 @@
 import { Button, Header, Box } from 'components'
 import { ErrorText } from 'ledger/components/error-text'
-import { LedgerResponse, LedgerSignTransactionRequest } from 'ledger/schemas'
+import { signTransaction } from 'ledger/ledger-wrapper'
+import {
+  LedgerResponse,
+  LedgerSignTransactionRequest,
+  createSignTxResponse,
+} from 'ledger/schemas'
 import { PairingHeader } from 'pairing/components/pairing-header'
 import { useState } from 'react'
 
@@ -14,8 +19,16 @@ export const SignTransaction = ({
   const [error, setError] = useState<string | undefined>()
   const [isLoading, setIsLoading] = useState<boolean>(false)
 
-  const signTransaction = async () => {
-    // TODO: implement transaction signing on ledger
+  const sign = async () => {
+    setIsLoading(true)
+    const signedTx = await signTransaction(message)
+
+    if (signedTx.isOk()) {
+      respond(createSignTxResponse(message, signedTx.value, ''))
+    } else {
+      setError(signedTx.error)
+    }
+    setIsLoading(false)
   }
 
   return (
@@ -30,7 +43,7 @@ export const SignTransaction = ({
         <Header>{message.ledgerDevice.name}</Header>
       </Box>
 
-      <Button onClick={signTransaction} disabled={isLoading}>
+      <Button onClick={sign} disabled={isLoading}>
         Continue
       </Button>
     </>

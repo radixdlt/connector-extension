@@ -3,7 +3,7 @@ import { ConnectorClient } from 'connector/connector-client'
 import { MessagesRouter } from 'message-router'
 import { errAsync, okAsync } from 'neverthrow'
 import { Queue } from 'queues/queue'
-import { AppLogger } from 'utils/logger'
+import { AppLogger, logger as appLogger } from 'utils/logger'
 import {
   Message,
   messageDiscriminator,
@@ -12,7 +12,6 @@ import {
   SendMessageWithConfirmation,
 } from '../messages/_types'
 import { LedgerRequest, LedgerResponse, isLedgerRequest } from 'ledger/schemas'
-import { logger as appLogger } from 'utils/logger'
 
 export type OffscreenMessageHandler = ReturnType<typeof OffscreenMessageHandler>
 export const OffscreenMessageHandler = (input: {
