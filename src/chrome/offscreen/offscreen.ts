@@ -1,3 +1,4 @@
+import { LedgerRequestSchema } from './../../ledger/schemas'
 import { config } from 'config'
 import { ConnectorClient } from 'connector/connector-client'
 import {
@@ -14,6 +15,7 @@ import { OffscreenMessageHandler } from 'chrome/offscreen/message-handler'
 import { MessageClient } from 'chrome/messages/message-client'
 import { Message } from 'chrome/messages/_types'
 import { filter, switchMap, timer, withLatestFrom } from 'rxjs'
+import { errAsync } from 'neverthrow'
 
 const messageRouter = MessagesRouter({ logger })
 
@@ -87,8 +89,20 @@ const incomingWalletMessageQueue = Queue<Record<string, any>>({
 const walletToLedgerQueue = Queue<LedgerRequest>({
   key: 'walletToLedger',
   logger,
-  worker: Worker((job) =>
-    messageClient
+  worker: Worker((job) => {
+    try {
+      LedgerRequestSchema.parse(job.data)
+    } catch (e) {
+      ledgerToWalletQueue.add(
+        createLedgerErrorResponse(job.data, 'failedParsingJSON'),
+        job.data.interactionId
+      )
+      return errAsync({
+        reason: 'failedParsingJSON',
+      })
+    }
+
+    return messageClient
       .sendMessageAndWaitForConfirmation(
         createMessage.walletToLedger('offScreen', job.data)
       )
@@ -101,7 +115,7 @@ const walletToLedgerQueue = Queue<LedgerRequest>({
           reason: 'ledgerRequestCancelled',
         }
       })
-  ),
+  }),
 })
 
 connectorClient.connected$.subscribe((connected) => {
