@@ -57,7 +57,7 @@ const errorResponses: Record<LedgerError, string> = {
 }
 
 export const encodeHdPath = (hdPath: string) => {
-  const path = hdPath.slice(2).split('/')
+  const path = hdPath.split('H').join(`'`).slice(2).split('/')
   const length = `00${(path.length & 0xff).toString(16)}`.slice(-2)
 
   const parts = path
