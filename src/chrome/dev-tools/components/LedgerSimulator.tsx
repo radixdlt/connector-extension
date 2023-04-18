@@ -49,7 +49,7 @@ export const LedgerSimulator = () => {
 
       switch (message.data.discriminator) {
         case 'importOlympiaDevice':
-          setDerivationPaths(message.data.derivationPaths)
+          setDerivationPaths(message.data.derivationPaths.map((path: string) => path.split('H').join(`'`)))
           return
       }
     }
