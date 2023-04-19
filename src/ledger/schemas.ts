@@ -245,20 +245,19 @@ export const createLedgerDeviceIdResponse = (
   },
 })
 
-export const createSignTxResponse = (
+export const createSignedTransactionResponse = (
   {
     interactionId,
     discriminator,
   }: Pick<LedgerSignTransactionRequest, 'interactionId' | 'discriminator'>,
-  signature: string,
-  publicKey: string
+  success: {
+    publicKey: string
+    signature: string
+  }
 ) => ({
   interactionId,
   discriminator,
-  success: {
-    publicKey,
-    signature,
-  },
+  success,
 })
 
 export const createLedgerOlympiaDeviceResponse = (
@@ -309,21 +308,5 @@ export const createLedgerErrorResponse = (
   error: {
     code: 0,
     message,
-  },
-})
-
-export const createLedgerSignedTransactionResponse = (
-  {
-    interactionId,
-    discriminator,
-  }: Pick<LedgerSignTransactionRequest, 'interactionId' | 'discriminator'>,
-  signedTransaction: string,
-  publicKey: string
-) => ({
-  interactionId,
-  discriminator,
-  success: {
-    signature: signedTransaction,
-    publicKey,
   },
 })

@@ -13,10 +13,9 @@ export const getImportFromOlympiaPayload = () => ({
   interactionId: crypto.randomUUID(),
   discriminator: 'importOlympiaDevice',
   derivationPaths: [
-    "m/44'/1022'/10'/525'/0'/1238'",
-    "m/44'/1022'/10'/525'/1'/1238'",
-    "m/44'/1022'/10'/525'/2'/1238'",
-    "m/44'/1022'/10'/525'/3'/1238'",
+    'm/44H/1022H/0H/0/4H',
+    'm/44H/1022H/0H/0/0H',
+    'm/44H/1022H/0H/0/5H',
   ],
 })
 
@@ -30,12 +29,12 @@ export const getDerivePublicKeyPayload = () => ({
   discriminator: 'derivePublicKey',
   keyParameters: {
     curve: 'curve25519',
-    derivationPath: "m/44'/1022'/10'/525'/0'/1238'",
+    derivationPath: 'm/44H/1022H/10H/525H/1460H/0H',
   },
   ledgerDevice: {
     name: 'My Ledger Device',
     model: 'nanoS',
-    id: '305495ba0fdfd3c400568ce7a2f4e4d446f3cd8b305a9d7b43f4e4257d71a248',
+    id: 'ed798e66ded43a63ba7a41cf060062ba4a0c55ad69b14f2215c1526383ac4157aa619ee9106b02582047dd7f802b305dbb0b1641dde02aef7fdac937b9f9ee8c',
   },
 })
 
@@ -44,12 +43,12 @@ export const getSignTransactionPayload = () => ({
   discriminator: 'signTransaction',
   keyParameters: {
     curve: 'curve25519',
-    derivationPath: "m/44'/1022'/10'/525'/0'/1238'",
+    derivationPath: 'm/44H/1022H/10H/525H/1460H/0H',
   },
   ledgerDevice: {
     name: 'My Ledger Device',
     model: 'nanoS',
-    id: '305495ba0fdfd3c400568ce7a2f4e4d446f3cd8b305a9d7b43f4e4257d71a248',
+    id: 'ed798e66ded43a63ba7a41cf060062ba4a0c55ad69b14f2215c1526383ac4157aa619ee9106b02582047dd7f802b305dbb0b1641dde02aef7fdac937b9f9ee8c',
   },
   compiledTransactionIntent: compiledTxHex.createAccount,
   mode: 'verbose',
@@ -60,12 +59,12 @@ export const getSignChallengePayload = () => ({
   discriminator: 'signChallenge',
   keyParameters: {
     curve: 'curve25519',
-    derivationPath: "m/44'/1022'/10'/525'/0'/1238'",
+    derivationPath: 'm/44H/1022H/10H/525H/1460H/0H',
   },
   ledgerDevice: {
     name: 'My Ledger Device',
     model: 'nanoS',
-    id: '305495ba0fdfd3c400568ce7a2f4e4d446f3cd8b305a9d7b43f4e4257d71a248',
+    id: 'ed798e66ded43a63ba7a41cf060062ba4a0c55ad69b14f2215c1526383ac4157aa619ee9106b02582047dd7f802b305dbb0b1641dde02aef7fdac937b9f9ee8c',
   },
   challenge: '',
 })

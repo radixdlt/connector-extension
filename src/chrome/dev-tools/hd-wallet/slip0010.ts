@@ -77,11 +77,11 @@ class Ed25519 extends Derivation {
     return this.formatKeys(masterKeys, 'm')
   }
 
-  private computePublicKey(privateKey: Hex | Buffer, withZeroByte = true) {
+  private computePublicKey(privateKey: Hex | Buffer, withZeroByte = false) {
     return computeEd25519PublicKey(
       typeof privateKey === 'string'
         ? Buffer.from(privateKey, 'hex')
-        : privateKey,
+        : (Uint8Array.from(privateKey) as Buffer),
       withZeroByte
     ).toString('hex')
   }

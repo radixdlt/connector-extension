@@ -4,7 +4,7 @@ import { ledger } from 'ledger/ledger-wrapper'
 import {
   LedgerResponse,
   LedgerSignTransactionRequest,
-  createSignTxResponse,
+  createSignedTransactionResponse,
 } from 'ledger/schemas'
 import { PairingHeader } from 'pairing/components/pairing-header'
 import { useState } from 'react'
@@ -24,7 +24,7 @@ export const SignTransaction = ({
     const signedTx = await ledger.signTransaction(message)
 
     if (signedTx.isOk()) {
-      respond(createSignTxResponse(message, signedTx.value, ''))
+      respond(createSignedTransactionResponse(message, signedTx.value))
     } else {
       setError(signedTx.error)
     }
