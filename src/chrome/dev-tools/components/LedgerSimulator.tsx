@@ -4,7 +4,7 @@ import {
   createLedgerDeviceIdResponse,
   createLedgerOlympiaDeviceResponse,
   createLedgerPublicKeyResponse,
-  createLedgerSignedTransactionResponse,
+  createSignedTransactionResponse,
 } from 'ledger/schemas'
 import { useEffect, useState } from 'react'
 import { BaseHdWallet, createRadixWallet } from '../hd-wallet/hd-wallet'
@@ -19,9 +19,6 @@ import { compiledTxHex } from '../example'
 const secp256k1 = new Elliptic('secp256k1')
 const ed25519 = new Elliptic('ed25519')
 
-const arrayBuffer2hex = (buffer: ArrayBuffer) =>
-  Buffer.from(new Uint8Array(buffer)).toString('hex')
-
 export const LedgerSimulator = () => {
   const [seed, setSeed] = useState<string>(
     'equip will roof matter pink blind book anxiety banner elbow sun young'
@@ -35,7 +32,7 @@ export const LedgerSimulator = () => {
   const [txIntent, setTxIntent] = useState<string>(
     compiledTxHex.createFungibleResourceWithInitialSupply
   )
-  const [hdPath, setHdPath] = useState<string>(`m/44'/1022'/10'/525'/0'/1238'`)
+  const [hdPath, setHdPath] = useState<string>(`m/44'/1022'/10'/525'/1460'/0'`)
 
   useEffect(() => {
     const onMessage = (message: any) => {
@@ -65,23 +62,16 @@ export const LedgerSimulator = () => {
     setSeed(generateMnemonic())
   }
 
-  const getDeviceId = async (wallet: BaseHdWallet) => {
-    const publicKey = wallet.derivePath(`365'`).publicKey.slice(2)
-    const hashed = await crypto.subtle.digest(
-      'SHA-256',
-      Buffer.from(publicKey, 'hex')
-    )
-    const hashed2 = await crypto.subtle.digest('SHA-256', hashed)
-    return hashed2
+  const getDeviceId = (wallet: BaseHdWallet): string => {
+    const publicKey = wallet.derivePath(`365'`).publicKey
+    return blake2b(64).update(Buffer.from(publicKey, 'hex')).digest('hex')
   }
 
   const sendDeviceIdResponse = async () => {
     const wallet = createRadixWallet({ seed, curve: 'ed25519' })
-    const hashed = await getDeviceId(wallet)
-
     const response = createLedgerDeviceIdResponse(
       { interactionId, discriminator: 'getDeviceInfo' },
-      arrayBuffer2hex(hashed),
+      getDeviceId(wallet),
       device
     )
     sendMessage(createMessage.ledgerResponse(response))
@@ -90,10 +80,9 @@ export const LedgerSimulator = () => {
 
   const sendPublicKeyResponse = async () => {
     const wallet = createRadixWallet({ seed, curve })
-    const publicKey = wallet.deriveFullPath(hdPath).publicKey
     const response = createLedgerPublicKeyResponse(
       { interactionId, discriminator: 'derivePublicKey' },
-      curve === 'ed25519' ? publicKey.slice(2) : publicKey
+      wallet.deriveFullPath(hdPath).publicKey
     )
     sendMessage(createMessage.ledgerResponse(response))
     setInteractionId(crypto.randomUUID())
@@ -104,7 +93,9 @@ export const LedgerSimulator = () => {
 
     return (
       <Box flex="row" items="center">
-        <Text bold>Olympia Derivation Paths</Text>
+        <Text bold css={{ minWidth: '200px' }}>
+          Olympia Derivation Paths
+        </Text>
         <Text>{derivationPaths?.join(', ')}</Text>
       </Box>
     )
@@ -112,7 +103,7 @@ export const LedgerSimulator = () => {
 
   const sendImportOlympiaDeviceResponse = async () => {
     const wallet = createRadixWallet({ seed, curve: 'secp256k1' })
-    const id = arrayBuffer2hex(await getDeviceId(wallet))
+    const id = getDeviceId(wallet)
 
     sendMessage(
       createMessage.ledgerResponse(
@@ -136,8 +127,7 @@ export const LedgerSimulator = () => {
     const wallet = createRadixWallet({ seed, curve })
     const privateKey = wallet.deriveFullPath(hdPath).privateKey
     const publicKey = wallet.deriveFullPath(hdPath).publicKey
-    const output = new Uint8Array(64)
-    const hash = blake2b(output.length)
+    const hash = blake2b(64)
       .update(Buffer.from(txIntent, 'base64'))
       .digest('hex')
 
@@ -146,25 +136,23 @@ export const LedgerSimulator = () => {
     if (curve === Curve.ed25519) {
       const pair = ed25519.keyFromPrivate(privateKey)
       const signed = pair.sign(hash)
-      const signedTx = signed.r.toString(16, 32) + signed.s.toString(16, 32)
-      const response = createLedgerSignedTransactionResponse(
+      const signature = signed.r.toString(16, 32) + signed.s.toString(16, 32)
+      const response = createSignedTransactionResponse(
         { interactionId, discriminator: 'signTransaction' },
-        signedTx,
-        publicKey
+        { signature, publicKey }
       )
       sendMessage(createMessage.ledgerResponse(response))
       setInteractionId(crypto.randomUUID())
     } else {
       const pair = secp256k1.keyFromPrivate(privateKey)
       const signed = pair.sign(hash)
-      const signedTx =
+      const signature =
         signed.recoveryParam?.toString(16).padStart(2, '0') +
         signed.r.toString(16, 32) +
         signed.s.toString(16, 32)
-      const response = createLedgerSignedTransactionResponse(
+      const response = createSignedTransactionResponse(
         { interactionId, discriminator: 'signTransaction' },
-        signedTx,
-        publicKey
+        { signature, publicKey }
       )
       sendMessage(createMessage.ledgerResponse(response))
       setInteractionId(crypto.randomUUID())
@@ -217,7 +205,7 @@ export const LedgerSimulator = () => {
           <Text
             muted
             size="small"
-          >{`m/44'/<COIN_TYPE>'/<NETWORK_ID>'/<ENTITY_TYPE>'/<ENTITY_INDEX>'/<KEY_TYPE>'`}</Text>
+          >{`m/44'/<COIN_TYPE>'/<NETWORK_ID>'/<ENTITY_TYPE>'/<KEY_TYPE>'/<ENTITY_INDEX>'`}</Text>
         </Box>
       </Box>
       <Box flex="row" items="center">

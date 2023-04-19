@@ -56,8 +56,11 @@ const errorResponses: Record<LedgerError, string> = {
   [LedgerErrorResponse.DeviceMismatch]: `Device doesn't match. Make sure you connected correct Ledger device`,
 }
 
-export const encodeHdPath = (hdPath: string) => {
-  const path = hdPath.split('H').join(`'`).slice(2).split('/')
+export const getDataLength = (data: string) =>
+  Math.floor(data.length / 2).toString(16)
+
+export const encodeDerivationPath = (derivationPath: string) => {
+  const path = derivationPath.split('H').join(`'`).slice(2).split('/')
   const length = `00${(path.length & 0xff).toString(16)}`.slice(-2)
 
   const parts = path
@@ -65,11 +68,11 @@ export const encodeHdPath = (hdPath: string) => {
     .map((value) => value.toString(16))
     .join('')
 
-  return `${length}${parts}`
-}
+  const data = `${length}${parts}`
+  const dataLength = getDataLength(data)
 
-export const getDataLength = (data: string) =>
-  Math.floor(data.length / 2).toString(16)
+  return `${dataLength}${data}`
+}
 
 export type LedgerOptions = {
   transport: typeof TransportWebHID
@@ -146,13 +149,12 @@ export const LedgerWrapper = ({ transport }: LedgerOptions) => {
                   >,
                   path
                 ) => {
-                  const bip32Data = encodeHdPath(path)
-                  const dataLength = getDataLength(bip32Data)
+                  const encodedDerivationPath = encodeDerivationPath(path)
 
                   return acc.andThen((publicKeys: any) =>
                     exchange(
                       LedgerInstructionCode.GetPubKeySecp256k1,
-                      `${dataLength}${bip32Data}`
+                      encodedDerivationPath
                     ).map((publicKey) => [...publicKeys, { publicKey, path }])
                   )
                 },
@@ -197,13 +199,15 @@ export const LedgerWrapper = ({ transport }: LedgerOptions) => {
           if (deviceId !== params.ledgerDevice.id) {
             return err(errorResponses[LedgerErrorResponse.DeviceMismatch])
           }
-          const bip32Data = encodeHdPath(params.keyParameters.derivationPath)
-          const dataLength = getDataLength(bip32Data)
+          const encodedDerivationPath = encodeDerivationPath(
+            params.keyParameters.derivationPath
+          )
+
           return exchange(
             params.keyParameters.curve === 'curve25519'
               ? LedgerInstructionCode.GetPubKeyEd25519
               : LedgerInstructionCode.GetPubKeySecp256k1,
-            `${dataLength}${bip32Data}`
+            encodedDerivationPath
           )
         })
         .andThen((result) => closeTransport().map(() => result))
@@ -235,8 +239,9 @@ export const LedgerWrapper = ({ transport }: LedgerOptions) => {
             return err(errorResponses[LedgerErrorResponse.DeviceMismatch])
           }
 
-          const bip32Data = encodeHdPath(params.keyParameters.derivationPath)
-          const dataLength = getDataLength(bip32Data)
+          const encodedDerivationPath = encodeDerivationPath(
+            params.keyParameters.derivationPath
+          )
           const data = bufferToChunks(
             Buffer.from(params.compiledTransactionIntent, 'hex'),
             255
@@ -251,27 +256,29 @@ export const LedgerWrapper = ({ transport }: LedgerOptions) => {
                 : LedgerInstructionClass.ab,
           }))
 
-          return exchange(command, `${dataLength}${bip32Data}`)
+          return exchange(command, encodedDerivationPath)
             .andThen(() =>
               chunks.reduce(
                 (
-                  acc: ResultAsync<string[], string>,
+                  acc: ResultAsync<string, string>,
                   { chunk, instructionClass }
                 ) =>
-                  acc.andThen((results) => {
+                  acc.andThen(() => {
                     const chunkLength = getDataLength(chunk)
 
                     return exchange(
                       command,
                       `${chunkLength}${chunk}`,
                       instructionClass
-                    ).map((result) => [...results, result])
+                    )
                   }),
-                okAsync([])
+                okAsync('')
               )
             )
-            .map((results) => results.filter((result) => result !== ''))
-            .map((results) => results[0])
+            .map((result) => ({
+              publicKey: result.slice(128),
+              signature: result.slice(0, 128),
+            }))
         })
         .andThen((result) => closeTransport().map(() => result))
         .mapErr((error) => {

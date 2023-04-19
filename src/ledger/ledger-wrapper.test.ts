@@ -2,7 +2,7 @@ import { compiledTxHex } from 'chrome/dev-tools/example'
 import {
   LedgerInstructionCode,
   LedgerWrapper,
-  encodeHdPath,
+  encodeDerivationPath,
   ledger,
 } from './ledger-wrapper'
 import TransportWebHID from '@ledgerhq/hw-transport-webhid'
@@ -66,9 +66,16 @@ const getExpectedTransactionSigningExchanges = (instructionCode: string) => [
   },
   {
     input: `ac${instructionCode}00002e651702800289ba4758731898e0850fbde5d412c080e4f8b7ea03174cb180d90c0a6669656c645f6e616d65202000`,
-    output: 'abababab9000',
+    output:
+      '5ad8cd006761aa698ea77f271c421a7ea9e34da45b4e827d2fce1b5205933b77e852261381cfaa0a8ecfba52622d5c1560462db70df08fc905111e2a9a5fa601cffce054df51fb4072e7faf627e0f64f168fd8811f749d34720ac8da264bac069000',
   },
 ]
+
+const expectedTransacionSignature = {
+  publicKey: 'cffce054df51fb4072e7faf627e0f64f168fd8811f749d34720ac8da264bac06',
+  signature:
+    '5ad8cd006761aa698ea77f271c421a7ea9e34da45b4e827d2fce1b5205933b77e852261381cfaa0a8ecfba52622d5c1560462db70df08fc905111e2a9a5fa601',
+}
 
 const ledgerDevice = {
   model: 'nanoS',
@@ -81,24 +88,24 @@ const keyParameters = {
 } as const
 
 describe('Ledger Babylon Wrapper', () => {
-  it('should encode hd path', () => {
+  it('should encode derivation path', () => {
     const testCases = [
       [
         `m/44'/1022'/10'/525'/0'/1238'`,
-        '068000002c800003fe8000000a8000020d80000000800004d6',
+        '19068000002c800003fe8000000a8000020d80000000800004d6',
       ],
       [
         `m/44H/1022H/10H/525H/0H/1238H`,
-        '068000002c800003fe8000000a8000020d80000000800004d6',
+        '19068000002c800003fe8000000a8000020d80000000800004d6',
       ],
       [
         `m/44'/1022'/10'/618'/1'/1211'`,
-        '068000002c800003fe8000000a8000026a80000001800004bb',
+        '19068000002c800003fe8000000a8000026a80000001800004bb',
       ],
     ]
 
     testCases.forEach(([input, expected]) => {
-      expect(encodeHdPath(input)).toEqual(expected)
+      expect(encodeDerivationPath(input)).toEqual(expected)
     })
   })
 
@@ -343,7 +350,7 @@ describe('Ledger Babylon Wrapper', () => {
 
       if (result.isErr()) throw result.error
 
-      expect(result.value).toEqual('abababab')
+      expect(result.value).toEqual(expectedTransacionSignature)
     })
 
     it('should sign summary TX using secp256k1', async () => {
@@ -365,7 +372,7 @@ describe('Ledger Babylon Wrapper', () => {
 
       if (result.isErr()) throw result.error
 
-      expect(result.value).toEqual('abababab')
+      expect(result.value).toEqual(expectedTransacionSignature)
     })
   })
 })
