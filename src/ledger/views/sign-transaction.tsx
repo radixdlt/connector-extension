@@ -1,5 +1,6 @@
-import { Button, Header, Box } from 'components'
+import { Button } from 'components'
 import { ErrorText } from 'ledger/components/error-text'
+import { LedgerDeviceBox } from 'ledger/components/ledger-device-box'
 import { ledger } from 'ledger/ledger-wrapper'
 import {
   LedgerResponse,
@@ -39,10 +40,7 @@ export const SignTransaction = ({
       </PairingHeader>
       <ErrorText error={error} />
 
-      <Box textAlign="center" py="large">
-        <Header>{message.ledgerDevice.name}</Header>
-      </Box>
-
+      <LedgerDeviceBox {...message.ledgerDevice} />
       <Button onClick={sign} disabled={isLoading}>
         Continue
       </Button>

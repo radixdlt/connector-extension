@@ -1,4 +1,4 @@
-import { Box, Button, Header } from 'components'
+import { Button } from 'components'
 import { ErrorText } from '../components/error-text'
 import { ledger } from 'ledger/ledger-wrapper'
 import {
@@ -8,6 +8,12 @@ import {
 } from 'ledger/schemas'
 import { PairingHeader } from 'pairing/components/pairing-header'
 import { useState } from 'react'
+import { LedgerDeviceBox } from 'ledger/components/ledger-device-box'
+
+const EntityType = {
+  Account: '525',
+  Identity: '618'
+} as const
 
 export const ApplyLedgerFactor = ({
   message,
@@ -18,6 +24,12 @@ export const ApplyLedgerFactor = ({
 }) => {
   const [error, setError] = useState<string | undefined>()
   const [isLoading, setIsLoading] = useState<boolean>(false)
+
+  const header = message.keyParameters.derivationPath
+    .split('/')[4]
+    .includes(EntityType.Account)
+    ? 'Apply Ledger Factor to Account Security'
+    : 'Apply Ledger Factor to Persona Security'
 
   const getPublicKey = async () => {
     setIsLoading(true)
@@ -32,15 +44,13 @@ export const ApplyLedgerFactor = ({
   }
   return (
     <>
-      <PairingHeader header="Apply Ledger Factor to Account Security">
+      <PairingHeader header={header}>
         Please connect the following Ledger hardware wallet device to this
         computer and click Continue:
       </PairingHeader>
 
       <ErrorText error={error} />
-      <Box textAlign="center" py="large">
-        <Header>{message.ledgerDevice.name}</Header>
-      </Box>
+      <LedgerDeviceBox {...message.ledgerDevice} />
       <Button full mt="large" onClick={getPublicKey} disabled={isLoading}>
         Continue
       </Button>

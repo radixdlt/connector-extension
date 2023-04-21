@@ -1,4 +1,5 @@
-import { Box, Button, Header } from 'components'
+import { Button } from 'components'
+import { LedgerDeviceBox } from 'ledger/components/ledger-device-box'
 import { LedgerResponse, LedgerSignChallengeRequest } from 'ledger/schemas'
 import { PairingHeader } from 'pairing/components/pairing-header'
 
@@ -14,9 +15,7 @@ export const SignChallenge = ({
       Please connect the following Ledger hardware wallet device to this
       computer and click Continue:
     </PairingHeader>
-    <Box textAlign="center" py="large">
-      <Header>{message.ledgerDevice.name}</Header>
-    </Box>
+    <LedgerDeviceBox {...message.ledgerDevice} />
     <Button>Continue</Button>
   </>
 )
