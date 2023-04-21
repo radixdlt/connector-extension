@@ -22,6 +22,14 @@ const ledgerDiscriminator = union([
   literal('importOlympiaDevice'),
 ])
 
+export const LedgerDeviceSchema = object({
+  name: string().optional(),
+  model: ledgerDeviceModel,
+  id: string(),
+})
+
+export type LedgerDevice = z.infer<typeof LedgerDeviceSchema>
+
 export const LedgerDeviceIdRequestSchema = object({
   interactionId: string(),
   discriminator: literal('getDeviceInfo'),
@@ -36,11 +44,7 @@ export const LedgerPublicKeyRequestSchema = object({
     curve,
     derivationPath: string(),
   }),
-  ledgerDevice: object({
-    name: string().optional(),
-    model: ledgerDeviceModel,
-    id: string(),
-  }),
+  ledgerDevice: LedgerDeviceSchema,
 })
 
 export type LedgerPublicKeyRequest = z.infer<
@@ -54,11 +58,7 @@ export const LedgerSignTransactionRequestSchema = object({
     curve,
     derivationPath: string(),
   }),
-  ledgerDevice: object({
-    name: string().optional(),
-    model: ledgerDeviceModel,
-    id: string(),
-  }),
+  ledgerDevice: LedgerDeviceSchema,
   compiledTransactionIntent: string(),
   mode: union([literal('verbose'), literal('summary')]),
 })
@@ -74,11 +74,7 @@ export const LedgerSignChallengeRequestSchema = object({
     curve,
     derivationPath: string(),
   }),
-  ledgerDevice: object({
-    name: string().optional(),
-    model: ledgerDeviceModel,
-    id: string(),
-  }),
+  ledgerDevice: LedgerDeviceSchema,
   challenge: string(),
 })
 

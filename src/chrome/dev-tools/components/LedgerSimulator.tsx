@@ -64,7 +64,7 @@ export const LedgerSimulator = () => {
 
   const getDeviceId = (wallet: BaseHdWallet): string => {
     const publicKey = wallet.derivePath(`365'`).publicKey
-    return blake2b(64).update(Buffer.from(publicKey, 'hex')).digest('hex')
+    return blake2b(32).update(Buffer.from(publicKey, 'hex')).digest('hex')
   }
 
   const sendDeviceIdResponse = async () => {
@@ -125,9 +125,8 @@ export const LedgerSimulator = () => {
 
   const signTx = async () => {
     const wallet = createRadixWallet({ seed, curve })
-    const privateKey = wallet.deriveFullPath(hdPath).privateKey
-    const publicKey = wallet.deriveFullPath(hdPath).publicKey
-    const hash = blake2b(64)
+    const { privateKey, publicKey } = wallet.deriveFullPath(hdPath)
+    const hash = blake2b(32)
       .update(Buffer.from(txIntent, 'base64'))
       .digest('hex')
 
