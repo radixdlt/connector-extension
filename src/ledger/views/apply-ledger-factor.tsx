@@ -32,6 +32,7 @@ export const ApplyLedgerFactor = ({
     : 'Apply Ledger Factor to Persona Security'
 
   const getPublicKey = async () => {
+    setError(undefined)
     setIsLoading(true)
     const publicKey = await ledger.getPublicKey(message)
 

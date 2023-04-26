@@ -20,6 +20,7 @@ export const NewHardwareWallet = ({
   const [isLoading, setIsLoading] = useState<boolean>(false)
 
   const getDeviceInfo = async () => {
+    setError(undefined)
     setIsLoading(true)
 
     const deviceInfo = await ledger.getDeviceInfo()

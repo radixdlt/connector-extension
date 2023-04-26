@@ -20,6 +20,7 @@ export const ImportOlympiaDevice = ({
   const [isLoading, setIsLoading] = useState<boolean>(false)
 
   const importOlympiaFromLedger = async () => {
+    setError(undefined)
     setIsLoading(true)
     const olympiaDevice = await ledger.getOlympiaDeviceInfo(message)
 

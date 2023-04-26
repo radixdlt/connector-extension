@@ -21,6 +21,7 @@ export const SignTransaction = ({
   const [isLoading, setIsLoading] = useState<boolean>(false)
 
   const sign = async () => {
+    setError(undefined)
     setIsLoading(true)
     const signedTx = await ledger.signTransaction(message)
 
