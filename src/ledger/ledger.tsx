@@ -56,8 +56,8 @@ export const Ledger = () => {
       }
     }
 
-    const subscription = ledger.progress$.subscribe((progress) =>
-      setProgressMessage(progress?.message)
+    const subscription = ledger.progress$.subscribe((message) =>
+      setProgressMessage(message)
     )
     chrome.runtime.onMessage.addListener(readMessage)
 

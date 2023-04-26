@@ -15,7 +15,7 @@ const LedgerInstructionClass = {
   aa: 'aa',
   ab: 'ab',
   ac: 'ac',
-}
+} as const
 
 const LedgerErrorResponse = {
   FailedToCreateTransport: 'FailedToCreateTransport',
@@ -38,7 +38,8 @@ export const LedgerInstructionCode = {
 } as const
 
 type LedgerError = Values<typeof LedgerErrorResponse>
-type LedgerInstruction = Values<typeof LedgerInstructionCode>
+type LedgerInstructionCode = Values<typeof LedgerInstructionCode>
+type LedgerInstructionClass = Values<typeof LedgerInstructionClass>
 
 const isKnownError = (statusCode: any): statusCode is LedgerError =>
   Object.values(LedgerErrorResponse).includes(statusCode)
@@ -78,7 +79,7 @@ export const encodeDerivationPath = (derivationPath: string) => {
 }
 
 const LedgerSubjects = () => ({
-  onProgressSubject: new Subject<{ message: string } | undefined>(),
+  onProgressSubject: new Subject<string | undefined>(),
 })
 
 export type LedgerOptions = {
@@ -89,16 +90,13 @@ export type LedgerOptions = {
 export const LedgerWrapper = ({ transport, ledgerSubjects }: LedgerOptions) => {
   const { onProgressSubject } = ledgerSubjects || LedgerSubjects()
 
-  const sendProgressMessage = (message?: string) =>
-    onProgressSubject.next(message ? { message } : undefined)
-
   const createLedgerTransport = () =>
     ResultAsync.fromPromise(
       transport.list(),
       () => LedgerErrorResponse.FailedToCreateTransport
     )
       .andThen((devices) => {
-        sendProgressMessage('Checking Ledger device connection')
+        onProgressSubject.next('Creating Ledger device connection')
         if (devices.length > 1) {
           return err(
             errorResponses[LedgerErrorResponse.MultipleLedgerConnected]
@@ -113,9 +111,9 @@ export const LedgerWrapper = ({ transport, ledgerSubjects }: LedgerOptions) => {
           () => LedgerErrorResponse.FailedToCreateTransport
         ).map((transport) => {
           const exchange = (
-            command: LedgerInstruction,
+            command: LedgerInstructionCode,
             data = '',
-            instructionClass = LedgerInstructionClass.aa
+            instructionClass: LedgerInstructionClass = LedgerInstructionClass.aa
           ) =>
             ResultAsync.fromPromise(
               transport.exchange(
@@ -141,7 +139,7 @@ export const LedgerWrapper = ({ transport, ledgerSubjects }: LedgerOptions) => {
 
           return {
             closeTransport: () => {
-              sendProgressMessage(undefined)
+              onProgressSubject.next(undefined)
               return ResultAsync.fromSafePromise(transport.close())
             },
             exchange,
@@ -149,82 +147,92 @@ export const LedgerWrapper = ({ transport, ledgerSubjects }: LedgerOptions) => {
         })
       )
 
-  const getOlympiaDeviceInfo = ({
-    derivationPaths,
-  }: Pick<LedgerImportOlympiaDeviceRequest, 'derivationPaths'>) =>
+  const wrapDataExchange = (
+    fn: (
+      exchangeFn: (
+        command: LedgerInstructionCode,
+        data?: string,
+        instructionClass?: LedgerInstructionClass
+      ) => ResultAsync<string, string>
+    ) => ResultAsync<any, any>
+  ) =>
     createLedgerTransport().andThen(({ closeTransport, exchange }) =>
-      exchange(LedgerInstructionCode.GetDeviceId)
-        .andThen((id) =>
-          exchange(LedgerInstructionCode.GetDeviceModel).andThen((model) =>
-            derivationPaths
-              .reduce(
-                (
-                  acc: ResultAsync<
-                    { publicKey: string; path: string }[],
-                    string
-                  >,
-                  path,
-                  index
-                ) => {
-                  const encodedDerivationPath = encodeDerivationPath(path)
-
-                  return acc.andThen((publicKeys: any) => {
-                    sendProgressMessage(
-                      `Importing ${index + 1} out of ${
-                        derivationPaths.length
-                      } olympia accounts`
-                    )
-                    return exchange(
-                      LedgerInstructionCode.GetPubKeySecp256k1,
-                      encodedDerivationPath
-                    ).map((publicKey) => [...publicKeys, { publicKey, path }])
-                  })
-                },
-                okAsync([])
-              )
-              .map((derivedPublicKeys) => ({
-                id,
-                model,
-                derivedPublicKeys,
-              }))
-          )
-        )
-        .andThen((result) => closeTransport().map(() => result))
+      fn(exchange)
+        .andThen((response) => closeTransport().map(() => response))
         .mapErr((error) => {
           closeTransport()
           return error
         })
     )
 
-  const getDeviceInfo = () =>
-    createLedgerTransport().andThen(({ closeTransport, exchange }) =>
-      exchange(LedgerInstructionCode.GetDeviceId)
-        .andThen((deviceId) =>
-          exchange(LedgerInstructionCode.GetDeviceModel).map((model) => ({
-            deviceId,
-            model,
-          }))
+  const ensureCorrectDeviceId =
+    (expectedDeviceId: string) => (ledgerDeviceId: string) => {
+      onProgressSubject.next('Checking Ledger Device ID')
+
+      return ledgerDeviceId === expectedDeviceId
+        ? ok(undefined)
+        : err(errorResponses[LedgerErrorResponse.DeviceMismatch])
+    }
+
+  const getOlympiaDeviceInfo = ({
+    derivationPaths,
+  }: Pick<LedgerImportOlympiaDeviceRequest, 'derivationPaths'>) =>
+    wrapDataExchange((exchange) =>
+      exchange(LedgerInstructionCode.GetDeviceId).andThen((id) =>
+        exchange(LedgerInstructionCode.GetDeviceModel).andThen((model) =>
+          derivationPaths
+            .reduce(
+              (
+                acc: ResultAsync<{ publicKey: string; path: string }[], string>,
+                path,
+                index
+              ) => {
+                const encodedDerivationPath = encodeDerivationPath(path)
+
+                return acc.andThen((publicKeys: any) => {
+                  onProgressSubject.next(
+                    `Importing ${index + 1} out of ${
+                      derivationPaths.length
+                    } olympia accounts`
+                  )
+                  return exchange(
+                    LedgerInstructionCode.GetPubKeySecp256k1,
+                    encodedDerivationPath
+                  ).map((publicKey) => [...publicKeys, { publicKey, path }])
+                })
+              },
+              okAsync([])
+            )
+            .map((derivedPublicKeys) => ({
+              id,
+              model,
+              derivedPublicKeys,
+            }))
         )
-        .andThen((result) => closeTransport().map(() => result))
-        .mapErr((error) => {
-          closeTransport()
-          return error
-        })
+      )
+    )
+
+  const getDeviceInfo = () =>
+    wrapDataExchange((exchange) =>
+      exchange(LedgerInstructionCode.GetDeviceId).andThen((deviceId) =>
+        exchange(LedgerInstructionCode.GetDeviceModel).map((model) => ({
+          deviceId,
+          model,
+        }))
+      )
     )
 
   const getPublicKey = (
     params: Omit<LedgerPublicKeyRequest, 'discriminator' | 'interactionId'>
   ) =>
-    createLedgerTransport().andThen(({ closeTransport, exchange }) =>
+    wrapDataExchange((exchange) =>
       exchange(LedgerInstructionCode.GetDeviceId)
-        .andThen((deviceId) => {
-          sendProgressMessage('Comparing Ledger Device ID')
-          if (deviceId !== params.ledgerDevice.id) {
-            return err(errorResponses[LedgerErrorResponse.DeviceMismatch])
-          }
+        .andThen(ensureCorrectDeviceId(params.ledgerDevice.id))
+        .andThen(() => {
           const encodedDerivationPath = encodeDerivationPath(
             params.keyParameters.derivationPath
           )
+          onProgressSubject.next('Getting public key...')
 
           return exchange(
             params.keyParameters.curve === 'curve25519'
@@ -232,11 +240,6 @@ export const LedgerWrapper = ({ transport, ledgerSubjects }: LedgerOptions) => {
               : LedgerInstructionCode.GetPubKeySecp256k1,
             encodedDerivationPath
           )
-        })
-        .andThen((result) => closeTransport().map(() => result))
-        .mapErr((error) => {
-          closeTransport()
-          return error
         })
     )
 
@@ -246,13 +249,10 @@ export const LedgerWrapper = ({ transport, ledgerSubjects }: LedgerOptions) => {
       'discriminator' | 'interactionId'
     >
   ) =>
-    createLedgerTransport().andThen(({ closeTransport, exchange }) =>
+    wrapDataExchange((exchange) =>
       exchange(LedgerInstructionCode.GetDeviceId)
-        .andThen((deviceId) => {
-          if (deviceId !== params.ledgerDevice.id) {
-            return err(errorResponses[LedgerErrorResponse.DeviceMismatch])
-          }
-
+        .andThen(ensureCorrectDeviceId(params.ledgerDevice.id))
+        .andThen(() => {
           const compiledTxIntentChunksResult = bufferToChunks(
             Buffer.from(params.compiledTransactionIntent, 'hex'),
             255
@@ -272,13 +272,13 @@ export const LedgerWrapper = ({ transport, ledgerSubjects }: LedgerOptions) => {
 
           return params.signers.reduce(
             (signersAcc: ResultAsync<any[], string>, signer, index) => {
-              let command: LedgerInstruction =
+              let command: LedgerInstructionCode =
                 signer.curve === 'curve25519'
                   ? LedgerInstructionCode.SignTxEd255519
                   : LedgerInstructionCode.SignTxSecp256k1
 
               if (params.mode === 'summary') {
-                command = String(Number(command) + 1) as LedgerInstruction
+                command = String(Number(command) + 1) as LedgerInstructionCode
               }
 
               const encodedDerivationPath = encodeDerivationPath(
@@ -286,7 +286,7 @@ export const LedgerWrapper = ({ transport, ledgerSubjects }: LedgerOptions) => {
               )
 
               return signersAcc.andThen((previousValue) => {
-                sendProgressMessage(
+                onProgressSubject.next(
                   `Gathering ${index + 1} out of ${
                     params.signers.length
                   } signatures`
@@ -326,11 +326,6 @@ export const LedgerWrapper = ({ transport, ledgerSubjects }: LedgerOptions) => {
             },
             okAsync([])
           )
-        })
-        .andThen((result) => closeTransport().map(() => result))
-        .mapErr((error) => {
-          closeTransport()
-          return error
         })
     )
 

@@ -16,7 +16,7 @@
     "start:local": "DEV_TOOLS=true vite --mode localhost",
     "start:beta": "DEV_TOOLS=true vite --mode beta",
     "start:development": "DEV_TOOLS=true vite --mode development",
-    "build:development": "DEV_TOOLS=true tsc && DEV_TOOLS=true vite build --mode development",
+    "build:development": "tsc && vite build --mode development",
     "build:beta": "tsc && vite build --mode beta",
     "build:rcnet": "tsc && vite build --mode rcnet",
     "build:cd": "./build.sh development && ./build.sh beta && ./build.sh rcnet",
