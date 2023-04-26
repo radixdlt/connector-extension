@@ -34,9 +34,8 @@ export const NewHardwareWallet = ({
       )
     } else {
       setError(deviceInfo.error)
+      setIsLoading(false)
     }
-
-    setIsLoading(false)
   }
 
   return (
@@ -47,10 +46,11 @@ export const NewHardwareWallet = ({
       </PairingHeader>
 
       <ErrorText error={error} />
-
-      <Button full mt="large" onClick={getDeviceInfo} disabled={isLoading}>
-        Continue
-      </Button>
+      {!isLoading && (
+        <Button full mt="large" onClick={getDeviceInfo}>
+          Continue
+        </Button>
+      )}
     </>
   )
 }

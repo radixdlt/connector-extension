@@ -28,8 +28,8 @@ export const SignTransaction = ({
       respond(createSignedTransactionResponse(message, signedTx.value))
     } else {
       setError(signedTx.error)
+      setIsLoading(false)
     }
-    setIsLoading(false)
   }
 
   return (
@@ -41,9 +41,11 @@ export const SignTransaction = ({
       <ErrorText error={error} />
 
       <LedgerDeviceBox {...message.ledgerDevice} />
-      <Button onClick={sign} disabled={isLoading}>
-        Continue
-      </Button>
+      {!isLoading && (
+        <Button full onClick={sign}>
+          Continue
+        </Button>
+      )}
     </>
   )
 }

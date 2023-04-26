@@ -71,11 +71,16 @@ const getExpectedTransactionSigningExchanges = (instructionCode: string) => [
   },
 ]
 
-const expectedTransacionSignature = {
-  publicKey: 'cffce054df51fb4072e7faf627e0f64f168fd8811f749d34720ac8da264bac06',
-  signature:
-    '5ad8cd006761aa698ea77f271c421a7ea9e34da45b4e827d2fce1b5205933b77e852261381cfaa0a8ecfba52622d5c1560462db70df08fc905111e2a9a5fa601',
-}
+const getExpectedTransacionSignature = (curve: string) => [
+  {
+    curve,
+    derivationPath: `m/44'/1022'/10'/525'/0'/1238'`,
+    publicKey:
+      'cffce054df51fb4072e7faf627e0f64f168fd8811f749d34720ac8da264bac06',
+    signature:
+      '5ad8cd006761aa698ea77f271c421a7ea9e34da45b4e827d2fce1b5205933b77e852261381cfaa0a8ecfba52622d5c1560462db70df08fc905111e2a9a5fa601',
+  },
+]
 
 const ledgerDevice = {
   model: 'nanoS',
@@ -342,7 +347,7 @@ describe('Ledger Babylon Wrapper', () => {
           model: 'nanoS',
           id: 'aaaaaaaaaaa',
         },
-        keyParameters,
+        signers: [keyParameters],
         compiledTransactionIntent: compiledTxHex.setMetadata,
         mode: 'verbose',
       })
@@ -362,14 +367,14 @@ describe('Ledger Babylon Wrapper', () => {
 
       const result = await ledger.signTransaction({
         ledgerDevice,
-        keyParameters,
+        signers: [keyParameters],
         compiledTransactionIntent: compiledTxHex.setMetadata,
         mode: 'verbose',
       })
 
       if (result.isErr()) throw result.error
 
-      expect(result.value).toEqual(expectedTransacionSignature)
+      expect(result.value).toEqual(getExpectedTransacionSignature('curve25519'))
     })
 
     it('should sign summary TX using secp256k1', async () => {
@@ -381,17 +386,19 @@ describe('Ledger Babylon Wrapper', () => {
 
       const result = await ledger.signTransaction({
         ledgerDevice,
-        keyParameters: {
-          derivationPath: `m/44'/1022'/10'/525'/0'/1238'`,
-          curve: 'secp256k1',
-        },
+        signers: [
+          {
+            derivationPath: `m/44'/1022'/10'/525'/0'/1238'`,
+            curve: 'secp256k1',
+          },
+        ],
         compiledTransactionIntent: compiledTxHex.setMetadata,
         mode: 'summary',
       })
 
       if (result.isErr()) throw result.error
 
-      expect(result.value).toEqual(expectedTransacionSignature)
+      expect(result.value).toEqual(getExpectedTransacionSignature('secp256k1'))
     })
   })
 })

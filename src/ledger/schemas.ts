@@ -30,6 +30,13 @@ export const LedgerDeviceSchema = object({
 
 export type LedgerDevice = z.infer<typeof LedgerDeviceSchema>
 
+export const KeyParametersSchema = object({
+  curve,
+  derivationPath: string(),
+})
+
+export type KeyParameters = z.infer<typeof KeyParametersSchema>
+
 export const LedgerDeviceIdRequestSchema = object({
   interactionId: string(),
   discriminator: literal('getDeviceInfo'),
@@ -40,10 +47,7 @@ export type LedgerDeviceIdRequest = z.infer<typeof LedgerDeviceIdRequestSchema>
 export const LedgerPublicKeyRequestSchema = object({
   interactionId: string(),
   discriminator: literal('derivePublicKey'),
-  keyParameters: object({
-    curve,
-    derivationPath: string(),
-  }),
+  keyParameters: KeyParametersSchema,
   ledgerDevice: LedgerDeviceSchema,
 })
 
@@ -54,10 +58,7 @@ export type LedgerPublicKeyRequest = z.infer<
 export const LedgerSignTransactionRequestSchema = object({
   interactionId: string(),
   discriminator: literal('signTransaction'),
-  keyParameters: object({
-    curve,
-    derivationPath: string(),
-  }),
+  signers: KeyParametersSchema.array(),
   ledgerDevice: LedgerDeviceSchema,
   compiledTransactionIntent: string(),
   mode: union([literal('verbose'), literal('summary')]),
@@ -70,10 +71,7 @@ export type LedgerSignTransactionRequest = z.infer<
 export const LedgerSignChallengeRequestSchema = object({
   interactionId: string(),
   discriminator: literal('signChallenge'),
-  keyParameters: object({
-    curve,
-    derivationPath: string(),
-  }),
+  signers: KeyParametersSchema.array(),
   ledgerDevice: LedgerDeviceSchema,
   challenge: string(),
 })
@@ -115,6 +113,15 @@ export type LedgerDeviceIdResponse = z.infer<
   typeof LedgerDeviceIdResponseSchema
 >
 
+export const SignatureOfSignerSchema = object({
+  curve,
+  derivationPath: string(),
+  signature: string(),
+  publicKey: string(),
+})
+
+export type SignatureOfSigner = z.infer<typeof SignatureOfSignerSchema>
+
 export const LedgerPublicKeyResponseSchema = object({
   interactionId: string(),
   discriminator: literal('derivePublicKey'),
@@ -130,10 +137,7 @@ export type LedgerPublicKeyResponse = z.infer<
 export const LedgerSignTransactionResponseSchema = object({
   interactionId: string(),
   discriminator: literal('signTransaction'),
-  success: object({
-    signature: string(),
-    publicKey: string(),
-  }),
+  success: SignatureOfSignerSchema.array(),
 })
 
 export type LedgerSignTransactionResponse = z.infer<
@@ -143,10 +147,7 @@ export type LedgerSignTransactionResponse = z.infer<
 export const LedgerSignChallengeResponseSchema = object({
   interactionId: string(),
   discriminator: literal('signChallenge'),
-  success: object({
-    signature: string(),
-    publicKey: string(),
-  }),
+  success: SignatureOfSignerSchema.array(),
 })
 
 export type LedgerSignChallengeResponse = z.infer<
@@ -246,10 +247,7 @@ export const createSignedTransactionResponse = (
     interactionId,
     discriminator,
   }: Pick<LedgerSignTransactionRequest, 'interactionId' | 'discriminator'>,
-  success: {
-    publicKey: string
-    signature: string
-  }
+  success: SignatureOfSigner[]
 ) => ({
   interactionId,
   discriminator,

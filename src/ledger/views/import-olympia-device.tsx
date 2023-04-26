@@ -27,8 +27,8 @@ export const ImportOlympiaDevice = ({
       respond(createLedgerOlympiaDeviceResponse(message, olympiaDevice.value))
     } else {
       setError(olympiaDevice.error)
+      setIsLoading(false)
     }
-    setIsLoading(false)
   }
 
   return (
@@ -39,14 +39,11 @@ export const ImportOlympiaDevice = ({
 
       <ErrorText error={error} />
 
-      <Button
-        full
-        mt="large"
-        onClick={importOlympiaFromLedger}
-        disabled={isLoading}
-      >
-        Continue
-      </Button>
+      {!isLoading && (
+        <Button full mt="large" onClick={importOlympiaFromLedger}>
+          Continue
+        </Button>
+      )}
     </>
   )
 }

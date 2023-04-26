@@ -12,7 +12,7 @@ import { LedgerDeviceBox } from 'ledger/components/ledger-device-box'
 
 const EntityType = {
   Account: '525',
-  Identity: '618'
+  Identity: '618',
 } as const
 
 export const ApplyLedgerFactor = ({
@@ -39,8 +39,8 @@ export const ApplyLedgerFactor = ({
       respond(createLedgerPublicKeyResponse(message, publicKey.value))
     } else {
       setError(publicKey.error)
+      setIsLoading(false)
     }
-    setIsLoading(false)
   }
   return (
     <>
@@ -51,9 +51,11 @@ export const ApplyLedgerFactor = ({
 
       <ErrorText error={error} />
       <LedgerDeviceBox {...message.ledgerDevice} />
-      <Button full mt="large" onClick={getPublicKey} disabled={isLoading}>
-        Continue
-      </Button>
+      {!isLoading && (
+        <Button full onClick={getPublicKey}>
+          Continue
+        </Button>
+      )}
     </>
   )
 }

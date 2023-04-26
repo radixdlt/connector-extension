@@ -7,6 +7,7 @@ import {
 import TransportWebHID from '@ledgerhq/hw-transport-webhid'
 import { logger } from 'utils/logger'
 import { bufferToChunks } from 'utils/buffer-to-chunks'
+import { Subject } from 'rxjs'
 
 type Values<T> = T[keyof T]
 
@@ -76,17 +77,28 @@ export const encodeDerivationPath = (derivationPath: string) => {
   return `${dataLength}${data}`
 }
 
+const LedgerSubjects = () => ({
+  onProgressSubject: new Subject<{ message: string } | undefined>(),
+})
+
 export type LedgerOptions = {
   transport: typeof TransportWebHID
+  ledgerSubjects?: ReturnType<typeof LedgerSubjects>
 }
 
-export const LedgerWrapper = ({ transport }: LedgerOptions) => {
+export const LedgerWrapper = ({ transport, ledgerSubjects }: LedgerOptions) => {
+  const { onProgressSubject } = ledgerSubjects || LedgerSubjects()
+
+  const sendProgressMessage = (message?: string) =>
+    onProgressSubject.next(message ? { message } : undefined)
+
   const createLedgerTransport = () =>
     ResultAsync.fromPromise(
       transport.list(),
       () => LedgerErrorResponse.FailedToCreateTransport
     )
       .andThen((devices) => {
+        sendProgressMessage('Checking Ledger device connection')
         if (devices.length > 1) {
           return err(
             errorResponses[LedgerErrorResponse.MultipleLedgerConnected]
@@ -128,8 +140,10 @@ export const LedgerWrapper = ({ transport }: LedgerOptions) => {
             })
 
           return {
-            closeTransport: () =>
-              ResultAsync.fromSafePromise(transport.close()),
+            closeTransport: () => {
+              sendProgressMessage(undefined)
+              return ResultAsync.fromSafePromise(transport.close())
+            },
             exchange,
           }
         })
@@ -149,16 +163,22 @@ export const LedgerWrapper = ({ transport }: LedgerOptions) => {
                     { publicKey: string; path: string }[],
                     string
                   >,
-                  path
+                  path,
+                  index
                 ) => {
                   const encodedDerivationPath = encodeDerivationPath(path)
 
-                  return acc.andThen((publicKeys: any) =>
-                    exchange(
+                  return acc.andThen((publicKeys: any) => {
+                    sendProgressMessage(
+                      `Importing ${index + 1} out of ${
+                        derivationPaths.length
+                      } olympia accounts`
+                    )
+                    return exchange(
                       LedgerInstructionCode.GetPubKeySecp256k1,
                       encodedDerivationPath
                     ).map((publicKey) => [...publicKeys, { publicKey, path }])
-                  )
+                  })
                 },
                 okAsync([])
               )
@@ -198,6 +218,7 @@ export const LedgerWrapper = ({ transport }: LedgerOptions) => {
     createLedgerTransport().andThen(({ closeTransport, exchange }) =>
       exchange(LedgerInstructionCode.GetDeviceId)
         .andThen((deviceId) => {
+          sendProgressMessage('Comparing Ledger Device ID')
           if (deviceId !== params.ledgerDevice.id) {
             return err(errorResponses[LedgerErrorResponse.DeviceMismatch])
           }
@@ -224,63 +245,87 @@ export const LedgerWrapper = ({ transport }: LedgerOptions) => {
       LedgerSignTransactionRequest,
       'discriminator' | 'interactionId'
     >
-  ) => {
-    let command: LedgerInstruction =
-      params.keyParameters.curve === 'curve25519'
-        ? LedgerInstructionCode.SignTxEd255519
-        : LedgerInstructionCode.SignTxSecp256k1
-
-    if (params.mode === 'summary') {
-      command = String(Number(command) + 1) as LedgerInstruction
-    }
-
-    return createLedgerTransport().andThen(({ closeTransport, exchange }) =>
+  ) =>
+    createLedgerTransport().andThen(({ closeTransport, exchange }) =>
       exchange(LedgerInstructionCode.GetDeviceId)
         .andThen((deviceId) => {
           if (deviceId !== params.ledgerDevice.id) {
             return err(errorResponses[LedgerErrorResponse.DeviceMismatch])
           }
 
-          const encodedDerivationPath = encodeDerivationPath(
-            params.keyParameters.derivationPath
-          )
-          const data = bufferToChunks(
+          const compiledTxIntentChunksResult = bufferToChunks(
             Buffer.from(params.compiledTransactionIntent, 'hex'),
             255
           )
-          if (data.isErr()) return err('error chunking data')
+          if (compiledTxIntentChunksResult.isErr())
+            return err('error chunking data')
 
-          const chunks = data.value.map((chunk, index) => ({
-            chunk: chunk.toString('hex'),
-            instructionClass:
-              index === data.value.length - 1
-                ? LedgerInstructionClass.ac
-                : LedgerInstructionClass.ab,
-          }))
+          const apduChunks = compiledTxIntentChunksResult.value.map(
+            (chunk, index) => ({
+              chunk: chunk.toString('hex'),
+              instructionClass:
+                index === compiledTxIntentChunksResult.value.length - 1
+                  ? LedgerInstructionClass.ac
+                  : LedgerInstructionClass.ab,
+            })
+          )
 
-          return exchange(command, encodedDerivationPath)
-            .andThen(() =>
-              chunks.reduce(
-                (
-                  acc: ResultAsync<string, string>,
-                  { chunk, instructionClass }
-                ) =>
-                  acc.andThen(() => {
-                    const chunkLength = getDataLength(chunk)
+          return params.signers.reduce(
+            (signersAcc: ResultAsync<any[], string>, signer, index) => {
+              let command: LedgerInstruction =
+                signer.curve === 'curve25519'
+                  ? LedgerInstructionCode.SignTxEd255519
+                  : LedgerInstructionCode.SignTxSecp256k1
 
-                    return exchange(
-                      command,
-                      `${chunkLength}${chunk}`,
-                      instructionClass
-                    )
-                  }),
-                okAsync('')
+              if (params.mode === 'summary') {
+                command = String(Number(command) + 1) as LedgerInstruction
+              }
+
+              const encodedDerivationPath = encodeDerivationPath(
+                signer.derivationPath
               )
-            )
-            .map((result) => ({
-              publicKey: result.slice(128),
-              signature: result.slice(0, 128),
-            }))
+
+              return signersAcc.andThen((previousValue) => {
+                sendProgressMessage(
+                  `Gathering ${index + 1} out of ${
+                    params.signers.length
+                  } signatures`
+                )
+                return exchange(command, encodedDerivationPath)
+                  .andThen(() =>
+                    apduChunks.reduce(
+                      (
+                        acc: ResultAsync<string, string>,
+                        { chunk, instructionClass }
+                      ) =>
+                        acc.andThen(() => {
+                          const chunkLength = getDataLength(chunk)
+
+                          return exchange(
+                            command,
+                            `${chunkLength}${chunk}`,
+                            instructionClass
+                          )
+                        }),
+                      okAsync('')
+                    )
+                  )
+                  .map((result) => ({
+                    publicKey: result.slice(128),
+                    signature: result.slice(0, 128),
+                  }))
+                  .map((result) => [
+                    ...previousValue,
+                    {
+                      ...result,
+                      derivationPath: signer.derivationPath,
+                      curve: signer.curve,
+                    },
+                  ])
+              })
+            },
+            okAsync([])
+          )
         })
         .andThen((result) => closeTransport().map(() => result))
         .mapErr((error) => {
@@ -288,9 +333,14 @@ export const LedgerWrapper = ({ transport }: LedgerOptions) => {
           return error
         })
     )
-  }
 
-  return { getOlympiaDeviceInfo, getDeviceInfo, getPublicKey, signTransaction }
+  return {
+    progress$: onProgressSubject.asObservable(),
+    getOlympiaDeviceInfo,
+    getDeviceInfo,
+    getPublicKey,
+    signTransaction,
+  }
 }
 
 export const ledger = LedgerWrapper({ transport: TransportWebHID })

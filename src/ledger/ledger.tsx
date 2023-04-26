@@ -1,4 +1,4 @@
-import { Box, PopupWindow } from 'components'
+import { Box, PopupWindow, Text } from 'components'
 import { useEffect, useState } from 'react'
 import {
   isPublicKeyRequest,
@@ -15,8 +15,10 @@ import { SignTransaction } from './views/sign-transaction'
 import { createMessage } from 'chrome/messages/create-message'
 import { Messages } from 'chrome/messages/_types'
 import { ImportOlympiaDevice } from './views/import-olympia-device'
+import { ledger } from './ledger-wrapper'
 
 export const Ledger = () => {
+  const [progressMessage, setProgressMessage] = useState<string | undefined>()
   const [currentMessage, setCurrentMessage] =
     useState<Messages['walletToLedger']>()
 
@@ -54,9 +56,13 @@ export const Ledger = () => {
       }
     }
 
+    const subscription = ledger.progress$.subscribe((progress) =>
+      setProgressMessage(progress?.message)
+    )
     chrome.runtime.onMessage.addListener(readMessage)
 
     return () => {
+      subscription.unsubscribe()
       chrome.runtime.onMessage.removeListener(readMessage)
     }
   }, [])
@@ -64,6 +70,9 @@ export const Ledger = () => {
   return (
     <PopupWindow content="start">
       <Box maxWidth="medium">{renderLedgerView(currentMessage)}</Box>
+      <Text italic style={{ color: 'white' }}>
+        {progressMessage}
+      </Text>
     </PopupWindow>
   )
 }

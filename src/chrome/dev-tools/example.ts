@@ -34,21 +34,27 @@ export const getDerivePublicKeyPayload = () => ({
   ledgerDevice: {
     name: 'My Ledger Device',
     model: 'nanoS',
-    id: 'ed798e66ded43a63ba7a41cf060062ba4a0c55ad69b14f2215c1526383ac4157aa619ee9106b02582047dd7f802b305dbb0b1641dde02aef7fdac937b9f9ee8c',
+    id: '41ac202687326a4fc6cb677e9fd92d08b91ce46c669950d58790d4d5e583adc0',
   },
 })
 
 export const getSignTransactionPayload = () => ({
   interactionId: crypto.randomUUID(),
   discriminator: 'signTransaction',
-  keyParameters: {
-    curve: 'curve25519',
-    derivationPath: 'm/44H/1022H/10H/525H/1460H/0H',
-  },
+  signers: [
+    {
+      curve: 'curve25519',
+      derivationPath: 'm/44H/1022H/10H/525H/1460H/0H',
+    },
+    {
+      curve: 'curve25519',
+      derivationPath: 'm/44H/1022H/10H/525H/1460H/1H',
+    },
+  ],
   ledgerDevice: {
     name: 'My Ledger Device',
     model: 'nanoS',
-    id: 'ed798e66ded43a63ba7a41cf060062ba4a0c55ad69b14f2215c1526383ac4157aa619ee9106b02582047dd7f802b305dbb0b1641dde02aef7fdac937b9f9ee8c',
+    id: '41ac202687326a4fc6cb677e9fd92d08b91ce46c669950d58790d4d5e583adc0',
   },
   compiledTransactionIntent: compiledTxHex.createAccount,
   mode: 'verbose',
@@ -57,14 +63,16 @@ export const getSignTransactionPayload = () => ({
 export const getSignChallengePayload = () => ({
   interactionId: crypto.randomUUID(),
   discriminator: 'signChallenge',
-  keyParameters: {
-    curve: 'curve25519',
-    derivationPath: 'm/44H/1022H/10H/525H/1460H/0H',
-  },
+  signers: [
+    {
+      curve: 'curve25519',
+      derivationPath: 'm/44H/1022H/10H/525H/1460H/0H',
+    },
+  ],
   ledgerDevice: {
     name: 'My Ledger Device',
     model: 'nanoS',
-    id: 'ed798e66ded43a63ba7a41cf060062ba4a0c55ad69b14f2215c1526383ac4157aa619ee9106b02582047dd7f802b305dbb0b1641dde02aef7fdac937b9f9ee8c',
+    id: '41ac202687326a4fc6cb677e9fd92d08b91ce46c669950d58790d4d5e583adc0',
   },
   challenge: '',
 })
