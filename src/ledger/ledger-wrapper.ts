@@ -3,6 +3,7 @@ import {
   LedgerImportOlympiaDeviceRequest,
   LedgerPublicKeyRequest,
   LedgerSignTransactionRequest,
+  SignatureOfSigner,
 } from './schemas'
 import TransportWebHID from '@ledgerhq/hw-transport-webhid'
 import { logger } from 'utils/logger'
@@ -79,16 +80,20 @@ export const encodeDerivationPath = (derivationPath: string) => {
 }
 
 const LedgerSubjects = () => ({
-  onProgressSubject: new Subject<string | undefined>(),
+  onProgressSubject: new Subject<string>(),
 })
 
-export type LedgerOptions = {
+export type LedgerOptions = Partial<{
   transport: typeof TransportWebHID
-  ledgerSubjects?: ReturnType<typeof LedgerSubjects>
-}
+  ledgerSubjects: ReturnType<typeof LedgerSubjects>
+}>
 
-export const LedgerWrapper = ({ transport, ledgerSubjects }: LedgerOptions) => {
-  const { onProgressSubject } = ledgerSubjects || LedgerSubjects()
+export const LedgerWrapper = ({
+  transport = TransportWebHID,
+  ledgerSubjects = LedgerSubjects(),
+}: LedgerOptions) => {
+  const setProgressMessage = (message: string) =>
+    ledgerSubjects.onProgressSubject.next(message)
 
   const createLedgerTransport = () =>
     ResultAsync.fromPromise(
@@ -96,7 +101,7 @@ export const LedgerWrapper = ({ transport, ledgerSubjects }: LedgerOptions) => {
       () => LedgerErrorResponse.FailedToCreateTransport
     )
       .andThen((devices) => {
-        onProgressSubject.next('Creating Ledger device connection')
+        setProgressMessage('Creating Ledger device connection')
         if (devices.length > 1) {
           return err(
             errorResponses[LedgerErrorResponse.MultipleLedgerConnected]
@@ -139,7 +144,7 @@ export const LedgerWrapper = ({ transport, ledgerSubjects }: LedgerOptions) => {
 
           return {
             closeTransport: () => {
-              onProgressSubject.next(undefined)
+              setProgressMessage('')
               return ResultAsync.fromSafePromise(transport.close())
             },
             exchange,
@@ -167,7 +172,7 @@ export const LedgerWrapper = ({ transport, ledgerSubjects }: LedgerOptions) => {
 
   const ensureCorrectDeviceId =
     (expectedDeviceId: string) => (ledgerDeviceId: string) => {
-      onProgressSubject.next('Checking Ledger Device ID')
+      setProgressMessage('Checking Ledger Device ID')
 
       return ledgerDeviceId === expectedDeviceId
         ? ok(undefined)
@@ -189,8 +194,8 @@ export const LedgerWrapper = ({ transport, ledgerSubjects }: LedgerOptions) => {
               ) => {
                 const encodedDerivationPath = encodeDerivationPath(path)
 
-                return acc.andThen((publicKeys: any) => {
-                  onProgressSubject.next(
+                return acc.andThen((publicKeys) => {
+                  setProgressMessage(
                     `Importing ${index + 1} out of ${
                       derivationPaths.length
                     } olympia accounts`
@@ -232,7 +237,7 @@ export const LedgerWrapper = ({ transport, ledgerSubjects }: LedgerOptions) => {
           const encodedDerivationPath = encodeDerivationPath(
             params.keyParameters.derivationPath
           )
-          onProgressSubject.next('Getting public key...')
+          setProgressMessage('Getting public key...')
 
           return exchange(
             params.keyParameters.curve === 'curve25519'
@@ -271,7 +276,11 @@ export const LedgerWrapper = ({ transport, ledgerSubjects }: LedgerOptions) => {
           )
 
           return params.signers.reduce(
-            (signersAcc: ResultAsync<any[], string>, signer, index) => {
+            (
+              signersAcc: ResultAsync<SignatureOfSigner[], string>,
+              signer,
+              index
+            ) => {
               let command: LedgerInstructionCode =
                 signer.curve === 'curve25519'
                   ? LedgerInstructionCode.SignTxEd255519
@@ -286,7 +295,7 @@ export const LedgerWrapper = ({ transport, ledgerSubjects }: LedgerOptions) => {
               )
 
               return signersAcc.andThen((previousValue) => {
-                onProgressSubject.next(
+                setProgressMessage(
                   `Gathering ${index + 1} out of ${
                     params.signers.length
                   } signatures`
@@ -330,7 +339,7 @@ export const LedgerWrapper = ({ transport, ledgerSubjects }: LedgerOptions) => {
     )
 
   return {
-    progress$: onProgressSubject.asObservable(),
+    progress$: ledgerSubjects.onProgressSubject.asObservable(),
     getOlympiaDeviceInfo,
     getDeviceInfo,
     getPublicKey,
@@ -338,4 +347,4 @@ export const LedgerWrapper = ({ transport, ledgerSubjects }: LedgerOptions) => {
   }
 }
 
-export const ledger = LedgerWrapper({ transport: TransportWebHID })
+export const ledger = LedgerWrapper({})
