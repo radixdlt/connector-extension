@@ -7,15 +7,15 @@ import {
   isDeviceIdRequest,
   LedgerResponse,
   isImportOlympiaDeviceRequest,
-} from './schemas'
-import { ApplyLedgerFactor } from './views/apply-ledger-factor'
-import { NewHardwareWallet } from './views/new-hardware-wallet'
-import { SignChallenge } from './views/sign-challenge'
-import { SignTransaction } from './views/sign-transaction'
+} from '../schemas'
+import { ApplyLedgerFactor } from './apply-ledger-factor'
+import { NewHardwareWallet } from './new-hardware-wallet'
+import { SignChallenge } from './sign-challenge'
+import { SignTransaction } from './sign-transaction'
 import { createMessage } from 'chrome/messages/create-message'
 import { Messages } from 'chrome/messages/_types'
-import { ImportOlympiaDevice } from './views/import-olympia-device'
-import { ledger } from './ledger-wrapper'
+import { ImportOlympiaDevice } from './import-olympia-device'
+import { ledger } from '../wrapper/ledger-wrapper'
 
 export const Ledger = () => {
   const [progressMessage, setProgressMessage] = useState<string | undefined>()

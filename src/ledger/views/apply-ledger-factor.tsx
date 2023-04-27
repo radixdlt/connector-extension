@@ -1,6 +1,5 @@
 import { Button } from 'components'
 import { ErrorText } from '../components/error-text'
-import { ledger } from 'ledger/ledger-wrapper'
 import {
   createLedgerPublicKeyResponse,
   LedgerPublicKeyRequest,
@@ -9,6 +8,7 @@ import {
 import { PairingHeader } from 'pairing/components/pairing-header'
 import { useState } from 'react'
 import { LedgerDeviceBox } from 'ledger/components/ledger-device-box'
+import { ledger } from 'ledger/wrapper/ledger-wrapper'
 
 const EntityType = {
   Account: '525',

@@ -1,87 +1,22 @@
-import { err, ok, okAsync, ResultAsync } from 'neverthrow'
+import TransportWebHID from '@ledgerhq/hw-transport-webhid'
 import {
   LedgerImportOlympiaDeviceRequest,
   LedgerPublicKeyRequest,
   LedgerSignTransactionRequest,
   SignatureOfSigner,
-} from './schemas'
-import TransportWebHID from '@ledgerhq/hw-transport-webhid'
+} from 'ledger/schemas'
+import { ResultAsync, err, ok, okAsync } from 'neverthrow'
+import { bufferToChunks } from 'utils'
 import { logger } from 'utils/logger'
-import { bufferToChunks } from 'utils/buffer-to-chunks'
-import { Subject } from 'rxjs'
-
-type Values<T> = T[keyof T]
-
-const LedgerInstructionClass = {
-  aa: 'aa',
-  ab: 'ab',
-  ac: 'ac',
-} as const
-
-const LedgerErrorResponse = {
-  FailedToCreateTransport: 'FailedToCreateTransport',
-  FailedToExchangeData: 'FailedToExchangeData',
-  MultipleLedgerConnected: 'MultipleLedgerConnected',
-  DeviceMismatch: 'DeviceMismatch',
-  UnlockDevice: '5515',
-  OpenRadixApp: '6e01',
-} as const
-
-export const LedgerInstructionCode = {
-  GetDeviceModel: '11',
-  GetDeviceId: '12',
-  GetPubKeyEd25519: '21',
-  GetPubKeySecp256k1: '31',
-  SignTxEd255519: '41',
-  SignTxEd255519Smart: '42',
-  SignTxSecp256k1: '51',
-  SignTxSecp256k1Smart: '52',
-} as const
-
-type LedgerError = Values<typeof LedgerErrorResponse>
-type LedgerInstructionCode = Values<typeof LedgerInstructionCode>
-type LedgerInstructionClass = Values<typeof LedgerInstructionClass>
-
-const isKnownError = (statusCode: any): statusCode is LedgerError =>
-  Object.values(LedgerErrorResponse).includes(statusCode)
-
-const errorResponses: Record<LedgerError, string> = {
-  [LedgerErrorResponse.MultipleLedgerConnected]:
-    'Please connect only one ledger device',
-  [LedgerErrorResponse.UnlockDevice]:
-    'Please unlock Ledger Device and try again',
-  [LedgerErrorResponse.OpenRadixApp]:
-    'Please open Radix Babylon app in your Ledger device and try again',
-  [LedgerErrorResponse.FailedToCreateTransport]:
-    'Failed to open transport layer with Ledger device',
-  [LedgerErrorResponse.FailedToExchangeData]:
-    'Failed to exchange data with Ledger device',
-  [LedgerErrorResponse.DeviceMismatch]: `Device doesn't match. Make sure you connected correct Ledger device`,
-}
-
-export const getDataLength = (data: string) =>
-  Math.floor(data.length / 2).toString(16)
-
-export const encodeDerivationPath = (derivationPath: string) => {
-  const path = derivationPath.split('H').join(`'`).slice(2).split('/')
-  const length = `00${(path.length & 0xff).toString(16)}`.slice(-2)
-
-  const parts = path
-    .map(
-      (value) => (value.endsWith("'") ? 0x80000000 : 0) + parseInt(value, 10)
-    )
-    .map((value) => value.toString(16).padStart(8, '0'))
-    .join('')
-
-  const data = `${length}${parts}`
-  const dataLength = getDataLength(data)
-
-  return `${dataLength}${data}`
-}
-
-const LedgerSubjects = () => ({
-  onProgressSubject: new Subject<string>(),
-})
+import {
+  LedgerErrorResponse,
+  LedgerInstructionCode,
+  LedgerInstructionClass,
+  errorResponses,
+} from './contants'
+import { encodeDerivationPath } from './encode-derivation-path'
+import { isKnownError, getDataLength } from './utils'
+import { LedgerSubjects } from './subjects'
 
 export type LedgerOptions = Partial<{
   transport: typeof TransportWebHID

@@ -7,7 +7,7 @@ import {
 } from 'ledger/schemas'
 import { PairingHeader } from 'pairing/components/pairing-header'
 import { useState } from 'react'
-import { ledger } from 'ledger/ledger-wrapper'
+import { ledger } from 'ledger/wrapper/ledger-wrapper'
 
 export const NewHardwareWallet = ({
   message,

@@ -1,7 +1,7 @@
 import { Button } from 'components'
 import { ErrorText } from 'ledger/components/error-text'
 import { LedgerDeviceBox } from 'ledger/components/ledger-device-box'
-import { ledger } from 'ledger/ledger-wrapper'
+import { ledger } from 'ledger/wrapper/ledger-wrapper'
 import {
   LedgerResponse,
   LedgerSignTransactionRequest,
