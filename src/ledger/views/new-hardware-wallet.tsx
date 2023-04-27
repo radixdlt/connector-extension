@@ -7,7 +7,7 @@ import {
 } from 'ledger/schemas'
 import { PairingHeader } from 'pairing/components/pairing-header'
 import { useState } from 'react'
-import { ledger } from 'ledger/ledger-wrapper'
+import { ledger } from 'ledger/wrapper/ledger-wrapper'
 
 export const NewHardwareWallet = ({
   message,
@@ -20,6 +20,7 @@ export const NewHardwareWallet = ({
   const [isLoading, setIsLoading] = useState<boolean>(false)
 
   const getDeviceInfo = async () => {
+    setError(undefined)
     setIsLoading(true)
 
     const deviceInfo = await ledger.getDeviceInfo()
@@ -34,9 +35,8 @@ export const NewHardwareWallet = ({
       )
     } else {
       setError(deviceInfo.error)
+      setIsLoading(false)
     }
-
-    setIsLoading(false)
   }
 
   return (
@@ -47,10 +47,11 @@ export const NewHardwareWallet = ({
       </PairingHeader>
 
       <ErrorText error={error} />
-
-      <Button full mt="large" onClick={getDeviceInfo} disabled={isLoading}>
-        Continue
-      </Button>
+      {!isLoading && (
+        <Button full mt="large" onClick={getDeviceInfo}>
+          Continue
+        </Button>
+      )}
     </>
   )
 }

@@ -1,6 +1,5 @@
 import { Button } from 'components'
 import { ErrorText } from '../components/error-text'
-import { ledger } from 'ledger/ledger-wrapper'
 import {
   createLedgerPublicKeyResponse,
   LedgerPublicKeyRequest,
@@ -9,10 +8,11 @@ import {
 import { PairingHeader } from 'pairing/components/pairing-header'
 import { useState } from 'react'
 import { LedgerDeviceBox } from 'ledger/components/ledger-device-box'
+import { ledger } from 'ledger/wrapper/ledger-wrapper'
 
 const EntityType = {
   Account: '525',
-  Identity: '618'
+  Identity: '618',
 } as const
 
 export const ApplyLedgerFactor = ({
@@ -32,6 +32,7 @@ export const ApplyLedgerFactor = ({
     : 'Apply Ledger Factor to Persona Security'
 
   const getPublicKey = async () => {
+    setError(undefined)
     setIsLoading(true)
     const publicKey = await ledger.getPublicKey(message)
 
@@ -39,8 +40,8 @@ export const ApplyLedgerFactor = ({
       respond(createLedgerPublicKeyResponse(message, publicKey.value))
     } else {
       setError(publicKey.error)
+      setIsLoading(false)
     }
-    setIsLoading(false)
   }
   return (
     <>
@@ -51,9 +52,11 @@ export const ApplyLedgerFactor = ({
 
       <ErrorText error={error} />
       <LedgerDeviceBox {...message.ledgerDevice} />
-      <Button full mt="large" onClick={getPublicKey} disabled={isLoading}>
-        Continue
-      </Button>
+      {!isLoading && (
+        <Button full onClick={getPublicKey}>
+          Continue
+        </Button>
+      )}
     </>
   )
 }

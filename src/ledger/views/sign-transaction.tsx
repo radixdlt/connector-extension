@@ -1,7 +1,7 @@
 import { Button } from 'components'
 import { ErrorText } from 'ledger/components/error-text'
 import { LedgerDeviceBox } from 'ledger/components/ledger-device-box'
-import { ledger } from 'ledger/ledger-wrapper'
+import { ledger } from 'ledger/wrapper/ledger-wrapper'
 import {
   LedgerResponse,
   LedgerSignTransactionRequest,
@@ -21,6 +21,7 @@ export const SignTransaction = ({
   const [isLoading, setIsLoading] = useState<boolean>(false)
 
   const sign = async () => {
+    setError(undefined)
     setIsLoading(true)
     const signedTx = await ledger.signTransaction(message)
 
@@ -28,8 +29,8 @@ export const SignTransaction = ({
       respond(createSignedTransactionResponse(message, signedTx.value))
     } else {
       setError(signedTx.error)
+      setIsLoading(false)
     }
-    setIsLoading(false)
   }
 
   return (
@@ -41,9 +42,11 @@ export const SignTransaction = ({
       <ErrorText error={error} />
 
       <LedgerDeviceBox {...message.ledgerDevice} />
-      <Button onClick={sign} disabled={isLoading}>
-        Continue
-      </Button>
+      {!isLoading && (
+        <Button full onClick={sign}>
+          Continue
+        </Button>
+      )}
     </>
   )
 }

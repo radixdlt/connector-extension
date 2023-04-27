@@ -32,7 +32,9 @@ export const LedgerSimulator = () => {
   const [txIntent, setTxIntent] = useState<string>(
     compiledTxHex.createFungibleResourceWithInitialSupply
   )
-  const [hdPath, setHdPath] = useState<string>(`m/44'/1022'/10'/525'/1460'/0'`)
+  const [derivationPath, setDerivationPath] = useState<string>(
+    `m/44'/1022'/10'/525'/1460'/0'`
+  )
 
   useEffect(() => {
     const onMessage = (message: any) => {
@@ -82,7 +84,7 @@ export const LedgerSimulator = () => {
     const wallet = createRadixWallet({ seed, curve })
     const response = createLedgerPublicKeyResponse(
       { interactionId, discriminator: 'derivePublicKey' },
-      wallet.deriveFullPath(hdPath).publicKey
+      wallet.deriveFullPath(derivationPath).publicKey
     )
     sendMessage(createMessage.ledgerResponse(response))
     setInteractionId(crypto.randomUUID())
@@ -125,7 +127,7 @@ export const LedgerSimulator = () => {
 
   const signTx = async () => {
     const wallet = createRadixWallet({ seed, curve })
-    const { privateKey, publicKey } = wallet.deriveFullPath(hdPath)
+    const { privateKey, publicKey } = wallet.deriveFullPath(derivationPath)
     const hash = blake2b(32)
       .update(Buffer.from(txIntent, 'base64'))
       .digest('hex')
@@ -138,7 +140,7 @@ export const LedgerSimulator = () => {
       const signature = signed.r.toString(16, 32) + signed.s.toString(16, 32)
       const response = createSignedTransactionResponse(
         { interactionId, discriminator: 'signTransaction' },
-        { signature, publicKey }
+        [{ signature, publicKey, curve: 'curve25519', derivationPath }]
       )
       sendMessage(createMessage.ledgerResponse(response))
       setInteractionId(crypto.randomUUID())
@@ -151,7 +153,7 @@ export const LedgerSimulator = () => {
         signed.s.toString(16, 32)
       const response = createSignedTransactionResponse(
         { interactionId, discriminator: 'signTransaction' },
-        { signature, publicKey }
+        [{ signature, publicKey, curve: 'secp256k1', derivationPath }]
       )
       sendMessage(createMessage.ledgerResponse(response))
       setInteractionId(crypto.randomUUID())
@@ -198,8 +200,8 @@ export const LedgerSimulator = () => {
         <Box>
           <input
             className="w-100"
-            value={hdPath}
-            onChange={(ev) => setHdPath(ev.target.value)}
+            value={derivationPath}
+            onChange={(ev) => setDerivationPath(ev.target.value)}
           />
           <Text
             muted

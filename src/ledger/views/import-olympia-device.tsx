@@ -1,6 +1,5 @@
 import { Button } from 'components'
 import { ErrorText } from '../components/error-text'
-import { ledger } from 'ledger/ledger-wrapper'
 import {
   LedgerImportOlympiaDeviceRequest,
   LedgerResponse,
@@ -8,6 +7,7 @@ import {
 } from 'ledger/schemas'
 import { PairingHeader } from 'pairing/components/pairing-header'
 import { useState } from 'react'
+import { ledger } from 'ledger/wrapper/ledger-wrapper'
 
 export const ImportOlympiaDevice = ({
   message,
@@ -20,6 +20,7 @@ export const ImportOlympiaDevice = ({
   const [isLoading, setIsLoading] = useState<boolean>(false)
 
   const importOlympiaFromLedger = async () => {
+    setError(undefined)
     setIsLoading(true)
     const olympiaDevice = await ledger.getOlympiaDeviceInfo(message)
 
@@ -27,8 +28,8 @@ export const ImportOlympiaDevice = ({
       respond(createLedgerOlympiaDeviceResponse(message, olympiaDevice.value))
     } else {
       setError(olympiaDevice.error)
+      setIsLoading(false)
     }
-    setIsLoading(false)
   }
 
   return (
@@ -39,14 +40,11 @@ export const ImportOlympiaDevice = ({
 
       <ErrorText error={error} />
 
-      <Button
-        full
-        mt="large"
-        onClick={importOlympiaFromLedger}
-        disabled={isLoading}
-      >
-        Continue
-      </Button>
+      {!isLoading && (
+        <Button full mt="large" onClick={importOlympiaFromLedger}>
+          Continue
+        </Button>
+      )}
     </>
   )
 }

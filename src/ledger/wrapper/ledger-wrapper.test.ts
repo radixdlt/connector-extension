@@ -1,11 +1,7 @@
 import { compiledTxHex } from 'chrome/dev-tools/example'
-import {
-  LedgerInstructionCode,
-  LedgerWrapper,
-  encodeDerivationPath,
-  ledger,
-} from './ledger-wrapper'
+import { LedgerWrapper, ledger } from './ledger-wrapper'
 import TransportWebHID from '@ledgerhq/hw-transport-webhid'
+import { LedgerInstructionCode } from './contants'
 
 const createLedgerWrapperWithMockedTransport = (
   expectedExchanges: {
@@ -71,11 +67,16 @@ const getExpectedTransactionSigningExchanges = (instructionCode: string) => [
   },
 ]
 
-const expectedTransacionSignature = {
-  publicKey: 'cffce054df51fb4072e7faf627e0f64f168fd8811f749d34720ac8da264bac06',
-  signature:
-    '5ad8cd006761aa698ea77f271c421a7ea9e34da45b4e827d2fce1b5205933b77e852261381cfaa0a8ecfba52622d5c1560462db70df08fc905111e2a9a5fa601',
-}
+const getExpectedTransacionSignature = (curve: string) => [
+  {
+    curve,
+    derivationPath: `m/44'/1022'/10'/525'/0'/1238'`,
+    publicKey:
+      'cffce054df51fb4072e7faf627e0f64f168fd8811f749d34720ac8da264bac06',
+    signature:
+      '5ad8cd006761aa698ea77f271c421a7ea9e34da45b4e827d2fce1b5205933b77e852261381cfaa0a8ecfba52622d5c1560462db70df08fc905111e2a9a5fa601',
+  },
+]
 
 const ledgerDevice = {
   model: 'nanoS',
@@ -88,46 +89,6 @@ const keyParameters = {
 } as const
 
 describe('Ledger Babylon Wrapper', () => {
-  it('should encode derivation path', () => {
-    const testCases = [
-      [
-        `m/44'/1022'/10'/525'/0'/1238'`,
-        '19068000002c800003fe8000000a8000020d80000000800004d6',
-      ],
-      [
-        `m/44H/1022H/10H/525H/0H/1238H`,
-        '19068000002c800003fe8000000a8000020d80000000800004d6',
-      ],
-      [
-        `m/44'/1022'/10'/618'/1'/1211'`,
-        '19068000002c800003fe8000000a8000026a80000001800004bb',
-      ],
-      [`m/44H/1022H/0H/0/1H`, '15058000002c800003fe800000000000000080000001'],
-      [`m/44H/1022H/0H/0/2H`, '15058000002c800003fe800000000000000080000002'],
-      [`m/44H/1022H/0H/0/3H`, '15058000002c800003fe800000000000000080000003'],
-      [`m/44H/1022H/0H/0/4H`, '15058000002c800003fe800000000000000080000004'],
-      [`m/44H/1022H/0H/0/5H`, '15058000002c800003fe800000000000000080000005'],
-      [`m/44H/1022H/0H/0/6H`, '15058000002c800003fe800000000000000080000006'],
-      [`m/44H/1022H/0H/0/7H`, '15058000002c800003fe800000000000000080000007'],
-      [`m/44H/1022H/0H/0/8H`, '15058000002c800003fe800000000000000080000008'],
-      [`m/44H/1022H/0H/0/9H`, '15058000002c800003fe800000000000000080000009'],
-      [`m/44H/1022H/0H/0/0`, '15058000002c800003fe800000000000000000000000'],
-      [`m/44H/1022H/0H/0/1`, '15058000002c800003fe800000000000000000000001'],
-      [`m/44H/1022H/0H/0/2`, '15058000002c800003fe800000000000000000000002'],
-      [`m/44H/1022H/0H/0/3`, '15058000002c800003fe800000000000000000000003'],
-      [`m/44H/1022H/0H/0/4`, '15058000002c800003fe800000000000000000000004'],
-      [`m/44H/1022H/0H/0/5`, '15058000002c800003fe800000000000000000000005'],
-      [`m/44H/1022H/0H/0/6`, '15058000002c800003fe800000000000000000000006'],
-      [`m/44H/1022H/0H/0/7`, '15058000002c800003fe800000000000000000000007'],
-      [`m/44H/1022H/0H/0/8`, '15058000002c800003fe800000000000000000000008'],
-      [`m/44H/1022H/0H/0/9`, '15058000002c800003fe800000000000000000000009'],
-    ]
-
-    testCases.forEach(([input, expected]) => {
-      expect(encodeDerivationPath(input)).toEqual(expected)
-    })
-  })
-
   describe('when hardware device is not connected', () => {
     it('should fail to open transport layer', async () => {
       const result: any = await ledger.getDeviceInfo()
@@ -342,7 +303,7 @@ describe('Ledger Babylon Wrapper', () => {
           model: 'nanoS',
           id: 'aaaaaaaaaaa',
         },
-        keyParameters,
+        signers: [keyParameters],
         compiledTransactionIntent: compiledTxHex.setMetadata,
         mode: 'verbose',
       })
@@ -362,14 +323,14 @@ describe('Ledger Babylon Wrapper', () => {
 
       const result = await ledger.signTransaction({
         ledgerDevice,
-        keyParameters,
+        signers: [keyParameters],
         compiledTransactionIntent: compiledTxHex.setMetadata,
         mode: 'verbose',
       })
 
       if (result.isErr()) throw result.error
 
-      expect(result.value).toEqual(expectedTransacionSignature)
+      expect(result.value).toEqual(getExpectedTransacionSignature('curve25519'))
     })
 
     it('should sign summary TX using secp256k1', async () => {
@@ -381,17 +342,19 @@ describe('Ledger Babylon Wrapper', () => {
 
       const result = await ledger.signTransaction({
         ledgerDevice,
-        keyParameters: {
-          derivationPath: `m/44'/1022'/10'/525'/0'/1238'`,
-          curve: 'secp256k1',
-        },
+        signers: [
+          {
+            derivationPath: `m/44'/1022'/10'/525'/0'/1238'`,
+            curve: 'secp256k1',
+          },
+        ],
         compiledTransactionIntent: compiledTxHex.setMetadata,
         mode: 'summary',
       })
 
       if (result.isErr()) throw result.error
 
-      expect(result.value).toEqual(expectedTransacionSignature)
+      expect(result.value).toEqual(getExpectedTransacionSignature('secp256k1'))
     })
   })
 })
