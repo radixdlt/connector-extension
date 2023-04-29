@@ -31,7 +31,10 @@ const createLedgerWrapperWithMockedTransport = (
   })
 }
 
-const getExpectedTransactionSigningExchanges = (instructionCode: string) => [
+const getExpectedTransactionSigningExchanges = (
+  instructionCode: string,
+  finalOutput: string
+) => [
   {
     input: 'aa120000',
     output: '305495ba9000',
@@ -62,19 +65,7 @@ const getExpectedTransactionSigningExchanges = (instructionCode: string) => [
   },
   {
     input: `ac${instructionCode}00002e651702800289ba4758731898e0850fbde5d412c080e4f8b7ea03174cb180d90c0a6669656c645f6e616d65202000`,
-    output:
-      '5ad8cd006761aa698ea77f271c421a7ea9e34da45b4e827d2fce1b5205933b77e852261381cfaa0a8ecfba52622d5c1560462db70df08fc905111e2a9a5fa601cffce054df51fb4072e7faf627e0f64f168fd8811f749d34720ac8da264bac069000',
-  },
-]
-
-const getExpectedTransacionSignature = (curve: string) => [
-  {
-    curve,
-    derivationPath: `m/44'/1022'/10'/525'/0'/1238'`,
-    publicKey:
-      'cffce054df51fb4072e7faf627e0f64f168fd8811f749d34720ac8da264bac06',
-    signature:
-      '5ad8cd006761aa698ea77f271c421a7ea9e34da45b4e827d2fce1b5205933b77e852261381cfaa0a8ecfba52622d5c1560462db70df08fc905111e2a9a5fa601',
+    output: finalOutput,
   },
 ]
 
@@ -317,7 +308,8 @@ describe('Ledger Babylon Wrapper', () => {
     it('should sign verbose TX using curve25519', async () => {
       const ledger = createLedgerWrapperWithMockedTransport(
         getExpectedTransactionSigningExchanges(
-          LedgerInstructionCode.SignTxEd255519
+          LedgerInstructionCode.SignTxEd255519,
+          '5ad8cd006761aa698ea77f271c421a7ea9e34da45b4e827d2fce1b5205933b77e852261381cfaa0a8ecfba52622d5c1560462db70df08fc905111e2a9a5fa601cffce054df51fb4072e7faf627e0f64f168fd8811f749d34720ac8da264bac069000'
         )
       )
 
@@ -330,13 +322,23 @@ describe('Ledger Babylon Wrapper', () => {
 
       if (result.isErr()) throw result.error
 
-      expect(result.value).toEqual(getExpectedTransacionSignature('curve25519'))
+      expect(result.value).toEqual([
+        {
+          curve: 'curve25519',
+          derivationPath: `m/44'/1022'/10'/525'/0'/1238'`,
+          publicKey:
+            'cffce054df51fb4072e7faf627e0f64f168fd8811f749d34720ac8da264bac06',
+          signature:
+            '5ad8cd006761aa698ea77f271c421a7ea9e34da45b4e827d2fce1b5205933b77e852261381cfaa0a8ecfba52622d5c1560462db70df08fc905111e2a9a5fa601',
+        },
+      ])
     })
 
     it('should sign summary TX using secp256k1', async () => {
       const ledger = createLedgerWrapperWithMockedTransport(
         getExpectedTransactionSigningExchanges(
-          LedgerInstructionCode.SignTxSecp256k1Smart
+          LedgerInstructionCode.SignTxSecp256k1Smart,
+          '5adadad8cd006761aa698ea77f271c421a7ea9e34da45b4e827d2fce1b5205933b77e852261381cfaa0a8ecfba52622d5c1560462db70df08fc905111e2a9a5fa601cffce054df51fb4072e7faf627e0f64f168fd8811f749d34720ac8da264bac069000'
         )
       )
 
@@ -354,7 +356,16 @@ describe('Ledger Babylon Wrapper', () => {
 
       if (result.isErr()) throw result.error
 
-      expect(result.value).toEqual(getExpectedTransacionSignature('secp256k1'))
+      expect(result.value).toEqual([
+        {
+          curve: 'secp256k1',
+          derivationPath: `m/44'/1022'/10'/525'/0'/1238'`,
+          publicKey:
+            '01cffce054df51fb4072e7faf627e0f64f168fd8811f749d34720ac8da264bac06',
+          signature:
+            '5adadad8cd006761aa698ea77f271c421a7ea9e34da45b4e827d2fce1b5205933b77e852261381cfaa0a8ecfba52622d5c1560462db70df08fc905111e2a9a5fa6',
+        },
+      ])
     })
   })
 })

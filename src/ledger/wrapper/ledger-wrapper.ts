@@ -254,10 +254,39 @@ export const LedgerWrapper = ({
                       okAsync('')
                     )
                   )
-                  .map((result) => ({
-                    publicKey: result.slice(128),
-                    signature: result.slice(0, 128),
-                  }))
+                  .andThen((result) => {
+                    const isCurve25519 = signer.curve === 'curve25519'
+                    const signatureByteCount = isCurve25519 ? 64 : 65
+                    const publicKeyByteCount = isCurve25519 ? 32 : 33
+                    if (
+                      result.length !==
+                      (signatureByteCount + publicKeyByteCount) * 2
+                    ) {
+                      return err(
+                        'Result containing signature and PublicKey has incorrect length.'
+                      )
+                    }
+
+                    const signature = result.slice(0, signatureByteCount * 2)
+                    const sigOffset = signatureByteCount * 2
+                    const publicKey = result.slice(
+                      sigOffset,
+                      sigOffset + 2 * publicKeyByteCount + 1
+                    )
+
+                    if (signature.length !== signatureByteCount * 2) {
+                      return err('Signature has incorrect length.')
+                    }
+
+                    if (publicKey.length !== publicKeyByteCount * 2) {
+                      return err('PublicKey has incorrect length.')
+                    }
+
+                    return ok({
+                      signature,
+                      publicKey,
+                    })
+                  })
                   .map((result) => [
                     ...previousValue,
                     {
