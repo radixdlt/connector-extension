@@ -14,12 +14,10 @@
   "scripts": {
     "start": "DEV_TOOLS=true vite --mode rcnet",
     "start:local": "DEV_TOOLS=true vite --mode localhost",
-    "start:beta": "DEV_TOOLS=true vite --mode beta",
     "start:development": "DEV_TOOLS=true vite --mode development",
     "build:development": "tsc && vite build --mode development",
-    "build:beta": "tsc && vite build --mode beta",
     "build:rcnet": "tsc && vite build --mode rcnet",
-    "build:cd": "./build.sh development && ./build.sh beta && ./build.sh rcnet",
+    "build:cd": "./build.sh development && ./build.sh rcnet",
     "preview": "vite preview",
     "prettier": "prettier --write src",
     "testrtc": "NODE_ENV=test karma start",
@@ -27,7 +25,6 @@
     "prepare": "husky install",
     "ladle": "ladle serve",
     "test": "jest --forceExit",
-    "test:beta": "MODE=beta jest --forceExit",
     "test:watch": "jest --watch"
   },
   "dependencies": {

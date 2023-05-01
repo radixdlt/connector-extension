@@ -40,21 +40,9 @@ const turnServers = {
       credential: 'password',
     },
   ],
-  beta: [
-    {
-      urls: 'turn:turn-betanet-udp.radixdlt.com:80?transport=udp',
-      username: 'username',
-      credential: 'password',
-    },
-    {
-      urls: 'turn:turn-betanet-tcp.radixdlt.com:80?transport=tcp',
-      username: 'username',
-      credential: 'password',
-    },
-  ],
 } as const
 
-const mode = import.meta.env.MODE as 'test' | 'development' | 'beta'
+const mode = import.meta.env.MODE as 'test' | 'development' | 'rcnet'
 
 export const config = {
   environment: process.env.NODE_ENV,
