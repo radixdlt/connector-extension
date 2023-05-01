@@ -10,6 +10,7 @@ import { Status } from 'connector/_types'
 import { filter, firstValueFrom, Subject } from 'rxjs'
 import { delayAsync } from 'test-utils/delay-async'
 import { Logger } from 'tslog'
+import { generateConnectionPassword } from 'connector/helpers'
 
 describe('connector client', () => {
   let extensionLogger = new Logger({ name: 'extensionConnector', minLevel: 2 })
@@ -21,11 +22,11 @@ describe('connector client', () => {
   let extensionWebRtcSubjects: WebRtcSubjectsType
   let walletWebRtcSubjects: WebRtcSubjectsType
   let extensionSignalingSubjects: SignalingSubjectsType
-
-  const password = Buffer.from(
-    '9e47e1afc8a02b626cb4db4c4c7d92a0f3a58949eded93f87b0a966bf9075b3f',
-    'hex'
-  )
+  const connectionPassword = generateConnectionPassword()
+  if (connectionPassword.isErr()) {
+    throw new Error('Could not generate random connection password')
+  }
+  const password = connectionPassword.value
 
   const waitForDataChannelStatus = (
     subjects: WebRtcSubjectsType,
