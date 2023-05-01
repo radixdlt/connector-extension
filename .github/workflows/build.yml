@@ -68,33 +68,3 @@ jobs:
           name: development_connector-extension-with-dev-tools.${{ github.sha }}
           path: dist/
 
-  build_beta:
-    runs-on: ubuntu-latest
-
-    steps:
-      - uses: actions/checkout@v3
-      - name: Use Node.js
-        uses: actions/setup-node@v3
-        with:
-          node-version: '18.x'
-
-      - name: Install dependencies
-        run: yarn install --frozen-lockfile
-
-      - name: Build dev extension
-        run: yarn build:beta
-
-      - uses: actions/upload-artifact@v3
-        with:
-          name: beta_connector-extension.${{ github.sha }}
-          path: dist/
-
-      - name: Build dev extension with dev tools
-        run: yarn build:beta
-        env:
-          DEV_TOOLS: true
-
-      - uses: actions/upload-artifact@v3
-        with:
-          name: beta_connector-extension-with-dev-tools.${{ github.sha }}
-          path: dist/
