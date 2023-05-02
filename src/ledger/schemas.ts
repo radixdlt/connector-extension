@@ -1,4 +1,4 @@
-import { z, literal, object, string, union, number } from 'zod'
+import { z, literal, object, string, union, number, boolean } from 'zod'
 
 const curve = union([literal('curve25519'), literal('secp256k1')])
 
@@ -60,6 +60,7 @@ export const LedgerSignTransactionRequestSchema = object({
   discriminator: literal('signTransaction'),
   signers: KeyParametersSchema.array(),
   ledgerDevice: LedgerDeviceSchema,
+  displayHash: boolean(),
   compiledTransactionIntent: string(),
   mode: union([literal('verbose'), literal('summary')]),
 })
