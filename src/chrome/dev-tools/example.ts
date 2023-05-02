@@ -1,3 +1,11 @@
+import {
+  LedgerDeviceIdRequest,
+  LedgerImportOlympiaDeviceRequest,
+  LedgerPublicKeyRequest,
+  LedgerSignChallengeRequest,
+  LedgerSignTransactionRequest,
+} from 'ledger/schemas'
+
 export const compiledTxHex: Record<string, string> = {
   createNFTwithNoInitialSupply:
     '4d21022109070107f20a00000000000000000ae8030000000000000a0500000000000000220101200720f381626e41e7027ea431bfe3009e94bdd25a746beec468948d6c3c7c5dc9a54b01000940420f000803002102202202210380070dbcc2a13098e3ee62a091096d8feaf8dcd82540d4bda7d967c10c086c6f636b5f6665652101850000e8890423c78a0000000000000000000000000000000000000000000000002004800000000000000000000000000000000000000000000000000000010c1a4e6f6e46756e6769626c655265736f757263654d616e616765720c066372656174652104220100210321032022002021002022002200010740200c00230c0c020b6465736372697074696f6e2841207665727920696e6e6f76617469766520616e6420696d706f7274616e74207265736f75726365046e616d650a4d795265736f7572636523222102040002220000220100050002220000220100202000',
@@ -9,22 +17,23 @@ export const compiledTxHex: Record<string, string> = {
     '4d21022109070107f20a00000000000000000ae8030000000000000a0500000000000000220101200720f381626e41e7027ea431bfe3009e94bdd25a746beec468948d6c3c7c5dc9a54b01000940420f0008030021022022022104800000000000000000000000000000000000000000000000000000050c074163636f756e740c0f6372656174655f616476616e6365642101210623212200230c220022000122010023212200230c22002200012201002104800000000000000000000000000000000000000000000000000000050c074163636f756e740c066372656174652100202000',
 }
 
-export const getImportFromOlympiaPayload = () => ({
-  interactionId: crypto.randomUUID(),
-  discriminator: 'importOlympiaDevice',
-  derivationPaths: [
-    'm/44H/1022H/0H/0/4H',
-    'm/44H/1022H/0H/0/0H',
-    'm/44H/1022H/0H/0/5H',
-  ],
-})
+export const getImportFromOlympiaPayload =
+  (): LedgerImportOlympiaDeviceRequest => ({
+    interactionId: crypto.randomUUID(),
+    discriminator: 'importOlympiaDevice',
+    derivationPaths: [
+      'm/44H/1022H/0H/0/4H',
+      'm/44H/1022H/0H/0/0H',
+      'm/44H/1022H/0H/0/5H',
+    ],
+  })
 
-export const getDeviceInfoPayload = () => ({
+export const getDeviceInfoPayload = (): LedgerDeviceIdRequest => ({
   interactionId: crypto.randomUUID(),
   discriminator: 'getDeviceInfo',
 })
 
-export const getDerivePublicKeyPayload = () => ({
+export const getDerivePublicKeyPayload = (): LedgerPublicKeyRequest => ({
   interactionId: crypto.randomUUID(),
   discriminator: 'derivePublicKey',
   keyParameters: {
@@ -38,7 +47,7 @@ export const getDerivePublicKeyPayload = () => ({
   },
 })
 
-export const getSignTransactionPayload = () => ({
+export const getSignTransactionPayload = (): LedgerSignTransactionRequest => ({
   interactionId: crypto.randomUUID(),
   discriminator: 'signTransaction',
   signers: [
@@ -56,11 +65,12 @@ export const getSignTransactionPayload = () => ({
     model: 'nanoS',
     id: '41ac202687326a4fc6cb677e9fd92d08b91ce46c669950d58790d4d5e583adc0',
   },
+  displayHash: true,
   compiledTransactionIntent: compiledTxHex.createAccount,
   mode: 'verbose',
 })
 
-export const getSignChallengePayload = () => ({
+export const getSignChallengePayload = (): LedgerSignChallengeRequest => ({
   interactionId: crypto.randomUUID(),
   discriminator: 'signChallenge',
   signers: [

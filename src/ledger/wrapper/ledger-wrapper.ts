@@ -23,6 +23,17 @@ export type LedgerOptions = Partial<{
   ledgerSubjects: ReturnType<typeof LedgerSubjects>
 }>
 
+export type AdditionalExchangeParams = {
+  p1?: string
+  instructionClass?: LedgerInstructionClass
+}
+
+export type ExchangeFn = (
+  command: LedgerInstructionCode,
+  data?: string,
+  additionalParams?: AdditionalExchangeParams
+) => ResultAsync<string, string>
+
 export const LedgerWrapper = ({
   transport = TransportWebHID,
   ledgerSubjects = LedgerSubjects(),
@@ -50,20 +61,22 @@ export const LedgerWrapper = ({
           transport.create(),
           () => LedgerErrorResponse.FailedToCreateTransport
         ).map((transport) => {
-          const exchange = (
+          const exchange: ExchangeFn = (
             command: LedgerInstructionCode,
             data = '',
-            instructionClass: LedgerInstructionClass = LedgerInstructionClass.aa
-          ) =>
-            ResultAsync.fromPromise(
-              transport.exchange(
-                Buffer.from(`${instructionClass}${command}0000${data}`, 'hex')
-              ),
+            {
+              p1 = '00',
+              instructionClass = LedgerInstructionClass.aa,
+            }: AdditionalExchangeParams = {}
+          ) => {
+            const ledgerInput = `${instructionClass}${command}${p1}00${data}`
+            return ResultAsync.fromPromise(
+              transport.exchange(Buffer.from(ledgerInput, 'hex')),
               () => errorResponses[LedgerErrorResponse.FailedToExchangeData]
             ).andThen((buffer) => {
               const stringifiedResponse = buffer.toString('hex')
               logger.debug(`📒 Ledger`, {
-                input: `${instructionClass}${command}0000${data}`,
+                input: ledgerInput,
                 output: stringifiedResponse,
               })
               const statusCode = stringifiedResponse.slice(-4)
@@ -76,6 +89,7 @@ export const LedgerWrapper = ({
               }
               return ok(stringifiedResponse.slice(0, -4))
             })
+          }
 
           return {
             closeTransport: () => {
@@ -88,13 +102,7 @@ export const LedgerWrapper = ({
       )
 
   const wrapDataExchange = (
-    fn: (
-      exchangeFn: (
-        command: LedgerInstructionCode,
-        data?: string,
-        instructionClass?: LedgerInstructionClass
-      ) => ResultAsync<string, string>
-    ) => ResultAsync<any, any>
+    fn: (exchangeFn: ExchangeFn) => ResultAsync<any, string>
   ) =>
     createLedgerTransport().andThen(({ closeTransport, exchange }) =>
       fn(exchange)
@@ -210,6 +218,8 @@ export const LedgerWrapper = ({
             })
           )
 
+          const p1 = params.displayHash ? '01' : '00'
+
           return params.signers.reduce(
             (
               signersAcc: ResultAsync<SignatureOfSigner[], string>,
@@ -245,11 +255,10 @@ export const LedgerWrapper = ({
                         acc.andThen(() => {
                           const chunkLength = getDataLength(chunk)
 
-                          return exchange(
-                            command,
-                            `${chunkLength}${chunk}`,
-                            instructionClass
-                          )
+                          return exchange(command, `${chunkLength}${chunk}`, {
+                            instructionClass,
+                            p1,
+                          })
                         }),
                       okAsync('')
                     )
