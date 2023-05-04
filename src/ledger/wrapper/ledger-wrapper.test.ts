@@ -41,7 +41,7 @@ const getExpectedTransactionSigningExchanges = (
     output: '305495ba9000',
   },
   {
-    input: `aa${instructionCode}000019068000002c800003fe8000000a8000020d80000000800004d6`,
+    input: `aa${instructionCode}${p1}0019068000002c800003fe8000000a8000020d80000000800004d6`,
     output: '9000',
   },
   {
