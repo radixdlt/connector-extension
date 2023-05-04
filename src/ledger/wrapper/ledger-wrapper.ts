@@ -245,7 +245,7 @@ export const LedgerWrapper = ({
                     params.signers.length
                   } signatures`
                 )
-                return exchange(command, encodedDerivationPath)
+                return exchange(command, encodedDerivationPath, { p1 })
                   .andThen(() =>
                     apduChunks.reduce(
                       (
