@@ -5,7 +5,7 @@ import {
   LedgerPublicKeyRequest,
 } from 'ledger/schemas'
 import { PairingHeader } from 'pairing/components/pairing-header'
-import { useContext, useState } from 'react'
+import { useContext, useEffect, useState, useCallback } from 'react'
 import { LedgerDeviceBox } from 'ledger/components/ledger-device-box'
 import { ledger } from 'ledger/wrapper/ledger-wrapper'
 import { MessagingContext } from 'ledger/contexts/messaging-context'
@@ -30,7 +30,7 @@ export const ApplyLedgerFactor = ({
     ? 'Apply Ledger Factor to Account Security'
     : 'Apply Ledger Factor to Persona Security'
 
-  const getPublicKey = async () => {
+  const getPublicKey = useCallback(async () => {
     setError(undefined)
     setIsLoading(true)
     const publicKey = await ledger.getPublicKey(message)
@@ -41,7 +41,12 @@ export const ApplyLedgerFactor = ({
       setError(publicKey.error)
       setIsLoading(false)
     }
-  }
+  }, [message, respond])
+
+  useEffect(() => {
+    getPublicKey()
+  }, [getPublicKey])
+
   return (
     <>
       <PairingHeader header={header}>

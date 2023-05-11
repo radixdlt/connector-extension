@@ -7,7 +7,7 @@ import {
   createSignedTransactionResponse,
 } from 'ledger/schemas'
 import { PairingHeader } from 'pairing/components/pairing-header'
-import { useContext, useState } from 'react'
+import { useContext, useState, useEffect, useCallback } from 'react'
 import { MessagingContext } from 'ledger/contexts/messaging-context'
 
 export const SignTransaction = ({
@@ -18,7 +18,7 @@ export const SignTransaction = ({
   const [error, setError] = useState<string | undefined>()
   const [isLoading, setIsLoading] = useState<boolean>(false)
   const { respond } = useContext(MessagingContext)
-  const sign = async () => {
+  const sign = useCallback(async () => {
     setError(undefined)
     setIsLoading(true)
     const signedTx = await ledger.signTransaction(message)
@@ -29,7 +29,11 @@ export const SignTransaction = ({
       setError(signedTx.error)
       setIsLoading(false)
     }
-  }
+  }, [message, respond])
+
+  useEffect(() => {
+    sign()
+  }, [sign])
 
   return (
     <>

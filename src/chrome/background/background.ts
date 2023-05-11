@@ -4,9 +4,7 @@ import { closePopup } from '../helpers/close-popup'
 import content from '../content-script/content-script?script'
 
 import { createOffscreen } from '../offscreen/create-offscreen'
-import {
-  BackgroundMessageHandler,
-} from './message-handler'
+import { BackgroundMessageHandler } from './message-handler'
 import { createMessage } from '../messages/create-message'
 import { MessageClient } from '../messages/message-client'
 import { openParingPopup } from '../helpers/open-pairing-popup'
