@@ -5,6 +5,6 @@ export const Link = styled('a', {
   fontSize: '16px',
   color: 'white',
   '&:visited': {
-    color: '$primary',
+    color: 'white',
   },
 })

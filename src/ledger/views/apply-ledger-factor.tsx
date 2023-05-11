@@ -3,12 +3,12 @@ import { ErrorText } from '../components/error-text'
 import {
   createLedgerPublicKeyResponse,
   LedgerPublicKeyRequest,
-  LedgerResponse,
 } from 'ledger/schemas'
 import { PairingHeader } from 'pairing/components/pairing-header'
-import { useState } from 'react'
+import { useContext, useState } from 'react'
 import { LedgerDeviceBox } from 'ledger/components/ledger-device-box'
 import { ledger } from 'ledger/wrapper/ledger-wrapper'
+import { MessagingContext } from 'ledger/contexts/messaging-context'
 
 const EntityType = {
   Account: '525',
@@ -17,13 +17,12 @@ const EntityType = {
 
 export const ApplyLedgerFactor = ({
   message,
-  respond,
 }: {
   message: LedgerPublicKeyRequest
-  respond: (response: LedgerResponse) => void
 }) => {
   const [error, setError] = useState<string | undefined>()
   const [isLoading, setIsLoading] = useState<boolean>(false)
+  const { respond } = useContext(MessagingContext)
 
   const header = message.keyParameters.derivationPath
     .split('/')[4]

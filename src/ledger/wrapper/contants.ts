@@ -8,7 +8,9 @@ export const LedgerInstructionClass = {
 
 export const LedgerErrorResponse = {
   FailedToCreateTransport: 'FailedToCreateTransport',
+  FailedToListLedgerDevices: 'FailedToListLedgerDevices',
   FailedToExchangeData: 'FailedToExchangeData',
+  NoDevicesConnected: 'NoDevicesConnected',
   MultipleLedgerConnected: 'MultipleLedgerConnected',
   DeviceMismatch: 'DeviceMismatch',
   UnlockDevice: '5515',
@@ -37,9 +39,13 @@ export const errorResponses: Record<LedgerError, string> = {
     'Please unlock Ledger Device and try again',
   [LedgerErrorResponse.OpenRadixApp]:
     'Please open Radix Babylon app in your Ledger device and try again',
+  [LedgerErrorResponse.NoDevicesConnected]:
+    'Did not find any connected Ledger devices. Please connect your Ledger device and try again',
+  [LedgerErrorResponse.FailedToListLedgerDevices]:
+    'Failed initial check to check list of connected devices',
   [LedgerErrorResponse.FailedToCreateTransport]:
-    'Failed to open transport layer with Ledger device',
+    'Could not recognize Ledger device. Did you connect it to your computer and unlock it?',
   [LedgerErrorResponse.FailedToExchangeData]:
-    'Failed to exchange data with Ledger device',
-  [LedgerErrorResponse.DeviceMismatch]: `Device doesn't match. Make sure you connected correct Ledger device`,
+    'Failed to exchange data with Ledger device. Did you disconnect it?',
+  [LedgerErrorResponse.DeviceMismatch]: `Connected device doesn't match requested one. Make sure you connected correct Ledger device`,
 }

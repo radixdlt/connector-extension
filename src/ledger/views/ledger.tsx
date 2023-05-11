@@ -1,5 +1,5 @@
 import { Box, PopupWindow, Text } from 'components'
-import { useEffect, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import {
   isPublicKeyRequest,
   isSignChallengeRequest,
@@ -16,33 +16,51 @@ import { createMessage } from 'chrome/messages/create-message'
 import { Messages } from 'chrome/messages/_types'
 import { ImportOlympiaDevice } from './import-olympia-device'
 import { ledger } from '../wrapper/ledger-wrapper'
+import { MessagingContext } from 'ledger/contexts/messaging-context'
 
 export const Ledger = () => {
   const [progressMessage, setProgressMessage] = useState<string | undefined>()
   const [currentMessage, setCurrentMessage] =
     useState<Messages['walletToLedger']>()
 
-  const respond = async (response: LedgerResponse) => {
-    await chrome.runtime.sendMessage(createMessage.ledgerResponse(response))
-    await chrome.runtime.sendMessage(
-      createMessage.confirmationSuccess('offScreen', currentMessage!.messageId)
-    )
-    window.close()
-  }
+  const messagingContext = useMemo(() => {
+    const _respond = async (response: LedgerResponse) => {
+      await chrome.runtime.sendMessage(createMessage.ledgerResponse(response))
+      await chrome.runtime.sendMessage(
+        createMessage.confirmationSuccess(
+          'offScreen',
+          currentMessage!.messageId
+        )
+      )
+      window.close()
+    }
+
+    const _switchToFullWindow = async () => {
+      await chrome.runtime.sendMessage(
+        createMessage.convertPopupToTab(currentMessage!)
+      )
+      window.close()
+    }
+
+    return {
+      respond: _respond,
+      switchToFullWindow: _switchToFullWindow,
+    }
+  }, [currentMessage])
 
   const renderLedgerView = (message?: Messages['walletToLedger']) => {
     if (!message) return
 
     if (isDeviceIdRequest(message.data)) {
-      return <NewHardwareWallet message={message.data} respond={respond} />
+      return <NewHardwareWallet message={message.data} />
     } else if (isPublicKeyRequest(message.data)) {
-      return <ApplyLedgerFactor message={message.data} respond={respond} />
+      return <ApplyLedgerFactor message={message.data} />
     } else if (isSignTransactionRequest(message.data)) {
-      return <SignTransaction message={message.data} respond={respond} />
+      return <SignTransaction message={message.data} />
     } else if (isSignChallengeRequest(message.data)) {
-      return <SignChallenge message={message.data} respond={respond} />
+      return <SignChallenge message={message.data} />
     } else if (isImportOlympiaDeviceRequest(message.data)) {
-      return <ImportOlympiaDevice message={message.data} respond={respond} />
+      return <ImportOlympiaDevice message={message.data} />
     }
   }
 
@@ -69,10 +87,12 @@ export const Ledger = () => {
 
   return (
     <PopupWindow content="start">
-      <Box maxWidth="medium">{renderLedgerView(currentMessage)}</Box>
-      <Text italic style={{ color: 'white' }}>
-        {progressMessage}
-      </Text>
+      <MessagingContext.Provider value={messagingContext}>
+        <Box maxWidth="medium">{renderLedgerView(currentMessage)}</Box>
+        <Text italic style={{ color: 'white' }}>
+          {progressMessage}
+        </Text>
+      </MessagingContext.Provider>
     </PopupWindow>
   )
 }

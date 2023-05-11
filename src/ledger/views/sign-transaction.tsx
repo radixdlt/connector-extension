@@ -3,23 +3,21 @@ import { ErrorText } from 'ledger/components/error-text'
 import { LedgerDeviceBox } from 'ledger/components/ledger-device-box'
 import { ledger } from 'ledger/wrapper/ledger-wrapper'
 import {
-  LedgerResponse,
   LedgerSignTransactionRequest,
   createSignedTransactionResponse,
 } from 'ledger/schemas'
 import { PairingHeader } from 'pairing/components/pairing-header'
-import { useState } from 'react'
+import { useContext, useState } from 'react'
+import { MessagingContext } from 'ledger/contexts/messaging-context'
 
 export const SignTransaction = ({
   message,
-  respond,
 }: {
   message: LedgerSignTransactionRequest
-  respond: (response: LedgerResponse) => void
 }) => {
   const [error, setError] = useState<string | undefined>()
   const [isLoading, setIsLoading] = useState<boolean>(false)
-
+  const { respond } = useContext(MessagingContext)
   const sign = async () => {
     setError(undefined)
     setIsLoading(true)

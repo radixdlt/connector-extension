@@ -55,6 +55,12 @@ export const createMessage = {
     messageId: crypto.randomUUID(),
     data: message,
   }),
+  convertPopupToTab: (message: Messages['walletToLedger']) => ({
+    source: 'popup',
+    discriminator: messageDiscriminator.convertPopupToTab,
+    messageId: crypto.randomUUID(),
+    data: message,
+  }),
   ledgerResponse: (message: LedgerResponse): Messages['ledgerResponse'] => ({
     source: 'ledger',
     discriminator: messageDiscriminator.ledgerResponse,
