@@ -6,9 +6,10 @@ import { Box, Button, Header, Text } from 'components'
 import {
   getDerivePublicKeyPayload,
   getDeviceInfoPayload,
-  getSignTransactionPayload,
   getSignChallengePayload,
   getImportFromOlympiaPayload,
+  getSignEd25519TransactionPayload,
+  getSignSecp256k1TransactionPayload,
 } from '../example'
 import { getConnectionPassword } from 'chrome/helpers/get-connection-password'
 export const WalletSimulator = () => {
@@ -21,10 +22,11 @@ export const WalletSimulator = () => {
 
   const messages = {
     'Import from Olympia': getImportFromOlympiaPayload(),
-    'Get UDI from Ledger': getDeviceInfoPayload(),
-    'Get Public Key from Ledger': getDerivePublicKeyPayload(),
-    'Sign Transaction on Ledger': getSignTransactionPayload(),
-    'Sign Challenge on Ledger': getSignChallengePayload(),
+    'Get UDI': getDeviceInfoPayload(),
+    'Get Public Key': getDerivePublicKeyPayload(),
+    'Sign TX (Secp256k1)': getSignSecp256k1TransactionPayload(),
+    'Sign TX (Curve25519)': getSignEd25519TransactionPayload(),
+    'Sign Auth': getSignChallengePayload(),
   }
 
   useEffect(() => {

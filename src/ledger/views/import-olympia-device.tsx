@@ -22,7 +22,6 @@ export const ImportOlympiaDevice = ({
     setError(undefined)
     setIsLoading(true)
     const olympiaDevice = await ledger.getOlympiaDeviceInfo(message)
-    console.log(olympiaDevice)
     if (olympiaDevice.isOk()) {
       respond(createLedgerOlympiaDeviceResponse(message, olympiaDevice.value))
     } else {

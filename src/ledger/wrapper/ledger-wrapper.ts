@@ -4,6 +4,7 @@ import {
   KeyParameters,
   LedgerImportOlympiaDeviceRequest,
   LedgerPublicKeyRequest,
+  LedgerSignChallengeRequest,
   LedgerSignTransactionRequest,
   SignatureOfSigner,
 } from 'ledger/schemas'
@@ -15,7 +16,7 @@ import {
   LedgerInstructionCode,
   LedgerInstructionClass,
   errorResponses,
-} from './contants'
+} from './constants'
 import { encodeDerivationPath } from './encode-derivation-path'
 import { getDataLength } from './utils'
 import { LedgerSubjects } from './subjects'
@@ -97,7 +98,7 @@ export const LedgerWrapper = ({
               () => errorResponses[LedgerErrorResponse.FailedToExchangeData]
             ).andThen((buffer) => {
               const stringifiedResponse = buffer.toString('hex')
-              logger.debug(`📒 Ledger`, {
+              logger.debug(`📒 ↔️ Ledger Exchange`, {
                 input: ledgerInput,
                 output: stringifiedResponse,
               })
@@ -209,6 +210,25 @@ export const LedgerWrapper = ({
       return ok({ p1, apduChunks })
     }
 
+  const parseSignAuthParams =
+    (
+      params: Omit<
+        LedgerSignChallengeRequest,
+        'discriminator' | 'interactionId'
+      >
+    ) =>
+    () => {
+      const addresLength = params.dAppDefinitionAddress.length.toString(16)
+
+      const data =
+        params.challenge +
+        addresLength +
+        Buffer.from(params.dAppDefinitionAddress, 'utf-8').toString('hex') +
+        Buffer.from(params.origin, 'utf-8').toString('hex')
+      const dataLength = getDataLength(data)
+      return ok({ challengeData: `${dataLength}${data}` })
+    }
+
   const getOlympiaDeviceInfo = ({
     derivationPaths,
   }: Pick<LedgerImportOlympiaDeviceRequest, 'derivationPaths'>): ResultAsync<
@@ -276,6 +296,56 @@ export const LedgerWrapper = ({
         })
     )
 
+  const signAuth = (
+    params: Omit<LedgerSignChallengeRequest, 'discriminator' | 'interactionId'>
+  ): ResultAsync<SignatureOfSigner[], string> =>
+    wrapDataExchange((exchange) =>
+      exchange(LedgerInstructionCode.GetDeviceId)
+        .andThen(ensureCorrectDeviceId(params.ledgerDevice.id))
+        .andThen(parseSignAuthParams(params))
+        .andThen(({ challengeData }) =>
+          params.derivationPaths.reduce(
+            (
+              acc: ResultAsync<SignatureOfSigner[], string>,
+              derivationPath,
+              index
+            ) =>
+              acc.andThen((signatures) => {
+                setProgressMessage(
+                  `Gathering ${index + 1} out of ${
+                    params.derivationPaths.length
+                  } signatures`
+                )
+
+                const encodedDerivationPath =
+                  encodeDerivationPath(derivationPath)
+
+                return exchange(
+                  LedgerInstructionCode.SignAuthEd25519,
+                  encodedDerivationPath
+                )
+                  .andThen(() =>
+                    exchange(
+                      LedgerInstructionCode.SignAuthEd25519,
+                      challengeData,
+                      { instructionClass: LedgerInstructionClass.ac }
+                    )
+                  )
+                  .map((result) => {
+                    const entry: SignatureOfSigner = {
+                      curve: 'curve25519',
+                      derivationPath,
+                      signature: result.slice(0, 128),
+                      publicKey: result.slice(128, 192),
+                    }
+                    return [...signatures, entry]
+                  })
+              }),
+            okAsync([])
+          )
+        )
+    )
+
   const signTransaction = (
     params: Omit<
       LedgerSignTransactionRequest,
@@ -299,7 +369,7 @@ export const LedgerWrapper = ({
                 publicKeyByteCount,
                 encodedDerivationPath,
               } = parseSignerParams(signer, params)
-
+              const digestLength = 32 * 2
               return signersAcc.andThen((previousValue) => {
                 setProgressMessage(
                   `Gathering ${index + 1} out of ${
@@ -324,9 +394,12 @@ export const LedgerWrapper = ({
                   )
                   .andThen((result) => {
                     if (
-                      result.length !==
+                      result.length - digestLength !==
                       (signatureByteCount + publicKeyByteCount) * 2
                     ) {
+                      logger.error(
+                        `Result length is ${result.length} whereas it should be (signature) ${signatureByteCount} bytes * 2 + (publicKey) ${publicKeyByteCount} bytes * 2 + digest length: ${digestLength}`
+                      )
                       return err(
                         'Result containing signature and PublicKey has incorrect length.'
                       )
@@ -336,14 +409,20 @@ export const LedgerWrapper = ({
                     const sigOffset = signatureByteCount * 2
                     const publicKey = result.slice(
                       sigOffset,
-                      sigOffset + 2 * publicKeyByteCount + 1
+                      sigOffset + 2 * publicKeyByteCount
                     )
 
                     if (signature.length !== signatureByteCount * 2) {
+                      logger.error(
+                        `Signature length is ${signature.length} whereas it should be ${signatureByteCount} bytes * 2`
+                      )
                       return err('Signature has incorrect length.')
                     }
 
                     if (publicKey.length !== publicKeyByteCount * 2) {
+                      logger.error(
+                        `Public Key length is ${publicKey.length} whereas it should be ${publicKeyByteCount} bytes * 2`
+                      )
                       return err('PublicKey has incorrect length.')
                     }
 
@@ -368,11 +447,12 @@ export const LedgerWrapper = ({
     )
 
   return {
-    progress$: ledgerSubjects.onProgressSubject.asObservable(),
-    getOlympiaDeviceInfo,
-    getDeviceInfo,
+    signAuth,
     getPublicKey,
+    getDeviceInfo,
     signTransaction,
+    getOlympiaDeviceInfo,
+    progress$: ledgerSubjects.onProgressSubject.asObservable(),
   }
 }
 

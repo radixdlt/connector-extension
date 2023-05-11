@@ -26,6 +26,7 @@ export const LedgerInstructionCode = {
   SignTxEd255519Smart: '42',
   SignTxSecp256k1: '51',
   SignTxSecp256k1Smart: '52',
+  SignAuthEd25519: '61',
 } as const
 
 export type LedgerError = Values<typeof LedgerErrorResponse>

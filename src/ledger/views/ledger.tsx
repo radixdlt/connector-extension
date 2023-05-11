@@ -24,7 +24,7 @@ export const Ledger = () => {
     useState<Messages['walletToLedger']>()
 
   const messagingContext = useMemo(() => {
-    const _respond = async (response: LedgerResponse) => {
+    const respond = async (response: LedgerResponse) => {
       await chrome.runtime.sendMessage(createMessage.ledgerResponse(response))
       await chrome.runtime.sendMessage(
         createMessage.confirmationSuccess(
@@ -35,7 +35,7 @@ export const Ledger = () => {
       window.close()
     }
 
-    const _switchToFullWindow = async () => {
+    const switchToFullWindow = async () => {
       await chrome.runtime.sendMessage(
         createMessage.convertPopupToTab(currentMessage!)
       )
@@ -43,8 +43,8 @@ export const Ledger = () => {
     }
 
     return {
-      respond: _respond,
-      switchToFullWindow: _switchToFullWindow,
+      respond,
+      switchToFullWindow,
     }
   }, [currentMessage])
 

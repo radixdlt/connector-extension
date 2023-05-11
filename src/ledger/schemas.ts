@@ -72,9 +72,11 @@ export type LedgerSignTransactionRequest = z.infer<
 export const LedgerSignChallengeRequestSchema = object({
   interactionId: string(),
   discriminator: literal('signChallenge'),
-  signers: KeyParametersSchema.array(),
+  derivationPaths: string().array(),
   ledgerDevice: LedgerDeviceSchema,
   challenge: string(),
+  origin: string(),
+  dAppDefinitionAddress: string(),
 })
 
 export type LedgerSignChallengeRequest = z.infer<
@@ -252,6 +254,18 @@ export const createSignedTransactionResponse = (
     interactionId,
     discriminator,
   }: Pick<LedgerSignTransactionRequest, 'interactionId' | 'discriminator'>,
+  success: SignatureOfSigner[]
+) => ({
+  interactionId,
+  discriminator,
+  success,
+})
+
+export const createSignedAuthResponse = (
+  {
+    interactionId,
+    discriminator,
+  }: Pick<LedgerSignChallengeRequest, 'interactionId' | 'discriminator'>,
   success: SignatureOfSigner[]
 ) => ({
   interactionId,

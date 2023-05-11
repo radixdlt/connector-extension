@@ -1,6 +1,6 @@
 import { Link, Text } from 'components'
 import { MessagingContext } from 'ledger/contexts/messaging-context'
-import { LedgerErrorResponse, errorResponses } from 'ledger/wrapper/contants'
+import { LedgerErrorResponse, errorResponses } from 'ledger/wrapper/constants'
 import { isKnownError } from 'ledger/wrapper/utils'
 import { useContext } from 'react'
 
