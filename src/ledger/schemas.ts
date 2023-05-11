@@ -155,16 +155,20 @@ export type LedgerSignChallengeResponse = z.infer<
   typeof LedgerSignChallengeResponseSchema
 >
 
+export const DerivedPublicKeySchema = object({
+  publicKey: string(),
+  path: string(),
+})
+
+export type DerivedPublicKey = z.infer<typeof DerivedPublicKeySchema>
+
 export const LedgerImportOlympiaDeviceResponseSchema = object({
   interactionId: string(),
   discriminator: literal('importOlympiaDevice'),
   success: object({
     model: ledgerDeviceModel,
     id: string(),
-    derivedPublicKeys: object({
-      publicKey: string(),
-      path: string(),
-    }).array(),
+    derivedPublicKeys: DerivedPublicKeySchema.array(),
   }),
 })
 

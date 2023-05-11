@@ -99,7 +99,7 @@ describe('Ledger Babylon Wrapper', () => {
       )
       const result: any = await ledger.getDeviceInfo()
       expect(result.isErr()).toBeTruthy()
-      expect(result.error).toEqual('Please connect only one ledger device')
+      expect(result.error).toEqual('MultipleLedgerConnected')
     })
   })
 
@@ -115,7 +115,7 @@ describe('Ledger Babylon Wrapper', () => {
       const result: any = await ledger.getDeviceInfo()
 
       expect(result.isErr()).toBeTruthy()
-      expect(result.error).toBe('Please unlock Ledger Device and try again')
+      expect(result.error).toBe('5515')
     })
 
     it('should return unknown error', async () => {
@@ -129,7 +129,7 @@ describe('Ledger Babylon Wrapper', () => {
       const result: any = await ledger.getDeviceInfo()
 
       expect(result.isErr()).toBeTruthy()
-      expect(result.error).toBe('Unknown error: 7777')
+      expect(result.error).toBe('7777')
     })
   })
 
@@ -173,9 +173,7 @@ describe('Ledger Babylon Wrapper', () => {
       })
       expect(result.isErr()).toBeTruthy()
       if (result.isErr()) {
-        expect(result.error).toBe(
-          "Device doesn't match. Make sure you connected correct Ledger device"
-        )
+        expect(result.error).toBe('DeviceMismatch')
       }
     })
 
@@ -302,9 +300,7 @@ describe('Ledger Babylon Wrapper', () => {
       })
 
       expect(result.isErr()).toBeTruthy()
-      expect(result.error).toBe(
-        "Device doesn't match. Make sure you connected correct Ledger device"
-      )
+      expect(result.error).toBe('DeviceMismatch')
     })
 
     it('should sign verbose TX using curve25519', async () => {
