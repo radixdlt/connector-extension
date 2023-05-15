@@ -47,42 +47,61 @@ export const getDerivePublicKeyPayload = (): LedgerPublicKeyRequest => ({
   },
 })
 
-export const getSignTransactionPayload = (): LedgerSignTransactionRequest => ({
-  interactionId: crypto.randomUUID(),
-  discriminator: 'signTransaction',
-  signers: [
-    {
-      curve: 'curve25519',
-      derivationPath: 'm/44H/1022H/10H/525H/1460H/0H',
+export const getSignEd25519TransactionPayload =
+  (): LedgerSignTransactionRequest => ({
+    interactionId: crypto.randomUUID(),
+    discriminator: 'signTransaction',
+    signers: [
+      {
+        curve: 'curve25519',
+        derivationPath: 'm/44H/1022H/10H/525H/1460H/0H',
+      },
+      {
+        curve: 'curve25519',
+        derivationPath: 'm/44H/1022H/10H/525H/1460H/1H',
+      },
+    ],
+    ledgerDevice: {
+      name: 'My Ledger Device',
+      model: 'nanoS',
+      id: '41ac202687326a4fc6cb677e9fd92d08b91ce46c669950d58790d4d5e583adc0',
     },
-    {
-      curve: 'curve25519',
-      derivationPath: 'm/44H/1022H/10H/525H/1460H/1H',
+    displayHash: true,
+    compiledTransactionIntent: compiledTxHex.createAccount,
+    mode: 'verbose',
+  })
+
+export const getSignSecp256k1TransactionPayload =
+  (): LedgerSignTransactionRequest => ({
+    interactionId: crypto.randomUUID(),
+    discriminator: 'signTransaction',
+    signers: [
+      {
+        curve: 'secp256k1',
+        derivationPath: 'm/44H/1022H/10H/525H/1238H',
+      },
+    ],
+    ledgerDevice: {
+      name: 'My Ledger Device',
+      model: 'nanoS',
+      id: '41ac202687326a4fc6cb677e9fd92d08b91ce46c669950d58790d4d5e583adc0',
     },
-  ],
-  ledgerDevice: {
-    name: 'My Ledger Device',
-    model: 'nanoS',
-    id: '41ac202687326a4fc6cb677e9fd92d08b91ce46c669950d58790d4d5e583adc0',
-  },
-  displayHash: true,
-  compiledTransactionIntent: compiledTxHex.createAccount,
-  mode: 'verbose',
-})
+    displayHash: true,
+    compiledTransactionIntent: compiledTxHex.createAccount,
+    mode: 'verbose',
+  })
 
 export const getSignChallengePayload = (): LedgerSignChallengeRequest => ({
   interactionId: crypto.randomUUID(),
   discriminator: 'signChallenge',
-  signers: [
-    {
-      curve: 'curve25519',
-      derivationPath: 'm/44H/1022H/10H/525H/1460H/0H',
-    },
-  ],
+  derivationPaths: ['m/44H/1022H/10H/525H/1460H/0H'],
   ledgerDevice: {
     name: 'My Ledger Device',
     model: 'nanoS',
     id: '41ac202687326a4fc6cb677e9fd92d08b91ce46c669950d58790d4d5e583adc0',
   },
-  challenge: '',
+  challenge: '140100298edb9cadd80423c1e15e2521d44f51be8b6a7953c9f03d83a8220071',
+  origin: 'https://rola.xrd',
+  dAppDefinitionAddress:
+    'account_tdx_b_1p8ahenyznrqy2w0tyg00r82rwuxys6z8kmrhh37c7maqpydx7p',
 })

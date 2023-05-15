@@ -1,4 +1,4 @@
-import { LedgerError, LedgerErrorResponse } from './contants'
+import { LedgerError, LedgerErrorResponse } from './constants'
 
 export const isKnownError = (statusCode: any): statusCode is LedgerError =>
   Object.values(LedgerErrorResponse).includes(statusCode)
