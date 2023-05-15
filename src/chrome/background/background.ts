@@ -9,6 +9,7 @@ import { createMessage } from '../messages/create-message'
 import { MessageClient } from '../messages/message-client'
 import { openParingPopup } from '../helpers/open-pairing-popup'
 import { AppLogger } from 'utils/logger'
+import { LedgerTabWatcher } from './ledger-tab-watcher'
 
 const backgroundLogger = {
   debug: (...args: string[]) => console.log(JSON.stringify(args, null, 2)),
@@ -38,8 +39,13 @@ const handleStorageChange = (changes: {
     )
 }
 
+const ledgerTabWatcher = LedgerTabWatcher()
+
 const messageHandler = MessageClient(
-  BackgroundMessageHandler({ logger: backgroundLogger }),
+  BackgroundMessageHandler({
+    logger: backgroundLogger,
+    ledgerTabWatcher: ledgerTabWatcher,
+  }),
   'background',
   { logger: backgroundLogger }
 )
@@ -55,9 +61,14 @@ const handleConnectionPasswordChange = (connectionPassword?: string) =>
       }, config.popup.closeDelayTime)
     })
 
+const tabRemovedListener = (tabId: number) =>
+  ledgerTabWatcher.triggerTabRemoval(tabId)
+
 chrome.runtime.onMessage.addListener((message, sender) => {
   messageHandler.onMessage(message, sender.tab?.id)
 })
+
+chrome.tabs.onRemoved.addListener(tabRemovedListener)
 chrome.storage.onChanged.addListener(handleStorageChange)
 chrome.action.onClicked.addListener(openParingPopup)
 chrome.runtime.onInstalled.addListener(handleOnInstallExtension)

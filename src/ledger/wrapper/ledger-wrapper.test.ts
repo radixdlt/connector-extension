@@ -1,7 +1,7 @@
 import { compiledTxHex } from 'chrome/dev-tools/example'
 import { LedgerWrapper, ledger } from './ledger-wrapper'
 import TransportWebHID from '@ledgerhq/hw-transport-webhid'
-import { LedgerInstructionCode } from './contants'
+import { LedgerInstructionCode } from './constants'
 
 const createLedgerWrapperWithMockedTransport = (
   expectedExchanges: {
@@ -99,7 +99,7 @@ describe('Ledger Babylon Wrapper', () => {
       )
       const result: any = await ledger.getDeviceInfo()
       expect(result.isErr()).toBeTruthy()
-      expect(result.error).toEqual('Please connect only one ledger device')
+      expect(result.error).toEqual('MultipleLedgerConnected')
     })
   })
 
@@ -115,7 +115,7 @@ describe('Ledger Babylon Wrapper', () => {
       const result: any = await ledger.getDeviceInfo()
 
       expect(result.isErr()).toBeTruthy()
-      expect(result.error).toBe('Please unlock Ledger Device and try again')
+      expect(result.error).toBe('5515')
     })
 
     it('should return unknown error', async () => {
@@ -129,7 +129,7 @@ describe('Ledger Babylon Wrapper', () => {
       const result: any = await ledger.getDeviceInfo()
 
       expect(result.isErr()).toBeTruthy()
-      expect(result.error).toBe('Unknown error: 7777')
+      expect(result.error).toBe('7777')
     })
   })
 
@@ -173,9 +173,7 @@ describe('Ledger Babylon Wrapper', () => {
       })
       expect(result.isErr()).toBeTruthy()
       if (result.isErr()) {
-        expect(result.error).toBe(
-          "Device doesn't match. Make sure you connected correct Ledger device"
-        )
+        expect(result.error).toBe('DeviceMismatch')
       }
     })
 
@@ -302,16 +300,14 @@ describe('Ledger Babylon Wrapper', () => {
       })
 
       expect(result.isErr()).toBeTruthy()
-      expect(result.error).toBe(
-        "Device doesn't match. Make sure you connected correct Ledger device"
-      )
+      expect(result.error).toBe('DeviceMismatch')
     })
 
     it('should sign verbose TX using curve25519', async () => {
       const ledger = createLedgerWrapperWithMockedTransport(
         getExpectedTransactionSigningExchanges(
           LedgerInstructionCode.SignTxEd255519,
-          '5ad8cd006761aa698ea77f271c421a7ea9e34da45b4e827d2fce1b5205933b77e852261381cfaa0a8ecfba52622d5c1560462db70df08fc905111e2a9a5fa601cffce054df51fb4072e7faf627e0f64f168fd8811f749d34720ac8da264bac069000',
+          '5ad8cd006761aa698ea77f271c421a7ea9e34da45b4e827d2fce1b5205933b77e852261381cfaa0a8ecfba52622d5c1560462db70df08fc905111e2a9a5fa601cffce054df51fb4072e7faf627e0f64f168fd8811f749d34720ac8da264bac06aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa9000',
           '00'
         )
       )
@@ -342,7 +338,7 @@ describe('Ledger Babylon Wrapper', () => {
       const ledger = createLedgerWrapperWithMockedTransport(
         getExpectedTransactionSigningExchanges(
           LedgerInstructionCode.SignTxSecp256k1Smart,
-          '5adadad8cd006761aa698ea77f271c421a7ea9e34da45b4e827d2fce1b5205933b77e852261381cfaa0a8ecfba52622d5c1560462db70df08fc905111e2a9a5fa601cffce054df51fb4072e7faf627e0f64f168fd8811f749d34720ac8da264bac069000',
+          '5adadad8cd006761aa698ea77f271c421a7ea9e34da45b4e827d2fce1b5205933b77e852261381cfaa0a8ecfba52622d5c1560462db70df08fc905111e2a9a5fa601cffce054df51fb4072e7faf627e0f64f168fd8811f749d34720ac8da264bac06aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa9000',
           '01'
         )
       )
@@ -370,6 +366,70 @@ describe('Ledger Babylon Wrapper', () => {
             '01cffce054df51fb4072e7faf627e0f64f168fd8811f749d34720ac8da264bac06',
           signature:
             '5adadad8cd006761aa698ea77f271c421a7ea9e34da45b4e827d2fce1b5205933b77e852261381cfaa0a8ecfba52622d5c1560462db70df08fc905111e2a9a5fa6',
+        },
+      ])
+    })
+  })
+
+  describe('auth signing', () => {
+    it('should sign challange using curve25519', async () => {
+      const ledger = createLedgerWrapperWithMockedTransport([
+        {
+          input: 'aa120000',
+          output: '305495ba9000',
+        },
+        {
+          input: 'aa61000019068000002c800003fe8000000c8000020d800005b480000000',
+          output: '9000',
+        },
+        {
+          input:
+            'ac6100007d17f3cb369f2632454f7f22c24e72b0adf7b95e36f2297467d3ff04010b2967e1416163636f756e745f7464785f625f317039646b6765643372707a79383630616d7074356a706d767633796c34793666357970707034746e736364736c767439763368747470733a2f2f64617368626f6172642e7264782e776f726b73',
+          output:
+            '5015423efc3ee29338df1877b7c9eaf563e894e89a327da9d5b5abbb7c2cda6ad36a66d6219d3817dba61737c0df398b7f5ae2df5b04a85c5f6985542684d80d451152a1cef7be603205086d4ebac0a0b78fda2ff4684b9dea5ca9ef003d4e7dc05cd851c0ff9d3d6022a23072640d4863b99c68d56ba1796dc0a75c32c46cef9000',
+        },
+        {
+          input: 'aa61000019068000002c800003fe8000000c8000020d800005b480000001',
+          output: '9000',
+        },
+        {
+          input:
+            'ac6100007d17f3cb369f2632454f7f22c24e72b0adf7b95e36f2297467d3ff04010b2967e1416163636f756e745f7464785f625f317039646b6765643372707a79383630616d7074356a706d767633796c34793666357970707034746e736364736c767439763368747470733a2f2f64617368626f6172642e7264782e776f726b73',
+          output:
+            '5015423efc3ee29338df1877b7c9eaf563e894e89a327da9d5b5abbb7c2cda6ad36a66d6219d3817dba61737c0df398b7f5ae2df5b04a85c5f6985542684d80d451152a1cef7be603205086d4ebac0a0b78fda2ff4684b9dea5ca9ef003d4e7dc05cd851c0ff9d3d6022a23072640d4863b99c68d56ba1796dc0a75c32c46cef9000',
+        },
+      ])
+
+      const result = await ledger.signAuth({
+        ledgerDevice,
+        derivationPaths: [
+          `m/44H/1022H/12H/525H/1460H/0H`,
+          `m/44H/1022H/12H/525H/1460H/1H`,
+        ],
+        challenge:
+          '17f3cb369f2632454f7f22c24e72b0adf7b95e36f2297467d3ff04010b2967e1',
+        origin: 'https://dashboard.rdx.works',
+        dAppDefinitionAddress:
+          'account_tdx_b_1p9dkged3rpzy860ampt5jpmvv3yl4y6f5yppp4tnscdslvt9v3',
+      })
+      if (result.isErr()) throw result.error
+
+      expect(result.value).toEqual([
+        {
+          curve: 'curve25519',
+          derivationPath: `m/44H/1022H/12H/525H/1460H/0H`,
+          publicKey:
+            '451152a1cef7be603205086d4ebac0a0b78fda2ff4684b9dea5ca9ef003d4e7d',
+          signature:
+            '5015423efc3ee29338df1877b7c9eaf563e894e89a327da9d5b5abbb7c2cda6ad36a66d6219d3817dba61737c0df398b7f5ae2df5b04a85c5f6985542684d80d',
+        },
+        {
+          curve: 'curve25519',
+          derivationPath: `m/44H/1022H/12H/525H/1460H/1H`,
+          publicKey:
+            '451152a1cef7be603205086d4ebac0a0b78fda2ff4684b9dea5ca9ef003d4e7d',
+          signature:
+            '5015423efc3ee29338df1877b7c9eaf563e894e89a327da9d5b5abbb7c2cda6ad36a66d6219d3817dba61737c0df398b7f5ae2df5b04a85c5f6985542684d80d',
         },
       ])
     })

@@ -10,9 +10,10 @@ import {
 } from '../messages/_types'
 import { getConnectionPassword as getConnectionPasswordFn } from '../helpers/get-connection-password'
 import { config } from 'config'
-import { createOrFocusTab } from 'chrome/helpers/create-or-focus-tab'
-import { sendMessage } from 'chrome/messages/send-message'
-import { createMessage } from 'chrome/messages/create-message'
+import { createAlignedPopupWindow } from 'chrome/helpers/create-popup-window'
+import { sendMessageToTab } from 'chrome/helpers/send-message-to-tab'
+import { createAndFocusTab } from 'chrome/helpers/create-and-focus-tab'
+import { LedgerTabWatcher } from './ledger-tab-watcher'
 
 export type BackgroundMessageHandler = ReturnType<
   typeof BackgroundMessageHandler
@@ -20,11 +21,13 @@ export type BackgroundMessageHandler = ReturnType<
 export const BackgroundMessageHandler =
   ({
     logger,
+    ledgerTabWatcher,
     getConnectionPassword = getConnectionPasswordFn,
     closePopup = closePopupFn,
     openParingPopup = openParingPopupFn,
   }: Partial<{
     logger?: AppLogger
+    ledgerTabWatcher: ReturnType<typeof LedgerTabWatcher>
     getConnectionPassword: () => ResultAsync<any, Error>
     closePopup: () => ResultAsync<any, Error>
     openParingPopup: () => ResultAsync<any, Error>
@@ -70,21 +73,23 @@ export const BackgroundMessageHandler =
         }))
       }
 
-      case messageDiscriminator.walletToLedger:
-        return createOrFocusTab(config.popup.pages.ledger)
-          .andThen((tab) => {
-            const tabRemovedListener = (tabId: number) => {
-              if (tabId === tab.id) {
-                chrome.tabs.onRemoved.removeListener(tabRemovedListener)
-                sendMessage(
-                  createMessage.confirmationError('ledger', message.messageId, {
-                    reason: 'tabClosed',
-                  })
-                )
-              }
-            }
+      case messageDiscriminator.convertPopupToTab: {
+        ledgerTabWatcher?.restoreInitial()
 
-            chrome.tabs.onRemoved.addListener(tabRemovedListener)
+        return createAndFocusTab(config.popup.pages.ledger)
+          .andThen((tab) => {
+            ledgerTabWatcher?.setWatchedTab(tab.id!, message.data.messageId)
+            return sendMessageToTab(tab.id!, message.data)
+          })
+          .map(() => ({ sendConfirmation: false }))
+          .mapErr(() => ({ reason: 'failedToOpenLedgerTab' }))
+      }
+
+      case messageDiscriminator.walletToLedger:
+        ledgerTabWatcher?.restoreInitial()
+        return createAlignedPopupWindow(config.popup.pages.ledger)
+          .andThen((tab) => {
+            ledgerTabWatcher?.setWatchedTab(tab.id!, message.messageId)
 
             return sendMessageWithConfirmation(
               { ...message, source: 'background' },

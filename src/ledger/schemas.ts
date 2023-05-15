@@ -72,9 +72,11 @@ export type LedgerSignTransactionRequest = z.infer<
 export const LedgerSignChallengeRequestSchema = object({
   interactionId: string(),
   discriminator: literal('signChallenge'),
-  signers: KeyParametersSchema.array(),
+  derivationPaths: string().array(),
   ledgerDevice: LedgerDeviceSchema,
   challenge: string(),
+  origin: string(),
+  dAppDefinitionAddress: string(),
 })
 
 export type LedgerSignChallengeRequest = z.infer<
@@ -155,16 +157,20 @@ export type LedgerSignChallengeResponse = z.infer<
   typeof LedgerSignChallengeResponseSchema
 >
 
+export const DerivedPublicKeySchema = object({
+  publicKey: string(),
+  path: string(),
+})
+
+export type DerivedPublicKey = z.infer<typeof DerivedPublicKeySchema>
+
 export const LedgerImportOlympiaDeviceResponseSchema = object({
   interactionId: string(),
   discriminator: literal('importOlympiaDevice'),
   success: object({
     model: ledgerDeviceModel,
     id: string(),
-    derivedPublicKeys: object({
-      publicKey: string(),
-      path: string(),
-    }).array(),
+    derivedPublicKeys: DerivedPublicKeySchema.array(),
   }),
 })
 
@@ -248,6 +254,18 @@ export const createSignedTransactionResponse = (
     interactionId,
     discriminator,
   }: Pick<LedgerSignTransactionRequest, 'interactionId' | 'discriminator'>,
+  success: SignatureOfSigner[]
+) => ({
+  interactionId,
+  discriminator,
+  success,
+})
+
+export const createSignedAuthResponse = (
+  {
+    interactionId,
+    discriminator,
+  }: Pick<LedgerSignChallengeRequest, 'interactionId' | 'discriminator'>,
   success: SignatureOfSigner[]
 ) => ({
   interactionId,

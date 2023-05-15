@@ -3,23 +3,21 @@ import { ErrorText } from '../components/error-text'
 import {
   createLedgerDeviceIdResponse,
   LedgerDeviceIdRequest,
-  LedgerResponse,
 } from 'ledger/schemas'
 import { PairingHeader } from 'pairing/components/pairing-header'
-import { useState } from 'react'
+import { useContext, useEffect, useState, useCallback } from 'react'
 import { ledger } from 'ledger/wrapper/ledger-wrapper'
+import { MessagingContext } from 'ledger/contexts/messaging-context'
 
 export const NewHardwareWallet = ({
   message,
-  respond,
 }: {
   message: LedgerDeviceIdRequest
-  respond: (response: LedgerResponse) => void
 }) => {
   const [error, setError] = useState<string | undefined>()
   const [isLoading, setIsLoading] = useState<boolean>(false)
-
-  const getDeviceInfo = async () => {
+  const { respond } = useContext(MessagingContext)
+  const getDeviceInfo = useCallback(async () => {
     setError(undefined)
     setIsLoading(true)
 
@@ -37,7 +35,11 @@ export const NewHardwareWallet = ({
       setError(deviceInfo.error)
       setIsLoading(false)
     }
-  }
+  }, [message, respond])
+
+  useEffect(() => {
+    getDeviceInfo()
+  }, [getDeviceInfo])
 
   return (
     <>

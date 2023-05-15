@@ -8,6 +8,7 @@ export const messageDiscriminator = {
   dAppRequest: 'dAppRequest',
   ledgerResponse: 'ledgerResponse',
   walletToLedger: 'walletToLedger',
+  convertPopupToTab: 'convertPopupToTab',
   walletResponse: 'walletResponse',
   toContentScript: 'toContentScript',
   walletMessage: 'walletMessage',
@@ -70,6 +71,11 @@ export type Messages = {
   [messageDiscriminator.sendMessageEventToDapp]: MessageBuilder<
     MessageDiscriminator['sendMessageEventToDapp'],
     { messageEvent: MessageLifeCycleEvent; interactionId: string }
+  >
+
+  [messageDiscriminator.convertPopupToTab]: MessageBuilder<
+    MessageDiscriminator['convertPopupToTab'],
+    { data: Messages['walletToLedger'] }
   >
 
   [messageDiscriminator.getConnectionPassword]: MessageBuilder<
