@@ -1,10 +1,29 @@
 import { Link, Text } from 'components'
 import { MessagingContext } from 'ledger/contexts/messaging-context'
-import { LedgerErrorResponse, errorResponses } from 'ledger/wrapper/constants'
-import { isKnownError } from 'ledger/wrapper/utils'
+import { LedgerErrorCode } from 'ledger/wrapper/constants'
 import { useContext } from 'react'
 
+export const ErrorMessages: Record<string, string> = {
+  [LedgerErrorCode.MultipleLedgerConnected]:
+    'Please connect only one ledger device',
+  [LedgerErrorCode.UnlockDevice]: 'Please unlock Ledger Device and try again',
+  [LedgerErrorCode.BadIns]:
+    'Please open Radix Babylon app in your Ledger device and try again',
+  [LedgerErrorCode.NoDevicesConnected]:
+    'Did not find any connected Ledger devices. Please connect your Ledger device and try again',
+  [LedgerErrorCode.FailedToListLedgerDevices]:
+    'Failed initial check to check list of connected devices',
+  [LedgerErrorCode.FailedToCreateTransport]:
+    'Could not recognize Ledger device. Did you connect it to your computer and unlock it?',
+  [LedgerErrorCode.FailedToExchangeData]:
+    'Failed to exchange data with Ledger device. Did you disconnect it?',
+  [LedgerErrorCode.DeviceMismatch]: `Connected device doesn't match requested one. Make sure you connected correct Ledger device`,
+}
+
 export const ErrorText = ({ error }: { error?: string }) => {
+  const errorNames = Object.fromEntries(
+    Object.entries(LedgerErrorCode).map(([key, value]) => [value, key])
+  )
   const { switchToFullWindow } = useContext(MessagingContext)
   const url = new URL(window.location.href)
   const isPopupWindow = url.searchParams.get('isPopupWindow') === 'true'
@@ -14,12 +33,11 @@ export const ErrorText = ({ error }: { error?: string }) => {
         bold
         style={{ color: 'white', lineHeight: '23px', marginTop: '20px' }}
       >
-        {isKnownError(error)
-          ? errorResponses[error]
-          : `Unknown error: ${error}`}
+        {ErrorMessages[error]
+          ? ErrorMessages[error]
+          : `Unknown error: ${errorNames[error] || error}`}
       </Text>
-      {error === LedgerErrorResponse.FailedToCreateTransport &&
-      isPopupWindow ? (
+      {error === LedgerErrorCode.FailedToCreateTransport && isPopupWindow ? (
         <Text style={{ color: 'white', marginTop: '20px' }} italic>
           If you are connecting Ledger device for the first time, please&nbsp;
           <Link
