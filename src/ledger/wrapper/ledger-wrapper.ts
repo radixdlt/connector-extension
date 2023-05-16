@@ -12,10 +12,9 @@ import { ResultAsync, err, ok, okAsync } from 'neverthrow'
 import { bufferToChunks } from 'utils'
 import { logger } from 'utils/logger'
 import {
-  LedgerErrorResponse,
+  LedgerErrorCode,
   LedgerInstructionCode,
   LedgerInstructionClass,
-  errorResponses,
 } from './constants'
 import { encodeDerivationPath } from './encode-derivation-path'
 import { getDataLength } from './utils'
@@ -65,11 +64,11 @@ export const LedgerWrapper = ({
   const createLedgerTransport = () =>
     ResultAsync.fromPromise(
       transport.list(),
-      () => LedgerErrorResponse.FailedToListLedgerDevices
+      () => LedgerErrorCode.FailedToListLedgerDevices
     )
       .andThen((devices) => {
         if (devices.length > 1) {
-          return err(LedgerErrorResponse.MultipleLedgerConnected)
+          return err(LedgerErrorCode.MultipleLedgerConnected)
         }
 
         if (devices.length === 0) {
@@ -81,7 +80,7 @@ export const LedgerWrapper = ({
       .andThen(() =>
         ResultAsync.fromPromise(
           transport.create(),
-          () => LedgerErrorResponse.FailedToCreateTransport
+          () => LedgerErrorCode.FailedToCreateTransport
         ).map((transport) => {
           setProgressMessage('Creating Ledger device connection')
           const exchange: ExchangeFn = (
@@ -95,7 +94,7 @@ export const LedgerWrapper = ({
             const ledgerInput = `${instructionClass}${command}${p1}00${data}`
             return ResultAsync.fromPromise(
               transport.exchange(Buffer.from(ledgerInput, 'hex')),
-              () => errorResponses[LedgerErrorResponse.FailedToExchangeData]
+              () => LedgerErrorCode.FailedToExchangeData
             ).andThen((buffer) => {
               const stringifiedResponse = buffer.toString('hex')
               logger.debug(`📒 ↔️ Ledger Exchange`, {
@@ -143,7 +142,7 @@ export const LedgerWrapper = ({
 
       return ledgerDeviceId === expectedDeviceId
         ? ok(undefined)
-        : err(LedgerErrorResponse.DeviceMismatch)
+        : err(LedgerErrorCode.DeviceMismatch)
     }
 
   const parseGetPublicKeyParams =
