@@ -1,4 +1,5 @@
 import {
+  KeyParameters,
   LedgerDeviceIdRequest,
   LedgerImportOlympiaDeviceRequest,
   LedgerPublicKeyRequest,
@@ -91,17 +92,35 @@ export const getSignSecp256k1TransactionPayload =
     mode: 'verbose',
   })
 
-export const getSignChallengePayload = (): LedgerSignChallengeRequest => ({
+const getSignChallengePayload = (
+  signers: KeyParameters[]
+): LedgerSignChallengeRequest => ({
   interactionId: crypto.randomUUID(),
   discriminator: 'signChallenge',
-  derivationPaths: ['m/44H/1022H/10H/525H/1460H/0H'],
+  signers,
   ledgerDevice: {
     name: 'My Ledger Device',
     model: 'nanoS',
     id: '41ac202687326a4fc6cb677e9fd92d08b91ce46c669950d58790d4d5e583adc0',
   },
-  challenge: '140100298edb9cadd80423c1e15e2521d44f51be8b6a7953c9f03d83a8220071',
-  origin: 'https://rola.xrd',
+  challenge: '17f3cb369f2632454f7f22c24e72b0adf7b95e36f2297467d3ff04010b2967e1',
+  origin: 'https://dashboard.rdx.works',
   dAppDefinitionAddress:
-    'account_tdx_b_1p8ahenyznrqy2w0tyg00r82rwuxys6z8kmrhh37c7maqpydx7p',
+    'account_tdx_b_1p9dkged3rpzy860ampt5jpmvv3yl4y6f5yppp4tnscdslvt9v3',
 })
+
+export const getSignEd222519ChallengePayload = () =>
+  getSignChallengePayload([
+    {
+      curve: 'curve25519',
+      derivationPath: 'm/44H/1022H/12H/525H/1460H/0H',
+    },
+  ])
+
+export const getSignSecp256k1ChallengePayload = () =>
+  getSignChallengePayload([
+    {
+      curve: 'secp256k1',
+      derivationPath: 'm/44H/1022H/10H/525H/1238H',
+    },
+  ])
