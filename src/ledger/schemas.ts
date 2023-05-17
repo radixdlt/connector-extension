@@ -72,7 +72,7 @@ export type LedgerSignTransactionRequest = z.infer<
 export const LedgerSignChallengeRequestSchema = object({
   interactionId: string(),
   discriminator: literal('signChallenge'),
-  derivationPaths: string().array(),
+  signers: KeyParametersSchema.array(),
   ledgerDevice: LedgerDeviceSchema,
   challenge: string(),
   origin: string(),

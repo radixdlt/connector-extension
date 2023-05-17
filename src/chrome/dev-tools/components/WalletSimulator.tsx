@@ -6,7 +6,8 @@ import { Box, Button, Header, Text } from 'components'
 import {
   getDerivePublicKeyPayload,
   getDeviceInfoPayload,
-  getSignChallengePayload,
+  getSignEd222519ChallengePayload,
+  getSignSecp256k1ChallengePayload,
   getImportFromOlympiaPayload,
   getSignEd25519TransactionPayload,
   getSignSecp256k1TransactionPayload,
@@ -26,7 +27,8 @@ export const WalletSimulator = () => {
     'Get Public Key': getDerivePublicKeyPayload(),
     'Sign TX (Secp256k1)': getSignSecp256k1TransactionPayload(),
     'Sign TX (Curve25519)': getSignEd25519TransactionPayload(),
-    'Sign Auth': getSignChallengePayload(),
+    'Sign Auth (Curve25519)': getSignEd222519ChallengePayload(),
+    'Sign Auth (Secp256k1)': getSignSecp256k1ChallengePayload(),
   }
 
   useEffect(() => {

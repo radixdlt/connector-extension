@@ -42,6 +42,7 @@ const getCurveConfig = ({ curve }: KeyParameters) =>
       publicKeyByteCount: 32,
       signatureByteCount: 64,
       signTx: LedgerInstructionCode.SignTxEd255519,
+      signAuth: LedgerInstructionCode.SignAuthEd25519,
       getPublicKey: LedgerInstructionCode.GetPubKeyEd25519,
       signTxSmart: LedgerInstructionCode.SignTxEd255519Smart,
     },
@@ -49,6 +50,7 @@ const getCurveConfig = ({ curve }: KeyParameters) =>
       publicKeyByteCount: 33,
       signatureByteCount: 65,
       signTx: LedgerInstructionCode.SignTxSecp256k1,
+      signAuth: LedgerInstructionCode.SignAuthSecp256k1,
       getPublicKey: LedgerInstructionCode.GetPubKeySecp256k1,
       signTxSmart: LedgerInstructionCode.SignTxSecp256k1Smart,
     },
@@ -67,6 +69,12 @@ export const LedgerWrapper = ({
       () => LedgerErrorCode.FailedToListLedgerDevices
     )
       .andThen((devices) => {
+        logger.debug(
+          'Found Ledger devices',
+          devices.map(
+            ({ productName, productId }) => `${productId}, ${productName}`
+          )
+        )
         if (devices.length > 1) {
           return err(LedgerErrorCode.MultipleLedgerConnected)
         }
@@ -157,18 +165,24 @@ export const LedgerWrapper = ({
 
   const parseSignerParams = (
     signer: KeyParameters,
-    params: Omit<
+    params?: Omit<
       LedgerSignTransactionRequest,
       'discriminator' | 'interactionId'
     >
   ) => {
-    const { signTx, signTxSmart, signatureByteCount, publicKeyByteCount } =
-      getCurveConfig(signer)
-    const command = params.mode === 'summary' ? signTxSmart : signTx
+    const {
+      signTx,
+      signTxSmart,
+      signatureByteCount,
+      publicKeyByteCount,
+      signAuth: signAuthCommand,
+    } = getCurveConfig(signer)
+    const command = params?.mode === 'summary' ? signTxSmart : signTx
 
     const encodedDerivationPath = encodeDerivationPath(signer.derivationPath)
     return {
       command,
+      signAuthCommand,
       encodedDerivationPath,
       signatureByteCount,
       publicKeyByteCount,
@@ -303,39 +317,36 @@ export const LedgerWrapper = ({
         .andThen(ensureCorrectDeviceId(params.ledgerDevice.id))
         .andThen(parseSignAuthParams(params))
         .andThen(({ challengeData }) =>
-          params.derivationPaths.reduce(
-            (
-              acc: ResultAsync<SignatureOfSigner[], string>,
-              derivationPath,
-              index
-            ) =>
+          params.signers.reduce(
+            (acc: ResultAsync<SignatureOfSigner[], string>, signer, index) =>
               acc.andThen((signatures) => {
                 setProgressMessage(
                   `Gathering ${index + 1} out of ${
-                    params.derivationPaths.length
+                    params.signers.length
                   } signatures`
                 )
 
-                const encodedDerivationPath =
-                  encodeDerivationPath(derivationPath)
+                const {
+                  signAuthCommand,
+                  signatureByteCount,
+                  publicKeyByteCount,
+                  encodedDerivationPath,
+                } = parseSignerParams(signer)
 
-                return exchange(
-                  LedgerInstructionCode.SignAuthEd25519,
-                  encodedDerivationPath
-                )
+                return exchange(signAuthCommand, encodedDerivationPath)
                   .andThen(() =>
-                    exchange(
-                      LedgerInstructionCode.SignAuthEd25519,
-                      challengeData,
-                      { instructionClass: LedgerInstructionClass.ac }
-                    )
+                    exchange(signAuthCommand, challengeData, {
+                      instructionClass: LedgerInstructionClass.ac,
+                    })
                   )
                   .map((result) => {
                     const entry: SignatureOfSigner = {
-                      curve: 'curve25519',
-                      derivationPath,
-                      signature: result.slice(0, 128),
-                      publicKey: result.slice(128, 192),
+                      ...signer,
+                      signature: result.slice(0, signatureByteCount * 2),
+                      publicKey: result.slice(
+                        signatureByteCount * 2,
+                        signatureByteCount * 2 + publicKeyByteCount * 2
+                      ),
                     }
                     return [...signatures, entry]
                   })

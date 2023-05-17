@@ -372,7 +372,7 @@ describe('Ledger Babylon Wrapper', () => {
   })
 
   describe('auth signing', () => {
-    it('should sign challange using curve25519', async () => {
+    it('should sign challange using different curves', async () => {
       const ledger = createLedgerWrapperWithMockedTransport([
         {
           input: 'aa120000',
@@ -389,22 +389,28 @@ describe('Ledger Babylon Wrapper', () => {
             '5015423efc3ee29338df1877b7c9eaf563e894e89a327da9d5b5abbb7c2cda6ad36a66d6219d3817dba61737c0df398b7f5ae2df5b04a85c5f6985542684d80d451152a1cef7be603205086d4ebac0a0b78fda2ff4684b9dea5ca9ef003d4e7dc05cd851c0ff9d3d6022a23072640d4863b99c68d56ba1796dc0a75c32c46cef9000',
         },
         {
-          input: 'aa61000019068000002c800003fe8000000c8000020d800005b480000001',
+          input: 'aa71000015058000002c800003fe8000000c8000020d800004d6',
           output: '9000',
         },
         {
           input:
-            'ac6100007d17f3cb369f2632454f7f22c24e72b0adf7b95e36f2297467d3ff04010b2967e1416163636f756e745f7464785f625f317039646b6765643372707a79383630616d7074356a706d767633796c34793666357970707034746e736364736c767439763368747470733a2f2f64617368626f6172642e7264782e776f726b73',
+            'ac7100007d17f3cb369f2632454f7f22c24e72b0adf7b95e36f2297467d3ff04010b2967e1416163636f756e745f7464785f625f317039646b6765643372707a79383630616d7074356a706d767633796c34793666357970707034746e736364736c767439763368747470733a2f2f64617368626f6172642e7264782e776f726b73',
           output:
-            '5015423efc3ee29338df1877b7c9eaf563e894e89a327da9d5b5abbb7c2cda6ad36a66d6219d3817dba61737c0df398b7f5ae2df5b04a85c5f6985542684d80d451152a1cef7be603205086d4ebac0a0b78fda2ff4684b9dea5ca9ef003d4e7dc05cd851c0ff9d3d6022a23072640d4863b99c68d56ba1796dc0a75c32c46cef9000',
+            '011c38168b1071585ccef652471beac0efcce58176c5ec24cd6e1af45058ec057e2990bdd899d24ea12c745c6c58819b86891998e2d7e1374eadca1ac2920ac187024483ba4e13195ed3b50b103c502a7799749261ae22a5b20950dd8815f6568645c05cd851c0ff9d3d6022a23072640d4863b99c68d56ba1796dc0a75c32c46cef9000',
         },
       ])
 
       const result = await ledger.signAuth({
         ledgerDevice,
-        derivationPaths: [
-          `m/44H/1022H/12H/525H/1460H/0H`,
-          `m/44H/1022H/12H/525H/1460H/1H`,
+        signers: [
+          {
+            curve: 'curve25519',
+            derivationPath: `m/44H/1022H/12H/525H/1460H/0H`,
+          },
+          {
+            curve: 'secp256k1',
+            derivationPath: `m/44H/1022H/12H/525H/1238H`,
+          },
         ],
         challenge:
           '17f3cb369f2632454f7f22c24e72b0adf7b95e36f2297467d3ff04010b2967e1',
@@ -424,12 +430,12 @@ describe('Ledger Babylon Wrapper', () => {
             '5015423efc3ee29338df1877b7c9eaf563e894e89a327da9d5b5abbb7c2cda6ad36a66d6219d3817dba61737c0df398b7f5ae2df5b04a85c5f6985542684d80d',
         },
         {
-          curve: 'curve25519',
-          derivationPath: `m/44H/1022H/12H/525H/1460H/1H`,
+          curve: 'secp256k1',
+          derivationPath: `m/44H/1022H/12H/525H/1238H`,
           publicKey:
-            '451152a1cef7be603205086d4ebac0a0b78fda2ff4684b9dea5ca9ef003d4e7d',
+            '024483ba4e13195ed3b50b103c502a7799749261ae22a5b20950dd8815f6568645',
           signature:
-            '5015423efc3ee29338df1877b7c9eaf563e894e89a327da9d5b5abbb7c2cda6ad36a66d6219d3817dba61737c0df398b7f5ae2df5b04a85c5f6985542684d80d',
+            '011c38168b1071585ccef652471beac0efcce58176c5ec24cd6e1af45058ec057e2990bdd899d24ea12c745c6c58819b86891998e2d7e1374eadca1ac2920ac187',
         },
       ])
     })
