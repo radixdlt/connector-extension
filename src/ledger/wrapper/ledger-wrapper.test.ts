@@ -32,17 +32,23 @@ const createLedgerWrapperWithMockedTransport = (
   })
 }
 
-const getExpectedTransactionSigningExchanges = (
-  instructionCode: string,
-  finalOutput: string,
+const getExpectedTransactionSigningExchanges = ({
+  instructionCode,
+  p1,
+  encodedDerivationPath,
+  finalOutput,
+}: {
+  instructionCode: string
+  finalOutput: string
   p1: string
-) => [
+  encodedDerivationPath: string
+}) => [
   {
     input: 'aa120000',
     output: '305495ba9000',
   },
   {
-    input: `aa${instructionCode}${p1}0019068000002c800003fe8000000a8000020d80000000800004d6`,
+    input: `aa${instructionCode}${p1}00${encodedDerivationPath}`,
     output: '9000',
   },
   {
@@ -322,16 +328,24 @@ describe('Ledger Babylon Wrapper', () => {
 
     it('should sign verbose TX using curve25519', async () => {
       const ledger = createLedgerWrapperWithMockedTransport(
-        getExpectedTransactionSigningExchanges(
-          LedgerInstructionCode.SignTxEd255519,
-          '5ad8cd006761aa698ea77f271c421a7ea9e34da45b4e827d2fce1b5205933b77e852261381cfaa0a8ecfba52622d5c1560462db70df08fc905111e2a9a5fa601cffce054df51fb4072e7faf627e0f64f168fd8811f749d34720ac8da264bac06aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa9000',
-          '00'
-        )
+        getExpectedTransactionSigningExchanges({
+          p1: '00',
+          instructionCode: LedgerInstructionCode.SignTxEd255519,
+          encodedDerivationPath:
+            '19068000002c800003fe8000000a8000020d800005b480000001',
+          finalOutput:
+            'b6d6f0ddd426dbce9af6dd6480c3e116823aa6ad05c97faef2c3b2ee678620d2e7f6a4887b54d9d7a0114fb1e8c359ed77c1d9db84d8acb0ffc518b90974ba01152fb698abd4a5aa588514bb217cbb20878c118588762bfbd3c3937d394a67915cb98b84f9fba860c2d91580c95b875736342050aa139be941927584908daf689000',
+        })
       )
 
       const result = await ledger.signTransaction({
         ledgerDevice,
-        signers: keysParameters,
+        signers: [
+          {
+            curve: 'curve25519',
+            derivationPath: 'm/44H/1022H/10H/525H/1460H/1H',
+          },
+        ],
         displayHash: false,
         compiledTransactionIntent: compiledTxHex.setMetadata,
         mode: 'verbose',
@@ -343,30 +357,32 @@ describe('Ledger Babylon Wrapper', () => {
         {
           derivedPublicKey: {
             curve: 'curve25519',
-            derivationPath: `m/44'/1022'/10'/525'/0'/1238'`,
+            derivationPath: `m/44H/1022H/10H/525H/1460H/1H`,
             publicKey:
-              'cffce054df51fb4072e7faf627e0f64f168fd8811f749d34720ac8da264bac06',
+              '152fb698abd4a5aa588514bb217cbb20878c118588762bfbd3c3937d394a6791',
           },
           signature:
-            '5ad8cd006761aa698ea77f271c421a7ea9e34da45b4e827d2fce1b5205933b77e852261381cfaa0a8ecfba52622d5c1560462db70df08fc905111e2a9a5fa601',
+            'b6d6f0ddd426dbce9af6dd6480c3e116823aa6ad05c97faef2c3b2ee678620d2e7f6a4887b54d9d7a0114fb1e8c359ed77c1d9db84d8acb0ffc518b90974ba01',
         },
       ])
     })
 
     it('should sign summary TX using secp256k1', async () => {
       const ledger = createLedgerWrapperWithMockedTransport(
-        getExpectedTransactionSigningExchanges(
-          LedgerInstructionCode.SignTxSecp256k1Smart,
-          '5adadad8cd006761aa698ea77f271c421a7ea9e34da45b4e827d2fce1b5205933b77e852261381cfaa0a8ecfba52622d5c1560462db70df08fc905111e2a9a5fa601cffce054df51fb4072e7faf627e0f64f168fd8811f749d34720ac8da264bac06aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa9000',
-          '01'
-        )
+        getExpectedTransactionSigningExchanges({
+          instructionCode: LedgerInstructionCode.SignTxSecp256k1Smart,
+          p1: '01',
+          encodedDerivationPath: '15058000002c800003fe8000000a8000020d800004d6',
+          finalOutput:
+            '016c5f7dd77eb25825c814b11f2657b9ffd906dc9be187ff931c841cadb53570ef193a4c6041e615e5c547e171c309402be0e339882109ddd0479201272f52fcdb024483ba4e13195ed3b50b103c502a7799749261ae22a5b20950dd8815f65686455cb98b84f9fba860c2d91580c95b875736342050aa139be941927584908daf689000',
+        })
       )
 
       const result = await ledger.signTransaction({
         ledgerDevice,
         signers: [
           {
-            derivationPath: `m/44'/1022'/10'/525'/0'/1238'`,
+            derivationPath: `m/44H/1022H/10H/525H/1238H`,
             curve: 'secp256k1',
           },
         ],
@@ -381,12 +397,12 @@ describe('Ledger Babylon Wrapper', () => {
         {
           derivedPublicKey: {
             curve: 'secp256k1',
-            derivationPath: `m/44'/1022'/10'/525'/0'/1238'`,
+            derivationPath: `m/44H/1022H/10H/525H/1238H`,
             publicKey:
-              '01cffce054df51fb4072e7faf627e0f64f168fd8811f749d34720ac8da264bac06',
+              '024483ba4e13195ed3b50b103c502a7799749261ae22a5b20950dd8815f6568645',
           },
           signature:
-            '5adadad8cd006761aa698ea77f271c421a7ea9e34da45b4e827d2fce1b5205933b77e852261381cfaa0a8ecfba52622d5c1560462db70df08fc905111e2a9a5fa6',
+            '016c5f7dd77eb25825c814b11f2657b9ffd906dc9be187ff931c841cadb53570ef193a4c6041e615e5c547e171c309402be0e339882109ddd0479201272f52fcdb',
         },
       ])
     })

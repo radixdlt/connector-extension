@@ -13,7 +13,7 @@ export const blake2b = (input: Buffer): ResultAsync<Buffer, Error> => {
   }
 }
 
-export const blakeHashBase64 = (data: string) =>
+export const blakeHashHexSync = (data: string) =>
   blake2bHash(32)
-    .update(new Uint8Array(Buffer.from(data, 'base64')))
+    .update(new Uint8Array(Buffer.from(data, 'hex')))
     .digest('hex')

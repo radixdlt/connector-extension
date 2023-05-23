@@ -22,6 +22,7 @@ import { getDataLength } from './utils'
 import { LedgerSubjects } from './subjects'
 import { curve25519 } from 'crypto/curve25519'
 import { secp256k1 } from 'crypto/secp256k1'
+import { blakeHashHexSync } from 'crypto/blake2b'
 
 export type LedgerOptions = Partial<{
   transport: typeof TransportWebHID
@@ -287,15 +288,21 @@ export const LedgerWrapper = ({
       >
     ) =>
     () => {
-      const addresLength = params.dAppDefinitionAddress.length.toString(16)
-
+      const addressLength = params.dAppDefinitionAddress.length.toString(16)
+      const encodedDappAddress = Buffer.from(
+        params.dAppDefinitionAddress,
+        'utf-8'
+      ).toString('hex')
+      const encodedOrigin = Buffer.from(params.origin, 'utf-8').toString('hex')
       const data =
-        params.challenge +
-        addresLength +
-        Buffer.from(params.dAppDefinitionAddress, 'utf-8').toString('hex') +
-        Buffer.from(params.origin, 'utf-8').toString('hex')
+        params.challenge + addressLength + encodedDappAddress + encodedOrigin
       const dataLength = getDataLength(data)
-      return ok({ challengeData: `${dataLength}${data}` })
+      return ok({
+        challengeData: `${dataLength}${data}`,
+        signedMessage: blakeHashHexSync(
+          `${params.challenge}${addressLength}${encodedDappAddress}${encodedOrigin}`
+        ),
+      })
     }
 
   const getOlympiaDeviceInfo = ({
@@ -390,7 +397,7 @@ export const LedgerWrapper = ({
       exchange(LedgerInstructionCode.GetDeviceId)
         .andThen(ensureCorrectDeviceId(params.ledgerDevice.id))
         .andThen(parseSignAuthParams(params))
-        .andThen(({ challengeData }) =>
+        .andThen(({ challengeData, signedMessage }) =>
           params.signers.reduce(
             (acc: ResultAsync<SignatureOfSigner[], string>, signer, index) =>
               acc.andThen((signatures) => {
@@ -401,6 +408,7 @@ export const LedgerWrapper = ({
                 )
 
                 const {
+                  verifySignature,
                   signAuthCommand,
                   signatureByteCount,
                   publicKeyByteCount,
@@ -413,13 +421,30 @@ export const LedgerWrapper = ({
                       instructionClass: LedgerInstructionClass.ac,
                     })
                   )
-                  .map((result) => {
+                  .andThen((result) => {
                     const publicKey = result.slice(
                       signatureByteCount * 2,
                       signatureByteCount * 2 + publicKeyByteCount * 2
                     )
 
                     const signature = result.slice(0, signatureByteCount * 2)
+
+                    const isValid = verifySignature({
+                      message: signedMessage,
+                      publicKey,
+                      signature,
+                    })
+
+                    if (isValid.isErr()) {
+                      return err(isValid.error)
+                    }
+
+                    return ok({
+                      signature,
+                      publicKey,
+                    })
+                  })
+                  .map(({ signature, publicKey }) => {
                     const entry: SignatureOfSigner = {
                       derivedPublicKey: {
                         ...signer,
@@ -457,6 +482,7 @@ export const LedgerWrapper = ({
                 signatureByteCount,
                 publicKeyByteCount,
                 encodedDerivationPath,
+                verifySignature,
               } = parseSignerParams(signer, params)
               const digestLength = 32 * 2
               return signersAcc.andThen((previousValue) => {
@@ -500,6 +526,18 @@ export const LedgerWrapper = ({
                       sigOffset,
                       sigOffset + 2 * publicKeyByteCount
                     )
+
+                    const isValid = verifySignature({
+                      message: blakeHashHexSync(
+                        params.compiledTransactionIntent
+                      ),
+                      publicKey,
+                      signature,
+                    })
+
+                    if (isValid.isErr()) {
+                      return err(isValid.error)
+                    }
 
                     if (signature.length !== signatureByteCount * 2) {
                       logger.error(

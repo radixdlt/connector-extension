@@ -17,7 +17,7 @@ import { createMessage } from 'chrome/messages/create-message'
 import { compiledTxHex } from '../example'
 import { curve25519 } from 'crypto/curve25519'
 import { secp256k1 } from 'crypto/secp256k1'
-import { blakeHashBase64 } from 'crypto/blake2b'
+import { blakeHashHexSync } from 'crypto/blake2b'
 
 export const LedgerSimulator = () => {
   const [seed, setSeed] = useState<string>(
@@ -134,7 +134,7 @@ export const LedgerSimulator = () => {
   const signTx = async () => {
     const wallet = createRadixWallet({ seed, curve })
     const { privateKey, publicKey } = wallet.deriveFullPath(derivationPath)
-    const hash = blakeHashBase64(txIntent)
+    const hash = blakeHashHexSync(txIntent)
 
     logger.debug('TX intent blake hash', hash)
 
@@ -264,7 +264,7 @@ export const LedgerSimulator = () => {
         <Text bold css={{ minWidth: '160px' }}>
           Blake Intent Hash
         </Text>
-        <Text>{blakeHashBase64(txIntent)}</Text>
+        <Text>{blakeHashHexSync(txIntent)}</Text>
       </Box>
       <Box flex="row">
         <Box>
