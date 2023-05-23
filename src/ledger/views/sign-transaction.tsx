@@ -4,7 +4,8 @@ import { LedgerDeviceBox } from 'ledger/components/ledger-device-box'
 import { ledger } from 'ledger/wrapper/ledger-wrapper'
 import {
   LedgerSignTransactionRequest,
-  createSignedTransactionResponse,
+  LedgerSignTransactionResponse,
+  createSignedResponse,
 } from 'ledger/schemas'
 import { PairingHeader } from 'pairing/components/pairing-header'
 import { useContext, useState, useEffect, useCallback } from 'react'
@@ -24,7 +25,12 @@ export const SignTransaction = ({
     const signedTx = await ledger.signTransaction(message)
 
     if (signedTx.isOk()) {
-      respond(createSignedTransactionResponse(message, signedTx.value))
+      respond(
+        createSignedResponse(
+          message,
+          signedTx.value
+        ) as LedgerSignTransactionResponse
+      )
     } else {
       setError(signedTx.error)
       setIsLoading(false)

@@ -16,7 +16,7 @@ const ledgerModel: Record<string, z.infer<typeof ledgerDeviceModel>> = {
 
 const ledgerDiscriminator = union([
   literal('getDeviceInfo'),
-  literal('derivePublicKey'),
+  literal('derivePublicKeys'),
   literal('signTransaction'),
   literal('signChallenge'),
   literal('importOlympiaDevice'),
@@ -46,8 +46,8 @@ export type LedgerDeviceIdRequest = z.infer<typeof LedgerDeviceIdRequestSchema>
 
 export const LedgerPublicKeyRequestSchema = object({
   interactionId: string(),
-  discriminator: literal('derivePublicKey'),
-  keyParameters: KeyParametersSchema,
+  discriminator: literal('derivePublicKeys'),
+  keysParameters: KeyParametersSchema.array(),
   ledgerDevice: LedgerDeviceSchema,
 })
 
@@ -116,21 +116,34 @@ export type LedgerDeviceIdResponse = z.infer<
   typeof LedgerDeviceIdResponseSchema
 >
 
-export const SignatureOfSignerSchema = object({
-  curve,
-  derivationPath: string(),
-  signature: string(),
+export const OlympiaDerivedPublicKeySchema = object({
+  path: string(),
   publicKey: string(),
+})
+
+export type OlympiaDerivedPublicKey = z.infer<
+  typeof OlympiaDerivedPublicKeySchema
+>
+
+export const DerivedPublicKeySchema = object({
+  curve,
+  publicKey: string(),
+  derivationPath: string(),
+})
+
+export type DerivedPublicKey = z.infer<typeof DerivedPublicKeySchema>
+
+export const SignatureOfSignerSchema = object({
+  derivedPublicKey: DerivedPublicKeySchema,
+  signature: string(),
 })
 
 export type SignatureOfSigner = z.infer<typeof SignatureOfSignerSchema>
 
 export const LedgerPublicKeyResponseSchema = object({
   interactionId: string(),
-  discriminator: literal('derivePublicKey'),
-  success: object({
-    publicKey: string(),
-  }),
+  discriminator: literal('derivePublicKeys'),
+  success: DerivedPublicKeySchema.array(),
 })
 
 export type LedgerPublicKeyResponse = z.infer<
@@ -157,20 +170,13 @@ export type LedgerSignChallengeResponse = z.infer<
   typeof LedgerSignChallengeResponseSchema
 >
 
-export const DerivedPublicKeySchema = object({
-  publicKey: string(),
-  path: string(),
-})
-
-export type DerivedPublicKey = z.infer<typeof DerivedPublicKeySchema>
-
 export const LedgerImportOlympiaDeviceResponseSchema = object({
   interactionId: string(),
   discriminator: literal('importOlympiaDevice'),
   success: object({
     model: ledgerDeviceModel,
     id: string(),
-    derivedPublicKeys: DerivedPublicKeySchema.array(),
+    derivedPublicKeys: OlympiaDerivedPublicKeySchema.array(),
   }),
 })
 
@@ -203,7 +209,7 @@ export type LedgerResponse = z.infer<typeof LedgerResponseSchema>
 export const isLedgerRequest = (message: any): message is LedgerRequest =>
   [
     'getDeviceInfo',
-    'derivePublicKey',
+    'derivePublicKeys',
     'signTransaction',
     'signChallenge',
     'importOlympiaDevice',
@@ -216,7 +222,7 @@ export const isDeviceIdRequest = (
 export const isPublicKeyRequest = (
   message: LedgerRequest
 ): message is LedgerPublicKeyRequest =>
-  message.discriminator === 'derivePublicKey'
+  message.discriminator === 'derivePublicKeys'
 
 export const isSignTransactionRequest = (
   message: LedgerRequest
@@ -249,23 +255,14 @@ export const createLedgerDeviceIdResponse = (
   },
 })
 
-export const createSignedTransactionResponse = (
+export const createSignedResponse = (
   {
     interactionId,
     discriminator,
-  }: Pick<LedgerSignTransactionRequest, 'interactionId' | 'discriminator'>,
-  success: SignatureOfSigner[]
-) => ({
-  interactionId,
-  discriminator,
-  success,
-})
-
-export const createSignedAuthResponse = (
-  {
-    interactionId,
-    discriminator,
-  }: Pick<LedgerSignChallengeRequest, 'interactionId' | 'discriminator'>,
+  }: {
+    interactionId: string
+    discriminator: 'signTransaction' | 'signChallenge'
+  },
   success: SignatureOfSigner[]
 ) => ({
   interactionId,
@@ -300,13 +297,11 @@ export const createLedgerPublicKeyResponse = (
     interactionId,
     discriminator,
   }: Pick<LedgerPublicKeyRequest, 'interactionId' | 'discriminator'>,
-  publicKey: string
+  derivedPublicKeys: DerivedPublicKey[]
 ): LedgerPublicKeyResponse => ({
   interactionId,
   discriminator,
-  success: {
-    publicKey,
-  },
+  success: derivedPublicKeys,
 })
 
 export const createLedgerErrorResponse = (

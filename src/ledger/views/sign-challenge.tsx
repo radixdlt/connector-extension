@@ -4,7 +4,8 @@ import { LedgerDeviceBox } from 'ledger/components/ledger-device-box'
 import { MessagingContext } from 'ledger/contexts/messaging-context'
 import {
   LedgerSignChallengeRequest,
-  createSignedAuthResponse,
+  LedgerSignChallengeResponse,
+  createSignedResponse,
 } from 'ledger/schemas'
 import { ledger } from 'ledger/wrapper/ledger-wrapper'
 import { PairingHeader } from 'pairing/components/pairing-header'
@@ -24,7 +25,12 @@ export const SignChallenge = ({
     const signedTx = await ledger.signAuth(message)
 
     if (signedTx.isOk()) {
-      respond(createSignedAuthResponse(message, signedTx.value))
+      respond(
+        createSignedResponse(
+          message,
+          signedTx.value
+        ) as LedgerSignChallengeResponse
+      )
     } else {
       setError(signedTx.error)
       setIsLoading(false)
