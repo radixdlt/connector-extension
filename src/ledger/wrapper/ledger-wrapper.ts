@@ -6,6 +6,7 @@ import {
   LedgerPublicKeyRequest,
   LedgerSignChallengeRequest,
   LedgerSignTransactionRequest,
+  OlympiaDerivedPublicKey,
   SignatureOfSigner,
 } from 'ledger/schemas'
 import { ResultAsync, err, ok, okAsync } from 'neverthrow'
@@ -19,6 +20,8 @@ import {
 import { encodeDerivationPath } from './encode-derivation-path'
 import { getDataLength } from './utils'
 import { LedgerSubjects } from './subjects'
+import { curve25519 } from 'crypto/curve25519'
+import { secp256k1 } from 'crypto/secp256k1'
 
 export type LedgerOptions = Partial<{
   transport: typeof TransportWebHID
@@ -36,8 +39,49 @@ export type ExchangeFn = (
   additionalParams?: AdditionalExchangeParams
 ) => ResultAsync<string, string>
 
-const getCurveConfig = ({ curve }: KeyParameters) =>
-  ({
+const getCurveConfig = ({ curve }: KeyParameters) => {
+  const verifyCurve25519Signature = ({
+    message,
+    signature,
+    publicKey,
+  }: {
+    message: string
+    signature: string
+    publicKey: string
+  }) => {
+    try {
+      // @ts-ignore: incorrect type definition in EC lib
+      const pub = curve25519.keyFromPublic(publicKey, 'hex')
+      const isValid = pub.verify(message, signature)
+      return isValid ? ok(undefined) : err('invalidSignature')
+    } catch (error) {
+      logger.error('Error verifying signature', error)
+      return err('invalidPublicKey')
+    }
+  }
+
+  const verifySecp256k1Signature = ({
+    message,
+    signature,
+    publicKey,
+  }: {
+    message: string
+    signature: string
+    publicKey: string
+  }) => {
+    try {
+      const pub = secp256k1.keyFromPublic(publicKey, 'hex')
+      const isValid = pub.verify(message, {
+        r: signature.slice(2, 66),
+        s: signature.slice(66),
+      })
+      return isValid ? ok(undefined) : err('invalidSignature')
+    } catch (error) {
+      logger.error('Error verifying signature', error)
+      return err('invalidPublicKey')
+    }
+  }
+  return {
     curve25519: {
       publicKeyByteCount: 32,
       signatureByteCount: 64,
@@ -45,6 +89,7 @@ const getCurveConfig = ({ curve }: KeyParameters) =>
       signAuth: LedgerInstructionCode.SignAuthEd25519,
       getPublicKey: LedgerInstructionCode.GetPubKeyEd25519,
       signTxSmart: LedgerInstructionCode.SignTxEd255519Smart,
+      verifySignature: verifyCurve25519Signature,
     },
     secp256k1: {
       publicKeyByteCount: 33,
@@ -53,8 +98,10 @@ const getCurveConfig = ({ curve }: KeyParameters) =>
       signAuth: LedgerInstructionCode.SignAuthSecp256k1,
       getPublicKey: LedgerInstructionCode.GetPubKeySecp256k1,
       signTxSmart: LedgerInstructionCode.SignTxSecp256k1Smart,
+      verifySignature: verifySecp256k1Signature,
     },
-  }[curve])
+  }[curve]
+}
 
 export const LedgerWrapper = ({
   transport = TransportWebHID,
@@ -155,13 +202,20 @@ export const LedgerWrapper = ({
 
   const parseGetPublicKeyParams =
     (params: Omit<LedgerPublicKeyRequest, 'discriminator' | 'interactionId'>) =>
-    () => {
-      const { getPublicKey } = getCurveConfig(params.keyParameters)
-      const encodedDerivationPath = encodeDerivationPath(
-        params.keyParameters.derivationPath
+    () =>
+      ok(
+        params.keysParameters.map((keyParameter) => {
+          const { getPublicKey } = getCurveConfig(keyParameter)
+          const encodedDerivationPath = encodeDerivationPath(
+            keyParameter.derivationPath
+          )
+          return {
+            ...keyParameter,
+            getPublicKey,
+            encodedDerivationPath,
+          }
+        })
       )
-      return ok({ command: getPublicKey, encodedDerivationPath })
-    }
 
   const parseSignerParams = (
     signer: KeyParameters,
@@ -176,12 +230,14 @@ export const LedgerWrapper = ({
       signatureByteCount,
       publicKeyByteCount,
       signAuth: signAuthCommand,
+      verifySignature,
     } = getCurveConfig(signer)
     const command = params?.mode === 'summary' ? signTxSmart : signTx
 
     const encodedDerivationPath = encodeDerivationPath(signer.derivationPath)
     return {
       command,
+      verifySignature,
       signAuthCommand,
       encodedDerivationPath,
       signatureByteCount,
@@ -248,7 +304,7 @@ export const LedgerWrapper = ({
     {
       id: string
       model: string
-      derivedPublicKeys: DerivedPublicKey[]
+      derivedPublicKeys: OlympiaDerivedPublicKey[]
     },
     string
   > =>
@@ -257,7 +313,11 @@ export const LedgerWrapper = ({
         exchange(LedgerInstructionCode.GetDeviceModel).andThen((model) =>
           derivationPaths
             .reduce(
-              (acc: ResultAsync<DerivedPublicKey[], string>, path, index) => {
+              (
+                acc: ResultAsync<OlympiaDerivedPublicKey[], string>,
+                path,
+                index
+              ) => {
                 const encodedDerivationPath = encodeDerivationPath(path)
 
                 return acc.andThen((publicKeys) => {
@@ -296,16 +356,30 @@ export const LedgerWrapper = ({
       )
     )
 
-  const getPublicKey = (
+  const getPublicKeys = (
     params: Omit<LedgerPublicKeyRequest, 'discriminator' | 'interactionId'>
-  ): ResultAsync<string, string> =>
+  ): ResultAsync<DerivedPublicKey[], string> =>
     wrapDataExchange((exchange) =>
       exchange(LedgerInstructionCode.GetDeviceId)
         .andThen(ensureCorrectDeviceId(params.ledgerDevice.id))
         .andThen(parseGetPublicKeyParams(params))
-        .andThen(({ command, encodedDerivationPath }) => {
-          setProgressMessage('Getting public key...')
-          return exchange(command, encodedDerivationPath)
+        .andThen((keysParameters) => {
+          setProgressMessage('Getting public keys...')
+          return keysParameters.reduce(
+            (
+              acc: ResultAsync<DerivedPublicKey[], string>,
+              { getPublicKey, encodedDerivationPath, curve, derivationPath }
+            ) =>
+              acc.andThen((derivedPublicKeys) =>
+                exchange(getPublicKey, encodedDerivationPath).map(
+                  (publicKey) => [
+                    ...derivedPublicKeys,
+                    { publicKey, derivationPath, curve },
+                  ]
+                )
+              ),
+            okAsync([])
+          )
         })
     )
 
@@ -340,13 +414,18 @@ export const LedgerWrapper = ({
                     })
                   )
                   .map((result) => {
+                    const publicKey = result.slice(
+                      signatureByteCount * 2,
+                      signatureByteCount * 2 + publicKeyByteCount * 2
+                    )
+
+                    const signature = result.slice(0, signatureByteCount * 2)
                     const entry: SignatureOfSigner = {
-                      ...signer,
-                      signature: result.slice(0, signatureByteCount * 2),
-                      publicKey: result.slice(
-                        signatureByteCount * 2,
-                        signatureByteCount * 2 + publicKeyByteCount * 2
-                      ),
+                      derivedPublicKey: {
+                        ...signer,
+                        publicKey,
+                      },
+                      signature,
                     }
                     return [...signatures, entry]
                   })
@@ -444,9 +523,12 @@ export const LedgerWrapper = ({
                   .map((result) => [
                     ...previousValue,
                     {
-                      ...result,
-                      derivationPath: signer.derivationPath,
-                      curve: signer.curve,
+                      signature: result.signature,
+                      derivedPublicKey: {
+                        publicKey: result.publicKey,
+                        derivationPath: signer.derivationPath,
+                        curve: signer.curve,
+                      },
                     },
                   ])
               })
@@ -458,7 +540,7 @@ export const LedgerWrapper = ({
 
   return {
     signAuth,
-    getPublicKey,
+    getPublicKeys,
     getDeviceInfo,
     signTransaction,
     getOlympiaDeviceInfo,

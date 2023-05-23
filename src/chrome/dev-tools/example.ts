@@ -36,11 +36,13 @@ export const getDeviceInfoPayload = (): LedgerDeviceIdRequest => ({
 
 export const getDerivePublicKeyPayload = (): LedgerPublicKeyRequest => ({
   interactionId: crypto.randomUUID(),
-  discriminator: 'derivePublicKey',
-  keyParameters: {
-    curve: 'curve25519',
-    derivationPath: 'm/44H/1022H/10H/525H/1460H/0H',
-  },
+  discriminator: 'derivePublicKeys',
+  keysParameters: [
+    {
+      curve: 'curve25519',
+      derivationPath: 'm/44H/1022H/10H/525H/1460H/0H',
+    },
+  ],
   ledgerDevice: {
     name: 'My Ledger Device',
     model: 'nanoS',

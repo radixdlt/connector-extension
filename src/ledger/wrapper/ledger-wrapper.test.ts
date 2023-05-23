@@ -2,6 +2,7 @@ import { compiledTxHex } from 'chrome/dev-tools/example'
 import { LedgerWrapper, ledger } from './ledger-wrapper'
 import TransportWebHID from '@ledgerhq/hw-transport-webhid'
 import { LedgerInstructionCode } from './constants'
+import { KeyParameters } from 'ledger/schemas'
 
 const createLedgerWrapperWithMockedTransport = (
   expectedExchanges: {
@@ -75,10 +76,12 @@ const ledgerDevice = {
   id: '305495ba',
 } as const
 
-const keyParameters = {
-  derivationPath: `m/44'/1022'/10'/525'/0'/1238'`,
-  curve: 'curve25519',
-} as const
+const keysParameters = [
+  {
+    derivationPath: `m/44'/1022'/10'/525'/0'/1238'`,
+    curve: 'curve25519',
+  },
+] as KeyParameters[]
 
 describe('Ledger Babylon Wrapper', () => {
   describe('when hardware device is not connected', () => {
@@ -164,12 +167,12 @@ describe('Ledger Babylon Wrapper', () => {
         },
       ])
 
-      const result = await ledger.getPublicKey({
+      const result = await ledger.getPublicKeys({
         ledgerDevice: {
           model: 'nanoS',
           id: 'aaaaaaaaaaa',
         },
-        keyParameters,
+        keysParameters,
       })
       expect(result.isErr()).toBeTruthy()
       if (result.isErr()) {
@@ -189,13 +192,19 @@ describe('Ledger Babylon Wrapper', () => {
         },
       ])
 
-      const result = await ledger.getPublicKey({
+      const result = await ledger.getPublicKeys({
         ledgerDevice,
-        keyParameters,
+        keysParameters,
       })
       if (result.isErr()) throw result.error
 
-      expect(result.value).toEqual('111111111111')
+      expect(result.value).toEqual([
+        {
+          curve: 'curve25519',
+          derivationPath: `m/44'/1022'/10'/525'/0'/1238'`,
+          publicKey: '111111111111',
+        },
+      ])
     })
 
     it('should get public key with secp256k1', async () => {
@@ -210,16 +219,24 @@ describe('Ledger Babylon Wrapper', () => {
         },
       ])
 
-      const result = await ledger.getPublicKey({
+      const result = await ledger.getPublicKeys({
         ledgerDevice,
-        keyParameters: {
-          derivationPath: `m/44'/1022'/10'/525'/0'/1238'`,
-          curve: 'secp256k1',
-        },
+        keysParameters: [
+          {
+            derivationPath: `m/44'/1022'/10'/525'/0'/1238'`,
+            curve: 'secp256k1',
+          },
+        ],
       })
       if (result.isErr()) throw result.error
 
-      expect(result.value).toEqual('111111111111')
+      expect(result.value).toEqual([
+        {
+          curve: 'secp256k1',
+          derivationPath: `m/44'/1022'/10'/525'/0'/1238'`,
+          publicKey: '111111111111',
+        },
+      ])
     })
   })
 
@@ -293,7 +310,7 @@ describe('Ledger Babylon Wrapper', () => {
           model: 'nanoS',
           id: 'aaaaaaaaaaa',
         },
-        signers: [keyParameters],
+        signers: keysParameters,
         displayHash: false,
         compiledTransactionIntent: compiledTxHex.setMetadata,
         mode: 'verbose',
@@ -314,7 +331,7 @@ describe('Ledger Babylon Wrapper', () => {
 
       const result = await ledger.signTransaction({
         ledgerDevice,
-        signers: [keyParameters],
+        signers: keysParameters,
         displayHash: false,
         compiledTransactionIntent: compiledTxHex.setMetadata,
         mode: 'verbose',
@@ -324,10 +341,12 @@ describe('Ledger Babylon Wrapper', () => {
 
       expect(result.value).toEqual([
         {
-          curve: 'curve25519',
-          derivationPath: `m/44'/1022'/10'/525'/0'/1238'`,
-          publicKey:
-            'cffce054df51fb4072e7faf627e0f64f168fd8811f749d34720ac8da264bac06',
+          derivedPublicKey: {
+            curve: 'curve25519',
+            derivationPath: `m/44'/1022'/10'/525'/0'/1238'`,
+            publicKey:
+              'cffce054df51fb4072e7faf627e0f64f168fd8811f749d34720ac8da264bac06',
+          },
           signature:
             '5ad8cd006761aa698ea77f271c421a7ea9e34da45b4e827d2fce1b5205933b77e852261381cfaa0a8ecfba52622d5c1560462db70df08fc905111e2a9a5fa601',
         },
@@ -360,10 +379,12 @@ describe('Ledger Babylon Wrapper', () => {
 
       expect(result.value).toEqual([
         {
-          curve: 'secp256k1',
-          derivationPath: `m/44'/1022'/10'/525'/0'/1238'`,
-          publicKey:
-            '01cffce054df51fb4072e7faf627e0f64f168fd8811f749d34720ac8da264bac06',
+          derivedPublicKey: {
+            curve: 'secp256k1',
+            derivationPath: `m/44'/1022'/10'/525'/0'/1238'`,
+            publicKey:
+              '01cffce054df51fb4072e7faf627e0f64f168fd8811f749d34720ac8da264bac06',
+          },
           signature:
             '5adadad8cd006761aa698ea77f271c421a7ea9e34da45b4e827d2fce1b5205933b77e852261381cfaa0a8ecfba52622d5c1560462db70df08fc905111e2a9a5fa6',
         },
@@ -422,18 +443,23 @@ describe('Ledger Babylon Wrapper', () => {
 
       expect(result.value).toEqual([
         {
-          curve: 'curve25519',
-          derivationPath: `m/44H/1022H/12H/525H/1460H/0H`,
-          publicKey:
-            '451152a1cef7be603205086d4ebac0a0b78fda2ff4684b9dea5ca9ef003d4e7d',
+          derivedPublicKey: {
+            curve: 'curve25519',
+            derivationPath: `m/44H/1022H/12H/525H/1460H/0H`,
+            publicKey:
+              '451152a1cef7be603205086d4ebac0a0b78fda2ff4684b9dea5ca9ef003d4e7d',
+          },
+
           signature:
             '5015423efc3ee29338df1877b7c9eaf563e894e89a327da9d5b5abbb7c2cda6ad36a66d6219d3817dba61737c0df398b7f5ae2df5b04a85c5f6985542684d80d',
         },
         {
-          curve: 'secp256k1',
-          derivationPath: `m/44H/1022H/12H/525H/1238H`,
-          publicKey:
-            '024483ba4e13195ed3b50b103c502a7799749261ae22a5b20950dd8815f6568645',
+          derivedPublicKey: {
+            curve: 'secp256k1',
+            derivationPath: `m/44H/1022H/12H/525H/1238H`,
+            publicKey:
+              '024483ba4e13195ed3b50b103c502a7799749261ae22a5b20950dd8815f6568645',
+          },
           signature:
             '011c38168b1071585ccef652471beac0efcce58176c5ec24cd6e1af45058ec057e2990bdd899d24ea12c745c6c58819b86891998e2d7e1374eadca1ac2920ac187',
         },

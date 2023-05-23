@@ -1,23 +1,23 @@
 import { generateMnemonic } from 'bip39'
 import { Box, Button, Header, Text } from 'components'
 import {
+  LedgerSignTransactionResponse,
   createLedgerDeviceIdResponse,
   createLedgerOlympiaDeviceResponse,
   createLedgerPublicKeyResponse,
-  createSignedTransactionResponse,
+  createSignedResponse,
 } from 'ledger/schemas'
 import { useEffect, useState } from 'react'
 import { BaseHdWallet, createRadixWallet } from '../hd-wallet/hd-wallet'
 import { Curve } from '../hd-wallet/models'
-import { ec as Elliptic } from 'elliptic'
 import blake2b from 'blake2b'
 import { logger } from 'utils/logger'
 import { sendMessage } from 'chrome/messages/send-message'
 import { createMessage } from 'chrome/messages/create-message'
 import { compiledTxHex } from '../example'
-
-const secp256k1 = new Elliptic('secp256k1')
-const ed25519 = new Elliptic('ed25519')
+import { curve25519 } from 'crypto/curve25519'
+import { secp256k1 } from 'crypto/secp256k1'
+import { blakeHashBase64 } from 'crypto/blake2b'
 
 export const LedgerSimulator = () => {
   const [seed, setSeed] = useState<string>(
@@ -83,8 +83,14 @@ export const LedgerSimulator = () => {
   const sendPublicKeyResponse = async () => {
     const wallet = createRadixWallet({ seed, curve })
     const response = createLedgerPublicKeyResponse(
-      { interactionId, discriminator: 'derivePublicKey' },
-      wallet.deriveFullPath(derivationPath).publicKey
+      { interactionId, discriminator: 'derivePublicKeys' },
+      [
+        {
+          derivationPath,
+          curve: 'curve25519',
+          publicKey: wallet.deriveFullPath(derivationPath).publicKey,
+        },
+      ]
     )
     sendMessage(createMessage.ledgerResponse(response))
     setInteractionId(crypto.randomUUID())
@@ -128,21 +134,30 @@ export const LedgerSimulator = () => {
   const signTx = async () => {
     const wallet = createRadixWallet({ seed, curve })
     const { privateKey, publicKey } = wallet.deriveFullPath(derivationPath)
-    const hash = blake2b(32)
-      .update(Buffer.from(txIntent, 'base64'))
-      .digest('hex')
+    const hash = blakeHashBase64(txIntent)
 
     logger.debug('TX intent blake hash', hash)
 
     if (curve === Curve.ed25519) {
-      const pair = ed25519.keyFromPrivate(privateKey)
+      const pair = curve25519.keyFromSecret(privateKey)
       const signed = pair.sign(hash)
-      const signature = signed.r.toString(16, 32) + signed.s.toString(16, 32)
-      const response = createSignedTransactionResponse(
+      const signature = signed.toHex()
+      const response = createSignedResponse(
         { interactionId, discriminator: 'signTransaction' },
-        [{ signature, publicKey, curve: 'curve25519', derivationPath }]
+        [
+          {
+            signature,
+            derivedPublicKey: {
+              publicKey,
+              curve: 'curve25519',
+              derivationPath,
+            },
+          },
+        ]
       )
-      sendMessage(createMessage.ledgerResponse(response))
+      sendMessage(
+        createMessage.ledgerResponse(response as LedgerSignTransactionResponse)
+      )
       setInteractionId(crypto.randomUUID())
     } else {
       const pair = secp256k1.keyFromPrivate(privateKey)
@@ -151,11 +166,18 @@ export const LedgerSimulator = () => {
         signed.recoveryParam?.toString(16).padStart(2, '0') +
         signed.r.toString(16, 32) +
         signed.s.toString(16, 32)
-      const response = createSignedTransactionResponse(
+      const response = createSignedResponse(
         { interactionId, discriminator: 'signTransaction' },
-        [{ signature, publicKey, curve: 'secp256k1', derivationPath }]
+        [
+          {
+            signature,
+            derivedPublicKey: { publicKey, curve: 'secp256k1', derivationPath },
+          },
+        ]
       )
-      sendMessage(createMessage.ledgerResponse(response))
+      sendMessage(
+        createMessage.ledgerResponse(response as LedgerSignTransactionResponse)
+      )
       setInteractionId(crypto.randomUUID())
     }
   }
@@ -226,12 +248,23 @@ export const LedgerSimulator = () => {
           />
           <Box flex="col">
             {Object.keys(compiledTxHex).map((key) => (
-              <Button key={key} onClick={() => setTxIntent(compiledTxHex[key])}>
+              <Button
+                key={key}
+                onClick={() => {
+                  setTxIntent(compiledTxHex[key])
+                }}
+              >
                 {key}
               </Button>
             ))}
           </Box>
         </Box>
+      </Box>
+      <Box flex="row">
+        <Text bold css={{ minWidth: '160px' }}>
+          Blake Intent Hash
+        </Text>
+        <Text>{blakeHashBase64(txIntent)}</Text>
       </Box>
       <Box flex="row">
         <Box>
