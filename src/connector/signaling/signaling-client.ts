@@ -46,6 +46,7 @@ export const SignalingClient = (input: {
   target: MessageSources
   source: MessageSources
   logger?: Logger<unknown>
+  restart: () => void
 }) => {
   const logger = input.logger
   const subjects = input.subjects
@@ -94,6 +95,7 @@ export const SignalingClient = (input: {
   const onError = (event: Event) => {
     logger?.debug(`🛰❌ signaling server error`, event)
     subjects.onErrorSubject.next(event)
+    input.restart()
   }
 
   const prepareMessage = ({
