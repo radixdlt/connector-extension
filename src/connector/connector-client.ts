@@ -80,6 +80,7 @@ export const ConnectorClient = (input: {
         logger,
         subjects: createSignalingSubjects(),
         secrets,
+        restart: () => triggerRestartSubject.next(),
       })
 
       const webRtcClient = WebRtcClient({
