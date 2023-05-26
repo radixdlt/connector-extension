@@ -216,28 +216,29 @@ export const isLedgerRequest = (message: any): message is LedgerRequest =>
   ].includes(message?.discriminator)
 
 export const isDeviceIdRequest = (
-  message: LedgerRequest
-): message is LedgerDeviceIdRequest => message.discriminator === 'getDeviceInfo'
+  message?: LedgerRequest
+): message is LedgerDeviceIdRequest =>
+  message?.discriminator === 'getDeviceInfo'
 
 export const isPublicKeyRequest = (
-  message: LedgerRequest
+  message?: LedgerRequest
 ): message is LedgerPublicKeyRequest =>
-  message.discriminator === 'derivePublicKeys'
+  message?.discriminator === 'derivePublicKeys'
 
 export const isSignTransactionRequest = (
-  message: LedgerRequest
+  message?: LedgerRequest
 ): message is LedgerSignTransactionRequest =>
-  message.discriminator === 'signTransaction'
+  message?.discriminator === 'signTransaction'
 
 export const isSignChallengeRequest = (
-  message: LedgerRequest
+  message?: LedgerRequest
 ): message is LedgerSignChallengeRequest =>
-  message.discriminator === 'signChallenge'
+  message?.discriminator === 'signChallenge'
 
 export const isImportOlympiaDeviceRequest = (
-  message: LedgerRequest
+  message?: LedgerRequest
 ): message is LedgerImportOlympiaDeviceRequest =>
-  message.discriminator === 'importOlympiaDevice'
+  message?.discriminator === 'importOlympiaDevice'
 
 export const createLedgerDeviceIdResponse = (
   {
