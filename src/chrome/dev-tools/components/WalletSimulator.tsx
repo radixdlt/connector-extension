@@ -8,7 +8,6 @@ import {
   getDeviceInfoPayload,
   getSignEd222519ChallengePayload,
   getSignSecp256k1ChallengePayload,
-  getImportFromOlympiaPayload,
   getSignEd25519TransactionPayload,
   getSignSecp256k1TransactionPayload,
 } from '../example'
@@ -22,11 +21,10 @@ export const WalletSimulator = () => {
   const [error, setError] = useState<string>('')
 
   const messages = {
-    'Import from Olympia': getImportFromOlympiaPayload(),
     'Get UDI': getDeviceInfoPayload(),
     'Get Public Key': getDerivePublicKeyPayload(),
-    'Sign TX (Secp256k1)': getSignSecp256k1TransactionPayload(),
-    'Sign TX (Curve25519)': getSignEd25519TransactionPayload(),
+    'Sign "Set Metadata" TX (Secp256k1)': getSignSecp256k1TransactionPayload(),
+    'Sign "Create Account" TX (Curve25519)': getSignEd25519TransactionPayload(),
     'Sign Auth (Curve25519)': getSignEd222519ChallengePayload(),
     'Sign Auth (Secp256k1)': getSignSecp256k1ChallengePayload(),
   }
@@ -94,10 +92,12 @@ export const WalletSimulator = () => {
         <Text css={{ minWidth: '140px' }} bold>
           Mock Requests
         </Text>
-        <Box flex="row">
+        <Box>
           {Object.entries(messages).map(([button, value]) => (
             <Button
               ml="small"
+              mb="small"
+              size="small"
               key={button}
               onClick={() => setMessage(JSON.stringify(value, null, 2))}
             >
@@ -123,7 +123,9 @@ export const WalletSimulator = () => {
 
       <br />
       <Text bold>Recent Extension Message</Text>
-      <pre>{responseMessage}</pre>
+      <pre style={{ maxWidth: '500px', overflowX: 'auto' }}>
+        {responseMessage}
+      </pre>
       <Text>{error}</Text>
     </Box>
   )
