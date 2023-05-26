@@ -139,7 +139,7 @@ export const {
 })
 
 globalCss({
-  '*, body': {
+  '*:not(textarea,pre), body': {
     fontFamily: 'IBM Plex Sans',
     fontWeight: '400',
     margin: 0,
