@@ -23,6 +23,7 @@ import { LedgerSubjects } from './subjects'
 import { curve25519 } from 'crypto/curve25519'
 import { secp256k1 } from 'crypto/secp256k1'
 import { blakeHashHexSync } from 'crypto/blake2b'
+import { parseSignAuth } from './parse-sign-auth'
 
 export type LedgerOptions = Partial<{
   transport: typeof TransportWebHID
@@ -280,31 +281,6 @@ export const LedgerWrapper = ({
       return ok({ p1, apduChunks })
     }
 
-  const parseSignAuthParams =
-    (
-      params: Omit<
-        LedgerSignChallengeRequest,
-        'discriminator' | 'interactionId'
-      >
-    ) =>
-    () => {
-      const addressLength = params.dAppDefinitionAddress.length.toString(16)
-      const encodedDappAddress = Buffer.from(
-        params.dAppDefinitionAddress,
-        'utf-8'
-      ).toString('hex')
-      const encodedOrigin = Buffer.from(params.origin, 'utf-8').toString('hex')
-      const data =
-        params.challenge + addressLength + encodedDappAddress + encodedOrigin
-      const dataLength = getDataLength(data)
-      return ok({
-        challengeData: `${dataLength}${data}`,
-        signedMessage: blakeHashHexSync(
-          `${params.challenge}${addressLength}${encodedDappAddress}${encodedOrigin}`
-        ),
-      })
-    }
-
   const getOlympiaDeviceInfo = ({
     derivationPaths,
   }: Pick<LedgerImportOlympiaDeviceRequest, 'derivationPaths'>): ResultAsync<
@@ -396,8 +372,8 @@ export const LedgerWrapper = ({
     wrapDataExchange((exchange) =>
       exchange(LedgerInstructionCode.GetDeviceId)
         .andThen(ensureCorrectDeviceId(params.ledgerDevice.id))
-        .andThen(parseSignAuthParams(params))
-        .andThen(({ challengeData, signedMessage }) =>
+        .map(() => parseSignAuth(params))
+        .andThen(({ challengeData, hashToSign }) =>
           params.signers.reduce(
             (acc: ResultAsync<SignatureOfSigner[], string>, signer, index) =>
               acc.andThen((signatures) => {
@@ -430,7 +406,7 @@ export const LedgerWrapper = ({
                     const signature = result.slice(0, signatureByteCount * 2)
 
                     const isValid = verifySignature({
-                      message: signedMessage,
+                      message: hashToSign,
                       publicKey,
                       signature,
                     })
