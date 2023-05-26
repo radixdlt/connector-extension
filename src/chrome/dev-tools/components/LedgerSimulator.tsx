@@ -1,55 +1,116 @@
 import { generateMnemonic } from 'bip39'
 import { Box, Button, Header, Text } from 'components'
 import {
-  LedgerSignTransactionResponse,
+  KeyParameters,
+  LedgerDeviceIdRequest,
+  LedgerPublicKeyRequest,
+  LedgerRequest,
+  LedgerRequestSchema,
+  LedgerResponse,
+  LedgerSignChallengeRequest,
+  LedgerSignTransactionRequest,
   createLedgerDeviceIdResponse,
-  createLedgerOlympiaDeviceResponse,
   createLedgerPublicKeyResponse,
   createSignedResponse,
+  isDeviceIdRequest,
+  isPublicKeyRequest,
+  isSignChallengeRequest,
+  isSignTransactionRequest,
 } from 'ledger/schemas'
 import { useEffect, useState } from 'react'
 import { BaseHdWallet, createRadixWallet } from '../hd-wallet/hd-wallet'
-import { Curve } from '../hd-wallet/models'
-import blake2b from 'blake2b'
-import { logger } from 'utils/logger'
 import { sendMessage } from 'chrome/messages/send-message'
 import { createMessage } from 'chrome/messages/create-message'
-import { compiledTxHex } from '../example'
 import { curve25519 } from 'crypto/curve25519'
 import { secp256k1 } from 'crypto/secp256k1'
 import { blakeHashHexSync } from 'crypto/blake2b'
+import { parseSignAuth } from 'ledger/wrapper/parse-sign-auth'
+import { ec, eddsa } from 'elliptic'
+import { logger } from 'utils/logger'
+
+const DEFAULT_MNEMONIC =
+  'equip will roof matter pink blind book anxiety banner elbow sun young'
+
+const generateWallets = (seed: string) => ({
+  seed,
+  curve25519: createRadixWallet({
+    seed,
+    curve: 'ed25519',
+  }),
+  secp256k1: createRadixWallet({
+    seed,
+    curve: 'secp256k1',
+  }),
+})
+
+const signingConfig = {
+  curve25519: {
+    createKeyPair: (privateKey: string) => curve25519.keyFromSecret(privateKey),
+    signatureToHex: (signed: eddsa.Signature) => signed.toHex(),
+  },
+  secp256k1: {
+    createKeyPair: (privateKey: string) => secp256k1.keyFromPrivate(privateKey),
+    signatureToHex: (signed: ec.Signature) =>
+      signed.recoveryParam?.toString(16).padStart(2, '0') +
+      signed.r.toString(16, 32) +
+      signed.s.toString(16, 32),
+  },
+}
+
+const getLocalStorageMnemonics = () => {
+  try {
+    const mnemonics =
+      JSON.parse(localStorage.getItem('radix-dev-tools-mnemonics') ?? '[]') || []
+    return mnemonics
+  } catch (e) {
+    return []
+  }
+}
+
+const addLocalStorageMnemonic = (name: string, mnemonic: string) => {
+  const mnemonics = [...getLocalStorageMnemonics(), { name, mnemonic }]
+  localStorage.setItem('radix-dev-tools-mnemonics', JSON.stringify(mnemonics))
+}
+
+const mapSignerToSignature = (
+  signer: KeyParameters,
+  hashToSign: string,
+  wallet: BaseHdWallet
+) => {
+  const curveConfig = signingConfig[signer.curve]
+  const { privateKey, publicKey } = wallet.deriveFullPath(signer.derivationPath)
+  const keyPair = curveConfig.createKeyPair(privateKey)
+  const signed = keyPair.sign(hashToSign)
+  const signature = curveConfig.signatureToHex(signed as any)
+  return {
+    signature,
+    derivedPublicKey: {
+      publicKey,
+      curve: signer.curve,
+      derivationPath: signer.derivationPath,
+    },
+  }
+}
 
 export const LedgerSimulator = () => {
-  const [seed, setSeed] = useState<string>(
-    'equip will roof matter pink blind book anxiety banner elbow sun young'
-  )
-  const [derivationPaths, setDerivationPaths] = useState<string[]>()
-  const [interactionId, setInteractionId] = useState<string>(
-    crypto.randomUUID()
-  )
+  const [rememberedMnemonics, setRememberedMnemonics] = useState<
+    { mnemonic: string; name: string }[]
+  >(getLocalStorageMnemonics())
   const [device, setDevice] = useState<string>('00')
-  const [curve, setCurve] = useState<keyof typeof Curve>('secp256k1')
-  const [txIntent, setTxIntent] = useState<string>(
-    compiledTxHex.createFungibleResourceWithInitialSupply
-  )
-  const [derivationPath, setDerivationPath] = useState<string>(
-    `m/44'/1022'/10'/525'/1460'/0'`
-  )
+  const [wallet, setWallet] = useState(generateWallets(DEFAULT_MNEMONIC))
+  const [walletRequest, setWalletRequest] = useState<LedgerRequest>()
+  const [messageId, setMessageId] = useState<string>()
 
   useEffect(() => {
     const onMessage = (message: any) => {
       if (message?.discriminator !== 'walletToLedger') return
-
-      if (message?.data?.interactionId) {
-        setInteractionId(message.data.interactionId)
-      }
-
-      if (message?.data?.discriminator === 'importOlympiaDevice') {
-        setDerivationPaths(
-          message.data.derivationPaths.map((path: string) =>
-            path.split('H').join(`'`)
-          )
-        )
+      try {
+        LedgerRequestSchema.parse(message.data)
+        const walletRequest = message.data as LedgerRequest
+        setWalletRequest(walletRequest)
+        setMessageId(message.messageId)
+      } catch (e) {
+        logger.error('Ledger request failed validation')
       }
     }
 
@@ -61,245 +122,248 @@ export const LedgerSimulator = () => {
   }, [])
 
   const updateMnemonic = () => {
-    setSeed(generateMnemonic())
+    setWallet(generateWallets(generateMnemonic()))
   }
 
-  const getDeviceId = (wallet: BaseHdWallet): string => {
-    const publicKey = wallet.derivePath(`365'`).publicKey
-    return blake2b(32).update(Buffer.from(publicKey, 'hex')).digest('hex')
+  const rememberMnemonic = () => {
+    const mnemonicName = prompt('Please provide name for remembered mnemonic')
+    addLocalStorageMnemonic(mnemonicName ?? '--not provided--', wallet.seed)
+    setRememberedMnemonics(getLocalStorageMnemonics())
   }
 
-  const sendDeviceIdResponse = async () => {
-    const wallet = createRadixWallet({ seed, curve: 'ed25519' })
-    const response = createLedgerDeviceIdResponse(
-      { interactionId, discriminator: 'getDeviceInfo' },
-      getDeviceId(wallet),
+  const mockRespond = async () => {
+    const createResponse = () => {
+      if (isDeviceIdRequest(walletRequest)) {
+        return getDeviceIdResponse(walletRequest)
+      } else if (isPublicKeyRequest(walletRequest)) {
+        return getPublicKeyResponse(walletRequest)
+      } else if (isSignChallengeRequest(walletRequest)) {
+        return getSignAuthChallengeResponse(walletRequest)
+      } else if (isSignTransactionRequest(walletRequest)) {
+        return getSignTransactionResponse(walletRequest)
+      }
+    }
+    const response = await createResponse()
+    if (response) {
+      sendMessage(createMessage.ledgerResponse(response as LedgerResponse))
+      sendMessage(createMessage.confirmationSuccess('any', messageId!))
+      sendMessage(createMessage.closeLedgerTab())
+      setMessageId(undefined)
+      setWalletRequest(undefined)
+    }
+  }
+
+  const getDeviceIdResponse = async (request: LedgerDeviceIdRequest) =>
+    createLedgerDeviceIdResponse(
+      request,
+      blakeHashHexSync(wallet.curve25519.derivePath(`365'`).publicKey),
       device
     )
-    sendMessage(createMessage.ledgerResponse(response))
-    setInteractionId(crypto.randomUUID())
+
+  const getPublicKeyResponse = async (request: LedgerPublicKeyRequest) => {
+    if (request?.keysParameters?.length) {
+      return createLedgerPublicKeyResponse(
+        request,
+        request.keysParameters.map((keyParameters) => ({
+          ...keyParameters,
+          publicKey:
+            keyParameters.curve === 'curve25519'
+              ? wallet.curve25519.deriveFullPath(keyParameters.derivationPath)
+                  .publicKey
+              : wallet.secp256k1.deriveFullPath(keyParameters.derivationPath)
+                  .publicKey,
+        }))
+      )
+    }
   }
 
-  const sendPublicKeyResponse = async () => {
-    const wallet = createRadixWallet({ seed, curve })
-    const response = createLedgerPublicKeyResponse(
-      { interactionId, discriminator: 'derivePublicKeys' },
-      [
-        {
-          derivationPath,
-          curve: 'curve25519',
-          publicKey: wallet.deriveFullPath(derivationPath).publicKey,
-        },
-      ]
-    )
-    sendMessage(createMessage.ledgerResponse(response))
-    setInteractionId(crypto.randomUUID())
-  }
+  const renderKeysParameters = () => {
+    const keysParameters: KeyParameters[] =
+      (walletRequest as any)?.keysParameters ||
+      (walletRequest as any)?.signers ||
+      []
 
-  const renderDerivationPaths = () => {
-    if (!derivationPaths) return null
-
+    if (!keysParameters.length) return null
     return (
       <Box flex="row" items="center">
         <Text bold css={{ minWidth: '200px' }}>
-          Olympia Derivation Paths
+          Key Params / Signers
         </Text>
-        <Text>{derivationPaths?.join(', ')}</Text>
+        <ul>
+          {keysParameters.map((param, index) => (
+            <li key={index}>{`${param.curve} - ${param.derivationPath}`}</li>
+          ))}
+        </ul>
       </Box>
     )
   }
 
-  const sendImportOlympiaDeviceResponse = async () => {
-    const wallet = createRadixWallet({ seed, curve: 'secp256k1' })
-    const id = getDeviceId(wallet)
+  const renderBlakeTxIntentHash = () => {
+    const intent = (walletRequest as LedgerSignTransactionRequest)
+      ?.compiledTransactionIntent
+    if (!intent) return null
+    const hash = intent ? blakeHashHexSync(intent) : ''
 
-    sendMessage(
-      createMessage.ledgerResponse(
-        createLedgerOlympiaDeviceResponse(
-          { interactionId, discriminator: 'importOlympiaDevice' },
-          {
-            id,
-            model: device,
-            derivedPublicKeys:
-              derivationPaths?.map((path) => ({
-                path,
-                publicKey: wallet.deriveFullPath(path).publicKey,
-              })) || [],
-          }
-        )
+    return (
+      <Box flex="row">
+        <Text bold css={{ minWidth: '160px' }}>
+          Intent Hash
+        </Text>
+        <Text>{hash}</Text>
+      </Box>
+    )
+  }
+
+  const renderAuthChallenge = () => {
+    if (walletRequest?.discriminator === 'signChallenge') {
+      return (
+        <>
+          <Box flex="row">
+            <Text bold css={{ minWidth: '160px' }}>
+              dApp
+            </Text>
+            <Text>{walletRequest.dAppDefinitionAddress}</Text>
+          </Box>
+          <Box flex="row">
+            <Text bold css={{ minWidth: '160px' }}>
+              Origin
+            </Text>
+            <Text>{walletRequest.origin}</Text>
+          </Box>
+          <Box flex="row">
+            <Text bold css={{ minWidth: '160px' }}>
+              Nonce
+            </Text>
+            <Text>{walletRequest.challenge}</Text>
+          </Box>
+          <Box flex="row">
+            <Text bold css={{ minWidth: '160px' }}>
+              Auth Hash
+            </Text>
+            <Text>{parseSignAuth(walletRequest).hashToSign}</Text>
+          </Box>
+        </>
+      )
+    }
+
+    return null
+  }
+
+  const getSignAuthChallengeResponse = async (
+    request: LedgerSignChallengeRequest
+  ) => {
+    const { hashToSign } = parseSignAuth(request)
+    return createSignedResponse(
+      request,
+      request.signers.map((signer) =>
+        mapSignerToSignature(signer, hashToSign, wallet[signer.curve])
       )
     )
   }
 
-  const signTx = async () => {
-    const wallet = createRadixWallet({ seed, curve })
-    const { privateKey, publicKey } = wallet.deriveFullPath(derivationPath)
-    const hash = blakeHashHexSync(txIntent)
+  const getSignTransactionResponse = async (
+    request: LedgerSignTransactionRequest
+  ) => {
+    const hashToSign = blakeHashHexSync(request.compiledTransactionIntent)
 
-    logger.debug('TX intent blake hash', hash)
+    return createSignedResponse(
+      request,
+      request.signers.map((signer) =>
+        mapSignerToSignature(signer, hashToSign, wallet[signer.curve])
+      )
+    )
+  }
 
-    if (curve === Curve.ed25519) {
-      const pair = curve25519.keyFromSecret(privateKey)
-      const signed = pair.sign(hash)
-      const signature = signed.toHex()
-      const response = createSignedResponse(
-        { interactionId, discriminator: 'signTransaction' },
-        [
-          {
-            signature,
-            derivedPublicKey: {
-              publicKey,
-              curve: 'curve25519',
-              derivationPath,
-            },
-          },
-        ]
-      )
-      sendMessage(
-        createMessage.ledgerResponse(response as LedgerSignTransactionResponse)
-      )
-      setInteractionId(crypto.randomUUID())
-    } else {
-      const pair = secp256k1.keyFromPrivate(privateKey)
-      const signed = pair.sign(hash)
-      const signature =
-        signed.recoveryParam?.toString(16).padStart(2, '0') +
-        signed.r.toString(16, 32) +
-        signed.s.toString(16, 32)
-      const response = createSignedResponse(
-        { interactionId, discriminator: 'signTransaction' },
-        [
-          {
-            signature,
-            derivedPublicKey: { publicKey, curve: 'secp256k1', derivationPath },
-          },
-        ]
-      )
-      sendMessage(
-        createMessage.ledgerResponse(response as LedgerSignTransactionResponse)
-      )
-      setInteractionId(crypto.randomUUID())
-    }
+  const renderWalletRequest = () => (
+    <>
+      <Box flex="row" items="center">
+        <Text bold css={{ minWidth: '140px' }}>
+          Interaction ID
+        </Text>
+        <Text>{walletRequest?.interactionId}</Text>
+      </Box>
+      <Box flex="row" items="center">
+        <Text bold css={{ minWidth: '140px' }}>
+          Discriminator
+        </Text>
+        <Text>{walletRequest?.discriminator}</Text>
+      </Box>
+      {renderKeysParameters()}
+      {renderBlakeTxIntentHash()}
+      {renderAuthChallenge()}
+      <Button full onClick={mockRespond}>
+        Mock Respond
+      </Button>
+    </>
+  )
+
+  const renderRememberedMnemonics = () => {
+    if (rememberedMnemonics.length === 0) return null
+
+    return (
+      <Box flex="row" items="center">
+        <Text bold css={{ minWidth: '140px' }}>
+          Remembered
+        </Text>
+        <select
+          onChange={(ev) => {
+            try {
+              setWallet(generateWallets(ev.target.value))
+            } catch (e) {
+              logger.error('Invalid seed phrase')
+            }
+          }}
+        >
+          <option selected value={DEFAULT_MNEMONIC}>
+            Default Mnemonic - {DEFAULT_MNEMONIC}
+          </option>
+          {rememberedMnemonics.map(({ mnemonic, name }, index) => (
+            <option value={mnemonic} key={index}>
+              {name} - {mnemonic}
+            </option>
+          ))}
+        </select>
+      </Box>
+    )
   }
 
   return (
     <Box full p="medium">
       <Header dark>Ledger Simulator</Header>
+      {renderRememberedMnemonics()}
       <Box flex="row" items="center">
         <Text bold css={{ minWidth: '140px' }}>
-          Mnemonic / Seed
+          Mnemonic
         </Text>
         <input
           className="w-100"
-          value={seed}
-          onChange={(ev) => setSeed(ev.target.value)}
+          value={wallet.seed}
+          onChange={(ev) => {
+            try {
+              setWallet(generateWallets(ev.target.value))
+            } catch (e) {
+              logger.error('Invalid seed phrase')
+            }
+          }}
         />
         <Button ml="small" onClick={updateMnemonic}>
           Regenerate
         </Button>
+        <Button ml="small" onClick={rememberMnemonic}>
+          Remember
+        </Button>
       </Box>
       <Box flex="row" items="center">
         <Text bold css={{ minWidth: '140px' }}>
-          Interaction ID
+          Ledger Device
         </Text>
-        <input
-          className="w-100"
-          value={interactionId}
-          onChange={(ev) => setInteractionId(ev.target.value)}
-        />
-        <Button
-          ml="small"
-          onClick={(ev) => setInteractionId(crypto.randomUUID())}
-        >
-          Regenerate
-        </Button>
+        <select onChange={(ev) => setDevice(ev.target.value)}>
+          <option value="00">Nano S</option>
+          <option value="01">Nano S Plus</option>
+          <option value="02">Nano X</option>
+        </select>
       </Box>
-      {renderDerivationPaths()}
-      <Box flex="row" items="center">
-        <Text bold css={{ minWidth: '140px' }}>
-          Derivation Path
-        </Text>
-        <Box>
-          <input
-            className="w-100"
-            value={derivationPath}
-            onChange={(ev) => setDerivationPath(ev.target.value)}
-          />
-          <Text
-            muted
-            size="small"
-          >{`m/44'/<COIN_TYPE>'/<NETWORK_ID>'/<ENTITY_TYPE>'/<KEY_TYPE>'/<ENTITY_INDEX>'`}</Text>
-        </Box>
-      </Box>
-      <Box flex="row" items="center">
-        <Text bold css={{ minWidth: '140px' }}>
-          Compiled TxIntent
-        </Text>
-        <Box flex="row">
-          <textarea
-            name="compiled_intent"
-            cols={90}
-            rows={7}
-            value={txIntent}
-            onInput={(ev) => {
-              // @ts-ignore
-              setTxIntent(ev.target.value || '')
-            }}
-          />
-          <Box flex="col">
-            {Object.keys(compiledTxHex).map((key) => (
-              <Button
-                key={key}
-                onClick={() => {
-                  setTxIntent(compiledTxHex[key])
-                }}
-              >
-                {key}
-              </Button>
-            ))}
-          </Box>
-        </Box>
-      </Box>
-      <Box flex="row">
-        <Text bold css={{ minWidth: '160px' }}>
-          Blake Intent Hash
-        </Text>
-        <Text>{blakeHashHexSync(txIntent)}</Text>
-      </Box>
-      <Box flex="row">
-        <Box>
-          <Text bold>Ledger model</Text>
-          <select onChange={(ev) => setDevice(ev.target.value)}>
-            <option value="00">Nano S</option>
-            <option value="01">Nano S Plus</option>
-            <option value="02">Nano X</option>
-          </select>
-        </Box>
-        <Box>
-          <Text bold>Curve</Text>
-          <select
-            onChange={(ev) => setCurve(ev.target.value as keyof typeof Curve)}
-          >
-            <option value="secp256k1">secp256k1</option>
-            <option value="ed25519">curve25519</option>
-          </select>
-        </Box>
-      </Box>
-      <Box>
-        <Text bold>Actions</Text>
-        <Button onClick={sendImportOlympiaDeviceResponse}>
-          Send Olympia Import Response
-        </Button>
-        <Button onClick={sendDeviceIdResponse} ml="small">
-          Send Device ID Response
-        </Button>
-        <Button onClick={sendPublicKeyResponse} ml="small">
-          Send Public Key Response
-        </Button>
-        <Button onClick={signTx} ml="small">
-          Sign Tx
-        </Button>
-      </Box>
+      {walletRequest ? renderWalletRequest() : 'Waiting for wallet request...'}
     </Box>
   )
 }
