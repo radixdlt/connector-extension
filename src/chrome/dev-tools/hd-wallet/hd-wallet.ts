@@ -53,6 +53,6 @@ export class BaseHdWallet {
   }
 
   public deriveFullPath(path: string): Keys {
-    return this.slip10.derivePath(path)
+    return this.slip10.derivePath(path.split('H').join(`'`))
   }
 }
