@@ -1,6 +1,6 @@
 import { closePopup as closePopupFn } from 'chrome/helpers/close-popup'
 import { openParingPopup as openParingPopupFn } from 'chrome/helpers/open-pairing-popup'
-import { errAsync, ResultAsync } from 'neverthrow'
+import { errAsync, okAsync, ResultAsync } from 'neverthrow'
 import { AppLogger } from 'utils/logger'
 import {
   messageDiscriminator,
@@ -83,6 +83,16 @@ export const BackgroundMessageHandler =
           })
           .map(() => ({ sendConfirmation: false }))
           .mapErr(() => ({ reason: 'failedToOpenLedgerTab' }))
+      }
+
+      case messageDiscriminator.closeLedgerTab: {
+        const { tabId } = ledgerTabWatcher?.getCurrentlyWatched() ?? {}
+        ledgerTabWatcher?.restoreInitial()
+        return tabId
+          ? ResultAsync.fromSafePromise(chrome.tabs.remove(tabId)).map(() => ({
+              sendConfirmation: false,
+            }))
+          : okAsync({ sendConfirmation: false })
       }
 
       case messageDiscriminator.walletToLedger:

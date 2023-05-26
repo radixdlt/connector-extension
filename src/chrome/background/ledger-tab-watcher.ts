@@ -5,6 +5,7 @@ export const LedgerTabWatcher = () => {
   let tabId: number | undefined
   let messageId: string | undefined
   return {
+    getCurrentlyWatched: () => ({ tabId, messageId }),
     setWatchedTab: (_tabId: number, _messageId: string) => {
       tabId = _tabId
       messageId = _messageId

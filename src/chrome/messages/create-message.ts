@@ -46,6 +46,11 @@ export const createMessage = {
     messageId: crypto.randomUUID(),
     data: message,
   }),
+  closeLedgerTab: (): Messages['closeLedgerTab'] => ({
+    source: 'any',
+    discriminator: 'closeLedgerTab',
+    messageId: crypto.randomUUID(),
+  }),
   walletToLedger: (
     source: MessageSource,
     message: LedgerRequest
