@@ -60,7 +60,8 @@ const signingConfig = {
 const getLocalStorageMnemonics = () => {
   try {
     const mnemonics =
-      JSON.parse(localStorage.getItem('radix-dev-tools-mnemonics') ?? '[]') || []
+      JSON.parse(localStorage.getItem('radix-dev-tools-mnemonics') ?? '[]') ||
+      []
     return mnemonics
   } catch (e) {
     return []

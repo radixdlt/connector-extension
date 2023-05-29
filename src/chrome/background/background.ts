@@ -61,8 +61,19 @@ const handleConnectionPasswordChange = (connectionPassword?: string) =>
       }, config.popup.closeDelayTime)
     })
 
-const tabRemovedListener = (tabId: number) =>
+const tabRemovedListener = (tabId: number) => {
   ledgerTabWatcher.triggerTabRemoval(tabId)
+  messageHandler.sendMessageAndWaitForConfirmation(
+    createMessage.closeDappTab('background', tabId)
+  )
+}
+
+chrome.tabs.onUpdated.addListener((tabId, changeInfo) => {
+  const isTabReload = changeInfo.status === 'loading' && !changeInfo.url
+  if (isTabReload) {
+    tabRemovedListener(tabId)
+  }
+})
 
 chrome.runtime.onMessage.addListener((message, sender) => {
   messageHandler.onMessage(message, sender.tab?.id)

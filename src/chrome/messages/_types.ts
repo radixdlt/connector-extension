@@ -7,6 +7,7 @@ export const messageDiscriminator = {
   setConnectionPassword: 'setConnectionPassword',
   dAppRequest: 'dAppRequest',
   closeLedgerTab: 'closeLedgerTab',
+  closeDappTab: 'closeDappTab',
   ledgerResponse: 'ledgerResponse',
   walletToLedger: 'walletToLedger',
   convertPopupToTab: 'convertPopupToTab',
@@ -106,6 +107,10 @@ export type Messages = {
   [messageDiscriminator.closeLedgerTab]: MessageBuilder<
     MessageDiscriminator['closeLedgerTab'],
     {}
+  >
+  [messageDiscriminator.closeDappTab]: MessageBuilder<
+    MessageDiscriminator['closeDappTab'],
+    { tabId: number }
   >
   [messageDiscriminator.incomingDappMessage]: MessageBuilder<
     MessageDiscriminator['incomingDappMessage'],

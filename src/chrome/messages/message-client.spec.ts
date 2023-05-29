@@ -139,7 +139,7 @@ describe('message client', () => {
   // so it has to proxy the message through background message handler
   it('should send wallet response to dApp', async () => {
     const testHelper = createTestHelper({})
-    testHelper.messageRouter.add(1, '456')
+    testHelper.messageRouter.add(1, '456', '')
     testHelper.mockIncomingWalletMessage({ interactionId: '456' }, 1)
 
     await Promise.all([
@@ -192,7 +192,7 @@ describe('message client', () => {
       ),
     })
 
-    testHelper.messageRouter.add(1, '456')
+    testHelper.messageRouter.add(1, '456', '')
     testHelper.mockIncomingWalletMessage({ interactionId: '456' }, 1)
 
     await Promise.all([
