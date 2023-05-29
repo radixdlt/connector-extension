@@ -1,7 +1,7 @@
 import { createMessage } from 'chrome/messages/create-message'
 import { ConnectorClient } from 'connector/connector-client'
 import { MessagesRouter } from 'message-router'
-import { errAsync, okAsync } from 'neverthrow'
+import { ResultAsync, errAsync, okAsync } from 'neverthrow'
 import { Queue } from 'queues/queue'
 import { AppLogger, logger as appLogger } from 'utils/logger'
 import {
@@ -64,9 +64,9 @@ export const OffscreenMessageHandler = (input: {
       }
 
       case messageDiscriminator.dAppRequest: {
-        const { interactionId } = message.data
+        const { interactionId, metadata } = message.data
         return messageRouter
-          .add(tabId!, interactionId)
+          .add(tabId!, interactionId, metadata.origin)
           .asyncAndThen(() => {
             if (message.data?.items?.discriminator === 'cancelRequest')
               return dAppRequestQueue
@@ -103,6 +103,22 @@ export const OffscreenMessageHandler = (input: {
         return ledgerToWalletQueue
           .add(message.data, message.data.interactionId)
           .map(() => ({ sendConfirmation: false }))
+
+      case messageDiscriminator.closeDappTab: {
+        const { tabId } = message
+        return messageRouter
+          .getAndRemoveByTabId(tabId)
+          .mapErr(() => ({ reason: 'tabIdNotFound' }))
+          .map((interactionIds) => {
+            for (const interactionId of interactionIds) {
+              ResultAsync.combine([
+                dAppRequestQueue.cancel(interactionId),
+                incomingWalletMessageQueue.cancel(interactionId),
+              ])
+            }
+          })
+          .map(() => ({ sendConfirmation: false }))
+      }
 
       default:
         return errAsync({
