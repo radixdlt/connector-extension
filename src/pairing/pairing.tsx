@@ -34,7 +34,7 @@ export const Paring = () => {
 
     const subscription = connectorClient.connectionPassword$.subscribe(
       (password) => {
-        setConnectionPassword(password.toString('hex'))
+        setConnectionPassword(password?.toString('hex'))
       }
     )
 
