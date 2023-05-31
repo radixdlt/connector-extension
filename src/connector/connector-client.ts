@@ -23,7 +23,7 @@ import { errAsync, ResultAsync } from 'neverthrow'
 import { errorIdentity } from 'utils/error-identity'
 import { sendMessageOverDataChannelAndWaitForConfirmation } from './webrtc/helpers/send-message-over-data-channel-and-wait-for-confirmation'
 import { ConnectorClientSubjects } from './subjects'
-import { MessageErrorReasons } from './_types'
+import { MessageErrorReasons, Secrets } from './_types'
 
 export type ConnectorClient = ReturnType<typeof ConnectorClient>
 
@@ -72,6 +72,7 @@ export const ConnectorClient = (input: {
   const subscriptions = new Subscription()
 
   const connection$ = secretsClient.secrets$.pipe(
+    filter((secrets): secrets is Secrets => !!secrets),
     switchMap((secrets) => {
       const signalingClient = SignalingClient({
         baseUrl: input.signalingServerBaseUrl,
@@ -131,7 +132,7 @@ export const ConnectorClient = (input: {
     setConnectionPassword: (password: Buffer) =>
       secretsClient.deriveSecretsFromPassword(password),
     connectionPassword$: secretsClient.secrets$.pipe(
-      map((secrets) => secrets.encryptionKey)
+      map((secrets) => secrets?.encryptionKey)
     ),
     generateConnectionPassword: () => secretsClient.generateConnectionSecrets(),
     connect: () => shouldConnectSubject.next(true),
