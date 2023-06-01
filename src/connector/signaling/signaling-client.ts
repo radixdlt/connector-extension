@@ -10,6 +10,7 @@ import {
 import { Logger } from 'tslog'
 import {
   concatMap,
+  delay,
   filter,
   first,
   from,
@@ -95,7 +96,6 @@ export const SignalingClient = (input: {
   const onError = (event: Event) => {
     logger?.debug(`🛰❌ signaling server error`, event)
     subjects.onErrorSubject.next(event)
-    input.restart()
   }
 
   const prepareMessage = ({
@@ -234,6 +234,17 @@ export const SignalingClient = (input: {
 
   subscription.add(onRemoteClientConnectionStateChange$.subscribe())
 
+  subscription.add(
+    subjects.onErrorSubject
+      .pipe(
+        delay(1_000),
+        tap(() => {
+          input.restart()
+        })
+      )
+      .subscribe()
+  )
+
   ws.onmessage = onMessage
   ws.onopen = onOpen
   ws.onclose = onClose
@@ -265,7 +276,9 @@ export const SignalingClient = (input: {
     onIceCandidate$,
     subjects,
     disconnect: () => {
-      ws.close()
+      if (ws.readyState === 1) {
+        ws.close()
+      }
     },
     destroy: () => {
       subscription.unsubscribe()
