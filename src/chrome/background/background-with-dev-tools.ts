@@ -27,5 +27,19 @@ chrome.contextMenus.removeAll(() => {
     contexts: ['all'],
   })
 
-  chrome.contextMenus.onClicked.addListener(async () => openRadixDevToolsPage())
+  chrome.contextMenus.create({
+    id: 'logs',
+    title: 'Logs',
+    contexts: ['all'],
+  })
+
+  chrome.contextMenus.onClicked.addListener(async (value) => {
+    if (value.menuItemId === 'logs') {
+      await chrome.tabs.create({
+        url: chrome.runtime.getURL(config.offscreen.url),
+      })
+    } else if (value.menuItemId === 'radix-dev-tools') {
+      await openRadixDevToolsPage()
+    }
+  })
 })
