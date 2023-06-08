@@ -1,15 +1,28 @@
 import { config } from 'config'
 
-export const createOffscreen = async () => {
-  if (await chrome.offscreen.hasDocument()) {
-    return
+let creating: Promise<void> | null
+
+export async function createOffscreen() {
+  const offscreenUrl = chrome.runtime.getURL(config.offscreen.url)
+
+  // @ts-ignore: clients exists in service workers context
+  const matchedClients = await clients.matchAll()
+
+  for (const client of matchedClients) {
+    if (client.url === offscreenUrl) {
+      return
+    }
   }
 
-  setTimeout(async () => {
-    await chrome.offscreen.createDocument({
-      url: chrome.runtime.getURL(config.offscreen.url),
+  if (creating) {
+    await creating
+  } else {
+    creating = chrome.offscreen.createDocument({
+      url: offscreenUrl,
       reasons: [chrome.offscreen.Reason.WEB_RTC],
       justification: 'Keep WebRTC connection with mobile wallet',
     })
-  }, 1000)
+    await creating
+    creating = null
+  }
 }
