@@ -14,6 +14,10 @@ export async function createOffscreen() {
     }
   }
 
+  if (await chrome.offscreen.hasDocument()) {
+    return
+  }
+
   if (creating) {
     await creating
   } else {
