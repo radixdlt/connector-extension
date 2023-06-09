@@ -16,4 +16,16 @@ export const sessionStore = {
       chrome.storage.session.get(key),
       (error) => error as Error
     ),
+  setSingleItem: (key: string, value: any) =>
+    ResultAsync.fromPromise(
+      chrome.storage.session.set({
+        [key]: value,
+      }),
+      (error) => error as Error
+    ),
+  getSingleItem: (key: string) =>
+    ResultAsync.fromPromise(
+      chrome.storage.session.get(key).then((result) => result[key]),
+      (error) => error as Error
+    ),
 } as const
