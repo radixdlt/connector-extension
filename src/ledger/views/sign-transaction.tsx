@@ -5,11 +5,13 @@ import { ledger } from 'ledger/wrapper/ledger-wrapper'
 import {
   LedgerSignTransactionRequest,
   LedgerSignTransactionResponse,
+  createLedgerErrorResponse,
   createSignedResponse,
 } from 'ledger/schemas'
 import { PairingHeader } from 'pairing/components/pairing-header'
 import { useContext, useState, useEffect, useCallback } from 'react'
 import { MessagingContext } from 'ledger/contexts/messaging-context'
+import { LedgerErrorCode } from 'ledger/wrapper/constants'
 
 export const SignTransaction = ({
   message,
@@ -32,6 +34,9 @@ export const SignTransaction = ({
         ) as LedgerSignTransactionResponse
       )
     } else {
+      if (signedTx.error === LedgerErrorCode.BadTxSignUserRejected) {
+        respond(createLedgerErrorResponse(message, signedTx.error))
+      }
       setError(signedTx.error)
       setIsLoading(false)
     }
