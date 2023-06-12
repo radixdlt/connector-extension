@@ -38,13 +38,14 @@ export const ImportOlympiaDevice = ({
     <>
       <PairingHeader header="Import Olympia Device">
         Please connect a Ledger Device which was used to manage Olympia accounts
+        and click retry
       </PairingHeader>
 
       <ErrorText error={error} />
 
       {!isLoading && (
         <Button full mt="large" onClick={importOlympiaFromLedger}>
-          Continue
+          Retry
         </Button>
       )}
     </>

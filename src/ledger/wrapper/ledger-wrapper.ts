@@ -149,15 +149,13 @@ export const LedgerWrapper = ({
             }: AdditionalExchangeParams = {}
           ) => {
             const ledgerInput = `${instructionClass}${command}${p1}00${data}`
+            logger.debug('📒 sending', ledgerInput)
             return ResultAsync.fromPromise(
               transport.exchange(Buffer.from(ledgerInput, 'hex')),
               () => LedgerErrorCode.FailedToExchangeData
             ).andThen((buffer) => {
               const stringifiedResponse = buffer.toString('hex')
-              logger.debug(`📒 ↔️ Ledger Exchange`, {
-                input: ledgerInput,
-                output: stringifiedResponse,
-              })
+              logger.debug(`📒 received`, stringifiedResponse)
               const statusCode = stringifiedResponse.slice(-4)
               if (statusCode !== '9000') {
                 return err(statusCode)

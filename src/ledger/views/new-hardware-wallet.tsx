@@ -45,13 +45,13 @@ export const NewHardwareWallet = ({
     <>
       <PairingHeader header="New Hardware Wallet">
         Please connect a new Ledger Nano S or Nano X hardware wallet device to
-        this computer and click Continue.
+        this computer and click retry
       </PairingHeader>
 
       <ErrorText error={error} />
       {!isLoading && (
         <Button full mt="large" onClick={getDeviceInfo}>
-          Continue
+          Retry
         </Button>
       )}
     </>
