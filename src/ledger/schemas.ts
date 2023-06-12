@@ -99,7 +99,7 @@ export const LedgerRequestSchema = union([
   LedgerSignTransactionRequestSchema,
   LedgerSignChallengeRequestSchema,
   LedgerImportOlympiaDeviceRequestSchema,
-])
+]).describe('LedgerRequest')
 
 export type LedgerRequest = z.infer<typeof LedgerRequestSchema>
 

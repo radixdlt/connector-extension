@@ -22,10 +22,11 @@ import {
   filter,
   finalize,
   switchMap,
+  tap,
   timer,
   withLatestFrom,
 } from 'rxjs'
-import { errAsync } from 'neverthrow'
+import { validateZodSchema } from 'chrome/helpers/validate-zod-schema'
 
 const messageRouter = MessagesRouter({ logger })
 
@@ -101,27 +102,23 @@ const walletToLedgerSubject = new Subject<LedgerRequest>()
 walletToLedgerSubject
   .asObservable()
   .pipe(
+    tap((message) =>
+      logger.debug(
+        '🪪 -> 📒: walletToLedgerSubject',
+        message.interactionId,
+        message.discriminator
+      )
+    ),
     switchMap((message) =>
       new Observable((subscriber) => {
-        logger.debug(
-          '🪪 -> 📒: walletToLedgerSubject',
-          message.interactionId,
-          message.discriminator
-        )
         messageClient
           .sendMessageAndWaitForConfirmation(createMessage.closeLedgerTab())
-          .andThen(() => {
-            try {
-              LedgerRequestSchema.parse(message)
-            } catch (e) {
-              subscriber.error('failedParsingJSON')
-              return errAsync({ reason: 'failedParsingJSON' })
-            }
-
-            return messageClient.sendMessageAndWaitForConfirmation(
+          .andThen(() => validateZodSchema(LedgerRequestSchema, message))
+          .andThen((message) =>
+            messageClient.sendMessageAndWaitForConfirmation(
               createMessage.walletToLedger('offScreen', message)
             )
-          })
+          )
           .mapErr((error) => subscriber.error(error.reason))
       }).pipe(
         catchError((error) => {
