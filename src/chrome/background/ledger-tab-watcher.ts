@@ -14,7 +14,7 @@ export const LedgerTabWatcher = () => ({
     }),
   triggerTabRemoval: async (justRemovedTabId: number) => {
     const watchedTab = await sessionStore.getSingleItem('watchedTab')
-    if (watchedTab.isErr()) {
+    if (watchedTab.isErr() || !watchedTab.value) {
       return
     }
 

@@ -88,16 +88,23 @@ export const BackgroundMessageHandler =
       }
 
       case messageDiscriminator.closeLedgerTab: {
-        return ledgerTabWatcher.getCurrentlyWatched().andThen(({ tabId }) => {
-          ledgerTabWatcher.restoreInitial()
-          return tabId
-            ? ResultAsync.fromSafePromise(chrome.tabs.remove(tabId)).map(
-                () => ({
-                  sendConfirmation: false,
-                })
-              )
-            : okAsync({ sendConfirmation: false })
-        })
+        return ledgerTabWatcher
+          .getCurrentlyWatched()
+          .andThen((currentlyWatched) => {
+            if (!currentlyWatched || !currentlyWatched.tabId) {
+              return okAsync({ sendConfirmation: true })
+            }
+
+            const { tabId } = currentlyWatched
+            return ledgerTabWatcher.restoreInitial().andThen(() =>
+              ResultAsync.fromPromise(chrome.tabs.remove(tabId), () => ({
+                reason: 'failedToCloseLedgerTab',
+              })).map(() => ({
+                sendConfirmation: true,
+              }))
+            )
+          })
+          .mapErr(() => ({ reason: 'failedToCloseLedgerTab' }))
       }
 
       case messageDiscriminator.walletToLedger:
