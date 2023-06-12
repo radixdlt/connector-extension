@@ -16,7 +16,7 @@ export const ErrorMessages: Record<string, string> = {
   [LedgerErrorCode.FailedToCreateTransport]:
     'Could not recognize Ledger device. Did you connect it to your computer and unlock it?',
   [LedgerErrorCode.FailedToExchangeData]:
-    'Failed to exchange data with Ledger device. Did you disconnect it?',
+    'Failed to exchange data with Ledger device. Please restart Babylon Ledger app and try again',
   [LedgerErrorCode.DeviceMismatch]: `Connected device doesn't match requested one. Make sure you connected correct Ledger device`,
 }
 

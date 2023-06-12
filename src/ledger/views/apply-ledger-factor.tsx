@@ -40,14 +40,14 @@ export const ApplyLedgerFactor = ({
     <>
       <PairingHeader header="Apply Ledger Factor to Account Security">
         Please connect the following Ledger hardware wallet device to this
-        computer and click Continue:
+        computer and click retry
       </PairingHeader>
 
       <ErrorText error={error} />
       <LedgerDeviceBox {...message.ledgerDevice} />
       {!isLoading && (
         <Button full onClick={getPublicKey}>
-          Continue
+          Retry
         </Button>
       )}
     </>

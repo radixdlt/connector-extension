@@ -50,14 +50,14 @@ export const SignTransaction = ({
     <>
       <PairingHeader header="Sign Transaction with Ledger Device">
         Please connect the following Ledger hardware wallet device to this
-        computer and click Continue:
+        computer and click retry
       </PairingHeader>
       <ErrorText error={error} />
 
       <LedgerDeviceBox {...message.ledgerDevice} />
       {!isLoading && (
         <Button full onClick={sign}>
-          Continue
+          Retry
         </Button>
       )}
     </>
