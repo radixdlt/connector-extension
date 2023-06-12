@@ -14,7 +14,17 @@ import { createMessage } from 'chrome/messages/create-message'
 import { OffscreenMessageHandler } from 'chrome/offscreen/message-handler'
 import { MessageClient } from 'chrome/messages/message-client'
 import { Message } from 'chrome/messages/_types'
-import { filter, switchMap, timer, withLatestFrom } from 'rxjs'
+import {
+  NEVER,
+  Observable,
+  Subject,
+  catchError,
+  filter,
+  finalize,
+  switchMap,
+  timer,
+  withLatestFrom,
+} from 'rxjs'
 import { errAsync } from 'neverthrow'
 
 const messageRouter = MessagesRouter({ logger })
@@ -86,37 +96,53 @@ const incomingWalletMessageQueue = Queue<Record<string, any>>({
   ),
 })
 
-const walletToLedgerQueue = Queue<LedgerRequest>({
-  key: 'walletToLedger',
-  logger,
-  worker: Worker((job) => {
-    try {
-      LedgerRequestSchema.parse(job.data)
-    } catch (e) {
-      ledgerToWalletQueue.add(
-        createLedgerErrorResponse(job.data, 'failedParsingJSON'),
-        job.data.interactionId
-      )
-      return errAsync({
-        reason: 'failedParsingJSON',
-      })
-    }
+const walletToLedgerSubject = new Subject<LedgerRequest>()
 
-    return messageClient
-      .sendMessageAndWaitForConfirmation(
-        createMessage.walletToLedger('offScreen', job.data)
-      )
-      .mapErr(() => {
-        ledgerToWalletQueue.add(
-          createLedgerErrorResponse(job.data, 'ledgerRequestCancelled'),
-          job.data.interactionId
+walletToLedgerSubject
+  .asObservable()
+  .pipe(
+    switchMap((message) =>
+      new Observable((subscriber) => {
+        logger.debug(
+          '🪪 -> 📒: walletToLedgerSubject',
+          message.interactionId,
+          message.discriminator
         )
-        return {
-          reason: 'ledgerRequestCancelled',
-        }
-      })
-  }),
-})
+        messageClient
+          .sendMessageAndWaitForConfirmation(createMessage.closeLedgerTab())
+          .andThen(() => {
+            try {
+              LedgerRequestSchema.parse(message)
+            } catch (e) {
+              subscriber.error('failedParsingJSON')
+              return errAsync({ reason: 'failedParsingJSON' })
+            }
+
+            return messageClient.sendMessageAndWaitForConfirmation(
+              createMessage.walletToLedger('offScreen', message)
+            )
+          })
+          .mapErr((error) => subscriber.error(error.reason))
+      }).pipe(
+        catchError((error) => {
+          logger.debug('🪪 -> 📒: walletToLedgerSubject error', error)
+          ledgerToWalletQueue.add(
+            createLedgerErrorResponse(message, error),
+            message.interactionId
+          )
+          return NEVER
+        }),
+        finalize(() => {
+          logger.debug('🪪 -> 📒: walletToLedgerSubject finalize', message)
+          ledgerToWalletQueue.add(
+            createLedgerErrorResponse(message, 'ledgerRequestCancelled'),
+            message.interactionId
+          )
+        })
+      )
+    )
+  )
+  .subscribe()
 
 connectorClient.connected$.subscribe((connected) => {
   if (connected) {
@@ -133,7 +159,7 @@ const messageClient = MessageClient(
     connectorClient,
     dAppRequestQueue,
     ledgerToWalletQueue,
-    walletToLedgerQueue,
+    walletToLedgerSubject,
     incomingWalletMessageQueue,
     messageRouter,
     logger,

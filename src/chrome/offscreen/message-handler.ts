@@ -12,20 +12,21 @@ import {
   SendMessageWithConfirmation,
 } from '../messages/_types'
 import { LedgerRequest, LedgerResponse, isLedgerRequest } from 'ledger/schemas'
+import { Subject } from 'rxjs'
 
 export type OffscreenMessageHandler = ReturnType<typeof OffscreenMessageHandler>
 export const OffscreenMessageHandler = (input: {
   connectorClient: ConnectorClient
   dAppRequestQueue: Queue<any>
   ledgerToWalletQueue: Queue<LedgerResponse>
-  walletToLedgerQueue: Queue<LedgerRequest>
+  walletToLedgerSubject: Subject<LedgerRequest>
   incomingWalletMessageQueue: Queue<any>
   messageRouter: MessagesRouter
   logger?: AppLogger
 }): MessageHandler => {
   const connectorClient = input.connectorClient
   const dAppRequestQueue = input.dAppRequestQueue
-  const walletToLedgerQueue = input.walletToLedgerQueue
+  const walletToLedgerSubject = input.walletToLedgerSubject
   const ledgerToWalletQueue = input.ledgerToWalletQueue
   const incomingWalletMessageQueue = input.incomingWalletMessageQueue
   const messageRouter = input.messageRouter
@@ -39,7 +40,7 @@ export const OffscreenMessageHandler = (input: {
     switch (message.discriminator) {
       case messageDiscriminator.walletMessage: {
         if (isLedgerRequest(message.data)) {
-          walletToLedgerQueue.add(message.data, message.data.interactionId)
+          walletToLedgerSubject.next(message.data)
         } else {
           incomingWalletMessageQueue.add(
             message.data,
