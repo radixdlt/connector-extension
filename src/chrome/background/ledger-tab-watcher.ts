@@ -18,7 +18,7 @@ export const LedgerTabWatcher = () => ({
       return
     }
 
-    const { tabId, messageId } = watchedTab.value
+    const { tabId, messageId } = watchedTab.value {}
 
     if (!messageId || !tabId || justRemovedTabId !== tabId) {
       return
