@@ -5,8 +5,10 @@ import { MessagingContext } from 'ledger/contexts/messaging-context'
 import {
   LedgerSignChallengeRequest,
   LedgerSignChallengeResponse,
+  createLedgerErrorResponse,
   createSignedResponse,
 } from 'ledger/schemas'
+import { LedgerErrorCode } from 'ledger/wrapper/constants'
 import { ledger } from 'ledger/wrapper/ledger-wrapper'
 import { PairingHeader } from 'pairing/components/pairing-header'
 import { useContext, useEffect, useState, useCallback } from 'react'
@@ -32,6 +34,9 @@ export const SignChallenge = ({
         ) as LedgerSignChallengeResponse
       )
     } else {
+      if (signedTx.error === LedgerErrorCode.BadTxSignUserRejected) {
+        respond(createLedgerErrorResponse(message, signedTx.error))
+      }
       setError(signedTx.error)
       setIsLoading(false)
     }
