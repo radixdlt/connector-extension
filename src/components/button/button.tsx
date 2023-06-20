@@ -25,7 +25,7 @@ export const Button = styled('button', {
       },
       medium: {
         marginTop: '$md',
-      }
+      },
     },
     mb: {
       small: {

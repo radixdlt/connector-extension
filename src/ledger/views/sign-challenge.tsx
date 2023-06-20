@@ -26,6 +26,10 @@ export const SignChallenge = ({
     setIsLoading(true)
     const signedTx = await ledger.signAuth(message)
 
+    if (message.interactionId !== ledger.getLastInteractionId()) {
+      return
+    }
+
     if (signedTx.isOk()) {
       respond(
         createSignedResponse(

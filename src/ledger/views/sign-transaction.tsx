@@ -26,6 +26,10 @@ export const SignTransaction = ({
     setIsLoading(true)
     const signedTx = await ledger.signTransaction(message)
 
+    if (message.interactionId !== ledger.getLastInteractionId()) {
+      return
+    }
+
     if (signedTx.isOk()) {
       respond(
         createSignedResponse(

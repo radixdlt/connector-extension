@@ -23,10 +23,13 @@ export const ApplyLedgerFactor = ({
     setError(undefined)
     setIsLoading(true)
     const publicKey = await ledger.getPublicKeys(message)
-
+    if (message.interactionId !== ledger.getLastInteractionId()) {
+      return
+    }
     if (publicKey.isOk()) {
       respond(createLedgerPublicKeyResponse(message, publicKey.value))
     } else {
+      console.log(publicKey.error, message.interactionId)
       setError(publicKey.error)
       setIsLoading(false)
     }

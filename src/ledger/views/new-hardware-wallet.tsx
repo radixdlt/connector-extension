@@ -21,8 +21,10 @@ export const NewHardwareWallet = ({
     setError(undefined)
     setIsLoading(true)
 
-    const deviceInfo = await ledger.getDeviceInfo()
-
+    const deviceInfo = await ledger.getDeviceInfo(message)
+    if (message.interactionId !== ledger.getLastInteractionId()) {
+      return
+    }
     if (deviceInfo.isOk()) {
       respond(
         createLedgerDeviceIdResponse(
