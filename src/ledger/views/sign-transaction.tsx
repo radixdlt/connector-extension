@@ -35,7 +35,7 @@ export const SignTransaction = ({
       )
     } else {
       if (signedTx.error === LedgerErrorCode.BadTxSignUserRejected) {
-        respond(createLedgerErrorResponse(message, signedTx.error))
+        respond(createLedgerErrorResponse(message, 'BadTxSignUserRejected'))
       }
       setError(signedTx.error)
       setIsLoading(false)

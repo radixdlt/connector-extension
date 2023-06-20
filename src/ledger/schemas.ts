@@ -1,4 +1,4 @@
-import { z, literal, object, string, union, number, boolean } from 'zod'
+import { z, literal, object, string, union, boolean } from 'zod'
 
 const curve = union([literal('curve25519'), literal('secp256k1')])
 
@@ -188,7 +188,6 @@ export const LedgerErrorResponseSchema = object({
   interactionId: string(),
   discriminator: ledgerDiscriminator,
   error: object({
-    code: number(),
     message: string(),
   }),
 })
@@ -315,7 +314,6 @@ export const createLedgerErrorResponse = (
   interactionId,
   discriminator,
   error: {
-    code: 0,
     message,
   },
 })

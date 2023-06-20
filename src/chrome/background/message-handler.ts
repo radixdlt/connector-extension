@@ -10,10 +10,10 @@ import {
 } from '../messages/_types'
 import { getConnectionPassword as getConnectionPasswordFn } from '../helpers/get-connection-password'
 import { config } from 'config'
-import { createAlignedPopupWindow } from 'chrome/helpers/create-popup-window'
 import { sendMessageToTab } from 'chrome/helpers/send-message-to-tab'
 import { createAndFocusTab } from 'chrome/helpers/create-and-focus-tab'
 import { LedgerTabWatcher } from './ledger-tab-watcher'
+import { createOrFocusPopupWindow } from 'chrome/helpers/create-or-focus-popup-window'
 
 export type BackgroundMessageHandler = ReturnType<
   typeof BackgroundMessageHandler
@@ -79,7 +79,7 @@ export const BackgroundMessageHandler =
         return createAndFocusTab(config.popup.pages.ledger)
           .andThen((tab) =>
             ledgerTabWatcher
-              .setWatchedTab(tab.id!, message.data.messageId)
+              .setWatchedTab(tab.id!, message.data.data)
               .map(() => tab)
           )
           .andThen((tab) => sendMessageToTab(tab.id!, message.data))
@@ -100,7 +100,7 @@ export const BackgroundMessageHandler =
               ResultAsync.fromPromise(chrome.tabs.remove(tabId), () => ({
                 reason: 'failedToCloseLedgerTab',
               })).map(() => ({
-                sendConfirmation: true,
+                sendConfirmation: false,
               }))
             )
           })
@@ -108,21 +108,25 @@ export const BackgroundMessageHandler =
       }
 
       case messageDiscriminator.walletToLedger:
-        ledgerTabWatcher.restoreInitial()
-        return createAlignedPopupWindow(config.popup.pages.ledger)
-          .andThen((tab) =>
-            ledgerTabWatcher
-              .setWatchedTab(tab.id!, message.messageId)
-              .map(() => tab)
+        return ledgerTabWatcher
+          .restoreInitial()
+          .andThen(() =>
+            createOrFocusPopupWindow(config.popup.pages.ledger)
+              .andThen((tab) =>
+                ledgerTabWatcher
+                  .setWatchedTab(tab.id!, message.data)
+                  .map(() => tab)
+              )
+              .andThen((tab) =>
+                sendMessageWithConfirmation(
+                  { ...message, source: 'background' },
+                  tab.id
+                )
+              )
+              .map(() => ({ sendConfirmation: true }))
+              .mapErr(() => ({ reason: 'failedToOpenLedgerTab' }))
           )
-          .andThen((tab) =>
-            sendMessageWithConfirmation(
-              { ...message, source: 'background' },
-              tab.id
-            )
-          )
-          .map(() => ({ sendConfirmation: true }))
-          .mapErr(() => ({ reason: 'failedToOpenLedgerTab' }))
+          .mapErr(() => ({ reason: 'failedRestoringTabWatcher' }))
 
       default:
         return errAsync({
