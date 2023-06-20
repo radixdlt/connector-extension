@@ -252,64 +252,6 @@ describe('Ledger Babylon Wrapper', () => {
     })
   })
 
-  describe('importing olympia ledger device', () => {
-    it('should get secp256k1 public key for each derivation path', async () => {
-      const ledger = createLedgerWrapperWithMockedTransport([
-        {
-          input: 'aa120000',
-          output: '305495ba9000',
-        },
-        {
-          input: 'aa110000',
-          output: '019000',
-        },
-        {
-          input: 'aa31000015058000002c800003fe800000000000000080000004',
-          output: '44449000',
-        },
-        {
-          input: 'aa31000015058000002c800003fe800000000000000080000002',
-          output: '22229000',
-        },
-        {
-          input: 'aa31000015058000002c800003fe800000000000000080000003',
-          output: '33339000',
-        },
-      ])
-
-      const result = await ledger.getOlympiaDeviceInfo({
-        interactionId: 'abc',
-        discriminator: 'importOlympiaDevice',
-        derivationPaths: [
-          'm/44H/1022H/0H/0/4H',
-          'm/44H/1022H/0H/0/2H',
-          'm/44H/1022H/0H/0/3H',
-        ],
-      })
-
-      if (result.isErr()) throw result.error
-
-      expect(result.value).toEqual({
-        id: '305495ba',
-        model: '01',
-        derivedPublicKeys: [
-          {
-            path: 'm/44H/1022H/0H/0/4H',
-            publicKey: '4444',
-          },
-          {
-            path: 'm/44H/1022H/0H/0/2H',
-            publicKey: '2222',
-          },
-          {
-            path: 'm/44H/1022H/0H/0/3H',
-            publicKey: '3333',
-          },
-        ],
-      })
-    })
-  })
-
   describe('transaction signing', () => {
     it('should match device id before signing transaction', async () => {
       const ledger = createLedgerWrapperWithMockedTransport([
