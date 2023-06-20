@@ -64,6 +64,7 @@ const buildConfig: UserConfigExport = {
     },
   },
   build: {
+    sourcemap: isDevToolsActive ? 'inline' : false,
     rollupOptions: {
       input: {
         ledger: 'src/ledger/index.html',
