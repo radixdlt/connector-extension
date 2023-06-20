@@ -1,4 +1,4 @@
-import { Box, PopupWindow, Text } from 'components'
+import { Box, Button, PopupWindow, Text } from 'components'
 import { useEffect, useMemo, useState } from 'react'
 import {
   isPublicKeyRequest,
@@ -7,6 +7,7 @@ import {
   isDeviceIdRequest,
   LedgerResponse,
   isImportOlympiaDeviceRequest,
+  createLedgerErrorResponse,
 } from '../schemas'
 import { ApplyLedgerFactor } from './apply-ledger-factor'
 import { NewHardwareWallet } from './new-hardware-wallet'
@@ -17,6 +18,8 @@ import { Messages } from 'chrome/messages/_types'
 import { ImportOlympiaDevice } from './import-olympia-device'
 import { ledger } from '../wrapper/ledger-wrapper'
 import { MessagingContext } from 'ledger/contexts/messaging-context'
+import { sendMessage } from 'chrome/messages/send-message'
+import { Subscription } from 'rxjs'
 
 export const Ledger = () => {
   const [progressMessage, setProgressMessage] = useState<string | undefined>()
@@ -26,12 +29,6 @@ export const Ledger = () => {
   const messagingContext = useMemo(() => {
     const respond = async (response: LedgerResponse) => {
       await chrome.runtime.sendMessage(createMessage.ledgerResponse(response))
-      await chrome.runtime.sendMessage(
-        createMessage.confirmationSuccess(
-          'offScreen',
-          currentMessage!.messageId
-        )
-      )
       window.close()
     }
 
@@ -64,18 +61,32 @@ export const Ledger = () => {
     }
   }
 
+  const cancel = () => {
+    if (!currentMessage) return
+
+    sendMessage(
+      createMessage.ledgerResponse(
+        createLedgerErrorResponse(currentMessage.data, 'userCancelled')
+      )
+    ).map(() => window.close())
+  }
+
   useEffect(() => {
+    const subscription = new Subscription()
     const readMessage = (message: any) => {
       if (
         message.discriminator === 'walletToLedger' &&
         message.source === 'background'
       ) {
+        sendMessage(
+          createMessage.confirmationSuccess('ledger', message.messageId)
+        )
         setCurrentMessage(message)
       }
     }
 
-    const subscription = ledger.progress$.subscribe((message) =>
-      setProgressMessage(message)
+    subscription.add(
+      ledger.progress$.subscribe((message) => setProgressMessage(message))
     )
     chrome.runtime.onMessage.addListener(readMessage)
 
@@ -88,10 +99,17 @@ export const Ledger = () => {
   return (
     <PopupWindow content="start">
       <MessagingContext.Provider value={messagingContext}>
-        <Box maxWidth="medium">{renderLedgerView(currentMessage)}</Box>
-        <Text italic style={{ color: 'white' }}>
-          {progressMessage}
-        </Text>
+        <Box maxWidth="medium">
+          {renderLedgerView(currentMessage)}
+          <Text italic style={{ color: 'white' }}>
+            {progressMessage}
+          </Text>
+          {progressMessage ? null : (
+            <Button full mt="medium" onClick={cancel}>
+              Cancel
+            </Button>
+          )}
+        </Box>
       </MessagingContext.Provider>
     </PopupWindow>
   )
