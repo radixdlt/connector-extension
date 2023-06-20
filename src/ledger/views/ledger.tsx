@@ -6,7 +6,6 @@ import {
   isSignTransactionRequest,
   isDeviceIdRequest,
   LedgerResponse,
-  isImportOlympiaDeviceRequest,
   createLedgerErrorResponse,
 } from '../schemas'
 import { ApplyLedgerFactor } from './apply-ledger-factor'
@@ -15,7 +14,6 @@ import { SignChallenge } from './sign-challenge'
 import { SignTransaction } from './sign-transaction'
 import { createMessage } from 'chrome/messages/create-message'
 import { Messages } from 'chrome/messages/_types'
-import { ImportOlympiaDevice } from './import-olympia-device'
 import { ledger } from '../wrapper/ledger-wrapper'
 import { MessagingContext } from 'ledger/contexts/messaging-context'
 import { sendMessage } from 'chrome/messages/send-message'
@@ -56,8 +54,6 @@ export const Ledger = () => {
       return <SignTransaction message={message.data} />
     } else if (isSignChallengeRequest(message.data)) {
       return <SignChallenge message={message.data} />
-    } else if (isImportOlympiaDeviceRequest(message.data)) {
-      return <ImportOlympiaDevice message={message.data} />
     }
   }
 

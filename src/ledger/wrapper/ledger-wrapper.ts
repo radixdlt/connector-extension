@@ -3,11 +3,9 @@ import {
   DerivedPublicKey,
   KeyParameters,
   LedgerDeviceIdRequest,
-  LedgerImportOlympiaDeviceRequest,
   LedgerPublicKeyRequest,
   LedgerSignChallengeRequest,
   LedgerSignTransactionRequest,
-  OlympiaDerivedPublicKey,
   SignatureOfSigner,
 } from 'ledger/schemas'
 import { ResultAsync, err, ok, okAsync } from 'neverthrow'
@@ -305,51 +303,6 @@ export const LedgerWrapper = ({
       return ok({ p1, apduChunks })
     }
 
-  const getOlympiaDeviceInfo = ({
-    derivationPaths,
-  }: Pick<LedgerImportOlympiaDeviceRequest, 'derivationPaths'>): ResultAsync<
-    {
-      id: string
-      model: string
-      derivedPublicKeys: OlympiaDerivedPublicKey[]
-    },
-    string
-  > =>
-    wrapDataExchange((exchange) =>
-      exchange(LedgerInstructionCode.GetDeviceId).andThen((id) =>
-        exchange(LedgerInstructionCode.GetDeviceModel).andThen((model) =>
-          derivationPaths
-            .reduce(
-              (
-                acc: ResultAsync<OlympiaDerivedPublicKey[], string>,
-                path,
-                index
-              ) => {
-                const encodedDerivationPath = encodeDerivationPath(path)
-
-                return acc.andThen((publicKeys) => {
-                  setProgressMessage(
-                    `Importing ${index + 1} out of ${
-                      derivationPaths.length
-                    } olympia accounts`
-                  )
-                  return exchange(
-                    LedgerInstructionCode.GetPubKeySecp256k1,
-                    encodedDerivationPath
-                  ).map((publicKey) => [...publicKeys, { publicKey, path }])
-                })
-              },
-              okAsync([])
-            )
-            .map((derivedPublicKeys) => ({
-              id,
-              model,
-              derivedPublicKeys,
-            }))
-        )
-      )
-    )
-
   const getDeviceInfo = (): ResultAsync<
     { deviceId: string; model: string },
     string
@@ -592,10 +545,6 @@ export const LedgerWrapper = ({
     signTransaction: (params: LedgerSignTransactionRequest) => {
       lastInteractionId = params.interactionId
       return signTransaction(params)
-    },
-    getOlympiaDeviceInfo: (params: LedgerImportOlympiaDeviceRequest) => {
-      lastInteractionId = params.interactionId
-      return getOlympiaDeviceInfo(params)
     },
     getLastInteractionId: () => lastInteractionId,
     progress$: ledgerSubjects.onProgressSubject.asObservable(),
