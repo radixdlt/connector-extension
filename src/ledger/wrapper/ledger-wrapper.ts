@@ -2,6 +2,7 @@ import TransportWebHID from '@ledgerhq/hw-transport-webhid'
 import {
   DerivedPublicKey,
   KeyParameters,
+  LedgerDeviceIdRequest,
   LedgerImportOlympiaDeviceRequest,
   LedgerPublicKeyRequest,
   LedgerSignChallengeRequest,
@@ -24,6 +25,7 @@ import { curve25519 } from 'crypto/curve25519'
 import { secp256k1 } from 'crypto/secp256k1'
 import { blakeHashHexSync } from 'crypto/blake2b'
 import { parseSignAuth } from './parse-sign-auth'
+import Transport from '@ledgerhq/hw-transport'
 
 export type LedgerOptions = Partial<{
   transport: typeof TransportWebHID
@@ -109,11 +111,29 @@ export const LedgerWrapper = ({
   transport = TransportWebHID,
   ledgerSubjects = LedgerSubjects(),
 }: LedgerOptions) => {
+  let currentTransport: Transport | undefined
+  let lastInteractionId: string | undefined
   const setProgressMessage = (message: string) =>
     ledgerSubjects.onProgressSubject.next(message)
 
-  const createLedgerTransport = () =>
-    ResultAsync.fromPromise(
+  const createLedgerTransport = (): ResultAsync<
+    { closeTransport: () => ResultAsync<void, string>; exchange: ExchangeFn },
+    string
+  > => {
+    if (currentTransport) {
+      setProgressMessage('Finalizing existing ledger communication')
+      return ResultAsync.fromPromise(
+        currentTransport.close().then(() => {
+          currentTransport = undefined
+        }),
+        (e) => {
+          logger.error(e)
+          return 'failedToCloseExistingTransport'
+        }
+      ).andThen(() => createLedgerTransport())
+    }
+
+    return ResultAsync.fromPromise(
       transport.list(),
       () => LedgerErrorCode.FailedToListLedgerDevices
     )
@@ -139,6 +159,7 @@ export const LedgerWrapper = ({
           transport.create(),
           () => LedgerErrorCode.FailedToCreateTransport
         ).map((transport) => {
+          currentTransport = transport
           setProgressMessage('Creating Ledger device connection')
           const exchange: ExchangeFn = (
             command: LedgerInstructionCode,
@@ -167,12 +188,17 @@ export const LedgerWrapper = ({
           return {
             closeTransport: () => {
               setProgressMessage('')
-              return ResultAsync.fromSafePromise(transport.close())
+              currentTransport = undefined
+              return ResultAsync.fromPromise(
+                transport.close(),
+                () => 'failedClosingTransport'
+              )
             },
             exchange,
           }
         })
       )
+  }
 
   const wrapDataExchange = (
     fn: (exchangeFn: ExchangeFn) => ResultAsync<any, string>
@@ -551,11 +577,27 @@ export const LedgerWrapper = ({
     )
 
   return {
-    signAuth,
-    getPublicKeys,
-    getDeviceInfo,
-    signTransaction,
-    getOlympiaDeviceInfo,
+    signAuth: (params: LedgerSignChallengeRequest) => {
+      lastInteractionId = params.interactionId
+      return signAuth(params)
+    },
+    getPublicKeys: (params: LedgerPublicKeyRequest) => {
+      lastInteractionId = params.interactionId
+      return getPublicKeys(params)
+    },
+    getDeviceInfo: (params: LedgerDeviceIdRequest) => {
+      lastInteractionId = params.interactionId
+      return getDeviceInfo()
+    },
+    signTransaction: (params: LedgerSignTransactionRequest) => {
+      lastInteractionId = params.interactionId
+      return signTransaction(params)
+    },
+    getOlympiaDeviceInfo: (params: LedgerImportOlympiaDeviceRequest) => {
+      lastInteractionId = params.interactionId
+      return getOlympiaDeviceInfo(params)
+    },
+    getLastInteractionId: () => lastInteractionId,
     progress$: ledgerSubjects.onProgressSubject.asObservable(),
   }
 }

@@ -81,6 +81,9 @@ export const Ledger = () => {
         sendMessage(
           createMessage.confirmationSuccess('ledger', message.messageId)
         )
+        if (message.data.interactionId === currentMessage?.data.interactionId) {
+          return
+        }
         setCurrentMessage(message)
       }
     }

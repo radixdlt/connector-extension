@@ -22,6 +22,9 @@ export const ImportOlympiaDevice = ({
     setError(undefined)
     setIsLoading(true)
     const olympiaDevice = await ledger.getOlympiaDeviceInfo(message)
+    if (message.interactionId !== ledger.getLastInteractionId()) {
+      return
+    }
     if (olympiaDevice.isOk()) {
       respond(createLedgerOlympiaDeviceResponse(message, olympiaDevice.value))
     } else {

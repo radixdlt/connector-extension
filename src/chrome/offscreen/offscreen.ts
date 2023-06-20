@@ -1,8 +1,6 @@
 import { config } from 'config'
 import { ConnectorClient } from 'connector/connector-client'
-import {
-  LedgerResponse,
-} from 'ledger/schemas'
+import { LedgerResponse } from 'ledger/schemas'
 import { logger } from 'utils/logger'
 import { Queue } from 'queues/queue'
 import { Worker } from 'queues/worker'
@@ -11,12 +9,7 @@ import { createMessage } from 'chrome/messages/create-message'
 import { OffscreenMessageHandler } from 'chrome/offscreen/message-handler'
 import { MessageClient } from 'chrome/messages/message-client'
 import { Message } from 'chrome/messages/_types'
-import {
-  filter,
-  switchMap,
-  timer,
-  withLatestFrom,
-} from 'rxjs'
+import { filter, switchMap, timer, withLatestFrom } from 'rxjs'
 
 const messageRouter = MessagesRouter({ logger })
 
