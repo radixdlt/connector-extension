@@ -74,17 +74,20 @@ export const BackgroundMessageHandler =
       }
 
       case messageDiscriminator.convertPopupToTab: {
-        ledgerTabWatcher.restoreInitial()
-
-        return createAndFocusTab(config.popup.pages.ledger)
-          .andThen((tab) =>
-            ledgerTabWatcher
-              .setWatchedTab(tab.id!, message.data.data)
-              .map(() => tab)
+        return ledgerTabWatcher
+          .restoreInitial()
+          .andThen(() =>
+            createAndFocusTab(config.popup.pages.ledger)
+              .andThen((tab) =>
+                ledgerTabWatcher
+                  .setWatchedTab(tab.id!, message.data.data)
+                  .map(() => tab)
+              )
+              .andThen((tab) => sendMessageToTab(tab.id!, message.data))
+              .map(() => ({ sendConfirmation: false }))
+              .mapErr(() => ({ reason: 'failedToOpenLedgerTab' }))
           )
-          .andThen((tab) => sendMessageToTab(tab.id!, message.data))
-          .map(() => ({ sendConfirmation: false }))
-          .mapErr(() => ({ reason: 'failedToOpenLedgerTab' }))
+          .mapErr(() => ({ reason: 'failedRestoringTabWatcher' }))
       }
 
       case messageDiscriminator.closeLedgerTab: {
