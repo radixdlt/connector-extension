@@ -41,7 +41,7 @@
     "react-qr-code": "^2.0.8",
     "react-use": "^17.4.0",
     "rxjs": "^7.5.7",
-    "tslog": "^4.7.1",
+    "tslog": "^4.8.2",
     "zod": "^3.19.1"
   },
   "devDependencies": {
