@@ -19,9 +19,6 @@ import {
 import { encodeDerivationPath } from './encode-derivation-path'
 import { getDataLength } from './utils'
 import { LedgerSubjects } from './subjects'
-import { curve25519 } from 'crypto/curve25519'
-import { secp256k1 } from 'crypto/secp256k1'
-import { blakeHashHexSync } from 'crypto/blake2b'
 import { parseSignAuth } from './parse-sign-auth'
 import Transport from '@ledgerhq/hw-transport'
 
@@ -41,49 +38,8 @@ export type ExchangeFn = (
   additionalParams?: AdditionalExchangeParams
 ) => ResultAsync<string, string>
 
-const getCurveConfig = ({ curve }: KeyParameters) => {
-  const verifyCurve25519Signature = ({
-    message,
-    signature,
-    publicKey,
-  }: {
-    message: string
-    signature: string
-    publicKey: string
-  }) => {
-    try {
-      // @ts-ignore: incorrect type definition in EC lib
-      const pub = curve25519.keyFromPublic(publicKey, 'hex')
-      const isValid = pub.verify(message, signature)
-      return isValid ? ok(undefined) : err('invalidSignature')
-    } catch (error) {
-      logger.error('Error verifying signature', error)
-      return err('invalidPublicKey')
-    }
-  }
-
-  const verifySecp256k1Signature = ({
-    message,
-    signature,
-    publicKey,
-  }: {
-    message: string
-    signature: string
-    publicKey: string
-  }) => {
-    try {
-      const pub = secp256k1.keyFromPublic(publicKey, 'hex')
-      const isValid = pub.verify(message, {
-        r: signature.slice(2, 66),
-        s: signature.slice(66),
-      })
-      return isValid ? ok(undefined) : err('invalidSignature')
-    } catch (error) {
-      logger.error('Error verifying signature', error)
-      return err('invalidPublicKey')
-    }
-  }
-  return {
+const getCurveConfig = ({ curve }: KeyParameters) =>
+  ({
     curve25519: {
       publicKeyByteCount: 32,
       signatureByteCount: 64,
@@ -91,7 +47,6 @@ const getCurveConfig = ({ curve }: KeyParameters) => {
       signAuth: LedgerInstructionCode.SignAuthEd25519,
       getPublicKey: LedgerInstructionCode.GetPubKeyEd25519,
       signTxSmart: LedgerInstructionCode.SignTxEd255519Smart,
-      verifySignature: verifyCurve25519Signature,
     },
     secp256k1: {
       publicKeyByteCount: 33,
@@ -100,10 +55,8 @@ const getCurveConfig = ({ curve }: KeyParameters) => {
       signAuth: LedgerInstructionCode.SignAuthSecp256k1,
       getPublicKey: LedgerInstructionCode.GetPubKeySecp256k1,
       signTxSmart: LedgerInstructionCode.SignTxSecp256k1Smart,
-      verifySignature: verifySecp256k1Signature,
     },
-  }[curve]
-}
+  }[curve])
 
 export const LedgerWrapper = ({
   transport = TransportWebHID,
@@ -254,14 +207,12 @@ export const LedgerWrapper = ({
       signatureByteCount,
       publicKeyByteCount,
       signAuth: signAuthCommand,
-      verifySignature,
     } = getCurveConfig(signer)
     const command = params?.mode === 'summary' ? signTxSmart : signTx
 
     const encodedDerivationPath = encodeDerivationPath(signer.derivationPath)
     return {
       command,
-      verifySignature,
       signAuthCommand,
       encodedDerivationPath,
       signatureByteCount,
@@ -361,7 +312,6 @@ export const LedgerWrapper = ({
                 )
 
                 const {
-                  verifySignature,
                   signAuthCommand,
                   signatureByteCount,
                   publicKeyByteCount,
@@ -381,16 +331,6 @@ export const LedgerWrapper = ({
                     )
 
                     const signature = result.slice(0, signatureByteCount * 2)
-
-                    const isValid = verifySignature({
-                      message: hashToSign,
-                      publicKey,
-                      signature,
-                    })
-
-                    if (isValid.isErr()) {
-                      return err(isValid.error)
-                    }
 
                     return ok({
                       signature,
@@ -435,7 +375,6 @@ export const LedgerWrapper = ({
                 signatureByteCount,
                 publicKeyByteCount,
                 encodedDerivationPath,
-                verifySignature,
               } = parseSignerParams(signer, params)
               const digestLength = 32 * 2
               return signersAcc.andThen((previousValue) => {
@@ -479,18 +418,6 @@ export const LedgerWrapper = ({
                       sigOffset,
                       sigOffset + 2 * publicKeyByteCount
                     )
-
-                    const isValid = verifySignature({
-                      message: blakeHashHexSync(
-                        params.compiledTransactionIntent
-                      ),
-                      publicKey,
-                      signature,
-                    })
-
-                    if (isValid.isErr()) {
-                      return err(isValid.error)
-                    }
 
                     if (signature.length !== signatureByteCount * 2) {
                       logger.error(
