@@ -1,16 +1,18 @@
+import { createLedgerErrorResponse } from './../../ledger/schemas'
 import { sessionStore } from 'chrome/helpers/set-item'
 import { createMessage } from 'chrome/messages/create-message'
 import { sendMessage } from 'chrome/messages/send-message'
+import { LedgerRequest } from 'ledger/schemas'
 
 export const LedgerTabWatcher = () => ({
   getCurrentlyWatched: () =>
     sessionStore
       .getSingleItem('watchedTab')
       .mapErr(() => ({ reason: 'failedToGetWatchedTab' })),
-  setWatchedTab: (_tabId: number, _messageId: string) =>
+  setWatchedTab: (tabId: number, request: LedgerRequest) =>
     sessionStore.setSingleItem('watchedTab', {
-      tabId: _tabId,
-      messageId: _messageId,
+      tabId,
+      request,
     }),
   triggerTabRemoval: async (justRemovedTabId: number) => {
     const watchedTab = await sessionStore.getSingleItem('watchedTab')
@@ -18,16 +20,16 @@ export const LedgerTabWatcher = () => ({
       return
     }
 
-    const { tabId, messageId } = watchedTab.value
+    const { tabId, request } = watchedTab.value
 
-    if (!messageId || !tabId || justRemovedTabId !== tabId) {
+    if (!tabId || justRemovedTabId !== tabId) {
       return
     }
 
     sendMessage(
-      createMessage.confirmationError('ledger', messageId, {
-        reason: 'tabClosed',
-      })
+      createMessage.ledgerResponse(
+        createLedgerErrorResponse(request, 'tabClosed')
+      )
     )
 
     sessionStore.setSingleItem('watchedTab', {})

@@ -26,6 +26,10 @@ export const SignChallenge = ({
     setIsLoading(true)
     const signedTx = await ledger.signAuth(message)
 
+    if (message.interactionId !== ledger.getLastInteractionId()) {
+      return
+    }
+
     if (signedTx.isOk()) {
       respond(
         createSignedResponse(
@@ -35,7 +39,7 @@ export const SignChallenge = ({
       )
     } else {
       if (signedTx.error === LedgerErrorCode.BadTxSignUserRejected) {
-        respond(createLedgerErrorResponse(message, signedTx.error))
+        respond(createLedgerErrorResponse(message, 'BadTxSignUserRejected'))
       }
       setError(signedTx.error)
       setIsLoading(false)

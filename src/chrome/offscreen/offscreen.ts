@@ -1,11 +1,6 @@
-import { LedgerRequestSchema } from './../../ledger/schemas'
 import { config } from 'config'
 import { ConnectorClient } from 'connector/connector-client'
-import {
-  LedgerRequest,
-  LedgerResponse,
-  createLedgerErrorResponse,
-} from 'ledger/schemas'
+import { LedgerResponse } from 'ledger/schemas'
 import { logger } from 'utils/logger'
 import { Queue } from 'queues/queue'
 import { Worker } from 'queues/worker'
@@ -14,18 +9,7 @@ import { createMessage } from 'chrome/messages/create-message'
 import { OffscreenMessageHandler } from 'chrome/offscreen/message-handler'
 import { MessageClient } from 'chrome/messages/message-client'
 import { Message } from 'chrome/messages/_types'
-import {
-  NEVER,
-  Observable,
-  Subject,
-  catchError,
-  filter,
-  finalize,
-  switchMap,
-  timer,
-  withLatestFrom,
-} from 'rxjs'
-import { errAsync } from 'neverthrow'
+import { filter, switchMap, timer, withLatestFrom } from 'rxjs'
 
 const messageRouter = MessagesRouter({ logger })
 
@@ -96,54 +80,6 @@ const incomingWalletMessageQueue = Queue<Record<string, any>>({
   ),
 })
 
-const walletToLedgerSubject = new Subject<LedgerRequest>()
-
-walletToLedgerSubject
-  .asObservable()
-  .pipe(
-    switchMap((message) =>
-      new Observable((subscriber) => {
-        logger.debug(
-          '🪪 -> 📒: walletToLedgerSubject',
-          message.interactionId,
-          message.discriminator
-        )
-        messageClient
-          .sendMessageAndWaitForConfirmation(createMessage.closeLedgerTab())
-          .andThen(() => {
-            try {
-              LedgerRequestSchema.parse(message)
-            } catch (e) {
-              subscriber.error('failedParsingJSON')
-              return errAsync({ reason: 'failedParsingJSON' })
-            }
-
-            return messageClient.sendMessageAndWaitForConfirmation(
-              createMessage.walletToLedger('offScreen', message)
-            )
-          })
-          .mapErr((error) => subscriber.error(error.reason))
-      }).pipe(
-        catchError((error) => {
-          logger.debug('🪪 -> 📒: walletToLedgerSubject error', error)
-          ledgerToWalletQueue.add(
-            createLedgerErrorResponse(message, error),
-            message.interactionId
-          )
-          return NEVER
-        }),
-        finalize(() => {
-          logger.debug('🪪 -> 📒: walletToLedgerSubject finalize', message)
-          ledgerToWalletQueue.add(
-            createLedgerErrorResponse(message, 'ledgerRequestCancelled'),
-            message.interactionId
-          )
-        })
-      )
-    )
-  )
-  .subscribe()
-
 connectorClient.connected$.subscribe((connected) => {
   if (connected) {
     ledgerToWalletQueue.start()
@@ -159,7 +95,6 @@ const messageClient = MessageClient(
     connectorClient,
     dAppRequestQueue,
     ledgerToWalletQueue,
-    walletToLedgerSubject,
     incomingWalletMessageQueue,
     messageRouter,
     logger,

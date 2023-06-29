@@ -1,5 +1,5 @@
 import { createPopupWindow } from 'chrome/helpers/create-popup-window'
-import { focusPopupWindow } from 'chrome/helpers/focus-popup-window'
+import { focusWindow } from 'chrome/helpers/focus-window'
 import { getExtensionTabsByUrl } from 'chrome/helpers/get-extension-tabs-by-url'
 import { getPopupId } from 'chrome/helpers/get-popup-id'
 import { setPopupId } from 'chrome/helpers/set-popup-id'
@@ -13,7 +13,7 @@ export const openParingPopup = () =>
     .andThen((isPopupWindowOpen) =>
       getActiveWindow().andThen(({ width, left, height, top }) =>
         isPopupWindowOpen
-          ? getPopupId().andThen(focusPopupWindow)
+          ? getPopupId().andThen(focusWindow)
           : createPopupWindow(config.popup.pages.pairing, {
               width,
               left,

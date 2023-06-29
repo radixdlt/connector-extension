@@ -1,4 +1,4 @@
-import { z, literal, object, string, union, number, boolean } from 'zod'
+import { z, literal, object, string, union, boolean } from 'zod'
 
 const curve = union([literal('curve25519'), literal('secp256k1')])
 
@@ -19,7 +19,6 @@ const ledgerDiscriminator = union([
   literal('derivePublicKeys'),
   literal('signTransaction'),
   literal('signChallenge'),
-  literal('importOlympiaDevice'),
 ])
 
 export const LedgerDeviceSchema = object({
@@ -83,23 +82,12 @@ export type LedgerSignChallengeRequest = z.infer<
   typeof LedgerSignChallengeRequestSchema
 >
 
-export const LedgerImportOlympiaDeviceRequestSchema = object({
-  interactionId: string(),
-  discriminator: literal('importOlympiaDevice'),
-  derivationPaths: string().array(),
-})
-
-export type LedgerImportOlympiaDeviceRequest = z.infer<
-  typeof LedgerImportOlympiaDeviceRequestSchema
->
-
 export const LedgerRequestSchema = union([
   LedgerDeviceIdRequestSchema,
   LedgerPublicKeyRequestSchema,
   LedgerSignTransactionRequestSchema,
   LedgerSignChallengeRequestSchema,
-  LedgerImportOlympiaDeviceRequestSchema,
-])
+]).describe('LedgerRequest')
 
 export type LedgerRequest = z.infer<typeof LedgerRequestSchema>
 
@@ -114,15 +102,6 @@ export const LedgerDeviceIdResponseSchema = object({
 
 export type LedgerDeviceIdResponse = z.infer<
   typeof LedgerDeviceIdResponseSchema
->
-
-export const OlympiaDerivedPublicKeySchema = object({
-  path: string(),
-  publicKey: string(),
-})
-
-export type OlympiaDerivedPublicKey = z.infer<
-  typeof OlympiaDerivedPublicKeySchema
 >
 
 export const DerivedPublicKeySchema = object({
@@ -170,25 +149,10 @@ export type LedgerSignChallengeResponse = z.infer<
   typeof LedgerSignChallengeResponseSchema
 >
 
-export const LedgerImportOlympiaDeviceResponseSchema = object({
-  interactionId: string(),
-  discriminator: literal('importOlympiaDevice'),
-  success: object({
-    model: ledgerDeviceModel,
-    id: string(),
-    derivedPublicKeys: OlympiaDerivedPublicKeySchema.array(),
-  }),
-})
-
-export type LedgerImportOlympiaDeviceResponse = z.infer<
-  typeof LedgerImportOlympiaDeviceResponseSchema
->
-
 export const LedgerErrorResponseSchema = object({
   interactionId: string(),
   discriminator: ledgerDiscriminator,
   error: object({
-    code: number(),
     message: string(),
   }),
 })
@@ -200,7 +164,6 @@ export const LedgerResponseSchema = union([
   LedgerPublicKeyResponseSchema,
   LedgerSignTransactionResponseSchema,
   LedgerSignChallengeResponseSchema,
-  LedgerImportOlympiaDeviceResponseSchema,
   LedgerErrorResponseSchema,
 ])
 
@@ -212,7 +175,6 @@ export const isLedgerRequest = (message: any): message is LedgerRequest =>
     'derivePublicKeys',
     'signTransaction',
     'signChallenge',
-    'importOlympiaDevice',
   ].includes(message?.discriminator)
 
 export const isDeviceIdRequest = (
@@ -234,11 +196,6 @@ export const isSignChallengeRequest = (
   message?: LedgerRequest
 ): message is LedgerSignChallengeRequest =>
   message?.discriminator === 'signChallenge'
-
-export const isImportOlympiaDeviceRequest = (
-  message?: LedgerRequest
-): message is LedgerImportOlympiaDeviceRequest =>
-  message?.discriminator === 'importOlympiaDevice'
 
 export const createLedgerDeviceIdResponse = (
   {
@@ -271,28 +228,6 @@ export const createSignedResponse = (
   success,
 })
 
-export const createLedgerOlympiaDeviceResponse = (
-  {
-    interactionId,
-    discriminator,
-  }: Pick<LedgerImportOlympiaDeviceRequest, 'interactionId' | 'discriminator'>,
-  data: {
-    id: string
-    model: string
-    derivedPublicKeys: {
-      publicKey: string
-      path: string
-    }[]
-  }
-) => ({
-  interactionId,
-  discriminator,
-  success: {
-    ...data,
-    model: ledgerModel[data.model],
-  },
-})
-
 export const createLedgerPublicKeyResponse = (
   {
     interactionId,
@@ -315,7 +250,6 @@ export const createLedgerErrorResponse = (
   interactionId,
   discriminator,
   error: {
-    code: 0,
     message,
   },
 })

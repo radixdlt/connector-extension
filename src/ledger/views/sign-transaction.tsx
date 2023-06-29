@@ -26,6 +26,10 @@ export const SignTransaction = ({
     setIsLoading(true)
     const signedTx = await ledger.signTransaction(message)
 
+    if (message.interactionId !== ledger.getLastInteractionId()) {
+      return
+    }
+
     if (signedTx.isOk()) {
       respond(
         createSignedResponse(
@@ -35,7 +39,7 @@ export const SignTransaction = ({
       )
     } else {
       if (signedTx.error === LedgerErrorCode.BadTxSignUserRejected) {
-        respond(createLedgerErrorResponse(message, signedTx.error))
+        respond(createLedgerErrorResponse(message, 'BadTxSignUserRejected'))
       }
       setError(signedTx.error)
       setIsLoading(false)

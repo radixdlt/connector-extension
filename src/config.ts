@@ -99,8 +99,8 @@ export const config = {
     url: 'src/chrome/dev-tools/dev-tools.html',
   },
   popup: {
-    width: 375,
-    height: 559,
+    width: 400,
+    height: 600,
     offsetTop: 0,
     pages: {
       pairing: 'src/pairing/index.html',
