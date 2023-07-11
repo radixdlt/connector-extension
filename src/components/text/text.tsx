@@ -1,5 +1,5 @@
-import { mb } from '../variants/mb'
 import { styled } from '../../stitches.config'
+import { m } from 'components/variants'
 
 export const Text = styled('p', {
   variants: {
@@ -65,40 +65,6 @@ export const Text = styled('p', {
         display: 'inline',
       },
     },
-    my: {
-      xsmall: {
-        my: '$xs',
-      },
-      small: {
-        my: '$sm',
-      },
-      medium: {
-        my: '$md',
-      },
-      large: {
-        my: '$lg',
-      },
-      none: {
-        my: '$0',
-      },
-    },
-    ml: {
-      xsmall: {
-        ml: '$xs',
-      },
-      small: {
-        ml: '$sm',
-      },
-      medium: {
-        ml: '$md',
-      },
-      large: {
-        ml: '$lg',
-      },
-      none: {
-        ml: '$0',
-      },
-    },
-    mb,
+    ...m,
   },
 })

@@ -31,6 +31,14 @@ export const Box = styled('div', {
         maxWidth: '500px',
       },
     },
+    bg: {
+      dark: {
+        backgroundColor: 'rgba(0,0,0,0.5)',
+      },
+      white: {
+        backgroundColor: 'white',
+      },
+    },
     p: {
       xsmall: {
         p: '$xs',

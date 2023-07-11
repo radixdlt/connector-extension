@@ -52,7 +52,7 @@ export const NewHardwareWallet = ({
 
       <ErrorText error={error} />
       {!isLoading && (
-        <Button full mt="large" onClick={getDeviceInfo}>
+        <Button full mt="lg" onClick={getDeviceInfo}>
           Retry
         </Button>
       )}
