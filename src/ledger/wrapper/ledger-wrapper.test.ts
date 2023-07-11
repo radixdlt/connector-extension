@@ -158,8 +158,8 @@ describe('Ledger Babylon Wrapper', () => {
       if (result.isErr()) throw result.error
 
       expect(result.value).toEqual({
-        deviceId: '305495ba0fdfd3c400568ce7a2ff',
-        model: '00',
+        id: '305495ba0fdfd3c400568ce7a2ff',
+        model: 'nanoS',
       })
     })
   })

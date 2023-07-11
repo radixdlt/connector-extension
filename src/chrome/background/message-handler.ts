@@ -10,10 +10,9 @@ import {
 } from '../messages/_types'
 import { getConnectionPassword as getConnectionPasswordFn } from '../helpers/get-connection-password'
 import { config } from 'config'
-import { sendMessageToTab } from 'chrome/helpers/send-message-to-tab'
-import { createAndFocusTab } from 'chrome/helpers/create-and-focus-tab'
 import { LedgerTabWatcher } from './ledger-tab-watcher'
-import { createOrFocusPopupWindow } from 'chrome/helpers/create-or-focus-popup-window'
+import { ensureTab } from 'chrome/helpers/ensure-tab'
+import { focusTabByUrl } from 'chrome/helpers/focus-tab'
 
 export type BackgroundMessageHandler = ReturnType<
   typeof BackgroundMessageHandler
@@ -73,23 +72,6 @@ export const BackgroundMessageHandler =
         }))
       }
 
-      case messageDiscriminator.convertPopupToTab: {
-        return ledgerTabWatcher
-          .restoreInitial()
-          .andThen(() =>
-            createAndFocusTab(config.popup.pages.ledger)
-              .andThen((tab) =>
-                ledgerTabWatcher
-                  .setWatchedTab(tab.id!, message.data.data)
-                  .map(() => tab),
-              )
-              .andThen((tab) => sendMessageToTab(tab.id!, message.data))
-              .map(() => ({ sendConfirmation: false }))
-              .mapErr(() => ({ reason: 'failedToOpenLedgerTab' })),
-          )
-          .mapErr(() => ({ reason: 'failedRestoringTabWatcher' }))
-      }
-
       case messageDiscriminator.closeLedgerTab: {
         return ledgerTabWatcher
           .getCurrentlyWatched()
@@ -110,11 +92,19 @@ export const BackgroundMessageHandler =
           .mapErr(() => ({ reason: 'failedToCloseLedgerTab' }))
       }
 
+      case messageDiscriminator.focusLedgerTab: {
+        return focusTabByUrl(config.popup.pages.ledger)
+          .map(() => ({
+            sendConfirmation: false,
+          }))
+          .mapErr(() => ({ reason: 'failedToFocusLedgerTab' }))
+      }
+
       case messageDiscriminator.walletToLedger:
         return ledgerTabWatcher
           .restoreInitial()
           .andThen(() =>
-            createOrFocusPopupWindow(config.popup.pages.ledger)
+            ensureTab(config.popup.pages.ledger)
               .andThen((tab) =>
                 ledgerTabWatcher
                   .setWatchedTab(tab.id!, message.data)
@@ -126,7 +116,7 @@ export const BackgroundMessageHandler =
                   tab.id,
                 ),
               )
-              .map(() => ({ sendConfirmation: true }))
+              .map(() => ({ sendConfirmation: false }))
               .mapErr(() => ({ reason: 'failedToOpenLedgerTab' })),
           )
           .mapErr(() => ({ reason: 'failedRestoringTabWatcher' }))

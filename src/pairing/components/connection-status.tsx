@@ -67,6 +67,7 @@ export const ConnectionStatus = ({ onForgetWallet }: ConnectionStatusProps) => {
   return (
     <>
       <Box
+        py="small"
         flex="col"
         justify="between"
         style={

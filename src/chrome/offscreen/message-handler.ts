@@ -84,7 +84,7 @@ export const OffscreenMessageHandler = (input: {
                       'requestCancelSuccess',
                       interactionId,
                     ),
-                    tabId!,
+                    tabId,
                   ),
                 )
 

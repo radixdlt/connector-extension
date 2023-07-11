@@ -23,8 +23,8 @@ export const WalletSimulator = () => {
   const messages = {
     'Get UDI': getDeviceInfoPayload(),
     'Get Public Key': getDerivePublicKeyPayload(),
-    'Sign "Set Metadata" TX (Secp256k1)': getSignSecp256k1TransactionPayload(),
-    'Sign "Create Account" TX (Curve25519)': getSignEd25519TransactionPayload(),
+    'Sign TX (Secp256k1)': getSignSecp256k1TransactionPayload(),
+    'Sign TX (Curve25519)': getSignEd25519TransactionPayload(),
     'Sign Auth (Curve25519)': getSignEd222519ChallengePayload(),
     'Sign Auth (Secp256k1)': getSignSecp256k1ChallengePayload(),
   }

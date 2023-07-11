@@ -7,10 +7,10 @@ export const messageDiscriminator = {
   setConnectionPassword: 'setConnectionPassword',
   dAppRequest: 'dAppRequest',
   closeLedgerTab: 'closeLedgerTab',
+  focusLedgerTab: 'focusLedgerTab',
   closeDappTab: 'closeDappTab',
   ledgerResponse: 'ledgerResponse',
   walletToLedger: 'walletToLedger',
-  convertPopupToTab: 'convertPopupToTab',
   walletResponse: 'walletResponse',
   toContentScript: 'toContentScript',
   walletMessage: 'walletMessage',
@@ -75,11 +75,6 @@ export type Messages = {
     { messageEvent: MessageLifeCycleEvent; interactionId: string }
   >
 
-  [messageDiscriminator.convertPopupToTab]: MessageBuilder<
-    MessageDiscriminator['convertPopupToTab'],
-    { data: Messages['walletToLedger'] }
-  >
-
   [messageDiscriminator.getConnectionPassword]: MessageBuilder<
     MessageDiscriminator['getConnectionPassword'],
     {}
@@ -106,6 +101,10 @@ export type Messages = {
   >
   [messageDiscriminator.closeLedgerTab]: MessageBuilder<
     MessageDiscriminator['closeLedgerTab'],
+    {}
+  >
+  [messageDiscriminator.focusLedgerTab]: MessageBuilder<
+    MessageDiscriminator['focusLedgerTab'],
     {}
   >
   [messageDiscriminator.closeDappTab]: MessageBuilder<

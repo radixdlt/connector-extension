@@ -32,6 +32,12 @@ export type AdditionalExchangeParams = {
   instructionClass?: LedgerInstructionClass
 }
 
+const ledgerModel: Record<string, string> = {
+  '00': 'nanoS',
+  '01': 'nanoS+',
+  '02': 'nanoX',
+}
+
 export type ExchangeFn = (
   command: LedgerInstructionCode,
   data?: string,
@@ -261,8 +267,8 @@ export const LedgerWrapper = ({
     wrapDataExchange((exchange) =>
       exchange(LedgerInstructionCode.GetDeviceId).andThen((deviceId) =>
         exchange(LedgerInstructionCode.GetDeviceModel).map((model) => ({
-          deviceId,
-          model,
+          id: deviceId,
+          model: ledgerModel[model],
         })),
       ),
     )
@@ -301,7 +307,7 @@ export const LedgerWrapper = ({
       exchange(LedgerInstructionCode.GetDeviceId)
         .andThen(ensureCorrectDeviceId(params.ledgerDevice.id))
         .map(() => parseSignAuth(params))
-        .andThen(({ challengeData, hashToSign }) =>
+        .andThen(({ challengeData }) =>
           params.signers.reduce(
             (acc: ResultAsync<SignatureOfSigner[], string>, signer, index) =>
               acc.andThen((signatures) => {

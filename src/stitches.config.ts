@@ -62,6 +62,7 @@ export const {
       borderColor: colors.grey,
       grey: colors.grey,
       muted: colors.darkGrey,
+      radixGrey1: colors.radixGrey1,
       radixGrey2: colors.radixGrey2,
     },
     fontSizes: {
@@ -141,7 +142,7 @@ export const {
 })
 
 globalCss({
-  '*:not(textarea,pre), body': {
+  '*:not(textarea,pre,strong), body': {
     fontFamily: 'IBM Plex Sans',
     fontWeight: '400',
     margin: 0,

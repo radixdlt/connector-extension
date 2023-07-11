@@ -1,11 +1,8 @@
 import { styled } from '../../stitches.config'
-import { mb, mt } from '../variants'
+import { m } from '../variants'
 
 export const Box = styled('div', {
-  borderWidth: '$sm',
-  backgroundColor: 'transparent',
   boxSizing: 'border-box',
-  py: '$sm',
   variants: {
     full: {
       true: {
@@ -28,7 +25,18 @@ export const Box = styled('div', {
     },
     maxWidth: {
       medium: {
-        maxWidth: '500px',
+        maxWidth: '600px',
+      },
+    },
+    radius: {
+      small: {
+        borderRadius: '8px',
+      },
+      medium: {
+        borderRadius: '12px',
+      },
+      large: {
+        borderRadius: '16px',
       },
     },
     bg: {
@@ -163,7 +171,6 @@ export const Box = styled('div', {
       center: { textAlign: 'center' },
       right: { textAlign: 'right' },
     },
-    mb,
-    mt,
+    ...m,
   },
 })

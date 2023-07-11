@@ -36,9 +36,17 @@ export const Text = styled('p', {
       large: {
         fontSize: '$lg',
       },
+      '2xl': {
+        fontSize: '$2xl',
+      },
+      '4xl': {
+        fontSize: '$4xl',
+        fontWeight: '700',
+      },
     },
     color: {
       radixGrey2: { color: '$radixGrey2' },
+      radixGrey1: { color: '$radixGrey1' },
     },
     bold: {
       true: {
