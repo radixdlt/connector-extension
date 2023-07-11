@@ -35,7 +35,7 @@ const handleStorageChange = (changes: {
 }) => {
   if (changes['connectionPassword'])
     return handleConnectionPasswordChange(
-      changes['connectionPassword']?.newValue
+      changes['connectionPassword']?.newValue,
     )
 }
 
@@ -47,13 +47,13 @@ const messageHandler = MessageClient(
     ledgerTabWatcher: ledgerTabWatcher,
   }),
   'background',
-  { logger: backgroundLogger }
+  { logger: backgroundLogger },
 )
 
 const handleConnectionPasswordChange = (connectionPassword?: string) =>
   messageHandler
     .sendMessageAndWaitForConfirmation(
-      createMessage.setConnectionPassword('background', connectionPassword)
+      createMessage.setConnectionPassword('background', connectionPassword),
     )
     .map(() => {
       setTimeout(() => {
@@ -64,7 +64,7 @@ const handleConnectionPasswordChange = (connectionPassword?: string) =>
 const tabRemovedListener = (tabId: number) => {
   ledgerTabWatcher.triggerTabRemoval(tabId)
   messageHandler.sendMessageAndWaitForConfirmation(
-    createMessage.closeDappTab('background', tabId)
+    createMessage.closeDappTab('background', tabId),
   )
 }
 

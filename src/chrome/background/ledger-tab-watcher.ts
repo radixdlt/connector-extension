@@ -28,8 +28,8 @@ export const LedgerTabWatcher = () => ({
 
     sendMessage(
       createMessage.ledgerResponse(
-        createLedgerErrorResponse(request, 'tabClosed')
-      )
+        createLedgerErrorResponse(request, 'tabClosed'),
+      ),
     )
 
     sessionStore.setSingleItem('watchedTab', {})

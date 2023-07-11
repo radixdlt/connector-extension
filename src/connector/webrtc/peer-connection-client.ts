@@ -38,10 +38,10 @@ export const PeerConnectionClient = (input: {
                   payload: { sdp },
                   source: input.source,
                 }))
-                .map((offer) => subjects.offerSubject.next(offer))
-            )
+                .map((offer) => subjects.offerSubject.next(offer)),
+            ),
           )
-          .subscribe()
+          .subscribe(),
       )
   }
 
@@ -56,13 +56,13 @@ export const PeerConnectionClient = (input: {
   const setLocalDescription = (description: RTCSessionDescriptionInit) =>
     ResultAsync.fromPromise(
       peerConnection.setLocalDescription(description),
-      errorIdentity
+      errorIdentity,
     ).map(() => peerConnection.localDescription!)
 
   const setRemoteDescription = (description: RTCSessionDescriptionInit) =>
     ResultAsync.fromPromise(
       peerConnection.setRemoteDescription(description),
-      errorIdentity
+      errorIdentity,
     )
 
   const createAnswer = () =>
@@ -83,25 +83,25 @@ export const PeerConnectionClient = (input: {
               payload: { sdp },
               source: input.source,
             }))
-            .map((answer) => subjects.answerSubject.next(answer))
-        )
+            .map((answer) => subjects.answerSubject.next(answer)),
+        ),
       )
-      .subscribe()
+      .subscribe(),
   )
 
   subscriptions.add(
-    onRemoteAnswer$.pipe(mergeMap(setRemoteDescription)).subscribe()
+    onRemoteAnswer$.pipe(mergeMap(setRemoteDescription)).subscribe(),
   )
 
   return {
     destroy: () => {
       peerConnection.removeEventListener(
         'signalingstatechange',
-        onSignalingStateChange
+        onSignalingStateChange,
       )
       peerConnection.removeEventListener(
         'onnegotiationneeded',
-        onNegotiationNeeded
+        onNegotiationNeeded,
       )
       peerConnection.close()
       subscriptions.unsubscribe()

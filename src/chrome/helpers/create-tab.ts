@@ -12,5 +12,5 @@ export const createTab = (url: string) =>
         }
         chrome.tabs.onUpdated.addListener(listener)
       })
-    })
+    }),
   )

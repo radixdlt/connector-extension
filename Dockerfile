@@ -1,12 +1,12 @@
-FROM node:18
+FROM node:20
 
 WORKDIR /home/node/app
 
 COPY package.json ./
-COPY yarn.lock ./
+COPY package-lock.json ./
 
-RUN yarn add wrtc
+RUN npm install --ignore-scripts wrtc 
 
 COPY . .
 
-CMD yarn test
+CMD npm run test

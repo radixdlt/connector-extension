@@ -13,7 +13,7 @@ describe('Sealbox', () => {
     expect(iv.toString('hex')).toEqual('beefbeefbeefbeefbeefbeef')
     expect(authTag.toString('hex')).toEqual('e6cfcefa8ea661e3eedc3daa814532c5')
     expect(ciphertext.toString('hex')).toEqual(
-      '2f8525856c67b0bbf31ecc5a51bdbb501b875bda57d1713ce16f33544c8a88'
+      '2f8525856c67b0bbf31ecc5a51bdbb501b875bda57d1713ce16f33544c8a88',
     )
 
     expect(combined.toString('hex')).toEqual(sealboxHex)

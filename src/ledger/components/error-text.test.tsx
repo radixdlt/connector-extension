@@ -15,14 +15,14 @@ describe('ErrorText', () => {
         value={{ switchToFullWindow: () => {} } as any}
       >
         <ErrorText error={error} />,
-      </MessagingContext.Provider>
+      </MessagingContext.Provider>,
     )
 
   describe('GIVEN known error', () => {
     it('should render message instead', () => {
       const { getByText } = renderErrorText('DeviceMismatch')
       expect(
-        getByText(/Make sure you connected correct Ledger device/i)
+        getByText(/Make sure you connected correct Ledger device/i),
       ).toBeTruthy()
     })
 

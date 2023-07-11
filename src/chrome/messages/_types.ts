@@ -38,7 +38,7 @@ export type MessageSource = keyof typeof messageSource
 
 export type MessageBuilder<
   D extends keyof typeof messageDiscriminator,
-  Content
+  Content,
 > = {
   source: MessageSource
   discriminator: D
@@ -59,7 +59,7 @@ export type ConfirmationMessageError = MessageBuilder<
 
 export type SendMessageWithConfirmation<T = any> = (
   message: Message,
-  tabId?: number
+  tabId?: number,
 ) => ResultAsync<
   ConfirmationMessageSuccess<T>['data'],
   ConfirmationMessageError['error']
@@ -145,7 +145,7 @@ export type MessageHandlerOutput = ReturnType<MessageHandler>
 export type MessageHandler = (
   message: Message,
   sendMessageWithConfirmation: SendMessageWithConfirmation,
-  tabId?: number
+  tabId?: number,
 ) => ResultAsync<
   { sendConfirmation: boolean; data?: any },
   ConfirmationMessageError['error']

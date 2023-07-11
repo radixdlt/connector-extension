@@ -6,7 +6,7 @@ export const blake2b = (input: Buffer): ResultAsync<Buffer, Error> => {
   const output = new Uint8Array(32)
   try {
     return okAsync(
-      blake2bHash(output.length).update(new Uint8Array(input)).digest('hex')
+      blake2bHash(output.length).update(new Uint8Array(input)).digest('hex'),
     ).map((hex) => Buffer.from(hex, 'hex'))
   } catch (error) {
     return errAsync(error as Error)

@@ -9,7 +9,7 @@ const createLedgerWrapperWithMockedTransport = (
     input: string
     output: string
   }[],
-  devices: HIDDevice[] = []
+  devices: HIDDevice[] = [],
 ): ReturnType<typeof LedgerWrapper> => {
   let exchangeIndex = 0
 
@@ -20,10 +20,10 @@ const createLedgerWrapperWithMockedTransport = (
         Promise.resolve({
           exchange: (buffer: Buffer) => {
             expect(buffer.toString('hex')).toBe(
-              expectedExchanges[exchangeIndex].input
+              expectedExchanges[exchangeIndex].input,
             )
             return Promise.resolve(
-              Buffer.from(expectedExchanges[exchangeIndex++].output, 'hex')
+              Buffer.from(expectedExchanges[exchangeIndex++].output, 'hex'),
             )
           },
           close: () => Promise.resolve(),
@@ -104,7 +104,7 @@ describe('Ledger Babylon Wrapper', () => {
       const device: HIDDevice = {} as any
       const ledger = createLedgerWrapperWithMockedTransport(
         [],
-        [device, device]
+        [device, device],
       )
       const result: any = await ledger.getDeviceInfo({} as any)
       expect(result.isErr()).toBeTruthy()
@@ -287,7 +287,7 @@ describe('Ledger Babylon Wrapper', () => {
             '19068000002c800003fe8000000a8000020d800005b480000001',
           finalOutput:
             'b6d6f0ddd426dbce9af6dd6480c3e116823aa6ad05c97faef2c3b2ee678620d2e7f6a4887b54d9d7a0114fb1e8c359ed77c1d9db84d8acb0ffc518b90974ba01152fb698abd4a5aa588514bb217cbb20878c118588762bfbd3c3937d394a67915cb98b84f9fba860c2d91580c95b875736342050aa139be941927584908daf689000',
-        })
+        }),
       )
 
       const result = await ledger.signTransaction({
@@ -329,7 +329,7 @@ describe('Ledger Babylon Wrapper', () => {
           encodedDerivationPath: '15058000002c800003fe8000000a8000020d800004d6',
           finalOutput:
             '016c5f7dd77eb25825c814b11f2657b9ffd906dc9be187ff931c841cadb53570ef193a4c6041e615e5c547e171c309402be0e339882109ddd0479201272f52fcdb024483ba4e13195ed3b50b103c502a7799749261ae22a5b20950dd8815f65686455cb98b84f9fba860c2d91580c95b875736342050aa139be941927584908daf689000',
-        })
+        }),
       )
 
       const result = await ledger.signTransaction({

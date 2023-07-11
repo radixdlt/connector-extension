@@ -5,5 +5,5 @@ export const focusWindow = (windowId: number | undefined) =>
     windowId
       ? chrome.windows.update(windowId, { focused: true })
       : Promise.reject(Error('popupId not provided')),
-    (error) => error as Error
+    (error) => error as Error,
   )

@@ -60,13 +60,13 @@ export const ConnectorClient = (input: {
   const triggerRestart$ = triggerRestartSubject.pipe(
     withLatestFrom(shouldConnectSubject),
     map(([, shouldConnect]) => shouldConnect),
-    tap(() => logger?.debug(`🔌🔄 restarting connector client`))
+    tap(() => logger?.debug(`🔌🔄 restarting connector client`)),
   )
   const triggerConnection$ = merge(
     shouldConnectSubject.pipe(
-      distinctUntilChanged((oldValue, newValue) => oldValue === newValue)
+      distinctUntilChanged((oldValue, newValue) => oldValue === newValue),
     ),
-    triggerRestart$
+    triggerRestart$,
   )
 
   const subscriptions = new Subscription()
@@ -107,19 +107,19 @@ export const ConnectorClient = (input: {
         finalize(() => {
           connected.next(false)
           return destroy()
-        })
+        }),
       )
-    })
+    }),
   )
 
   subscriptions.add(
     triggerConnection$
       .pipe(
         switchMap((shouldConnect) =>
-          iif(() => !!shouldConnect, connection$, [])
-        )
+          iif(() => !!shouldConnect, connection$, []),
+        ),
       )
-      .subscribe()
+      .subscribe(),
   )
 
   return {
@@ -127,12 +127,12 @@ export const ConnectorClient = (input: {
     connected: () =>
       ResultAsync.fromPromise(
         firstValueFrom(connected.pipe(filter((value) => value))),
-        errorIdentity
+        errorIdentity,
       ),
     setConnectionPassword: (password: Buffer) =>
       secretsClient.deriveSecretsFromPassword(password),
     connectionPassword$: secretsClient.secrets$.pipe(
-      map((secrets) => secrets?.encryptionKey)
+      map((secrets) => secrets?.encryptionKey),
     ),
     generateConnectionPassword: () => secretsClient.generateConnectionSecrets(),
     connect: () => shouldConnectSubject.next(true),
@@ -143,7 +143,7 @@ export const ConnectorClient = (input: {
       options?: Partial<{
         messageEventCallback: (event: 'messageSent') => void
         timeout: number
-      }>
+      }>,
     ): ResultAsync<
       undefined,
       {

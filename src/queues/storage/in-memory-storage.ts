@@ -28,7 +28,7 @@ export const InMemoryStorage = (): StorageProvider => {
   return {
     getData: <T = any>(key: string) =>
       ResultAsync.fromPromise(getData(key), (error) => error as Error).andThen(
-        (data) => (data ? parseJSON<T>(data) : ok(undefined))
+        (data) => (data ? parseJSON<T>(data) : ok(undefined)),
       ),
     setData: (key: string, data: unknown) =>
       ResultAsync.fromPromise(setData(key, data), (error) => error as Error),

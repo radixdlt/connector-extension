@@ -32,7 +32,7 @@ export const OffscreenMessageHandler = (input: {
   return (
     message: Message,
     sendMessageWithConfirmation: SendMessageWithConfirmation,
-    tabId?: number
+    tabId?: number,
   ): MessageHandlerOutput => {
     switch (message.discriminator) {
       case messageDiscriminator.walletMessage: {
@@ -40,16 +40,16 @@ export const OffscreenMessageHandler = (input: {
           logger.debug(
             '🪪 -> 📒: walletToLedgerSubject',
             message.data.interactionId,
-            message.data.discriminator
+            message.data.discriminator,
           )
 
           return sendMessageWithConfirmation(
-            createMessage.walletToLedger('offScreen', message.data)
+            createMessage.walletToLedger('offScreen', message.data),
           ).map(() => ({ sendConfirmation: false }))
         } else {
           incomingWalletMessageQueue.add(
             message.data,
-            message.data.interactionId
+            message.data.interactionId,
           )
         }
 
@@ -60,7 +60,7 @@ export const OffscreenMessageHandler = (input: {
         const { connectionPassword } = message
         if (connectionPassword) {
           connectorClient.setConnectionPassword(
-            Buffer.from(connectionPassword, 'hex')
+            Buffer.from(connectionPassword, 'hex'),
           )
           connectorClient.connect()
         } else {
@@ -82,10 +82,10 @@ export const OffscreenMessageHandler = (input: {
                     createMessage.sendMessageEventToDapp(
                       'offScreen',
                       'requestCancelSuccess',
-                      interactionId
+                      interactionId,
                     ),
-                    tabId!
-                  )
+                    tabId!,
+                  ),
                 )
 
             return dAppRequestQueue.add(message.data, interactionId)
@@ -100,8 +100,8 @@ export const OffscreenMessageHandler = (input: {
           .andThen((tabId) =>
             sendMessageWithConfirmation(
               createMessage.walletResponse('offScreen', message.data),
-              tabId
-            )
+              tabId,
+            ),
           )
           .map(() => ({ sendConfirmation: true }))
 

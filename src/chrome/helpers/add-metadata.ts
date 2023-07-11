@@ -1,5 +1,5 @@
 export const addMetadata = (
-  message: Record<string, any>
+  message: Record<string, any>,
 ): Record<string, any> => ({
   ...message,
   metadata: {
