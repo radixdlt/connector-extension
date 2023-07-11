@@ -24,7 +24,7 @@ export const PeerConnectionClient = (input: {
   const onRemoteOffer$ = signalingClient.onOffer$
   const onRemoteAnswer$ = signalingClient.onAnswer$
 
-  const onNegotiationNeeded = async () => {
+  const onNegotiationNeeded = () => {
     if (input.shouldCreateOffer)
       subscriptions.add(
         signalingClient.remoteClientConnected$
