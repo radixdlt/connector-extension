@@ -178,22 +178,22 @@ export const isLedgerRequest = (message: any): message is LedgerRequest =>
   ].includes(message?.discriminator)
 
 export const isDeviceIdRequest = (
-  message?: LedgerRequest
+  message?: LedgerRequest,
 ): message is LedgerDeviceIdRequest =>
   message?.discriminator === 'getDeviceInfo'
 
 export const isPublicKeyRequest = (
-  message?: LedgerRequest
+  message?: LedgerRequest,
 ): message is LedgerPublicKeyRequest =>
   message?.discriminator === 'derivePublicKeys'
 
 export const isSignTransactionRequest = (
-  message?: LedgerRequest
+  message?: LedgerRequest,
 ): message is LedgerSignTransactionRequest =>
   message?.discriminator === 'signTransaction'
 
 export const isSignChallengeRequest = (
-  message?: LedgerRequest
+  message?: LedgerRequest,
 ): message is LedgerSignChallengeRequest =>
   message?.discriminator === 'signChallenge'
 
@@ -203,7 +203,7 @@ export const createLedgerDeviceIdResponse = (
     discriminator,
   }: Pick<LedgerDeviceIdRequest, 'interactionId' | 'discriminator'>,
   ledgerDeviceId: string,
-  model: string
+  model: string,
 ): LedgerDeviceIdResponse => ({
   interactionId,
   discriminator,
@@ -221,7 +221,7 @@ export const createSignedResponse = (
     interactionId: string
     discriminator: 'signTransaction' | 'signChallenge'
   },
-  success: SignatureOfSigner[]
+  success: SignatureOfSigner[],
 ) => ({
   interactionId,
   discriminator,
@@ -233,7 +233,7 @@ export const createLedgerPublicKeyResponse = (
     interactionId,
     discriminator,
   }: Pick<LedgerPublicKeyRequest, 'interactionId' | 'discriminator'>,
-  derivedPublicKeys: DerivedPublicKey[]
+  derivedPublicKeys: DerivedPublicKey[],
 ): LedgerPublicKeyResponse => ({
   interactionId,
   discriminator,
@@ -245,7 +245,7 @@ export const createLedgerErrorResponse = (
     interactionId,
     discriminator,
   }: Pick<LedgerRequest, 'interactionId' | 'discriminator'>,
-  message: string
+  message: string,
 ) => ({
   interactionId,
   discriminator,

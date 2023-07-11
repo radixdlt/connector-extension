@@ -34,8 +34,8 @@ export const SignChallenge = ({
       respond(
         createSignedResponse(
           message,
-          signedTx.value
-        ) as LedgerSignChallengeResponse
+          signedTx.value,
+        ) as LedgerSignChallengeResponse,
       )
     } else {
       if (signedTx.error === LedgerErrorCode.BadTxSignUserRejected) {

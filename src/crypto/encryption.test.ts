@@ -17,7 +17,7 @@ describe('Encryption', () => {
     const encrypted = await encrypt(
       Buffer.from(testMessage, 'utf8'),
       Buffer.from(encryptionKey, 'hex'),
-      iv
+      iv,
     )
 
     if (encrypted.isErr()) throw encrypted.error
@@ -27,7 +27,7 @@ describe('Encryption', () => {
     const decrypted = await decrypt(
       encrypted.value.ciphertext,
       Buffer.from(encryptionKey, 'hex'),
-      encrypted.value.iv
+      encrypted.value.iv,
     )
 
     if (decrypted.isErr()) throw decrypted.error
@@ -38,7 +38,7 @@ describe('Encryption', () => {
     const decrypted = await decrypt(
       Buffer.from(testMessage, 'hex'),
       Buffer.from(encryptionKey, 'hex'),
-      Buffer.from('test')
+      Buffer.from('test'),
     )
     expect(decrypted.isErr()).toBe(true)
   })
@@ -48,14 +48,14 @@ describe('Encryption', () => {
     const encrypted = await encrypt(
       Buffer.from(testMessage2, 'utf8'),
       Buffer.from(encryptionKey2, 'hex'),
-      iv
+      iv,
     )
 
     if (encrypted.isErr()) throw encrypted.error
     const decrypted = await decrypt(
       encrypted.value.ciphertext,
       Buffer.from(encryptionKey2, 'hex'),
-      encrypted.value.iv
+      encrypted.value.iv,
     )
 
     if (decrypted.isErr()) throw decrypted.error
@@ -68,7 +68,7 @@ describe('Encryption', () => {
         101, 11, 188, 67, 254, 113, 165, 152, 53, 19, 118, 227, 195, 21, 110,
         83, 145, 197, 78, 134, 31, 238, 50, 160, 207, 34, 245, 16, 26, 135, 105,
         96,
-      ])
+      ]),
     )
     if (keyResult.isErr()) throw keyResult.error
     expect(keyResult.isOk()).toBe(true)

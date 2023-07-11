@@ -35,7 +35,7 @@ export const getDerivePublicKeyPayload = (): LedgerPublicKeyRequest => ({
 })
 
 const getSignChallengePayload = (
-  signers: KeyParameters[]
+  signers: KeyParameters[],
 ): LedgerSignChallengeRequest => ({
   interactionId: crypto.randomUUID(),
   discriminator: 'signChallenge',
@@ -53,7 +53,7 @@ const getSignChallengePayload = (
 
 const getSignTxPayload = (
   signers: KeyParameters[],
-  compiledTransactionIntent: string
+  compiledTransactionIntent: string,
 ): LedgerSignTransactionRequest => ({
   interactionId: crypto.randomUUID(),
   discriminator: 'signTransaction',
@@ -81,7 +81,7 @@ export const getSignEd25519TransactionPayload =
           derivationPath: 'm/44H/1022H/10H/525H/1460H/1H',
         },
       ],
-      compiledTxHex.createAccount
+      compiledTxHex.createAccount,
     )
 
 export const getSignSecp256k1TransactionPayload =
@@ -93,7 +93,7 @@ export const getSignSecp256k1TransactionPayload =
           derivationPath: 'm/44H/1022H/10H/525H/1238H',
         },
       ],
-      compiledTxHex.setMetadata
+      compiledTxHex.setMetadata,
     )
 
 export const getSignEd222519ChallengePayload = () =>

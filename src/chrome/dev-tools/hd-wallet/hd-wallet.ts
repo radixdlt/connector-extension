@@ -31,7 +31,7 @@ export class BaseHdWallet {
       this.seed = mnemonicOrSeed
     } else {
       throw new Error(
-        `Invalid seed: Seed Length has to be between 32 (128 bits) and 128 (516 bits) \nSeed: ${mnemonicOrSeed} \nSeedLength: ${mnemonicOrSeed.length}`
+        `Invalid seed: Seed Length has to be between 32 (128 bits) and 128 (516 bits) \nSeed: ${mnemonicOrSeed} \nSeedLength: ${mnemonicOrSeed.length}`,
       )
     }
 
@@ -48,7 +48,7 @@ export class BaseHdWallet {
 
   public derivePath(path: string): Keys {
     return this.slip10.derivePath(
-      `m/${this.purpose}'/${this.coinType}'/${path}`
+      `m/${this.purpose}'/${this.coinType}'/${path}`,
     )
   }
 

@@ -5,11 +5,11 @@ import { Buffer } from 'buffer'
 
 export const bufferToChunks = (
   buffer: Buffer,
-  chunkSize: number
+  chunkSize: number,
 ): Result<Buffer[], Error> => {
   try {
     return ok(
-      chunk(buffer.toJSON().data, chunkSize).map((part) => Buffer.from(part))
+      chunk(buffer.toJSON().data, chunkSize).map((part) => Buffer.from(part)),
     )
   } catch (error) {
     return err(errorIdentity(error))

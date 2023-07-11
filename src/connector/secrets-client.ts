@@ -14,7 +14,7 @@ export const SecretsClient = (input: { logger?: Logger<unknown> }) => {
         logger?.debug(`🔐🔄 connection password generated`)
         secretsSubject.next(secrets)
         return password
-      })
+      }),
     )
 
   const deriveSecretsFromPassword = (password: Buffer) =>

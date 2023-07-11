@@ -34,7 +34,7 @@ export const BackgroundMessageHandler =
   }>) =>
   (
     message: Message,
-    sendMessageWithConfirmation: SendMessageWithConfirmation
+    sendMessageWithConfirmation: SendMessageWithConfirmation,
   ): MessageHandlerOutput => {
     switch (message.discriminator) {
       case messageDiscriminator.getConnectionPassword:
@@ -53,7 +53,7 @@ export const BackgroundMessageHandler =
           .andThen((connectionPassword) =>
             connectionPassword
               ? closePopup().map(() => !!connectionPassword)
-              : openParingPopup().map(() => !!connectionPassword)
+              : openParingPopup().map(() => !!connectionPassword),
           )
           .map((isLinked) => ({
             sendConfirmation: true,
@@ -67,7 +67,7 @@ export const BackgroundMessageHandler =
       case messageDiscriminator.sendMessageToTab: {
         return sendMessageWithConfirmation(
           { ...message.data, source: 'background' },
-          message.tabId
+          message.tabId,
         ).map(() => ({
           sendConfirmation: true,
         }))
@@ -81,11 +81,11 @@ export const BackgroundMessageHandler =
               .andThen((tab) =>
                 ledgerTabWatcher
                   .setWatchedTab(tab.id!, message.data.data)
-                  .map(() => tab)
+                  .map(() => tab),
               )
               .andThen((tab) => sendMessageToTab(tab.id!, message.data))
               .map(() => ({ sendConfirmation: false }))
-              .mapErr(() => ({ reason: 'failedToOpenLedgerTab' }))
+              .mapErr(() => ({ reason: 'failedToOpenLedgerTab' })),
           )
           .mapErr(() => ({ reason: 'failedRestoringTabWatcher' }))
       }
@@ -104,7 +104,7 @@ export const BackgroundMessageHandler =
                 reason: 'failedToCloseLedgerTab',
               })).map(() => ({
                 sendConfirmation: false,
-              }))
+              })),
             )
           })
           .mapErr(() => ({ reason: 'failedToCloseLedgerTab' }))
@@ -118,16 +118,16 @@ export const BackgroundMessageHandler =
               .andThen((tab) =>
                 ledgerTabWatcher
                   .setWatchedTab(tab.id!, message.data)
-                  .map(() => tab)
+                  .map(() => tab),
               )
               .andThen((tab) =>
                 sendMessageWithConfirmation(
                   { ...message, source: 'background' },
-                  tab.id
-                )
+                  tab.id,
+                ),
               )
               .map(() => ({ sendConfirmation: true }))
-              .mapErr(() => ({ reason: 'failedToOpenLedgerTab' }))
+              .mapErr(() => ({ reason: 'failedToOpenLedgerTab' })),
           )
           .mapErr(() => ({ reason: 'failedRestoringTabWatcher' }))
 

@@ -30,20 +30,20 @@ describe('connector client', () => {
 
   const waitForDataChannelStatus = (
     subjects: WebRtcSubjectsType,
-    value: 'open' | 'closed'
+    value: 'open' | 'closed',
   ) =>
     firstValueFrom(
       subjects.dataChannelStatusSubject.pipe(
-        filter((status) => status === value)
-      )
+        filter((status) => status === value),
+      ),
     )
 
   const waitForSignalingServerStatus = (
     subjects: SignalingSubjectsType,
-    value: Status
+    value: Status,
   ) =>
     firstValueFrom(
-      subjects.statusSubject.pipe(filter((status) => status === value))
+      subjects.statusSubject.pipe(filter((status) => status === value)),
     )
 
   const createExtensionConnector = () => {
@@ -101,7 +101,7 @@ describe('connector client', () => {
     walletConnector.connect()
 
     expect(
-      await waitForDataChannelStatus(extensionWebRtcSubjects, 'open')
+      await waitForDataChannelStatus(extensionWebRtcSubjects, 'open'),
     ).toBe('open')
   })
 
@@ -117,14 +117,14 @@ describe('connector client', () => {
 
     await waitForSignalingServerStatus(
       extensionSignalingSubjects,
-      'disconnected'
+      'disconnected',
     )
 
     expect(
       await waitForSignalingServerStatus(
         extensionSignalingSubjects,
-        'connected'
-      )
+        'connected',
+      ),
     ).toBe('connected')
   })
 
@@ -135,8 +135,8 @@ describe('connector client', () => {
     expect(
       await waitForSignalingServerStatus(
         extensionSignalingSubjects,
-        'disconnected'
-      )
+        'disconnected',
+      ),
     ).toBe('disconnected')
 
     extensionConnector.setConnectionPassword(password)
@@ -144,8 +144,8 @@ describe('connector client', () => {
     expect(
       await waitForSignalingServerStatus(
         extensionSignalingSubjects,
-        'connected'
-      )
+        'connected',
+      ),
     ).toBe('connected')
   })
 
@@ -187,17 +187,17 @@ describe('connector client', () => {
     await Promise.all([
       extensionConnector.sendMessage(
         { foo: 'bar' },
-        { messageEventCallback: (event) => messageEventSubject.next(event) }
+        { messageEventCallback: (event) => messageEventSubject.next(event) },
       ),
       firstValueFrom(
-        messageEventSubject.pipe(filter((event) => event === 'messageSent'))
+        messageEventSubject.pipe(filter((event) => event === 'messageSent')),
       ),
       firstValueFrom(
         extensionConnectorSubjects.onDataChannelMessageSubject.pipe(
           filter(
-            (message) => message.packageType === 'receiveMessageConfirmation'
-          )
-        )
+            (message) => message.packageType === 'receiveMessageConfirmation',
+          ),
+        ),
       ),
     ])
   })

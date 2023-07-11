@@ -3,12 +3,12 @@ import { filter, Subject } from 'rxjs'
 
 export const waitForConfirmation = (
   onDataChannelMessageSubject: Subject<ChunkedMessageType>,
-  messageId: string
+  messageId: string,
 ) =>
   onDataChannelMessageSubject.pipe(
     filter(
       (message): message is MessageConfirmation =>
         message.packageType === 'receiveMessageConfirmation' &&
-        message.messageId === messageId
-    )
+        message.messageId === messageId,
+    ),
   )

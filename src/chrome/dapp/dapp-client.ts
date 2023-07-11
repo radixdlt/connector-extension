@@ -7,14 +7,14 @@ export const ChromeDAppClient = () => {
     window.dispatchEvent(
       new CustomEvent(dAppEvent.receive, {
         detail: message,
-      })
+      }),
     )
     return ok(true)
   }
 
   const sendMessageEvent = (
     interactionId: string,
-    eventType: MessageLifeCycleEvent
+    eventType: MessageLifeCycleEvent,
   ) =>
     sendMessage({
       interactionId,
@@ -22,7 +22,7 @@ export const ChromeDAppClient = () => {
     })
 
   const messageListener = (
-    callbackFn: (message: Record<string, any>) => void
+    callbackFn: (message: Record<string, any>) => void,
   ) => {
     window.addEventListener(dAppEvent.send, (event) => {
       const { detail: message } = event as CustomEvent<any>

@@ -32,7 +32,7 @@ export const Ledger = () => {
 
     const switchToFullWindow = async () => {
       await chrome.runtime.sendMessage(
-        createMessage.convertPopupToTab(currentMessage!)
+        createMessage.convertPopupToTab(currentMessage!),
       )
       window.close()
     }
@@ -62,8 +62,8 @@ export const Ledger = () => {
 
     sendMessage(
       createMessage.ledgerResponse(
-        createLedgerErrorResponse(currentMessage.data, 'userCancelled')
-      )
+        createLedgerErrorResponse(currentMessage.data, 'userCancelled'),
+      ),
     ).map(() => window.close())
   }
 
@@ -75,7 +75,7 @@ export const Ledger = () => {
         message.source === 'background'
       ) {
         sendMessage(
-          createMessage.confirmationSuccess('ledger', message.messageId)
+          createMessage.confirmationSuccess('ledger', message.messageId),
         )
         if (message.data.interactionId === currentMessage?.data.interactionId) {
           return
@@ -85,7 +85,7 @@ export const Ledger = () => {
     }
 
     subscription.add(
-      ledger.progress$.subscribe((message) => setProgressMessage(message))
+      ledger.progress$.subscribe((message) => setProgressMessage(message)),
     )
     chrome.runtime.onMessage.addListener(readMessage)
 

@@ -76,7 +76,7 @@ const addLocalStorageMnemonic = (name: string, mnemonic: string) => {
 const mapSignerToSignature = (
   signer: KeyParameters,
   hashToSign: string,
-  wallet: BaseHdWallet
+  wallet: BaseHdWallet,
 ) => {
   const curveConfig = signingConfig[signer.curve]
   const { privateKey, publicKey } = wallet.deriveFullPath(signer.derivationPath)
@@ -158,7 +158,7 @@ export const LedgerSimulator = () => {
     createLedgerDeviceIdResponse(
       request,
       blakeHashHexSync(wallet.curve25519.derivePath(`365'`).publicKey),
-      device
+      device,
     )
 
   const getPublicKeyResponse = async (request: LedgerPublicKeyRequest) => {
@@ -173,7 +173,7 @@ export const LedgerSimulator = () => {
                   .publicKey
               : wallet.secp256k1.deriveFullPath(keyParameters.derivationPath)
                   .publicKey,
-        }))
+        })),
       )
     }
   }
@@ -251,27 +251,27 @@ export const LedgerSimulator = () => {
   }
 
   const getSignAuthChallengeResponse = async (
-    request: LedgerSignChallengeRequest
+    request: LedgerSignChallengeRequest,
   ) => {
     const { hashToSign } = parseSignAuth(request)
     return createSignedResponse(
       request,
       request.signers.map((signer) =>
-        mapSignerToSignature(signer, hashToSign, wallet[signer.curve])
-      )
+        mapSignerToSignature(signer, hashToSign, wallet[signer.curve]),
+      ),
     )
   }
 
   const getSignTransactionResponse = async (
-    request: LedgerSignTransactionRequest
+    request: LedgerSignTransactionRequest,
   ) => {
     const hashToSign = blakeHashHexSync(request.compiledTransactionIntent)
 
     return createSignedResponse(
       request,
       request.signers.map((signer) =>
-        mapSignerToSignature(signer, hashToSign, wallet[signer.curve])
-      )
+        mapSignerToSignature(signer, hashToSign, wallet[signer.curve]),
+      ),
     )
   }
 

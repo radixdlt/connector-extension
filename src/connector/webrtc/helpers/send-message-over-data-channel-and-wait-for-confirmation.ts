@@ -11,7 +11,7 @@ import { prepareMessage } from './prepare-message'
 
 const sendChunks = (
   chunks: string[],
-  sendMessageOverDataChannelSubject: Subject<string>
+  sendMessageOverDataChannelSubject: Subject<string>,
 ) => {
   chunks.forEach((chunk) => sendMessageOverDataChannelSubject.next(chunk))
   return okAsync(undefined)
@@ -19,7 +19,7 @@ const sendChunks = (
 
 const waitForConfirmation = (
   messageId: string,
-  onDataChannelMessageSubject: Subject<ChunkedMessageType>
+  onDataChannelMessageSubject: Subject<ChunkedMessageType>,
 ) =>
   ResultAsync.fromSafePromise(
     firstValueFrom(
@@ -27,18 +27,18 @@ const waitForConfirmation = (
         filter(
           (message): message is MessageConfirmation | MessageErrorTypes =>
             ['receiveMessageConfirmation', 'receiveMessageError'].includes(
-              message.packageType
-            ) && message.messageId === messageId
-        )
-      )
-    )
+              message.packageType,
+            ) && message.messageId === messageId,
+        ),
+      ),
+    ),
   ).andThen(
     (
-      message
+      message,
     ): ResultAsync<MessageConfirmation, { reason: MessageErrorReasons }> =>
       message.packageType === 'receiveMessageConfirmation'
         ? okAsync(message)
-        : errAsync({ reason: message.error })
+        : errAsync({ reason: message.error }),
   )
 
 export const sendMessageOverDataChannelAndWaitForConfirmation = (input: {
@@ -59,7 +59,10 @@ export const sendMessageOverDataChannelAndWaitForConfirmation = (input: {
     }))
     .andThen(({ chunks, messageId }) =>
       ResultAsync.combine([
-        sendChunks(chunks, input.sendMessageOverDataChannelSubject).map(() => {
+        sendChunks(
+          chunks as string[],
+          input.sendMessageOverDataChannelSubject,
+        ).map(() => {
           input.messageEventCallback('messageSent')
           if (input.timeout)
             setTimeout(() => {
@@ -71,6 +74,6 @@ export const sendMessageOverDataChannelAndWaitForConfirmation = (input: {
             }, input.timeout)
         }),
         waitForConfirmation(messageId, input.onDataChannelMessageSubject),
-      ])
+      ]),
     )
     .map(() => undefined)

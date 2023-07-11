@@ -50,7 +50,7 @@ export const Queue = <T>({
   const subscriptions = new Subscription()
 
   const decodeStateData = (
-    data: QueueStateRaw<T>
+    data: QueueStateRaw<T>,
   ): Result<QueueState<T>, never> =>
     ok({
       items: new Map(Object.entries(data.items)),
@@ -63,12 +63,12 @@ export const Queue = <T>({
     })
 
   const transformState = (
-    data: QueueState<T>
+    data: QueueState<T>,
   ): Result<QueueStateRaw<T>, never> =>
     ok({
       items: [...data.items.entries()].reduce(
         (acc, [id, item]) => ({ ...acc, [id]: item }),
-        {}
+        {},
       ),
       ids: {
         [jobStatus.pending]: [...data.ids.pending.values()],
@@ -96,7 +96,7 @@ export const Queue = <T>({
       .mapErr(() => ({ reason: 'GetStateError' }))
 
   const saveState = (
-    state: QueueState<T>
+    state: QueueState<T>,
   ): ResultAsync<undefined, QueueInteractionError> =>
     transformState(state)
       .asyncAndThen((data) => {
@@ -107,7 +107,7 @@ export const Queue = <T>({
 
   const addJobToPendingQueue = (
     job: Job<T>,
-    state: QueueState<T>
+    state: QueueState<T>,
   ): ResultAsync<QueueState<T>, never> => {
     logger?.debug(`[${key}] addJob`, { job })
     state.items.set(job.id, { ...job, updatedAt: Date.now() })
@@ -146,7 +146,7 @@ export const Queue = <T>({
 
   const removeJobQueueInteraction = (
     jobId: string,
-    state: QueueState<T>
+    state: QueueState<T>,
   ): ResultAsync<QueueState<T>, QueueInteractionError> => {
     logger?.debug(`[${key}] removeJob`, {
       jobId,
@@ -164,7 +164,7 @@ export const Queue = <T>({
   const updateState =
     (interaction: QueueInteraction<T>) =>
     (
-      state: QueueState<T>
+      state: QueueState<T>,
     ): ResultAsync<QueueState<T>, QueueInteractionError> => {
       switch (interaction.interaction) {
         case queueInteractions.addJob:
@@ -175,7 +175,7 @@ export const Queue = <T>({
 
         case queueInteractions.updateJobStatus:
           return getJobById(interaction.jobId).andThen((job) =>
-            updateJobStatusQueueInteraction({ ...interaction, state, job })
+            updateJobStatusQueueInteraction({ ...interaction, state, job }),
           )
 
         case queueInteractions.retryJob:
@@ -186,7 +186,7 @@ export const Queue = <T>({
               job,
               status: 'pending',
               numberOfRetries: job.numberOfRetries + 1,
-            })
+            }),
           )
 
         case queueInteractions.cancelJob:
@@ -227,11 +227,11 @@ export const Queue = <T>({
             },
             jobId: id,
             interactionId: crypto.randomUUID(),
-          }).mapErr((err) => err.error)
+          }).mapErr((err) => err.error),
     )
 
   const addQueueInteractionAndWaitForStateUpdate = (
-    interaction: QueueInteraction<T>
+    interaction: QueueInteraction<T>,
   ): ResultAsync<
     QueueInteraction<T>,
     {
@@ -246,14 +246,14 @@ export const Queue = <T>({
             result.error.interaction.interactionId === interaction.interactionId
           )
         return result.value.interactionId === interaction.interactionId
-      })
+      }),
     )
 
     const dispatchStateUpdate$ = of(true).pipe(
       tap(() => {
         subjects.queueInteraction.next(interaction)
       }),
-      filter((v): v is never => false)
+      filter((v): v is never => false),
     )
 
     return ResultAsync.fromPromise(
@@ -262,7 +262,7 @@ export const Queue = <T>({
         error as {
           error: QueueInteractionError
           interaction: QueueInteraction<T>
-        }
+        },
     ).andThen((result) => result)
   }
 
@@ -273,7 +273,7 @@ export const Queue = <T>({
         (job): Result<Job<T>, QueueInteractionError> =>
           job
             ? ok(job)
-            : err({ reason: queueInteractionErrorType.JobNotFoundError })
+            : err({ reason: queueInteractionErrorType.JobNotFoundError }),
       )
 
   subscriptions.add(
@@ -284,11 +284,11 @@ export const Queue = <T>({
             .andThen(updateState(interaction))
             .andThen(saveState)
             .map(() => interaction)
-            .mapErr((error) => ({ error, interaction }))
+            .mapErr((error) => ({ error, interaction })),
         ),
-        tap((result) => subjects.queueInteractionResult.next(result))
+        tap((result) => subjects.queueInteractionResult.next(result)),
       )
-      .subscribe()
+      .subscribe(),
   )
 
   const getNextPendingJob = (): ResultAsync<Job<T>, QueueInteractionError> =>
@@ -333,8 +333,8 @@ export const Queue = <T>({
         worker
           .run(job)
           .mapErr(({ shouldRetry }) =>
-            shouldRetry ? retryJob(job.id) : updateJobStatus(job.id, 'failed')
-          )
+            shouldRetry ? retryJob(job.id) : updateJobStatus(job.id, 'failed'),
+          ),
       )
       .andThen(() => updateJobStatus(job.id, 'completed'))
       .map(() => {
@@ -345,11 +345,11 @@ export const Queue = <T>({
       })
 
   const onStateChange$ = subjects.queueInteractionResult.pipe(
-    filter((result) => result.isOk())
+    filter((result) => result.isOk()),
   )
 
   const shouldProcessJobs$ = subjects.paused.pipe(
-    filter((isPaused) => !isPaused)
+    filter((isPaused) => !isPaused),
   )
 
   subscriptions.add(
@@ -358,11 +358,11 @@ export const Queue = <T>({
         concatMap(() =>
           of(true).pipe(
             withLatestFrom(shouldProcessJobs$),
-            switchMap(() => getNextPendingJob().andThen(processNextJob))
-          )
-        )
+            switchMap(() => getNextPendingJob().andThen(processNextJob)),
+          ),
+        ),
       )
-      .subscribe()
+      .subscribe(),
   )
 
   return {
@@ -384,7 +384,7 @@ export const Queue = <T>({
             interaction: 'cancelJob',
             jobId,
             interactionId: crypto.randomUUID(),
-          }).mapErr((err) => err.error)
+          }).mapErr((err) => err.error),
         )
         .map(() => undefined),
   }

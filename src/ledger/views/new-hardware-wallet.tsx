@@ -30,8 +30,8 @@ export const NewHardwareWallet = ({
         createLedgerDeviceIdResponse(
           message,
           deviceInfo.value.deviceId,
-          deviceInfo.value.model
-        )
+          deviceInfo.value.model,
+        ),
       )
     } else {
       setError(deviceInfo.error)

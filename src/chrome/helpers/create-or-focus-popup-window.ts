@@ -13,8 +13,8 @@ export const createOrFocusPopupWindow = (url: string) =>
       .andThen(() =>
         ResultAsync.fromPromise(
           chrome.tabs.update(tabs[0].id!, { active: true }),
-          (e) => e as Error
-        )
+          (e) => e as Error,
+        ),
       )
       .map(() => tabs[0])
   })

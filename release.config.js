@@ -131,7 +131,7 @@ module.exports = {
     [
       '@semantic-release/exec',
       {
-        publishCmd: 'yarn build:cd',
+        publishCmd: 'npm run build:cd',
       },
     ],
     [

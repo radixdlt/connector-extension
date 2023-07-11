@@ -41,7 +41,7 @@ export const WalletSimulator = () => {
     getConnectionPassword().map((connectionPassword) => {
       if (connectionPassword) {
         connectorClient.setConnectionPassword(
-          Buffer.from(connectionPassword, 'hex')
+          Buffer.from(connectionPassword, 'hex'),
         )
       }
     })
@@ -50,7 +50,7 @@ export const WalletSimulator = () => {
       connectorClient.connected$.subscribe(setConnectorStatus)
 
     connectorClient.onMessage$.subscribe((msg) =>
-      setResponseMessage(JSON.stringify(msg, null, 2))
+      setResponseMessage(JSON.stringify(msg, null, 2)),
     )
 
     setConnector(connectorClient)

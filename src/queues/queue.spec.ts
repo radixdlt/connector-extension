@@ -41,7 +41,7 @@ describe('Queue', () => {
     if (result.isErr()) throw result.error
 
     expect(
-      jobs.every((item) => result.value.ids.pending.has(item.id))
+      jobs.every((item) => result.value.ids.pending.has(item.id)),
     ).toBeTruthy()
   })
 
@@ -93,7 +93,7 @@ describe('Queue', () => {
 
     expect(result1.isOk()).toBeTruthy()
     expect(result2.isErr() && result2.error.reason).toEqual(
-      'JobAlreadyExistsError'
+      'JobAlreadyExistsError',
     )
   })
 
@@ -113,9 +113,9 @@ describe('Queue', () => {
             result.isOk() &&
             result.value.interaction === 'updateJobStatus' &&
             result.value.jobId === job.id &&
-            result.value.status === 'completed'
-        )
-      )
+            result.value.status === 'completed',
+        ),
+      ),
     )
   })
 
@@ -156,9 +156,9 @@ describe('Queue', () => {
             result.isOk() &&
             result.value.interaction === 'updateJobStatus' &&
             result.value.jobId === job1.id &&
-            result.value.status === 'completed'
-        )
-      )
+            result.value.status === 'completed',
+        ),
+      ),
     )
 
     expect(actual).toEqual([
@@ -229,9 +229,9 @@ describe('Queue', () => {
             result.isOk() &&
             result.value.interaction === 'updateJobStatus' &&
             result.value.jobId === job1.id &&
-            result.value.status === 'completed'
-        )
-      )
+            result.value.status === 'completed',
+        ),
+      ),
     )
 
     expect(actual).toEqual([
@@ -262,9 +262,9 @@ describe('Queue', () => {
             result.isOk() &&
             result.value.interaction === 'updateJobStatus' &&
             result.value.jobId === job3.id &&
-            result.value.status === 'completed'
-        )
-      )
+            result.value.status === 'completed',
+        ),
+      ),
     )
 
     expect(actual).toEqual([

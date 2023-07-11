@@ -17,7 +17,7 @@ export const MessagesRouter = ({ logger }: { logger: AppLogger }) => {
   }
 
   const getInteractionIdsByTabId = (
-    tabId: number
+    tabId: number,
   ): ResultAsync<string[], Error> => {
     const interactionIds = [...store.entries()]
       .filter(([, value]) => value.tabId === tabId)
@@ -30,7 +30,7 @@ export const MessagesRouter = ({ logger }: { logger: AppLogger }) => {
 
   const removeByTabId = (tabId: number) =>
     getInteractionIdsByTabId(tabId).map((interactionIds) =>
-      interactionIds.forEach((interactionId) => store.delete(interactionId))
+      interactionIds.forEach((interactionId) => store.delete(interactionId)),
     )
 
   const getAndRemoveByTabId = (tabId: number) =>

@@ -25,7 +25,7 @@ export const remoteClientDisconnected = new Set<string>([
 ])
 
 export const isRemoteClientConnectionUpdate = (
-  message: SignalingServerResponse
+  message: SignalingServerResponse,
 ): message is
   | RemoteClientJustConnected
   | RemoteClientIsAlreadyConnected

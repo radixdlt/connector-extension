@@ -3,7 +3,7 @@ import { logger } from 'utils/logger'
 
 export const validateZodSchema = <T>(
   schema: Zod.Schema<any>,
-  value: T
+  value: T,
 ): Result<T, { reason: string; error: any }> => {
   try {
     schema.parse(value)

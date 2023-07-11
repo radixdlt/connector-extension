@@ -20,8 +20,8 @@ export const cacheRemoteIceCandidates = (subjects: WebRtcSubjectsType) =>
   subjects.onRemoteIceCandidateSubject.pipe(
     scan((acc, curr) => [...acc, curr], [] as RTCIceCandidate[]),
     tap((iceCandidates) =>
-      subjects.remoteIceCandidatesSubject.next(iceCandidates)
-    )
+      subjects.remoteIceCandidatesSubject.next(iceCandidates),
+    ),
   )
 
 export const IceCandidateClient = (input: {
@@ -39,7 +39,7 @@ export const IceCandidateClient = (input: {
   }
   const onIceconnectionStateChange = () => {
     logger?.debug(
-      `🕸🧊 iceConnectionState: ${peerConnection.iceConnectionState}`
+      `🕸🧊 iceConnectionState: ${peerConnection.iceConnectionState}`,
     )
     subjects.iceConnectionStateSubject.next(peerConnection.iceConnectionState)
   }
@@ -50,7 +50,7 @@ export const IceCandidateClient = (input: {
   const addIceCandidate = (iceCandidate: RTCIceCandidate) =>
     ResultAsync.fromPromise(
       peerConnection.addIceCandidate(iceCandidate),
-      errorIdentity
+      errorIdentity,
     )
 
   const subscriptions = new Subscription()
@@ -63,36 +63,36 @@ export const IceCandidateClient = (input: {
     })),
     filter(
       (iceCandidate): iceCandidate is IceCandidate['payload'] =>
-        !!iceCandidate.candidate
+        !!iceCandidate.candidate,
     ),
     map(
       (payload): IceCandidateMessage => ({
         method: 'iceCandidate' as IceCandidate['method'],
         payload,
         source: input.source,
-      })
-    )
+      }),
+    ),
   )
 
   const haveLocalOffer$ = subjects.onSignalingStateChangeSubject.pipe(
-    filter((value) => value === 'have-local-offer')
+    filter((value) => value === 'have-local-offer'),
   )
 
   const haveRemoteOffer$ = subjects.onSignalingStateChangeSubject.pipe(
-    filter((value) => value === 'have-remote-offer')
+    filter((value) => value === 'have-remote-offer'),
   )
   const waitForRemoteDescription$ = merge(
     haveLocalOffer$,
     haveRemoteOffer$,
-    subjects.onRemoteAnswerSubject
+    subjects.onRemoteAnswerSubject,
   )
 
   const onRemoteIceCandidate$ = merge(
     subjects.remoteIceCandidatesSubject.pipe(
       first(),
-      mergeMap((iceCandidates) => iceCandidates)
+      mergeMap((iceCandidates) => iceCandidates),
     ),
-    subjects.onRemoteIceCandidateSubject
+    subjects.onRemoteIceCandidateSubject,
   )
 
   subscriptions.add(
@@ -100,19 +100,19 @@ export const IceCandidateClient = (input: {
       .pipe(
         scan((acc, curr) => [...acc, curr], [] as RTCIceCandidate[]),
         tap((iceCandidates) =>
-          subjects.remoteIceCandidatesSubject.next(iceCandidates)
-        )
+          subjects.remoteIceCandidatesSubject.next(iceCandidates),
+        ),
       )
-      .subscribe()
+      .subscribe(),
   )
 
   subscriptions.add(
     waitForRemoteDescription$
       .pipe(
         mergeMap(() => onRemoteIceCandidate$),
-        concatMap(addIceCandidate)
+        concatMap(addIceCandidate),
       )
-      .subscribe()
+      .subscribe(),
   )
 
   return {
@@ -121,7 +121,7 @@ export const IceCandidateClient = (input: {
       peerConnection.removeEventListener('icecandidate', onIcecandidate)
       peerConnection.removeEventListener(
         'iceconnectionstatechange',
-        onIceconnectionStateChange
+        onIceconnectionStateChange,
       )
       subscriptions.unsubscribe()
     },

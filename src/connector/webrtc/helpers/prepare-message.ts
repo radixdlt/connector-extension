@@ -12,5 +12,5 @@ export const prepareMessage = (message: Message) =>
       Result.combine([
         stringify(value.metaData),
         ...value.chunks.map(stringify),
-      ]).map((chunks) => ({ chunks, messageId: value.metaData.messageId }))
+      ]).map((chunks) => ({ chunks, messageId: value.metaData.messageId })),
     )

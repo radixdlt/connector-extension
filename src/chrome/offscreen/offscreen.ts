@@ -38,11 +38,11 @@ const dAppRequestQueue = Queue<any>({
               createMessage.sendMessageEventToDapp(
                 'offScreen',
                 'receivedByWallet',
-                job.data.interactionId
+                job.data.interactionId,
               ),
-              tabId
-            )
-          )
+              tabId,
+            ),
+          ),
       )
       .mapErr((error) => {
         const retryIfNotConnected = error.reason === 'notConnected'
@@ -52,7 +52,7 @@ const dAppRequestQueue = Queue<any>({
           ...error,
           shouldRetry: retryIfNotConnected || retryIfMessageFailed,
         }
-      })
+      }),
   ),
 })
 
@@ -62,7 +62,7 @@ const ledgerToWalletQueue = Queue<LedgerResponse>({
   worker: Worker((job) =>
     connectorClient.sendMessage(job.data, {
       timeout: config.webRTC.confirmationTimeout,
-    })
+    }),
   ),
 })
 
@@ -76,7 +76,7 @@ const incomingWalletMessageQueue = Queue<Record<string, any>>({
       .mapErr((err) => ({
         ...err,
         shouldRetry: false,
-      }))
+      })),
   ),
 })
 
@@ -100,7 +100,7 @@ const messageClient = MessageClient(
     logger,
   }),
   'offScreen',
-  { logger }
+  { logger },
 )
 
 connectorClient.onMessage$.subscribe((message) => {
@@ -121,15 +121,18 @@ everyTwoMinute$
     switchMap(() =>
       messageClient
         .sendMessageAndWaitForConfirmation<{ connectionPassword: string }>(
-          createMessage.getConnectionPassword('offScreen')
+          createMessage.getConnectionPassword('offScreen'),
         )
         .map(({ connectionPassword }) => connectionPassword)
         .andThen((connectionPassword) =>
           messageClient.handleMessage(
-            createMessage.setConnectionPassword('offScreen', connectionPassword)
-          )
-        )
-    )
+            createMessage.setConnectionPassword(
+              'offScreen',
+              connectionPassword,
+            ),
+          ),
+        ),
+    ),
   )
   .subscribe()
 

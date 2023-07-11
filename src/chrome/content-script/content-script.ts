@@ -10,7 +10,7 @@ import { MessageLifeCycleEvent } from 'chrome/dapp/_types'
 const chromeDAppClient = ChromeDAppClient()
 
 const sendMessageToDapp = (
-  message: Record<string, any>
+  message: Record<string, any>,
 ): ResultAsync<undefined, ConfirmationMessageError['error']> => {
   const result = chromeDAppClient.sendMessage(message)
 
@@ -21,7 +21,7 @@ const sendMessageToDapp = (
 
 const sendMessageEventToDapp = (
   interactionId: string,
-  eventType: MessageLifeCycleEvent
+  eventType: MessageLifeCycleEvent,
 ): ResultAsync<undefined, ConfirmationMessageError['error']> => {
   const result = chromeDAppClient.sendMessageEvent(interactionId, eventType)
   return result.isErr()
@@ -36,7 +36,7 @@ const messageHandler = MessageClient(
     logger: logger,
   }),
   'contentScript',
-  { logger }
+  { logger },
 )
 
 chromeDAppClient.messageListener((message) => {

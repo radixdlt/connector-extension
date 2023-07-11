@@ -4,12 +4,14 @@
 
 To get you all ready
 
-`yarn`
+`npm install`
 
 To start
 
-`yarn dev`
+`npm run dev`
 
-To run radle (storybook)
+# Known Issues
 
-`yarn ladle`
+## Chrome Extensions Jest Mocks
+
+Currently, [`jest-chrome` does not support `jest` newer than 27](https://github.com/extend-chrome/jest-chrome/issues/19). Appropriate override has been set inside `package.json` in order to make installation pass smoothly

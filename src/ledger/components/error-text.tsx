@@ -22,7 +22,7 @@ export const ErrorMessages: Record<string, string> = {
 
 export const ErrorText = ({ error }: { error?: string }) => {
   const errorNames = Object.fromEntries(
-    Object.entries(LedgerErrorCode).map(([key, value]) => [value, key])
+    Object.entries(LedgerErrorCode).map(([key, value]) => [value, key]),
   )
   const { switchToFullWindow } = useContext(MessagingContext)
   const url = new URL(window.location.href)

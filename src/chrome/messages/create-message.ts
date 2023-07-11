@@ -12,7 +12,7 @@ import { MessageLifeCycleEvent } from 'chrome/dapp/_types'
 export const createMessage = {
   setConnectionPassword: (
     source: MessageSource,
-    connectionPassword?: string
+    connectionPassword?: string,
   ): Messages['setConnectionPassword'] => ({
     discriminator: 'setConnectionPassword',
     messageId: crypto.randomUUID(),
@@ -20,7 +20,7 @@ export const createMessage = {
     source,
   }),
   getConnectionPassword: (
-    source: MessageSource
+    source: MessageSource,
   ): Messages['getConnectionPassword'] => ({
     discriminator: 'getConnectionPassword',
     messageId: crypto.randomUUID(),
@@ -39,7 +39,7 @@ export const createMessage = {
   }),
   walletMessage: (
     source: MessageSource,
-    message: any
+    message: any,
   ): Messages['walletMessage'] => ({
     source,
     discriminator: 'walletMessage',
@@ -53,7 +53,7 @@ export const createMessage = {
   }),
   closeDappTab: (
     source: MessageSource,
-    tabId: number
+    tabId: number,
   ): Messages['closeDappTab'] => ({
     source,
     tabId,
@@ -62,7 +62,7 @@ export const createMessage = {
   }),
   walletToLedger: (
     source: MessageSource,
-    message: LedgerRequest
+    message: LedgerRequest,
   ): Messages['walletToLedger'] => ({
     source,
     discriminator: messageDiscriminator.walletToLedger,
@@ -84,7 +84,7 @@ export const createMessage = {
   sendMessageToTab: (
     source: MessageSource,
     tabId: number,
-    data: Message
+    data: Message,
   ): Messages['sendMessageToTab'] => ({
     source,
     discriminator: 'sendMessageToTab',
@@ -95,7 +95,7 @@ export const createMessage = {
   confirmationSuccess: <T = any>(
     source: MessageSource,
     messageId: string,
-    data?: T
+    data?: T,
   ): ConfirmationMessageSuccess => ({
     source,
     success: true,
@@ -106,7 +106,7 @@ export const createMessage = {
   confirmationError: (
     source: MessageSource,
     messageId: string,
-    error: ConfirmationMessageError['error']
+    error: ConfirmationMessageError['error'],
   ): ConfirmationMessageError => ({
     source,
     success: false,
@@ -116,7 +116,7 @@ export const createMessage = {
   }),
   walletResponse: (
     source: MessageSource,
-    data: Record<string, any>
+    data: Record<string, any>,
   ): Messages['walletResponse'] => ({
     source,
     discriminator: 'walletResponse',
@@ -125,7 +125,7 @@ export const createMessage = {
   }),
   incomingDappMessage: (
     source: MessageSource,
-    data: Record<string, any>
+    data: Record<string, any>,
   ): Messages['incomingDappMessage'] => ({
     source,
     discriminator: 'incomingDappMessage',
@@ -134,7 +134,7 @@ export const createMessage = {
   }),
   incomingWalletMessage: (
     source: MessageSource,
-    data: Record<string, any>
+    data: Record<string, any>,
   ): Messages['incomingWalletMessage'] => ({
     source,
     discriminator: 'incomingWalletMessage',
@@ -144,7 +144,7 @@ export const createMessage = {
   sendMessageEventToDapp: (
     source: MessageSource,
     messageEvent: MessageLifeCycleEvent,
-    interactionId: string
+    interactionId: string,
   ): Messages['sendMessageEventToDapp'] => ({
     source,
     discriminator: 'sendMessageEventToDapp',
