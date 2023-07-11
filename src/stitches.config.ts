@@ -10,7 +10,9 @@ const colors = {
   darkGrey: '#535353',
   red: 'red',
   orange: 'orange',
-  'Radix-Grey-2': '#8A8FA4',
+  radixGrey1: '#003057',
+  radixGrey2: '#8A8FA4',
+  radixGrey4: '#e2e5ed',
 }
 
 const space = {
@@ -50,17 +52,17 @@ export const {
       info: colors.blue,
       success: colors.green,
       warning: colors.orange,
-      primaryButton: colors.darkGrey,
-      primaryButtonHover: colors.green,
+      primaryButton: colors.blue,
+      primaryButtonHover: colors.darkBlue,
       primaryButtonText: colors.white,
-      primaryGhostButton: colors.white,
-      primaryGhostButtonText: colors.darkBlue,
-      primaryGhostButtonHover: colors.blue,
-      primaryGhostButtonHoverText: colors.white,
+      secondaryButton: colors.radixGrey4,
+      secondaryButtonHover: colors.radixGrey1,
+      secondaryButtonText: colors.darkGrey,
+      textButtonText: colors.white,
       borderColor: colors.grey,
       grey: colors.grey,
       muted: colors.darkGrey,
-      radixGrey2: colors['Radix-Grey-2'],
+      radixGrey2: colors.radixGrey2,
     },
     fontSizes: {
       xs: '12px',
@@ -83,7 +85,7 @@ export const {
     },
 
     radii: {
-      sm: '4px',
+      sm: '14px',
       md: '10px',
       lg: '50%',
     },

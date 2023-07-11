@@ -104,7 +104,7 @@ export const Ledger = () => {
             {progressMessage}
           </Text>
           {progressMessage ? null : (
-            <Button full mt="medium" onClick={cancel}>
+            <Button full mt="md" onClick={cancel}>
               Cancel
             </Button>
           )}

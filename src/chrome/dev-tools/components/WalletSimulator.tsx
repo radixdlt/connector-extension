@@ -82,7 +82,7 @@ export const WalletSimulator = () => {
       <Box justify="between">
         <Box flex="row">
           <Text bold>Connector</Text>
-          <Text ml="medium">{connectorStatus ? '🟢' : '🔴'}</Text>
+          <Text ml="md">{connectorStatus ? '🟢' : '🔴'}</Text>
         </Box>
         <Button onClick={toggleConnection}>
           {connectorStatus ? 'Disconnect' : 'Connect'}
@@ -95,8 +95,8 @@ export const WalletSimulator = () => {
         <Box>
           {Object.entries(messages).map(([button, value]) => (
             <Button
-              ml="small"
-              mb="small"
+              ml="sm"
+              mb="sm"
               size="small"
               key={button}
               onClick={() => setMessage(JSON.stringify(value, null, 2))}

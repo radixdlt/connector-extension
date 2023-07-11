@@ -347,10 +347,10 @@ export const LedgerSimulator = () => {
             }
           }}
         />
-        <Button ml="small" onClick={updateMnemonic}>
+        <Button ml="sm" onClick={updateMnemonic}>
           Regenerate
         </Button>
-        <Button ml="small" onClick={rememberMnemonic}>
+        <Button ml="sm" onClick={rememberMnemonic}>
           Remember
         </Button>
       </Box>
