@@ -26,6 +26,11 @@ export const createMessage = {
     messageId: crypto.randomUUID(),
     source,
   }),
+  focusLedgerTab: (): Messages['focusLedgerTab'] => ({
+    source: 'ledger',
+    discriminator: messageDiscriminator.focusLedgerTab,
+    messageId: crypto.randomUUID(),
+  }),
   detectWalletLink: (source: MessageSource): Messages['detectWalletLink'] => ({
     source,
     discriminator: 'detectWalletLink',
@@ -66,12 +71,6 @@ export const createMessage = {
   ): Messages['walletToLedger'] => ({
     source,
     discriminator: messageDiscriminator.walletToLedger,
-    messageId: crypto.randomUUID(),
-    data: message,
-  }),
-  convertPopupToTab: (message: Messages['walletToLedger']) => ({
-    source: 'popup',
-    discriminator: messageDiscriminator.convertPopupToTab,
     messageId: crypto.randomUUID(),
     data: message,
   }),

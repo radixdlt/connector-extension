@@ -15,5 +15,10 @@ export const PopupWindow = styled(Box, {
         justifyContent: 'flex-start',
       },
     },
+    items: {
+      center: {
+        alignItems: 'center',
+      },
+    },
   },
 })

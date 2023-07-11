@@ -37,7 +37,7 @@ export const createPopupWindow = (
     new Promise((resolve) => {
       chrome.windows.create(
         {
-          url: `${chrome.runtime.getURL(pagePath)}?isPopupWindow=true`,
+          url: chrome.runtime.getURL(pagePath),
           type: 'popup',
           width: config.popup.width,
           height: config.popup.height,
