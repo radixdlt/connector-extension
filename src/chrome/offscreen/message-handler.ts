@@ -12,6 +12,7 @@ import {
   SendMessageWithConfirmation,
 } from '../messages/_types'
 import { LedgerResponse, isLedgerRequest } from 'ledger/schemas'
+import { sendMessage } from 'chrome/helpers/send-message'
 
 export type OffscreenMessageHandler = ReturnType<typeof OffscreenMessageHandler>
 export const OffscreenMessageHandler = (input: {
@@ -99,8 +100,15 @@ export const OffscreenMessageHandler = (input: {
           .mapErr(() => ({ reason: 'tabIdNotFound' }))
           .andThen((tabId) =>
             sendMessageWithConfirmation(
+              // this is targetted to particular dApp
               createMessage.walletResponse('offScreen', message.data),
               tabId,
+            ),
+          )
+          .map(() =>
+            sendMessage(
+              // this is for background script to handle notifications
+              createMessage.walletResponse('offScreen', message.data),
             ),
           )
           .map(() => ({ sendConfirmation: true }))

@@ -13,6 +13,8 @@ import { config } from 'config'
 import { LedgerTabWatcher } from './ledger-tab-watcher'
 import { ensureTab } from 'chrome/helpers/ensure-tab'
 import { focusTabByUrl } from 'chrome/helpers/focus-tab'
+import { createGatewayClient } from './gateway-client'
+import { notificationDispatcher } from './notification-dispatcher'
 
 export type BackgroundMessageHandler = ReturnType<
   typeof BackgroundMessageHandler
@@ -98,6 +100,25 @@ export const BackgroundMessageHandler =
             sendConfirmation: false,
           }))
           .mapErr(() => ({ reason: 'failedToFocusLedgerTab' }))
+      }
+
+      case messageDiscriminator.walletResponse: {
+        if (message.data?.items?.discriminator === 'transaction') {
+          const txIntentHash = message.data.items.send.transactionIntentHash
+          createGatewayClient()
+            .andThen((gatewayClient) =>
+              gatewayClient.pollTransactionStatus(txIntentHash),
+            )
+            .map((result) => {
+              notificationDispatcher.transaction(txIntentHash, result.status)
+            })
+        }
+        return okAsync({ sendConfirmation: false })
+      }
+
+      case messageDiscriminator.dAppRequest: {
+        notificationDispatcher.request(message.data.items.discriminator)
+        return okAsync({ sendConfirmation: false })
       }
 
       case messageDiscriminator.walletToLedger:

@@ -77,7 +77,7 @@ export const WalletSimulator = () => {
   }
 
   return (
-    <Box p="medium">
+    <Box p="medium" bg="white" rounded mr="lg">
       <Header dark>Wallet Simulator</Header>
       <Box justify="between">
         <Box flex="row">

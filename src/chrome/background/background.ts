@@ -10,6 +10,9 @@ import { MessageClient } from '../messages/message-client'
 import { openParingPopup } from '../helpers/open-pairing-popup'
 import { AppLogger } from 'utils/logger'
 import { LedgerTabWatcher } from './ledger-tab-watcher'
+import { txNotificationPrefix } from './notification-dispatcher'
+import { createAndFocusTab } from 'chrome/helpers/create-and-focus-tab'
+import { getDashboardBaseUrl } from 'options'
 
 const backgroundLogger = {
   debug: (...args: string[]) => console.log(JSON.stringify(args, null, 2)),
@@ -61,6 +64,15 @@ const handleConnectionPasswordChange = (connectionPassword?: string) =>
       }, config.popup.closeDelayTime)
     })
 
+const handleNotificationClick = (notificationId: string) => {
+  if (notificationId.startsWith(txNotificationPrefix)) {
+    const txId = notificationId.replace(txNotificationPrefix, '')
+    getDashboardBaseUrl().map((dashboardBaseUrl) => {
+      createAndFocusTab(`${dashboardBaseUrl}transaction/${txId}`)
+    })
+  }
+}
+
 const tabRemovedListener = (tabId: number) => {
   ledgerTabWatcher.triggerTabRemoval(tabId)
   messageHandler.sendMessageAndWaitForConfirmation(
@@ -80,6 +92,7 @@ chrome.runtime.onMessage.addListener((message, sender) => {
 })
 
 chrome.tabs.onRemoved.addListener(tabRemovedListener)
+chrome.notifications.onClicked.addListener(handleNotificationClick)
 chrome.storage.onChanged.addListener(handleStorageChange)
 chrome.action.onClicked.addListener(openParingPopup)
 chrome.runtime.onInstalled.addListener(handleOnInstallExtension)

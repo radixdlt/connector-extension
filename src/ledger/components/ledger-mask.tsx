@@ -1,4 +1,4 @@
-import { Box, Button, Text } from 'components'
+import { Box, Button, Mask, Text } from 'components'
 import { LedgerDevice } from 'ledger/schemas'
 import { LedgerDeviceBox } from './ledger-device-box'
 import Retry from '../assets/retry.svg'
@@ -53,37 +53,7 @@ export const LedgerMask = (props: {
     )
   }
   return (
-    <Box
-      mt="4xl"
-      bg="white"
-      radius="medium"
-      p="large"
-      position="relative"
-      textAlign="center"
-      maxWidth="medium"
-    >
-      <Box
-        position="absolute"
-        style={{
-          left: 0,
-          right: 0,
-        }}
-      >
-        <img
-          src="/radix-icon_128x128.png"
-          style={{
-            width: '78px',
-            height: '78px',
-            transform: 'translateY(-66px)',
-            boxShadow: '0 4px 10px 0 rgba(0, 0, 0, 0.25)',
-            borderRadius: '16px',
-          }}
-        />
-      </Box>
-
-      <Text size="large" color="radixGrey2" mt="xl">
-        Radix Wallet Connector
-      </Text>
+    <Mask>
       <Text color="radixGrey1" size="4xl" mt="lg" mb="md">
         {header}
       </Text>
@@ -91,6 +61,6 @@ export const LedgerMask = (props: {
 
       {renderLedgerDevice()}
       {renderErrorBox()}
-    </Box>
+    </Mask>
   )
 }
