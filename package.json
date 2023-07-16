@@ -29,7 +29,11 @@
     "test:watch": "jest --watch"
   },
   "dependencies": {
+    "@emotion/react": "^11.11.1",
+    "@emotion/styled": "^11.11.0",
     "@ledgerhq/hw-transport-webhid": "^6.27.12",
+    "@mui/material": "^5.14.0",
+    "@radixdlt/babylon-gateway-api-sdk": "^1.0.0-rc.2.2",
     "@stitches/react": "^1.2.8",
     "@types/blake2b": "^2.1.0",
     "bech32": "^2.0.0",
@@ -46,7 +50,7 @@
     "react-dom": "^18.2.0",
     "react-qr-code": "^2.0.8",
     "react-use": "^17.4.0",
-    "rxjs": "^7.5.7",
+    "rxjs": "^7.8.1",
     "tslog": "^4.7.1",
     "zod": "^3.19.1"
   },
@@ -67,7 +71,7 @@
     "@testing-library/user-event": "^14.4.3",
     "@types/blake2b": "^2.1.0",
     "@types/chai": "^4.3.3",
-    "@types/chrome": "^0.0.239",
+    "@types/chrome": "^0.0.241",
     "@types/elliptic": "^6.4.14",
     "@types/jest": "^29.1.2",
     "@types/lodash.chunk": "^4.2.7",

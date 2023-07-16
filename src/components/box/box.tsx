@@ -14,6 +14,11 @@ export const Box = styled('div', {
         cursor: 'pointer',
       },
     },
+    rounded: {
+      true: {
+        borderRadius: '16px',
+      },
+    },
     interactive: {
       true: {
         cursor: 'pointer',

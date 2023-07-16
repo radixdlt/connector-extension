@@ -327,31 +327,9 @@ export const LedgerSimulator = () => {
   }
 
   return (
-    <Box full p="medium">
+    <Box bg="white" p="medium" rounded style={{ minWidth: '450px' }}>
       <Header dark>Ledger Simulator</Header>
       {renderRememberedMnemonics()}
-      <Box flex="row" items="center">
-        <Text bold css={{ minWidth: '140px' }}>
-          Mnemonic
-        </Text>
-        <input
-          className="w-100"
-          value={wallet.seed}
-          onChange={(ev) => {
-            try {
-              setWallet(generateWallets(ev.target.value))
-            } catch (e) {
-              logger.error('Invalid seed phrase')
-            }
-          }}
-        />
-        <Button ml="sm" onClick={updateMnemonic}>
-          Regenerate
-        </Button>
-        <Button ml="sm" onClick={rememberMnemonic}>
-          Remember
-        </Button>
-      </Box>
       <Box flex="row" items="center">
         <Text bold css={{ minWidth: '140px' }}>
           Ledger Device
@@ -367,6 +345,31 @@ export const LedgerSimulator = () => {
           <option value="nanoX">Nano X</option>
         </select>
       </Box>
+      <Box flex="row" items="center">
+        <Text bold css={{ minWidth: '140px' }}>
+          Mnemonic
+        </Text>
+        <input
+          className="w-100"
+          value={wallet.seed}
+          onChange={(ev) => {
+            try {
+              setWallet(generateWallets(ev.target.value))
+            } catch (e) {
+              logger.error('Invalid seed phrase')
+            }
+          }}
+        />
+      </Box>
+      <Box flex="row">
+        <Button ml="sm" onClick={updateMnemonic}>
+          Regenerate
+        </Button>
+        <Button ml="sm" onClick={rememberMnemonic}>
+          Remember
+        </Button>
+      </Box>
+
       {walletRequest ? renderWalletRequest() : 'Waiting for wallet request...'}
     </Box>
   )
