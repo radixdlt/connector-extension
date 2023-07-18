@@ -10,7 +10,7 @@ export const txNotificationPrefix = 'transaction_'
 export const notificationDispatcher = {
   request: (discriminator: string) => {
     getShowDAppRequestNotifications().map((showDAppRequestNotifications) => {
-      if (!showDAppRequestNotifications) {
+      if (!showDAppRequestNotifications || discriminator === 'cancelRequest') {
         return
       }
 
