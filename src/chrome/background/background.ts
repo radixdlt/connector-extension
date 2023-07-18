@@ -68,7 +68,7 @@ const handleNotificationClick = (notificationId: string) => {
   if (notificationId.startsWith(txNotificationPrefix)) {
     const txId = notificationId.replace(txNotificationPrefix, '')
     getDashboardBaseUrl().map((dashboardBaseUrl) => {
-      createAndFocusTab(`${dashboardBaseUrl}transaction/${txId}`)
+      createAndFocusTab(`${dashboardBaseUrl}/transaction/${txId}`)
     })
   }
 }

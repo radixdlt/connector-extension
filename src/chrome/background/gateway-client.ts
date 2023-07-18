@@ -62,10 +62,10 @@ export const GatewayClient = ({
 }
 
 export const createGatewayClient = () =>
-  getGatewayApiBaseUrl().map((basePath) => {
-    const gatewayApi = GatewayApiClient.initialize({
-      basePath: basePath.endsWith('/') ? basePath?.slice(0, -1) : basePath,
-    })
-    const gatewayClient = GatewayClient({ gatewayApi })
-    return gatewayClient
-  })
+  getGatewayApiBaseUrl().map((basePath) =>
+    GatewayClient({
+      gatewayApi: GatewayApiClient.initialize({
+        basePath,
+      }),
+    }),
+  )
