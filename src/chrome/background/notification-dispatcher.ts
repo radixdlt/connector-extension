@@ -5,24 +5,67 @@ import {
   getShowTransactionResultNotifications,
 } from 'options'
 
+export type WalletInteraction = {
+  interactionId: string
+  items:
+    | {
+        discriminator: 'transaction' | 'unauthorizedRequest' | 'cancelRequest'
+      }
+    | {
+        discriminator: 'authorizedRequest'
+        auth: {
+          discriminator:
+            | 'usePersona'
+            | 'loginWithChallenge'
+            | 'loginWithoutChallenge'
+        }
+      }
+  metadata: {
+    version: number
+  }
+}
+
 export const txNotificationPrefix = 'transaction_'
 
 export const notificationDispatcher = {
-  request: (discriminator: string) => {
+  request: ({ items }: WalletInteraction) => {
     getShowDAppRequestNotifications().map((showDAppRequestNotifications) => {
-      if (!showDAppRequestNotifications || discriminator === 'cancelRequest') {
+      if (
+        !showDAppRequestNotifications ||
+        items.discriminator === 'cancelRequest'
+      ) {
         return
       }
 
-      const titles: Record<string, string> = {
-        authorizedRequest: 'Pending login request',
-        unauthorizedRequest: 'Pending data request',
-        transaction: 'Pending transaction request',
+      const contentDiscriminator =
+        items.discriminator === 'transaction'
+          ? 'transaction'
+          : items.discriminator === 'unauthorizedRequest'
+          ? 'dataRequest'
+          : items.discriminator === 'authorizedRequest' &&
+            items.auth.discriminator === 'usePersona'
+          ? 'dataRequest'
+          : 'loginRequest'
+
+      const content: Record<string, { title: string; message: string }> = {
+        loginRequest: {
+          title: 'Login Request Pending',
+          message: 'Open your Radix Wallet app to login',
+        },
+        dataRequest: {
+          title: 'Data Request Pending',
+          message: 'Open your Radix Wallet app to review the request',
+        },
+        transaction: {
+          title: 'Transaction Request Pending',
+          message: 'Open your Radix Wallet app to review the transaction',
+        },
       }
+
       createNotification(
         undefined,
-        titles[discriminator] || 'Pending wallet interaction',
-        'Please open your Radix Wallet',
+        content[contentDiscriminator].title,
+        content[contentDiscriminator].message,
       )
     })
   },
@@ -35,13 +78,18 @@ export const notificationDispatcher = {
 
         const title =
           status === 'CommittedSuccess'
-            ? 'Transaction successful'
-            : 'Transaction failed'
+            ? 'Transaction Successful'
+            : 'Transaction Failed'
 
         createNotification(
           `${txNotificationPrefix}${txId}`,
           title,
-          'Click to see transaction recipe',
+          'View more info on the Radix Dashboard',
+          [
+            {
+              title: 'View',
+            },
+          ],
         )
       },
     )
