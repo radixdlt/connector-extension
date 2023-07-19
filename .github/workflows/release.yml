@@ -27,7 +27,9 @@ jobs:
       - name: Release
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: npx semantic-release
+        run: |
+          npx semantic-release | tee out
+          echo "RELEASE_VERSION=$(grep 'Created tag ' out | awk -F 'Created tag ' '{print $2}')" >> $GITHUB_ENV
 
       # Snyk SBOM
       - uses: radixdlt/public-iac-resuable-artifacts/fetch-secrets@main
@@ -48,3 +50,4 @@ jobs:
         with:
           files: sbom.json
           repo-token: ${{ secrets.GITHUB_TOKEN }}
+          release-tag: ${{ env.RELEASE_VERSION }}
