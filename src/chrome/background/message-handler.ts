@@ -14,7 +14,10 @@ import { LedgerTabWatcher } from './ledger-tab-watcher'
 import { ensureTab } from 'chrome/helpers/ensure-tab'
 import { focusTabByUrl } from 'chrome/helpers/focus-tab'
 import { createGatewayClient } from './gateway-client'
-import { notificationDispatcher } from './notification-dispatcher'
+import {
+  notificationDispatcher,
+  WalletInteraction,
+} from './notification-dispatcher'
 
 export type BackgroundMessageHandler = ReturnType<
   typeof BackgroundMessageHandler
@@ -117,7 +120,12 @@ export const BackgroundMessageHandler =
       }
 
       case messageDiscriminator.dAppRequest: {
-        notificationDispatcher.request(message.data.items.discriminator)
+        getConnectionPassword().map((connectionPassword) => {
+          if (connectionPassword) {
+            notificationDispatcher.request(message.data as WalletInteraction)
+          }
+        })
+
         return okAsync({ sendConfirmation: false })
       }
 
