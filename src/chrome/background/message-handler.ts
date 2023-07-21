@@ -108,13 +108,16 @@ export const BackgroundMessageHandler =
       case messageDiscriminator.walletResponse: {
         if (message.data?.items?.discriminator === 'transaction') {
           const txIntentHash = message.data.items.send.transactionIntentHash
-          createGatewayClient()
-            .andThen((gatewayClient) =>
-              gatewayClient.pollTransactionStatus(txIntentHash),
+          const networkId = message.data.metadata.networkId
+          const gatewayClient = createGatewayClient(networkId)
+
+          gatewayClient.pollTransactionStatus(txIntentHash).map((result) => {
+            notificationDispatcher.transaction(
+              networkId,
+              txIntentHash,
+              result.status,
             )
-            .map((result) => {
-              notificationDispatcher.transaction(txIntentHash, result.status)
-            })
+          })
         }
         return okAsync({ sendConfirmation: false })
       }

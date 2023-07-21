@@ -1,5 +1,6 @@
 import {
   GatewayApiClient,
+  RadixNetworkConfigById,
   TransactionStatus,
   TransactionStatusResponse,
 } from '@radixdlt/babylon-gateway-api-sdk'
@@ -9,7 +10,6 @@ import {
 } from './exponential-backoff'
 import { Result, ResultAsync } from 'neverthrow'
 import { firstValueFrom, switchMap, filter, first } from 'rxjs'
-import { getGatewayApiBaseUrl } from 'options'
 
 export const GatewayClient = ({
   gatewayApi,
@@ -61,11 +61,9 @@ export const GatewayClient = ({
   return { pollTransactionStatus, gatewayApi }
 }
 
-export const createGatewayClient = () =>
-  getGatewayApiBaseUrl().map((basePath) =>
-    GatewayClient({
-      gatewayApi: GatewayApiClient.initialize({
-        basePath,
-      }),
+export const createGatewayClient = (networkId: number) =>
+  GatewayClient({
+    gatewayApi: GatewayApiClient.initialize({
+      basePath: RadixNetworkConfigById[networkId].gatewayUrl,
     }),
-  )
+  })
