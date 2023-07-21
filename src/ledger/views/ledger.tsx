@@ -157,6 +157,15 @@ export const Ledger = () => {
           return
         }
 
+        if (
+          [
+            LedgerDiscriminator.signChallenge,
+            LedgerDiscriminator.signTransaction,
+          ].includes(message.data.discriminator)
+        ) {
+          sendMessage(createMessage.focusLedgerTab())
+        }
+
         setCurrentMessage(message)
         setViewDefinition(
           viewsDefinition[message.data.discriminator](message.data as any),
