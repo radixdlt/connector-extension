@@ -25,8 +25,8 @@ export type WalletInteraction = {
   }
 }
 
-export const txNotificationPrefix = 'transaction_'
-
+export const txNotificationPrefix = 'transaction'
+export const txNotificationSplitter = '___'
 export const notificationDispatcher = {
   request: ({ items }: WalletInteraction) => {
     getShowDAppRequestNotifications().map((showDAppRequestNotifications) => {
@@ -69,7 +69,7 @@ export const notificationDispatcher = {
       )
     })
   },
-  transaction: (txId: string, status: TransactionStatus) => {
+  transaction: (networkId: number, txId: string, status: TransactionStatus) => {
     getShowTransactionResultNotifications().map(
       (showTransactionResultNotifications) => {
         if (!showTransactionResultNotifications) {
@@ -82,7 +82,7 @@ export const notificationDispatcher = {
             : 'Transaction Failed'
 
         createNotification(
-          `${txNotificationPrefix}${txId}`,
+          [txNotificationPrefix, networkId, txId].join(txNotificationSplitter),
           title,
           'View more info on the Radix Dashboard',
           [

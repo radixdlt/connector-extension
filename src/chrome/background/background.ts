@@ -10,9 +10,12 @@ import { MessageClient } from '../messages/message-client'
 import { openParingPopup } from '../helpers/open-pairing-popup'
 import { AppLogger } from 'utils/logger'
 import { LedgerTabWatcher } from './ledger-tab-watcher'
-import { txNotificationPrefix } from './notification-dispatcher'
+import {
+  txNotificationPrefix,
+  txNotificationSplitter,
+} from './notification-dispatcher'
 import { createAndFocusTab } from 'chrome/helpers/create-and-focus-tab'
-import { getDashboardBaseUrl } from 'options'
+import { RadixNetworkConfigById } from '@radixdlt/babylon-gateway-api-sdk'
 
 const backgroundLogger = {
   debug: (...args: string[]) => console.log(JSON.stringify(args, null, 2)),
@@ -66,10 +69,12 @@ const handleConnectionPasswordChange = (connectionPassword?: string) =>
 
 const handleNotificationClick = (notificationId: string) => {
   if (notificationId.startsWith(txNotificationPrefix)) {
-    const txId = notificationId.replace(txNotificationPrefix, '')
-    getDashboardBaseUrl().map((dashboardBaseUrl) => {
-      createAndFocusTab(`${dashboardBaseUrl}/transaction/${txId}`)
-    })
+    const [, networkId, txId] = notificationId.split(txNotificationSplitter)
+    createAndFocusTab(
+      `${
+        RadixNetworkConfigById[Number(networkId)].dashboardUrl
+      }/transaction/${txId}`,
+    )
   }
 }
 
