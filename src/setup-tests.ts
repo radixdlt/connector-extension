@@ -36,6 +36,9 @@ global.chrome.storage = {
     },
   },
 }
+global.chrome.runtime = {
+  sendMessage: () => Promise.resolve(),
+}
 
 global.crypto.subtle = webcrypto.subtle
 global.crypto.randomUUID = randomUUID
