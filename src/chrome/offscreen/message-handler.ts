@@ -73,7 +73,7 @@ export const OffscreenMessageHandler = (input: {
       case messageDiscriminator.dAppRequest: {
         const { interactionId, metadata } = message.data
         return messageRouter
-          .add(tabId!, interactionId, metadata.origin)
+          .add(tabId!, interactionId, metadata)
           .asyncAndThen(() => {
             if (message.data?.items?.discriminator === 'cancelRequest')
               return dAppRequestQueue
@@ -105,10 +105,17 @@ export const OffscreenMessageHandler = (input: {
               tabId,
             ),
           )
-          .map(() =>
+          .andThen(() => messageRouter.getNetworkId(message.data.interactionId))
+          .mapErr(() => ({ reason: 'networkIdNotFound' }))
+          .map((networkId) =>
             sendMessage(
               // this is for background script to handle notifications
-              createMessage.walletResponse('offScreen', message.data),
+              createMessage.walletResponse('offScreen', {
+                ...message.data,
+                metadata: {
+                  networkId,
+                },
+              }),
             ),
           )
           .map(() => ({ sendConfirmation: true }))
