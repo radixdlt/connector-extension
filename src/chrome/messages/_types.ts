@@ -17,6 +17,7 @@ export const messageDiscriminator = {
   sendMessageToTab: 'sendMessageToTab',
   detectWalletLink: 'detectWalletLink',
   confirmation: 'confirmation',
+  offscreenLog: 'offscreenLog',
   incomingDappMessage: 'incomingDappMessage',
   incomingWalletMessage: 'incomingWalletMessage',
   sendMessageEventToDapp: 'sendMessageEventToDapp',
@@ -73,6 +74,11 @@ export type Messages = {
   [messageDiscriminator.sendMessageEventToDapp]: MessageBuilder<
     MessageDiscriminator['sendMessageEventToDapp'],
     { messageEvent: MessageLifeCycleEvent; interactionId: string }
+  >
+
+  [messageDiscriminator.offscreenLog]: MessageBuilder<
+    MessageDiscriminator['offscreenLog'],
+    { log: any }
   >
 
   [messageDiscriminator.getConnectionPassword]: MessageBuilder<
