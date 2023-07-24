@@ -18,6 +18,7 @@ import {
   notificationDispatcher,
   WalletInteraction,
 } from './notification-dispatcher'
+import { RadixNetwork } from '@radixdlt/babylon-gateway-api-sdk'
 
 export type BackgroundMessageHandler = ReturnType<
   typeof BackgroundMessageHandler
@@ -108,7 +109,9 @@ export const BackgroundMessageHandler =
       case messageDiscriminator.walletResponse: {
         if (message.data?.items?.discriminator === 'transaction') {
           const txIntentHash = message.data.items.send.transactionIntentHash
-          const networkId = message.data.metadata.networkId
+          const networkId =
+            message.data?.metadata?.networkId || RadixNetwork.Ansharnet
+          logger?.debug('🔁 Polling', { txIntentHash, networkId })
           const gatewayClient = createGatewayClient(networkId)
 
           gatewayClient.pollTransactionStatus(txIntentHash).map((result) => {
