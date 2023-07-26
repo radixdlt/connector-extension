@@ -1,15 +1,14 @@
-import { MessageConfirmation } from 'connector/helpers'
-import { filter } from 'rxjs'
-import { WebRtcSubjectsType } from '../subjects'
+import { ChunkedMessageType, MessageConfirmation } from 'connector/_types'
+import { filter, Subject } from 'rxjs'
 
 export const waitForConfirmation = (
-  subjects: WebRtcSubjectsType,
-  messageId: string
+  onDataChannelMessageSubject: Subject<ChunkedMessageType>,
+  messageId: string,
 ) =>
-  subjects.onDataChannelMessageSubject.pipe(
+  onDataChannelMessageSubject.pipe(
     filter(
       (message): message is MessageConfirmation =>
         message.packageType === 'receiveMessageConfirmation' &&
-        message.messageId === messageId
-    )
+        message.messageId === messageId,
+    ),
   )

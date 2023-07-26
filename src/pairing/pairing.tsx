@@ -34,8 +34,8 @@ export const Paring = () => {
 
     const subscription = connectorClient.connectionPassword$.subscribe(
       (password) => {
-        setConnectionPassword(password.toString('hex'))
-      }
+        setConnectionPassword(password?.toString('hex'))
+      },
     )
 
     const connect = () =>
@@ -44,7 +44,7 @@ export const Paring = () => {
         .andThen(({ connectionPassword }) => {
           if (connectionPassword) {
             connectorClient.setConnectionPassword(
-              Buffer.from(connectionPassword, 'hex')
+              Buffer.from(connectionPassword, 'hex'),
             )
             return ok(null)
           } else {
@@ -58,7 +58,7 @@ export const Paring = () => {
                   return chromeLocalStore.setItem({
                     connectionPassword: buffer.toString('hex'),
                   })
-                })
+                }),
               )
           }
         })

@@ -4,12 +4,22 @@
 
 To get you all ready
 
-`yarn`
+`npm install`
 
-To start
+then build
 
-`yarn dev`
+`DEV_TOOLS=true npm run build:development`
 
-To run radle (storybook)
+you can optionally start HMR by
 
-`yarn ladle`
+`npm run dev`
+
+# Known Issues
+
+## Hot Module Reload aka `npm run dev`
+
+Pages are initialized in a different way when working in HMR mode. You may encounter issues inside dev tools or ledger pages. When working particularly with chrome messaging it's safer to always rebuild using `npm run build:*` commands. 
+
+## Chrome Extensions Jest Mocks
+
+Currently, [`jest-chrome` does not support `jest` newer than 27](https://github.com/extend-chrome/jest-chrome/issues/19). Appropriate override has been set inside `package.json` in order to make installation pass smoothly

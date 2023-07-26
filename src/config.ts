@@ -1,9 +1,7 @@
 import { LogLevelNumbers } from 'loglevel'
 import packageJson from '../package.json'
+import './buffer-shim'
 const { version } = packageJson
-import { Buffer } from 'buffer'
-
-globalThis.Buffer = Buffer
 
 const turnServers = {
   test: [
@@ -42,21 +40,9 @@ const turnServers = {
       credential: 'password',
     },
   ],
-  beta: [
-    {
-      urls: 'turn:turn-betanet-udp.radixdlt.com:80?transport=udp',
-      username: 'username',
-      credential: 'password',
-    },
-    {
-      urls: 'turn:turn-betanet-tcp.radixdlt.com:80?transport=tcp',
-      username: 'username',
-      credential: 'password',
-    },
-  ],
 } as const
 
-const mode = import.meta.env.MODE as 'test' | 'development' | 'beta'
+const mode = import.meta.env.MODE as 'test' | 'development' | 'rcnet'
 
 export const config = {
   environment: process.env.NODE_ENV,
@@ -74,6 +60,9 @@ export const config = {
     useBatchedIceCandidates: false,
     iceCandidatesBatchTime: 2000,
     useTargetClientId: import.meta.env.VITE_APP_USE_TARGET_CLIENT_ID === 'true',
+  },
+  offscreen: {
+    url: 'src/chrome/offscreen/index.html',
   },
   webRTC: {
     isInitiator: import.meta.env.VITE_APP_IS_INITIATOR === 'true',
@@ -106,13 +95,16 @@ export const config = {
     chunkSize: 11_500,
     confirmationTimeout: 10_000,
   },
+  devTools: {
+    url: 'src/chrome/dev-tools/dev-tools.html',
+  },
   popup: {
-    width: 375,
-    height: 559,
+    width: 400,
+    height: 600,
     offsetTop: 0,
     pages: {
       pairing: 'src/pairing/index.html',
-      devTools: 'src/chrome/dev-tools/dev-tools.html',
+      ledger: 'src/ledger/index.html',
     },
     closeDelayTime: 700,
     showOnInstall: false,

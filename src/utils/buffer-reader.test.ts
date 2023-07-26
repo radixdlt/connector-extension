@@ -12,7 +12,7 @@ describe('buffer reader', () => {
       const result = reader(7)
       if (result.isErr()) throw result.error
       expect(result.value.toJSON().data).toEqual(
-        data.slice(index * 7, index * 7 + 7)
+        data.slice(index * 7, index * 7 + 7),
       )
     })
   })

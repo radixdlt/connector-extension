@@ -17,24 +17,24 @@ import {
   tap,
   timer,
 } from 'rxjs'
-import { Message } from 'connector/_types'
+import { ChunkedMessageType, Message } from 'connector/_types'
 import { SignalingClientType } from 'connector/signaling/signaling-client'
 import { MessageSources } from 'io-types/types'
-import { MessageClientType } from 'connector/messages/message-client'
 
 export type WebRtcClient = ReturnType<typeof WebRtcClient>
 
 export const WebRtcClient = (
-  input: typeof config['webRTC'] & {
+  input: (typeof config)['webRTC'] & {
     shouldCreateOffer: boolean
     logger?: Logger<unknown>
     subjects: WebRtcSubjectsType
-    onMessageSubject: Subject<Message>
+    onDataChannelMessageSubject: Subject<ChunkedMessageType>
+    sendMessageOverDataChannelSubject: Subject<string>
+    onMessage: Subject<Message>
     signalingClient: SignalingClientType
     source: MessageSources
-    messageClient: MessageClientType
     restart: () => void
-  }
+  },
 ) => {
   const logger = input.logger
   const subjects = input.subjects
@@ -42,12 +42,12 @@ export const WebRtcClient = (
   const signalingClient = input.signalingClient
 
   const peerConnection: RTCPeerConnection = new RTCPeerConnection(
-    input.peerConnectionConfig
+    input.peerConnectionConfig,
   )
 
   const dataChannel = peerConnection.createDataChannel(
     'data',
-    input.dataChannelConfig
+    input.dataChannelConfig,
   )
 
   const peerConnectionClient = PeerConnectionClient({
@@ -64,7 +64,9 @@ export const WebRtcClient = (
     dataChannel,
     logger,
     subjects,
-    onMessageSubject: input.onMessageSubject,
+    onDataChannelMessageSubject: input.onDataChannelMessageSubject,
+    onMessage: input.onMessage,
+    sendMessageOverDataChannelSubject: input.sendMessageOverDataChannelSubject,
   })
 
   const iceCandidateClient = IceCandidateClient({
@@ -89,28 +91,28 @@ export const WebRtcClient = (
           merge(
             signalingClient.remoteClientDisconnected$,
             timer(100).pipe(
-              switchMap(() => signalingClient.remoteClientConnected$)
-            )
-          ).pipe(tap(() => restart()))
-        )
+              switchMap(() => signalingClient.remoteClientConnected$),
+            ),
+          ).pipe(tap(() => restart())),
+        ),
       )
-      .subscribe()
+      .subscribe(),
   )
 
   subscriptions.add(
     merge(onLocalOffer$, onLocalAnswer$, onLocalIceCandidate$)
       .pipe(concatMap(input.signalingClient.sendMessage))
-      .subscribe()
+      .subscribe(),
   )
 
   subscriptions.add(
     onRemoteIceCandidate$
       .pipe(
         tap((iceCandidate) =>
-          subjects.onRemoteIceCandidateSubject.next(iceCandidate)
-        )
+          subjects.onRemoteIceCandidateSubject.next(iceCandidate),
+        ),
       )
-      .subscribe()
+      .subscribe(),
   )
 
   subscriptions.add(
@@ -126,14 +128,14 @@ export const WebRtcClient = (
             filter(
               ([signalingServerStatus, dataChannelStatus]) =>
                 signalingServerStatus === 'disconnected' &&
-                dataChannelStatus === 'closed'
+                dataChannelStatus === 'closed',
             ),
             first(),
-            tap(() => restart())
-          )
-        )
+            tap(() => restart()),
+          ),
+        ),
       )
-      .subscribe()
+      .subscribe(),
   )
 
   subscriptions.add(
@@ -148,9 +150,9 @@ export const WebRtcClient = (
             signalingServerStatus === 'connected'
           )
             signalingClient.disconnect()
-        })
+        }),
       )
-      .subscribe()
+      .subscribe(),
   )
 
   subscriptions.add(
@@ -159,9 +161,9 @@ export const WebRtcClient = (
         filter((state) => state === 'disconnected'),
         tap(() => {
           restart()
-        })
+        }),
       )
-      .subscribe()
+      .subscribe(),
   )
 
   const destroy = () => {

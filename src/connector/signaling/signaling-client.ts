@@ -10,6 +10,7 @@ import {
 import { Logger } from 'tslog'
 import {
   concatMap,
+  delay,
   filter,
   first,
   from,
@@ -46,6 +47,7 @@ export const SignalingClient = (input: {
   target: MessageSources
   source: MessageSources
   logger?: Logger<unknown>
+  restart: () => void
 }) => {
   const logger = input.logger
   const subjects = input.subjects
@@ -59,20 +61,20 @@ export const SignalingClient = (input: {
 
   const onConfirmation$ = input.subjects.onMessageSubject.pipe(
     filter(
-      (message): message is Confirmation => message.info === 'confirmation'
-    )
+      (message): message is Confirmation => message.info === 'confirmation',
+    ),
   )
 
   const waitForConfirmation = (requestId: string) =>
     onConfirmation$.pipe(
-      filter((incomingMessage) => incomingMessage.requestId === requestId)
+      filter((incomingMessage) => incomingMessage.requestId === requestId),
     )
 
   const onMessage = (event: MessageEvent<string>) => {
     parseRawMessage(event.data).map((message) => {
       if (message.info === 'remoteData')
         logger?.trace(
-          `🛰💬⬇️ received: ${message.data.method} (${message.requestId})`
+          `🛰💬⬇️ received: ${message.data.method} (${message.requestId})`,
         )
       else if (message.info !== 'confirmation')
         logger?.trace(`🛰💬⬇️ received:`, message)
@@ -110,8 +112,8 @@ export const SignalingClient = (input: {
         encrypt(
           Buffer.from(JSON.stringify(payload)),
           input.secrets.encryptionKey,
-          iv
-        )
+          iv,
+        ),
       )
       .map((encrypted) => ({
         requestId: crypto.randomUUID(),
@@ -127,7 +129,10 @@ export const SignalingClient = (input: {
       })
 
   const sendMessage = (
-    message: Pick<DataTypes, 'payload' | 'method' | 'source' | 'targetClientId'>
+    message: Pick<
+      DataTypes,
+      'payload' | 'method' | 'source' | 'targetClientId'
+    >,
   ): Observable<Result<undefined, Error>> =>
     from(prepareMessage(message)).pipe(
       mergeMap((result) => {
@@ -139,83 +144,83 @@ export const SignalingClient = (input: {
           tap((result) =>
             result.map((data) => {
               logger?.trace(
-                `🛰💬⬆️ sending: ${message.method} (${encryptedMessage.requestId})`
+                `🛰💬⬆️ sending: ${message.method} (${encryptedMessage.requestId})`,
               )
               return ws.send(data)
-            })
+            }),
           ),
-          filter(() => false)
+          filter(() => false),
         )
 
         return merge(
           sendMessage$,
-          waitForConfirmation(encryptedMessage.requestId)
+          waitForConfirmation(encryptedMessage.requestId),
         ).pipe(map(() => ok(undefined)))
       }),
-      first()
+      first(),
     )
 
   const waitForRemoteClient = (waitFor: Set<string>) =>
     subjects.onMessageSubject.pipe(
       filter((message) => waitFor.has(message.info)),
-      first()
+      first(),
     )
 
   const onOffer$ = input.subjects.onMessageSubject.pipe(
     filter(
       (message): message is RemoteData<Offer> =>
-        message.info === 'remoteData' && message.data.method === 'offer'
+        message.info === 'remoteData' && message.data.method === 'offer',
     ),
     switchMap((message) =>
       decryptMessagePayload<Offer['payload']>(
         message.data,
-        input.secrets.encryptionKey
-      )
+        input.secrets.encryptionKey,
+      ),
     ),
     filter((result): result is Ok<Offer['payload'], never> => !result.isErr()),
     map(
       (result): RTCSessionDescriptionInit => ({
         ...result.value,
         type: 'offer',
-      })
-    )
+      }),
+    ),
   )
 
   const onAnswer$ = input.subjects.onMessageSubject.pipe(
     filter(
       (message): message is RemoteData<Answer> =>
-        message.info === 'remoteData' && message.data.method === 'answer'
+        message.info === 'remoteData' && message.data.method === 'answer',
     ),
     switchMap((message) =>
       decryptMessagePayload<Answer['payload']>(
         message.data,
-        input.secrets.encryptionKey
-      )
+        input.secrets.encryptionKey,
+      ),
     ),
     filter((result): result is Ok<Answer['payload'], never> => !result.isErr()),
     map(
       (result): RTCSessionDescriptionInit => ({
         ...result.value,
         type: 'answer',
-      })
-    )
+      }),
+    ),
   )
 
   const onIceCandidate$ = input.subjects.onMessageSubject.pipe(
     filter(
       (message): message is RemoteData<IceCandidate> =>
-        message.info === 'remoteData' && message.data.method === 'iceCandidate'
+        message.info === 'remoteData' && message.data.method === 'iceCandidate',
     ),
     concatMap((message) =>
       decryptMessagePayload<IceCandidate['payload']>(
         message.data,
-        input.secrets.encryptionKey
-      )
+        input.secrets.encryptionKey,
+      ),
     ),
     filter(
-      (result): result is Ok<IceCandidate['payload'], never> => !result.isErr()
+      (result): result is Ok<IceCandidate['payload'], never> => !result.isErr(),
     ),
-    map((result) => new RTCIceCandidate(result.value))
+    map((result) => new RTCIceCandidate(result.value)),
   )
 
   const onRemoteClientConnectionStateChange$ =
@@ -225,12 +230,23 @@ export const SignalingClient = (input: {
         subjects.targetClientIdSubject.next(
           message.info === remoteClientState.remoteClientDisconnected
             ? undefined
-            : message.remoteClientId
+            : message.remoteClientId,
         )
-      })
+      }),
     )
 
   subscription.add(onRemoteClientConnectionStateChange$.subscribe())
+
+  subscription.add(
+    subjects.onErrorSubject
+      .pipe(
+        delay(1_000),
+        tap(() => {
+          input.restart()
+        }),
+      )
+      .subscribe(),
+  )
 
   ws.onmessage = onMessage
   ws.onopen = onOpen
@@ -246,24 +262,26 @@ export const SignalingClient = (input: {
             filter(Boolean),
             first(),
             switchMap((targetClientId) =>
-              sendMessage({ ...message, targetClientId })
-            )
+              sendMessage({ ...message, targetClientId }),
+            ),
           )
         : sendMessage({ ...message, targetClientId: '' }),
     status$: subjects.statusSubject.asObservable(),
     onError$: subjects.onErrorSubject.asObservable(),
     onConnect$: subjects.statusSubject.pipe(
-      filter((status) => status === 'connected')
+      filter((status) => status === 'connected'),
     ),
     onDisconnect$: subjects.statusSubject.pipe(
-      filter((status) => status === 'disconnected')
+      filter((status) => status === 'disconnected'),
     ),
     onOffer$,
     onAnswer$,
     onIceCandidate$,
     subjects,
     disconnect: () => {
-      ws.close()
+      if (ws.readyState === 1) {
+        ws.close()
+      }
     },
     destroy: () => {
       subscription.unsubscribe()

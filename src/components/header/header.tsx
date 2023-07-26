@@ -7,6 +7,11 @@ export const Header = styled('h1', {
   lineHeight: '36px',
   variants: {
     mb,
+    dark: {
+      true: {
+        color: '$muted',
+      },
+    },
   },
   color: 'white',
 })

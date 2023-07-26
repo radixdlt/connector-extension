@@ -1,24 +1,22 @@
+import { m } from 'components/variants'
 import { styled } from '../../stitches.config'
 
 export const Button = styled('button', {
   backgroundColor: '$primaryButton',
   borderWidth: 0,
-  borderColor: '$borderColor',
-  borderStyle: 'solid',
   cursor: 'pointer',
-  borderRadius: '$sm',
-  fontSize: '$xs',
+  display: 'inline-flex',
+  alignItems: 'center',
+  justifyContent: 'center',
+  gap: '4px',
+  borderRadius: '12px',
   fontWeight: '$600',
   color: '$primaryButtonText',
   px: '$lg',
   py: '$sm',
-  transition: 'color .2s,border-color .2s,background-color .2s',
-  '&:hover': {
-    backgroundColor: '$primaryButtonHover',
-  },
-  lineHeight: 1.5,
-  boxShadow: '0px 4px 4px rgba(0, 0, 0, 0.25)',
+
   variants: {
+    ...m,
     full: {
       true: {
         width: '$1',
@@ -34,29 +32,23 @@ export const Button = styled('button', {
         fontSize: '0',
       },
     },
-    border: {
-      none: {
-        borderWidth: '0',
-      },
-    },
-    ghost: {
+    secondary: {
       true: {
-        backgroundColor: '$primaryGhostButton',
-        color: '$primaryGhostButtonText',
+        backgroundColor: '$secondaryButton',
+        color: '$secondaryButtonText',
         '&:hover': {
-          backgroundColor: '$primaryGhostButtonHover',
-          color: '$primaryGhostButtonHoverText',
+          backgroundColor: '$secondaryButton',
+          boxShadow: 'none',
         },
       },
     },
     text: {
       true: {
         backgroundColor: 'rgba(0,0,0,0)',
-        boxShadow: '0px 4px 4px rgba(0, 0, 0, 0)',
-        color: '$primaryGhostButton',
+        color: '$textButtonText',
         '&:hover': {
           backgroundColor: 'rgba(0,0,0,0)',
-          color: '$primaryGhostButton',
+          boxShadow: 'none',
         },
       },
     },

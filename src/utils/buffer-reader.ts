@@ -54,6 +54,6 @@ const createBufferReader = (buffer: Buffer): BufferReader => {
 }
 
 export const readBuffer = (
-  buffer: Buffer
+  buffer: Buffer,
 ): ((byteCount: number) => Result<Buffer, Error>) =>
   createBufferReader(buffer).readNextBuffer

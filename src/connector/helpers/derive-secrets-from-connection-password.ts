@@ -1,7 +1,7 @@
-import { sha256 } from 'crypto/sha256'
+import { blake2b } from 'crypto/blake2b'
 
 export const deriveSecretsFromPassword = (password: Buffer) =>
-  sha256(password).map((connectionId) => ({
+  blake2b(password).map((connectionId) => ({
     connectionId,
     encryptionKey: password,
   }))

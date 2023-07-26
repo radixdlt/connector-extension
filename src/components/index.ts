@@ -1,6 +1,7 @@
 export * from './box'
 export * from './button'
 export * from './header'
+export * from './mask'
 export * from './link'
 export * from './popup-window'
 export * from './qr-code'

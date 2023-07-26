@@ -5,5 +5,5 @@ export const getDisplayInfo = () =>
     chrome.system.display.getInfo({
       singleUnified: true,
     }),
-    (error) => error as Error
+    (error) => error as Error,
   ).map(([display]) => display)

@@ -17,34 +17,19 @@ jobs:
       - name: Use Node.js
         uses: actions/setup-node@v3
         with:
-          node-version: '18.x'
+          node-version: '20.x'
 
       - name: Install dependencies
-        run: yarn add --dev wrtc
+        run: npm install --D wrtc
 
       - name: Running lint
-        run: yarn lint
+        run: npm run lint
 
       - name: Running unit tests
-        run: yarn test
+        run: npm run test
 
-  test_beta:
-    if: ${{ github.base_ref == 'main' || github.ref_name == 'main' }}
-    runs-on: ubuntu-latest
-
-    steps:
-      - uses: actions/checkout@v3
-      - name: Use Node.js
-        uses: actions/setup-node@v3
-        with:
-          node-version: '18.x'
-
-      - name: Install dependencies
-        run: yarn add --dev wrtc
-
-      - name: Running lint
-        run: yarn lint
-
-      - name: Running unit tests
-        run: yarn test:beta
-
+      - name: SonarCloud Scan
+        uses: SonarSource/sonarcloud-github-action@156db6fef3e168e4972abb76de0b32bbce8ec77a
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}

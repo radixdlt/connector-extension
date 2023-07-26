@@ -1,48 +1,13 @@
 import { config } from 'config'
-import { sha256 } from 'crypto/sha256'
 import { err, ok, Result } from 'neverthrow'
 import { bufferToChunks } from 'utils'
 import { Buffer } from 'buffer'
-
-export type MetaData = {
-  packageType: 'metaData'
-  chunkCount: number
-  hashOfMessage: string
-  messageId: string
-  messageByteCount: number
-}
-
-export type MessageChunk = {
-  packageType: 'chunk'
-  chunkIndex: number
-  chunkData: string
-  messageId: string
-}
-
-export type MessageConfirmation = {
-  packageType: 'receiveMessageConfirmation'
-  messageId: string
-}
-
-type MessageError = 'messageHashesMismatch'
-
-type ChunkedMessageReceiveMessageError = {
-  packageType: 'receiveMessageError'
-  messageId: string
-  error: MessageError
-}
-
-export type MessageErrorTypes = ChunkedMessageReceiveMessageError
-
-export type ChunkedMessageType =
-  | MetaData
-  | MessageChunk
-  | MessageConfirmation
-  | MessageErrorTypes
+import { blake2b } from 'crypto/blake2b'
+import { MessageChunk, MetaData } from 'connector/_types'
 
 export const messageToChunked = (
   message: Buffer,
-  chunkSize = config.webRTC.chunkSize
+  chunkSize = config.webRTC.chunkSize,
 ) => {
   const messageId = crypto.randomUUID()
   return bufferToChunks(message, chunkSize)
@@ -53,11 +18,11 @@ export const messageToChunked = (
           chunkIndex,
           chunkData: buffer.toString('base64'),
           messageId,
-        })
-      )
+        }),
+      ),
     )
     .asyncAndThen((chunks) =>
-      sha256(message)
+      blake2b(message)
         .map(
           (buffer): MetaData => ({
             packageType: 'metaData',
@@ -65,9 +30,9 @@ export const messageToChunked = (
             messageByteCount: message.byteLength,
             hashOfMessage: buffer.toString('hex'),
             messageId,
-          })
+          }),
         )
-        .map((metaData) => ({ metaData, chunks }))
+        .map((metaData) => ({ metaData, chunks })),
     )
 }
 
@@ -90,9 +55,9 @@ export const Chunked = (metaData: MetaData) => {
       return ok(
         chunks
           .map(({ chunkData }) =>
-            Buffer.from(chunkData, 'base64').toString('utf-8')
+            Buffer.from(chunkData, 'base64').toString('utf-8'),
           )
-          .join('')
+          .join(''),
       )
     } catch (error) {
       return err(Error('failed to decode chunked messages'))
@@ -104,12 +69,17 @@ export const Chunked = (metaData: MetaData) => {
 
   const validate = () =>
     concatChunks()
-      .asyncAndThen(sha256)
-      .andThen((sha256Hash) =>
-        sha256Hash.toString('hex') === metaData.hashOfMessage
+      .asyncAndThen((value) => blake2b(Buffer.from(value, 'utf-8')))
+      .andThen((hash) => {
+        const expectedHash = hash.toString('hex')
+        return expectedHash === metaData.hashOfMessage
           ? ok(undefined)
-          : err(Error('chunked message hash does not match expected hash'))
-      )
+          : err(
+              Error(
+                `message hash "${metaData.hashOfMessage}" does not match expected hash "${expectedHash}"`,
+              ),
+            )
+      })
 
   const getMessage = () =>
     allChunksReceived().asyncAndThen(validate).andThen(concatChunks)

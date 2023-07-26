@@ -1,8 +1,10 @@
-import { filter, of, tap } from 'rxjs'
-import { WebRtcSubjectsType } from '../subjects'
+import { filter, of, Subject, tap } from 'rxjs'
 
-export const sendChunks = (subjects: WebRtcSubjectsType, chunks: string[]) =>
+export const sendChunks = (
+  sendMessageOverDataChannelSubject: Subject<string>,
+  chunks: string[],
+) =>
   of(...chunks).pipe(
-    tap((chunk) => subjects.sendMessageOverDataChannelSubject.next(chunk)),
-    filter(() => false)
+    tap((chunk) => sendMessageOverDataChannelSubject.next(chunk)),
+    filter(() => false),
   )

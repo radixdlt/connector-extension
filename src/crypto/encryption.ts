@@ -16,15 +16,15 @@ export const getKey = (encryptionKey: Buffer) =>
         length: 256,
       },
       false,
-      ['encrypt', 'decrypt']
+      ['encrypt', 'decrypt'],
     ),
-    errorIdentity
+    errorIdentity,
   )
 
 const cryptoDecrypt = (data: Buffer, encryptionKey: CryptoKey, iv: Buffer) =>
   ResultAsync.fromPromise(
     crypto.subtle.decrypt({ name: 'AES-GCM', iv }, encryptionKey, data),
-    errorIdentity
+    errorIdentity,
   ).map(Buffer.from)
 
 const cryptoEncrypt = (data: Buffer, encryptionKey: CryptoKey, iv: Buffer) =>
@@ -35,18 +35,18 @@ const cryptoEncrypt = (data: Buffer, encryptionKey: CryptoKey, iv: Buffer) =>
         iv,
       },
       encryptionKey,
-      data
+      data,
     ),
-    errorIdentity
+    errorIdentity,
   ).map(Buffer.from)
 
 export const decrypt = (
   data: Buffer,
   encryptionKey: Buffer,
-  iv: Buffer
+  iv: Buffer,
 ): ResultAsync<Buffer, Error> =>
   getKey(encryptionKey).andThen((cryptoKey) =>
-    cryptoDecrypt(data, cryptoKey, iv)
+    cryptoDecrypt(data, cryptoKey, iv),
   )
 
 const combineIVandCipherText = (iv: Buffer, ciphertext: Buffer): Buffer =>
@@ -55,7 +55,7 @@ const combineIVandCipherText = (iv: Buffer, ciphertext: Buffer): Buffer =>
 export const encrypt = (
   data: Buffer,
   encryptionKey: Buffer,
-  iv: Buffer
+  iv: Buffer,
 ): ResultAsync<
   Omit<SealedBoxProps, 'ciphertextAndAuthTag' | 'authTag'>,
   Error

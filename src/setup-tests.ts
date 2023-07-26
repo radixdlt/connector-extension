@@ -11,6 +11,11 @@ dotenv.config({
   path: path.join(__dirname, `../.env.${mode}`),
 })
 
+global.navigator.hid = {
+  requestDevice: () => Promise.resolve([]),
+  getDevices: () => Promise.resolve([]),
+}
+
 global.chrome = chrome
 global.chrome.storage = {
   onChanged: {
@@ -30,6 +35,9 @@ global.chrome.storage = {
       removeListener: () => {},
     },
   },
+}
+global.chrome.runtime = {
+  sendMessage: () => Promise.resolve(),
 }
 
 global.crypto.subtle = webcrypto.subtle

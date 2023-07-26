@@ -1,22 +1,79 @@
-import { Message } from 'connector/_types'
-import { err, ok, Result } from 'neverthrow'
-import { from, map, merge, mergeMap, Observable, of } from 'rxjs'
-import { WebRtcSubjectsType } from '../subjects'
+import {
+  ChunkedMessageType,
+  MessageConfirmation,
+  messageErrorReasons,
+  MessageErrorReasons,
+  MessageErrorTypes,
+} from 'connector/_types'
+import { errAsync, okAsync, ResultAsync } from 'neverthrow'
+import { filter, firstValueFrom, Subject } from 'rxjs'
 import { prepareMessage } from './prepare-message'
-import { waitForConfirmation } from './wait-for-confirmation'
-import { sendChunks } from './send-chunks'
 
-export const sendMessageOverDataChannelAndWaitForConfirmation = (
-  subjects: WebRtcSubjectsType,
-  message: Message
+const sendChunks = (
+  chunks: string[],
+  sendMessageOverDataChannelSubject: Subject<string>,
+) => {
+  chunks.forEach((chunk) => sendMessageOverDataChannelSubject.next(chunk))
+  return okAsync(undefined)
+}
+
+const waitForConfirmation = (
+  messageId: string,
+  onDataChannelMessageSubject: Subject<ChunkedMessageType>,
 ) =>
-  from(prepareMessage(message)).pipe(
-    mergeMap((result): Observable<Result<null, Error>> => {
-      if (result.isErr()) return of(err(result.error))
-      const { chunks, messageId } = result.value
-      return merge(
-        sendChunks(subjects, chunks),
-        waitForConfirmation(subjects, messageId)
-      ).pipe(map(() => ok(null)))
-    })
+  ResultAsync.fromSafePromise(
+    firstValueFrom(
+      onDataChannelMessageSubject.pipe(
+        filter(
+          (message): message is MessageConfirmation | MessageErrorTypes =>
+            ['receiveMessageConfirmation', 'receiveMessageError'].includes(
+              message.packageType,
+            ) && message.messageId === messageId,
+        ),
+      ),
+    ),
+  ).andThen(
+    (
+      message,
+    ): ResultAsync<MessageConfirmation, { reason: MessageErrorReasons }> =>
+      message.packageType === 'receiveMessageConfirmation'
+        ? okAsync(message)
+        : errAsync({ reason: message.error }),
   )
+
+export const sendMessageOverDataChannelAndWaitForConfirmation = (input: {
+  message: Record<string, any>
+  sendMessageOverDataChannelSubject: Subject<string>
+  onDataChannelMessageSubject: Subject<ChunkedMessageType>
+  messageEventCallback: (event: 'messageSent') => void
+  timeout?: number
+}): ResultAsync<
+  undefined,
+  {
+    reason: MessageErrorReasons
+  }
+> =>
+  prepareMessage(input.message)
+    .mapErr((): { reason: MessageErrorReasons } => ({
+      reason: messageErrorReasons.failedToPrepareMessage,
+    }))
+    .andThen(({ chunks, messageId }) =>
+      ResultAsync.combine([
+        sendChunks(
+          chunks as string[],
+          input.sendMessageOverDataChannelSubject,
+        ).map(() => {
+          input.messageEventCallback('messageSent')
+          if (input.timeout)
+            setTimeout(() => {
+              input.onDataChannelMessageSubject.next({
+                packageType: 'receiveMessageError',
+                messageId,
+                error: messageErrorReasons.timeout,
+              })
+            }, input.timeout)
+        }),
+        waitForConfirmation(messageId, input.onDataChannelMessageSubject),
+      ]),
+    )
+    .map(() => undefined)

@@ -1,4 +1,3 @@
-import { ChunkedMessageType } from '../helpers/data-chunking'
 import { Subject, Subscription, tap } from 'rxjs'
 import { Logger } from 'tslog'
 import { parseJSON } from 'utils'
@@ -6,13 +5,15 @@ import { toBuffer } from 'utils/to-buffer'
 import { WebRtcSubjectsType } from './subjects'
 import { stringify } from 'utils/stringify'
 import { handleIncomingChunkedMessages } from './helpers/handle-incoming-chunked-messages'
-import { Message } from 'connector/_types'
+import { ChunkedMessageType, Message } from 'connector/_types'
 
 export const DataChannelClient = (input: {
   dataChannel: RTCDataChannel
   logger?: Logger<unknown>
   subjects: WebRtcSubjectsType
-  onMessageSubject: Subject<Message>
+  onDataChannelMessageSubject: Subject<ChunkedMessageType>
+  sendMessageOverDataChannelSubject: Subject<string>
+  onMessage: Subject<Message>
 }) => {
   const logger = input.logger
   const dataChannel = input.dataChannel
@@ -33,7 +34,7 @@ export const DataChannelClient = (input: {
     parseJSON<ChunkedMessageType>(toBuffer(event.data).toString('utf-8'))
       .map((message) => {
         logger?.debug(`🕸💬⬇️ received data channel message`, message)
-        return subjects.onDataChannelMessageSubject.next(message)
+        return input.onDataChannelMessageSubject.next(message)
       })
       .mapErr((err) => {
         logger?.debug(`🕸💬⬇️ received data channel message`, err)
@@ -72,24 +73,24 @@ export const DataChannelClient = (input: {
   const subscriptions = new Subscription()
 
   subscriptions.add(
-    subjects.sendMessageOverDataChannelSubject
+    input.sendMessageOverDataChannelSubject
       .pipe(tap(sendMessageOverDataChannel))
-      .subscribe()
+      .subscribe(),
   )
 
   subscriptions.add(
-    handleIncomingChunkedMessages(subjects)
+    handleIncomingChunkedMessages(input.onDataChannelMessageSubject)
       .pipe(
         tap((result) =>
           result
             .map(({ messageId, message }) => {
               sendConfirmationMessage(messageId)
-              input.onMessageSubject.next(message)
+              input.onMessage.next(message)
             })
-            .mapErr(sendErrorMessage)
-        )
+            .mapErr(sendErrorMessage),
+        ),
       )
-      .subscribe()
+      .subscribe(),
   )
 
   return {
