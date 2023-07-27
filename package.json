@@ -33,7 +33,7 @@
     "@emotion/styled": "^11.11.0",
     "@ledgerhq/hw-transport-webhid": "^6.27.12",
     "@mui/material": "^5.14.0",
-    "@radixdlt/babylon-gateway-api-sdk": "^1.0.0-rc.2.3",
+    "@radixdlt/babylon-gateway-api-sdk": "^1.0.0-rc.2.5",
     "@stitches/react": "^1.2.8",
     "@types/blake2b": "^2.1.0",
     "bech32": "^2.0.0",
