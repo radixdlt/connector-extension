@@ -4,6 +4,7 @@ on:
   push:
     branches:
       - develop
+      - main
   workflow_dispatch:
 
 jobs:
@@ -24,11 +25,37 @@ jobs:
       - name: Install dependencies
         run: npm pkg delete scripts.prepare && npm ci
 
-      - name: Release
+      - name: Build rcnet extension
+        run: npm run build:rcnet
+        
+      - name: Github PreRelease
+        if: github.ref == 'refs/heads/develop'
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }} 
+          GOOGLE_CLIENT_ID: ${{ secrets.CLIENT_ID }}
+          GOOGLE_CLIENT_SECRET: ${{ secrets.CLIENT_SECRET }}
+          GOOGLE_REFRESH_TOKEN: ${{ secrets.REFRESH_TOKEN }}
+          GOOGLE_EXTENSION_ID: ${{ secrets.EXTENSION_ID }}
+          TARGET_RELEASE: local
         run: |
-          npx semantic-release | tee out
+          sed -i "s/\${EXTENSION_ID}/$GOOGLE_EXTENSION_ID/g" release.config.cjs
+          sed -i "s/\${TARGET}/$TARGET_RELEASE/g" release.config.cjs
+          npx semantic-release --verifyConditions | tee out
+          echo "RELEASE_VERSION=$(grep 'Created tag ' out | awk -F 'Created tag ' '{print $2}')" >> $GITHUB_ENV
+
+      - name: Github Release & Upload to webstore
+        if: github.ref == 'refs/heads/main'
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }} 
+          GOOGLE_CLIENT_ID: ${{ secrets.CLIENT_ID }}
+          GOOGLE_CLIENT_SECRET: ${{ secrets.CLIENT_SECRET }}
+          GOOGLE_REFRESH_TOKEN: ${{ secrets.REFRESH_TOKEN }}
+          GOOGLE_EXTENSION_ID: ${{ secrets.EXTENSION_ID }}
+          TARGET_RELEASE: trustedTesters
+        run: |
+          sed -i "s/\${EXTENSION_ID}/$GOOGLE_EXTENSION_ID/g" release.config.cjs
+          sed -i "s/\${TARGET}/$TARGET_RELEASE/g" release.config.cjs
+          npx semantic-release --verifyConditions | tee out
           echo "RELEASE_VERSION=$(grep 'Created tag ' out | awk -F 'Created tag ' '{print $2}')" >> $GITHUB_ENV
 
       # Snyk SBOM
