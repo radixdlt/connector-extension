@@ -10,6 +10,11 @@ import {
 import { MessageLifeCycleEvent } from 'chrome/dapp/_types'
 
 export const createMessage = {
+  extensionStatus: (isWalletLinked: boolean) => ({
+    eventType: 'extensionStatus',
+    isExtensionAvailable: true,
+    isWalletLinked,
+  }),
   offscreenLog: (log: any): Messages['offscreenLog'] => ({
     source: 'any',
     discriminator: 'offscreenLog',

@@ -46,3 +46,14 @@ chromeDAppClient.messageListener((message) => {
 chrome.runtime.onMessage.addListener((message: Message) => {
   messageHandler.onMessage(message)
 })
+
+chrome.storage.onChanged.addListener(
+  (changes: { [key: string]: chrome.storage.StorageChange }) => {
+    if (changes['connectionPassword'])
+      sendMessageToDapp(
+        createMessage.extensionStatus(
+          !!changes['connectionPassword']?.newValue,
+        ),
+      )
+  },
+)
