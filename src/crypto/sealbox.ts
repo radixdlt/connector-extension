@@ -24,7 +24,7 @@ const combineCiphertextAndAuthtag = ({
   Buffer.concat([ciphertext, authTag])
 
 export const transformBufferToSealbox = (
-  buffer: Buffer
+  buffer: Buffer,
 ): Result<SealedBoxProps, Error> => {
   const readNextBuffer = readBuffer(buffer)
 

@@ -7,16 +7,18 @@ export const messageDiscriminator = {
   setConnectionPassword: 'setConnectionPassword',
   dAppRequest: 'dAppRequest',
   closeLedgerTab: 'closeLedgerTab',
+  focusLedgerTab: 'focusLedgerTab',
   closeDappTab: 'closeDappTab',
+  extensionStatus: 'extensionStatus',
   ledgerResponse: 'ledgerResponse',
   walletToLedger: 'walletToLedger',
-  convertPopupToTab: 'convertPopupToTab',
   walletResponse: 'walletResponse',
   toContentScript: 'toContentScript',
   walletMessage: 'walletMessage',
   sendMessageToTab: 'sendMessageToTab',
   detectWalletLink: 'detectWalletLink',
   confirmation: 'confirmation',
+  offscreenLog: 'offscreenLog',
   incomingDappMessage: 'incomingDappMessage',
   incomingWalletMessage: 'incomingWalletMessage',
   sendMessageEventToDapp: 'sendMessageEventToDapp',
@@ -38,7 +40,7 @@ export type MessageSource = keyof typeof messageSource
 
 export type MessageBuilder<
   D extends keyof typeof messageDiscriminator,
-  Content
+  Content,
 > = {
   source: MessageSource
   discriminator: D
@@ -59,13 +61,21 @@ export type ConfirmationMessageError = MessageBuilder<
 
 export type SendMessageWithConfirmation<T = any> = (
   message: Message,
-  tabId?: number
+  tabId?: number,
 ) => ResultAsync<
   ConfirmationMessageSuccess<T>['data'],
   ConfirmationMessageError['error']
 >
 
 export type Messages = {
+  [messageDiscriminator.extensionStatus]: MessageBuilder<
+    MessageDiscriminator['extensionStatus'],
+    {
+      eventType: MessageDiscriminator['extensionStatus']
+      isWalletLinked: boolean
+      isExtensionAvailable: true
+    }
+  >
   [messageDiscriminator.confirmation]:
     | ConfirmationMessageSuccess
     | ConfirmationMessageError
@@ -75,9 +85,9 @@ export type Messages = {
     { messageEvent: MessageLifeCycleEvent; interactionId: string }
   >
 
-  [messageDiscriminator.convertPopupToTab]: MessageBuilder<
-    MessageDiscriminator['convertPopupToTab'],
-    { data: Messages['walletToLedger'] }
+  [messageDiscriminator.offscreenLog]: MessageBuilder<
+    MessageDiscriminator['offscreenLog'],
+    { log: any }
   >
 
   [messageDiscriminator.getConnectionPassword]: MessageBuilder<
@@ -106,6 +116,10 @@ export type Messages = {
   >
   [messageDiscriminator.closeLedgerTab]: MessageBuilder<
     MessageDiscriminator['closeLedgerTab'],
+    {}
+  >
+  [messageDiscriminator.focusLedgerTab]: MessageBuilder<
+    MessageDiscriminator['focusLedgerTab'],
     {}
   >
   [messageDiscriminator.closeDappTab]: MessageBuilder<
@@ -145,7 +159,7 @@ export type MessageHandlerOutput = ReturnType<MessageHandler>
 export type MessageHandler = (
   message: Message,
   sendMessageWithConfirmation: SendMessageWithConfirmation,
-  tabId?: number
+  tabId?: number,
 ) => ResultAsync<
   { sendConfirmation: boolean; data?: any },
   ConfirmationMessageError['error']

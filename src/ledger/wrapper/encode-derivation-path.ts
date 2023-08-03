@@ -6,7 +6,7 @@ export const encodeDerivationPath = (derivationPath: string) => {
 
   const parts = path
     .map(
-      (value) => (value.endsWith("'") ? 0x80000000 : 0) + parseInt(value, 10)
+      (value) => (value.endsWith("'") ? 0x80000000 : 0) + parseInt(value, 10),
     )
     .map((value) => value.toString(16).padStart(8, '0'))
     .join('')

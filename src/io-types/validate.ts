@@ -10,7 +10,7 @@ import {
 
 const validate = (
   schema: ReturnType<typeof object>,
-  message: DataTypes
+  message: DataTypes,
 ): Result<DataTypes, ZodError> => {
   try {
     schema.parse(message)
@@ -21,7 +21,7 @@ const validate = (
 }
 
 export const validateIncomingMessage = (
-  message: DataTypes
+  message: DataTypes,
 ): Result<DataTypes, ZodError | Error> => {
   switch (message.method) {
     case 'offer':

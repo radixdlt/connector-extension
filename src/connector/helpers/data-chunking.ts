@@ -7,7 +7,7 @@ import { MessageChunk, MetaData } from 'connector/_types'
 
 export const messageToChunked = (
   message: Buffer,
-  chunkSize = config.webRTC.chunkSize
+  chunkSize = config.webRTC.chunkSize,
 ) => {
   const messageId = crypto.randomUUID()
   return bufferToChunks(message, chunkSize)
@@ -18,8 +18,8 @@ export const messageToChunked = (
           chunkIndex,
           chunkData: buffer.toString('base64'),
           messageId,
-        })
-      )
+        }),
+      ),
     )
     .asyncAndThen((chunks) =>
       blake2b(message)
@@ -30,9 +30,9 @@ export const messageToChunked = (
             messageByteCount: message.byteLength,
             hashOfMessage: buffer.toString('hex'),
             messageId,
-          })
+          }),
         )
-        .map((metaData) => ({ metaData, chunks }))
+        .map((metaData) => ({ metaData, chunks })),
     )
 }
 
@@ -55,9 +55,9 @@ export const Chunked = (metaData: MetaData) => {
       return ok(
         chunks
           .map(({ chunkData }) =>
-            Buffer.from(chunkData, 'base64').toString('utf-8')
+            Buffer.from(chunkData, 'base64').toString('utf-8'),
           )
-          .join('')
+          .join(''),
       )
     } catch (error) {
       return err(Error('failed to decode chunked messages'))
@@ -76,8 +76,8 @@ export const Chunked = (metaData: MetaData) => {
           ? ok(undefined)
           : err(
               Error(
-                `message hash "${metaData.hashOfMessage}" does not match expected hash "${expectedHash}"`
-              )
+                `message hash "${metaData.hashOfMessage}" does not match expected hash "${expectedHash}"`,
+              ),
             )
       })
 

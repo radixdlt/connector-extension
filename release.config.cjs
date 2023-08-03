@@ -136,7 +136,7 @@ module.exports = {
     [
       '@semantic-release/exec',
       {
-        publishCmd: 'yarn build:cd',
+        publishCmd: 'npm run build:cd',
       },
     ],
     [
@@ -162,5 +162,13 @@ module.exports = {
         ],
       },
     ],
+    [
+      "semantic-release-chrome",
+      {
+        "extensionId": "${EXTENSION_ID}",
+        "asset": "radix-connector.zip",
+        "target": "${TARGET}"
+      }
+    ]
   ],
 }

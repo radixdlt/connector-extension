@@ -8,7 +8,7 @@ import { sendMessageToTab as chromeSendMessageToTab } from 'chrome/helpers/send-
 export type SendMessage = typeof sendMessage
 export const sendMessage = (
   message: Message,
-  tabId?: number
+  tabId?: number,
 ): ResultAsync<undefined, ConfirmationMessageError['error']> => {
   const canSendMessageToTab = message.source === 'background' && tabId
 
@@ -23,7 +23,7 @@ export const sendMessage = (
         chromeSendMessageToTab(tabId, message).mapErr((error) => ({
           reason: 'couldNotSendMessageToTab',
           jsError: error,
-        }))
+        })),
       )
   }
 

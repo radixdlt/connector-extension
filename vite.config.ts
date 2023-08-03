@@ -17,7 +17,13 @@ const [major, minor, patch, label = '0'] = version
   .filter(Boolean)
 
 const manifest = defineManifest(async () => {
-  const permissions = ['storage', 'tabs', 'offscreen', 'scripting']
+  const permissions: chrome.runtime.ManifestPermissions[] = [
+    'storage',
+    'tabs',
+    'offscreen',
+    'scripting',
+    'notifications',
+  ]
   const matches = ['https://*/*']
 
   if (isDevToolsActive) {
@@ -46,6 +52,7 @@ const manifest = defineManifest(async () => {
         run_at: 'document_idle',
       },
     ],
+    options_page: 'src/options/index.html',
     host_permissions: matches,
     permissions,
     icons: {
@@ -67,17 +74,18 @@ const buildConfig: UserConfigExport = {
     sourcemap: isDevToolsActive ? 'inline' : false,
     rollupOptions: {
       input: {
+        options: 'src/options/index.html',
         ledger: 'src/ledger/index.html',
         pairing: 'src/pairing/index.html',
+        devTools: 'src/chrome/dev-tools/dev-tools.html',
         offscreen: 'src/chrome/offscreen/index.html',
       },
     },
   },
 }
 
-if (isDevToolsActive) {
-  buildConfig.build.rollupOptions.input['devTools'] =
-    'src/chrome/dev-tools/dev-tools.html'
+if (!isDevToolsActive) {
+  delete buildConfig.build.rollupOptions.input['devTools']
 }
 
 export default defineConfig(buildConfig)

@@ -9,9 +9,7 @@ import {
   LedgerResponse,
   LedgerSignChallengeRequest,
   LedgerSignTransactionRequest,
-  createLedgerDeviceIdResponse,
-  createLedgerPublicKeyResponse,
-  createSignedResponse,
+  createLedgerSuccessResponse,
   isDeviceIdRequest,
   isPublicKeyRequest,
   isSignChallengeRequest,
@@ -76,7 +74,7 @@ const addLocalStorageMnemonic = (name: string, mnemonic: string) => {
 const mapSignerToSignature = (
   signer: KeyParameters,
   hashToSign: string,
-  wallet: BaseHdWallet
+  wallet: BaseHdWallet,
 ) => {
   const curveConfig = signingConfig[signer.curve]
   const { privateKey, publicKey } = wallet.deriveFullPath(signer.derivationPath)
@@ -97,7 +95,7 @@ export const LedgerSimulator = () => {
   const [rememberedMnemonics, setRememberedMnemonics] = useState<
     { mnemonic: string; name: string }[]
   >(getLocalStorageMnemonics())
-  const [device, setDevice] = useState<string>('00')
+  const [device, setDevice] = useState<'nanoS' | 'nanoS+' | 'nanoX'>('nanoS')
   const [wallet, setWallet] = useState(generateWallets(DEFAULT_MNEMONIC))
   const [walletRequest, setWalletRequest] = useState<LedgerRequest>()
   const [messageId, setMessageId] = useState<string>()
@@ -155,15 +153,14 @@ export const LedgerSimulator = () => {
   }
 
   const getDeviceIdResponse = async (request: LedgerDeviceIdRequest) =>
-    createLedgerDeviceIdResponse(
-      request,
-      blakeHashHexSync(wallet.curve25519.derivePath(`365'`).publicKey),
-      device
-    )
+    createLedgerSuccessResponse(request, {
+      id: blakeHashHexSync(wallet.curve25519.derivePath(`365'`).publicKey),
+      model: device,
+    })
 
   const getPublicKeyResponse = async (request: LedgerPublicKeyRequest) => {
     if (request?.keysParameters?.length) {
-      return createLedgerPublicKeyResponse(
+      return createLedgerSuccessResponse(
         request,
         request.keysParameters.map((keyParameters) => ({
           ...keyParameters,
@@ -173,7 +170,7 @@ export const LedgerSimulator = () => {
                   .publicKey
               : wallet.secp256k1.deriveFullPath(keyParameters.derivationPath)
                   .publicKey,
-        }))
+        })),
       )
     }
   }
@@ -251,27 +248,27 @@ export const LedgerSimulator = () => {
   }
 
   const getSignAuthChallengeResponse = async (
-    request: LedgerSignChallengeRequest
+    request: LedgerSignChallengeRequest,
   ) => {
     const { hashToSign } = parseSignAuth(request)
-    return createSignedResponse(
+    return createLedgerSuccessResponse(
       request,
       request.signers.map((signer) =>
-        mapSignerToSignature(signer, hashToSign, wallet[signer.curve])
-      )
+        mapSignerToSignature(signer, hashToSign, wallet[signer.curve]),
+      ),
     )
   }
 
   const getSignTransactionResponse = async (
-    request: LedgerSignTransactionRequest
+    request: LedgerSignTransactionRequest,
   ) => {
     const hashToSign = blakeHashHexSync(request.compiledTransactionIntent)
 
-    return createSignedResponse(
+    return createLedgerSuccessResponse(
       request,
       request.signers.map((signer) =>
-        mapSignerToSignature(signer, hashToSign, wallet[signer.curve])
-      )
+        mapSignerToSignature(signer, hashToSign, wallet[signer.curve]),
+      ),
     )
   }
 
@@ -307,6 +304,7 @@ export const LedgerSimulator = () => {
           Remembered
         </Text>
         <select
+          defaultValue={DEFAULT_MNEMONIC}
           onChange={(ev) => {
             try {
               setWallet(generateWallets(ev.target.value))
@@ -315,7 +313,7 @@ export const LedgerSimulator = () => {
             }
           }}
         >
-          <option selected value={DEFAULT_MNEMONIC}>
+          <option value={DEFAULT_MNEMONIC}>
             Default Mnemonic - {DEFAULT_MNEMONIC}
           </option>
           {rememberedMnemonics.map(({ mnemonic, name }, index) => (
@@ -329,9 +327,24 @@ export const LedgerSimulator = () => {
   }
 
   return (
-    <Box full p="medium">
+    <Box bg="white" p="medium" rounded style={{ minWidth: '450px' }}>
       <Header dark>Ledger Simulator</Header>
       {renderRememberedMnemonics()}
+      <Box flex="row" items="center">
+        <Text bold css={{ minWidth: '140px' }}>
+          Ledger Device
+        </Text>
+        <select
+          defaultValue="nanoS"
+          onChange={(ev) =>
+            setDevice(ev.target.value as 'nanoS' | 'nanoS+' | 'nanoX')
+          }
+        >
+          <option value="nanoS">Nano S</option>
+          <option value="nanoS+">Nano S Plus</option>
+          <option value="nanoX">Nano X</option>
+        </select>
+      </Box>
       <Box flex="row" items="center">
         <Text bold css={{ minWidth: '140px' }}>
           Mnemonic
@@ -347,23 +360,16 @@ export const LedgerSimulator = () => {
             }
           }}
         />
-        <Button ml="small" onClick={updateMnemonic}>
+      </Box>
+      <Box flex="row">
+        <Button ml="sm" onClick={updateMnemonic}>
           Regenerate
         </Button>
-        <Button ml="small" onClick={rememberMnemonic}>
+        <Button ml="sm" onClick={rememberMnemonic}>
           Remember
         </Button>
       </Box>
-      <Box flex="row" items="center">
-        <Text bold css={{ minWidth: '140px' }}>
-          Ledger Device
-        </Text>
-        <select onChange={(ev) => setDevice(ev.target.value)}>
-          <option value="00">Nano S</option>
-          <option value="01">Nano S Plus</option>
-          <option value="02">Nano X</option>
-        </select>
-      </Box>
+
       {walletRequest ? renderWalletRequest() : 'Waiting for wallet request...'}
     </Box>
   )

@@ -32,7 +32,7 @@ abstract class Derivation implements DerivationSchemeInterface {
 
     if (!(this.seedBuffer.length >= 16 && this.seedBuffer.length <= 64)) {
       throw new Error(
-        `Invalid seed: Seed has to be between 128 and 516 bits \nSeed: ${this.seed} \nSeedLength: ${this.seedBuffer.length}`
+        `Invalid seed: Seed has to be between 128 and 516 bits \nSeed: ${this.seed} \nSeedLength: ${this.seedBuffer.length}`,
       )
     }
   }
@@ -82,7 +82,7 @@ class Ed25519 extends Derivation {
       typeof privateKey === 'string'
         ? Buffer.from(privateKey, 'hex')
         : (Uint8Array.from(privateKey) as Buffer),
-      withZeroByte
+      withZeroByte,
     ).toString('hex')
   }
 }

@@ -11,15 +11,16 @@ import {
 } from '../messages/_types'
 import { AppLogger } from 'utils/logger'
 import { MessageLifeCycleEvent } from 'chrome/dapp/_types'
+import { getConnectionPassword } from 'chrome/helpers/get-connection-password'
 
 export type ContentScriptMessageHandlerOptions = {
   logger?: AppLogger
   sendMessageToDapp: (
-    message: any
+    message: any,
   ) => ResultAsync<undefined, ConfirmationMessageError['error']>
   sendMessageEventToDapp: (
     interactionId: string,
-    eventType: MessageLifeCycleEvent
+    eventType: MessageLifeCycleEvent,
   ) => ResultAsync<undefined, ConfirmationMessageError['error']>
 }
 export type ContentScriptMessageHandler = ReturnType<
@@ -33,13 +34,13 @@ export const ContentScriptMessageHandler =
   }: ContentScriptMessageHandlerOptions): MessageHandler =>
   (
     message: Message,
-    sendMessageWithConfirmation: SendMessageWithConfirmation
+    sendMessageWithConfirmation: SendMessageWithConfirmation,
   ): MessageHandlerOutput => {
     switch (message.discriminator) {
       case messageDiscriminator.sendMessageEventToDapp:
         return sendMessageEventToDapp(
           message.interactionId,
-          message.messageEvent
+          message.messageEvent,
         ).map(() => ({
           sendConfirmation: true,
         }))
@@ -51,22 +52,38 @@ export const ContentScriptMessageHandler =
       }
 
       case messageDiscriminator.incomingDappMessage: {
+        if (
+          message.data.discriminator === messageDiscriminator.extensionStatus
+        ) {
+          return getConnectionPassword()
+            .andThen((connectionPassword) =>
+              sendMessageToDapp(
+                createMessage.extensionStatus(!!connectionPassword),
+              ).map(() => ({ sendConfirmation: false })),
+            )
+            .mapErr((error) => {
+              return {
+                reason: 'unableToGetConnectionPassword',
+              }
+            })
+        }
+
         return sendMessageEventToDapp(
           message.data.interactionId,
-          'receivedByExtension'
+          'receivedByExtension',
         )
           .andThen(() =>
             ResultAsync.combine([
               sendMessageWithConfirmation(
                 createMessage.dAppRequest(
                   'contentScript',
-                  addMetadata(message.data)
-                )
+                  addMetadata(message.data),
+                ),
               ),
               sendMessageWithConfirmation(
-                createMessage.detectWalletLink('contentScript')
+                createMessage.detectWalletLink('contentScript'),
               ),
-            ])
+            ]),
           )
           .map(() => ({
             sendConfirmation: false,

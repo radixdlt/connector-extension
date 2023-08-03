@@ -9,32 +9,34 @@ import { exhaustMap, filter, first, mergeMap, Subject, tap } from 'rxjs'
 import { parseJSON } from 'utils'
 
 const waitForMetaData = (
-  onDataChannelMessageSubject: Subject<ChunkedMessageType>
+  onDataChannelMessageSubject: Subject<ChunkedMessageType>,
 ) =>
   onDataChannelMessageSubject.pipe(
-    filter((message): message is MetaData => message.packageType === 'metaData')
+    filter(
+      (message): message is MetaData => message.packageType === 'metaData',
+    ),
   )
 
 const waitForMessageChuck = (
   onDataChannelMessageSubject: Subject<ChunkedMessageType>,
-  messageId: string
+  messageId: string,
 ) =>
   onDataChannelMessageSubject.pipe(
     filter(
       (message): message is MessageChunk =>
-        message.packageType === 'chunk' && message.messageId === messageId
-    )
+        message.packageType === 'chunk' && message.messageId === messageId,
+    ),
   )
 
 export const handleIncomingChunkedMessages = (
-  onDataChannelMessageSubject: Subject<ChunkedMessageType>
+  onDataChannelMessageSubject: Subject<ChunkedMessageType>,
 ) =>
   waitForMetaData(onDataChannelMessageSubject).pipe(
     exhaustMap((metadata) => {
       const chunked = Chunked(metadata)
       const messageChunk$ = waitForMessageChuck(
         onDataChannelMessageSubject,
-        metadata.messageId
+        metadata.messageId,
       )
       return messageChunk$.pipe(
         tap((chunk) => chunked.addChunk(chunk)),
@@ -49,8 +51,8 @@ export const handleIncomingChunkedMessages = (
             .toString()
             .andThen(parseJSON<Message>)
             .map((message) => ({ messageId: metadata.messageId, message }))
-            .mapErr(() => metadata.messageId)
-        )
+            .mapErr(() => metadata.messageId),
+        ),
       )
-    })
+    }),
   )

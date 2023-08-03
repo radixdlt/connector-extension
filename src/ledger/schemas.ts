@@ -8,18 +8,22 @@ const ledgerDeviceModel = union([
   literal('nanoX'),
 ])
 
-const ledgerModel: Record<string, z.infer<typeof ledgerDeviceModel>> = {
-  '00': 'nanoS',
-  '01': 'nanoS+',
-  '02': 'nanoX',
-}
-
 const ledgerDiscriminator = union([
   literal('getDeviceInfo'),
   literal('derivePublicKeys'),
   literal('signTransaction'),
   literal('signChallenge'),
 ])
+
+export const LedgerDiscriminator: Record<
+  z.infer<typeof ledgerDiscriminator>,
+  string
+> = {
+  getDeviceInfo: 'getDeviceInfo',
+  derivePublicKeys: 'derivePublicKeys',
+  signTransaction: 'signTransaction',
+  signChallenge: 'signChallenge',
+} as const
 
 export const LedgerDeviceSchema = object({
   name: string().optional(),
@@ -157,13 +161,19 @@ export const LedgerErrorResponseSchema = object({
   }),
 })
 
-export type LedgerErrorResponse = z.infer<typeof LedgerErrorResponseSchema>
-
-export const LedgerResponseSchema = union([
+export const LedgerSuccessResponseSchema = union([
   LedgerDeviceIdResponseSchema,
   LedgerPublicKeyResponseSchema,
   LedgerSignTransactionResponseSchema,
   LedgerSignChallengeResponseSchema,
+])
+
+export type LedgerSuccessResponse = z.infer<typeof LedgerSuccessResponseSchema>
+
+export type LedgerErrorResponse = z.infer<typeof LedgerErrorResponseSchema>
+
+export const LedgerResponseSchema = union([
+  LedgerSuccessResponseSchema,
   LedgerErrorResponseSchema,
 ])
 
@@ -178,66 +188,36 @@ export const isLedgerRequest = (message: any): message is LedgerRequest =>
   ].includes(message?.discriminator)
 
 export const isDeviceIdRequest = (
-  message?: LedgerRequest
+  message?: LedgerRequest,
 ): message is LedgerDeviceIdRequest =>
   message?.discriminator === 'getDeviceInfo'
 
 export const isPublicKeyRequest = (
-  message?: LedgerRequest
+  message?: LedgerRequest,
 ): message is LedgerPublicKeyRequest =>
   message?.discriminator === 'derivePublicKeys'
 
 export const isSignTransactionRequest = (
-  message?: LedgerRequest
+  message?: LedgerRequest,
 ): message is LedgerSignTransactionRequest =>
   message?.discriminator === 'signTransaction'
 
 export const isSignChallengeRequest = (
-  message?: LedgerRequest
+  message?: LedgerRequest,
 ): message is LedgerSignChallengeRequest =>
   message?.discriminator === 'signChallenge'
 
-export const createLedgerDeviceIdResponse = (
-  {
-    interactionId,
-    discriminator,
-  }: Pick<LedgerDeviceIdRequest, 'interactionId' | 'discriminator'>,
-  ledgerDeviceId: string,
-  model: string
-): LedgerDeviceIdResponse => ({
-  interactionId,
-  discriminator,
-  success: {
-    id: ledgerDeviceId,
-    model: ledgerModel[model],
-  },
-})
-
-export const createSignedResponse = (
-  {
-    interactionId,
-    discriminator,
-  }: {
-    interactionId: string
-    discriminator: 'signTransaction' | 'signChallenge'
-  },
-  success: SignatureOfSigner[]
-) => ({
+export const createLedgerSuccessResponse = <T extends LedgerRequest, E>(
+  { interactionId, discriminator }: T,
+  success: E,
+): {
+  interactionId: string
+  discriminator: T['discriminator']
+  success: E
+} => ({
   interactionId,
   discriminator,
   success,
-})
-
-export const createLedgerPublicKeyResponse = (
-  {
-    interactionId,
-    discriminator,
-  }: Pick<LedgerPublicKeyRequest, 'interactionId' | 'discriminator'>,
-  derivedPublicKeys: DerivedPublicKey[]
-): LedgerPublicKeyResponse => ({
-  interactionId,
-  discriminator,
-  success: derivedPublicKeys,
 })
 
 export const createLedgerErrorResponse = (
@@ -245,7 +225,7 @@ export const createLedgerErrorResponse = (
     interactionId,
     discriminator,
   }: Pick<LedgerRequest, 'interactionId' | 'discriminator'>,
-  message: string
+  message: string,
 ) => ({
   interactionId,
   discriminator,

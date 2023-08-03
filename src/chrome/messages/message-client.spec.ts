@@ -32,7 +32,7 @@ const createTestHelper = ({
 
         return okAsync(undefined)
       },
-    }
+    },
   ),
   offScreenMessageClient = MessageClient(
     OffscreenMessageHandler({
@@ -58,7 +58,7 @@ const createTestHelper = ({
         messageClientSubjects.messageSubject.next({ message, tabId })
         return okAsync(undefined)
       },
-    }
+    },
   ),
   contentScriptMessageClient = MessageClient(
     ContentScriptMessageHandler({
@@ -75,7 +75,7 @@ const createTestHelper = ({
         messageClientSubjects.messageSubject.next({ message, tabId })
         return okAsync(undefined)
       },
-    }
+    },
   ),
 }: Partial<{
   messagesRouter: MessagesRouter
@@ -87,17 +87,17 @@ const createTestHelper = ({
 }>) => {
   const mockIncomingDappMessage = (message: Record<string, any>) => {
     contentScriptMessageClient.onMessage(
-      createMessage.incomingDappMessage('dApp', message)
+      createMessage.incomingDappMessage('dApp', message),
     )
   }
 
   const mockIncomingWalletMessage = (
     message: Record<string, any>,
-    tabId?: number
+    tabId?: number,
   ) => {
     offScreenMessageClient.onMessage(
       createMessage.incomingWalletMessage('wallet', message),
-      tabId
+      tabId,
     )
   }
 
@@ -123,14 +123,14 @@ describe('message client', () => {
           filter(
             ({ message }) =>
               message.discriminator === 'confirmation' &&
-              message.source === 'offScreen'
-          )
-        )
+              message.source === 'offScreen',
+          ),
+        ),
       ),
       firstValueFrom(
         testHelper.subjects.messageSubject.pipe(
-          filter(({ message }) => message.discriminator === 'detectWalletLink')
-        )
+          filter(({ message }) => message.discriminator === 'detectWalletLink'),
+        ),
       ),
     ])
   })
@@ -139,28 +139,28 @@ describe('message client', () => {
   // so it has to proxy the message through background message handler
   it('should send wallet response to dApp', async () => {
     const testHelper = createTestHelper({})
-    testHelper.messageRouter.add(1, '456', '')
+    testHelper.messageRouter.add(1, '456', { origin: 'origin', networkId: 1 })
     testHelper.mockIncomingWalletMessage({ interactionId: '456' }, 1)
 
     await Promise.all([
       firstValueFrom(
         testHelper.subjects.messageSubject.pipe(
-          filter(({ message }) => message.discriminator === 'sendMessageToTab')
-        )
+          filter(({ message }) => message.discriminator === 'sendMessageToTab'),
+        ),
       ),
       firstValueFrom(
         testHelper.subjects.messageSubject.pipe(
-          filter(({ message }) => message.discriminator === 'walletResponse')
-        )
+          filter(({ message }) => message.discriminator === 'walletResponse'),
+        ),
       ),
       firstValueFrom(
         testHelper.subjects.messageSubject.pipe(
           filter(
             ({ message }) =>
               message.discriminator === 'confirmation' &&
-              message.source === 'contentScript'
-          )
-        )
+              message.source === 'contentScript',
+          ),
+        ),
       ),
     ])
   })
@@ -188,18 +188,18 @@ describe('message client', () => {
             subjects.messageSubject.next({ message, tabId })
             return okAsync(undefined)
           },
-        }
+        },
       ),
     })
 
-    testHelper.messageRouter.add(1, '456', '')
+    testHelper.messageRouter.add(1, '456', { origin: 'origin', networkId: 1 })
     testHelper.mockIncomingWalletMessage({ interactionId: '456' }, 1)
 
     await Promise.all([
       firstValueFrom(
         testHelper.subjects.messageSubject.pipe(
-          filter(({ message }) => message.discriminator === 'sendMessageToTab')
-        )
+          filter(({ message }) => message.discriminator === 'sendMessageToTab'),
+        ),
       ),
       firstValueFrom(
         testHelper.subjects.messageSubject.pipe(
@@ -208,9 +208,9 @@ describe('message client', () => {
               message.discriminator === 'confirmation' &&
               message.source === 'background' &&
               message.success === false &&
-              message.error.reason === 'tabNotFound'
-          )
-        )
+              message.error.reason === 'tabNotFound',
+          ),
+        ),
       ),
     ])
   })

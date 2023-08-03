@@ -19,6 +19,6 @@ export const openParingPopup = () =>
               left,
               height,
               top,
-            }).andThen((popup) => setPopupId(popup?.id))
-      )
+            }).andThen((popup) => setPopupId(popup?.id)),
+      ),
     )

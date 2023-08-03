@@ -75,7 +75,7 @@ export const DataChannelClient = (input: {
   subscriptions.add(
     input.sendMessageOverDataChannelSubject
       .pipe(tap(sendMessageOverDataChannel))
-      .subscribe()
+      .subscribe(),
   )
 
   subscriptions.add(
@@ -87,10 +87,10 @@ export const DataChannelClient = (input: {
               sendConfirmationMessage(messageId)
               input.onMessage.next(message)
             })
-            .mapErr(sendErrorMessage)
-        )
+            .mapErr(sendErrorMessage),
+        ),
       )
-      .subscribe()
+      .subscribe(),
   )
 
   return {

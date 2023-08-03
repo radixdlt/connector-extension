@@ -30,7 +30,7 @@ export const MessageClient = (
     subjects?: MessageSubjects
     sendMessage?: SendMessage
     logger: AppLogger
-  }
+  },
 ) => {
   const subjects = input.subjects || MessageSubjects()
   const sendMessage = input.sendMessage || sendMessageFn
@@ -39,7 +39,7 @@ export const MessageClient = (
 
   const sendMessageAndWaitForConfirmation = <T = undefined>(
     value: Message,
-    tabId?: number
+    tabId?: number,
   ): ResultAsync<T, ConfirmationMessageError['error']> => {
     const shouldProxyMessageThroughBackground =
       value.source !== 'background' && tabId
@@ -51,27 +51,27 @@ export const MessageClient = (
     const confirmation$ = subjects.messageSubject.pipe(
       filter(
         (
-          value
+          value,
         ): value is { message: Messages['confirmation']; tabId?: number } =>
           value.message.discriminator === 'confirmation' &&
-          message.messageId === value.message.messageId
+          message.messageId === value.message.messageId,
       ),
       first(),
       map(
         (
-          confirmation
+          confirmation,
         ): Result<
           ConfirmationMessageSuccess<T>['data'],
           ConfirmationMessageError['error']
         > =>
           confirmation.message.success
             ? ok(confirmation.message.data)
-            : err(confirmation.message.error)
-      )
+            : err(confirmation.message.error),
+      ),
     )
 
     const waitForConfirmation = ResultAsync.fromSafePromise(
-      firstValueFrom(confirmation$)
+      firstValueFrom(confirmation$),
     ).andThen((result) => result)
 
     return sendMessage(message, tabId).andThen(() => waitForConfirmation)
@@ -90,7 +90,7 @@ export const MessageClient = (
   }) =>
     sendMessage(
       createMessage.confirmationSuccess(origin, messageId, data),
-      tabId
+      tabId,
     )
 
   const sendConfirmationError = ({
@@ -106,7 +106,7 @@ export const MessageClient = (
   }) =>
     sendMessage(
       createMessage.confirmationError(origin, messageId, error),
-      tabId
+      tabId,
     )
 
   subscriptions.add(
@@ -123,7 +123,7 @@ export const MessageClient = (
                     tabId,
                     data: result.data,
                   })
-                : ok(undefined)
+                : ok(undefined),
             )
             .mapErr((error) => {
               if (error.reason !== 'unhandledMessageDiscriminator')
@@ -137,10 +137,10 @@ export const MessageClient = (
                       ? undefined
                       : tabId,
                 })
-            })
-        )
+            }),
+        ),
       )
-      .subscribe()
+      .subscribe(),
   )
 
   return {

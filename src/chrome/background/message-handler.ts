@@ -10,10 +10,15 @@ import {
 } from '../messages/_types'
 import { getConnectionPassword as getConnectionPasswordFn } from '../helpers/get-connection-password'
 import { config } from 'config'
-import { sendMessageToTab } from 'chrome/helpers/send-message-to-tab'
-import { createAndFocusTab } from 'chrome/helpers/create-and-focus-tab'
 import { LedgerTabWatcher } from './ledger-tab-watcher'
-import { createOrFocusPopupWindow } from 'chrome/helpers/create-or-focus-popup-window'
+import { ensureTab } from 'chrome/helpers/ensure-tab'
+import { focusTabByUrl } from 'chrome/helpers/focus-tab'
+import { createGatewayClient } from './gateway-client'
+import {
+  notificationDispatcher,
+  WalletInteraction,
+} from './notification-dispatcher'
+import { RadixNetwork } from '@radixdlt/babylon-gateway-api-sdk'
 
 export type BackgroundMessageHandler = ReturnType<
   typeof BackgroundMessageHandler
@@ -34,7 +39,7 @@ export const BackgroundMessageHandler =
   }>) =>
   (
     message: Message,
-    sendMessageWithConfirmation: SendMessageWithConfirmation
+    sendMessageWithConfirmation: SendMessageWithConfirmation,
   ): MessageHandlerOutput => {
     switch (message.discriminator) {
       case messageDiscriminator.getConnectionPassword:
@@ -53,7 +58,7 @@ export const BackgroundMessageHandler =
           .andThen((connectionPassword) =>
             connectionPassword
               ? closePopup().map(() => !!connectionPassword)
-              : openParingPopup().map(() => !!connectionPassword)
+              : openParingPopup().map(() => !!connectionPassword),
           )
           .map((isLinked) => ({
             sendConfirmation: true,
@@ -67,27 +72,10 @@ export const BackgroundMessageHandler =
       case messageDiscriminator.sendMessageToTab: {
         return sendMessageWithConfirmation(
           { ...message.data, source: 'background' },
-          message.tabId
+          message.tabId,
         ).map(() => ({
           sendConfirmation: true,
         }))
-      }
-
-      case messageDiscriminator.convertPopupToTab: {
-        return ledgerTabWatcher
-          .restoreInitial()
-          .andThen(() =>
-            createAndFocusTab(config.popup.pages.ledger)
-              .andThen((tab) =>
-                ledgerTabWatcher
-                  .setWatchedTab(tab.id!, message.data.data)
-                  .map(() => tab)
-              )
-              .andThen((tab) => sendMessageToTab(tab.id!, message.data))
-              .map(() => ({ sendConfirmation: false }))
-              .mapErr(() => ({ reason: 'failedToOpenLedgerTab' }))
-          )
-          .mapErr(() => ({ reason: 'failedRestoringTabWatcher' }))
       }
 
       case messageDiscriminator.closeLedgerTab: {
@@ -104,30 +92,67 @@ export const BackgroundMessageHandler =
                 reason: 'failedToCloseLedgerTab',
               })).map(() => ({
                 sendConfirmation: false,
-              }))
+              })),
             )
           })
           .mapErr(() => ({ reason: 'failedToCloseLedgerTab' }))
+      }
+
+      case messageDiscriminator.focusLedgerTab: {
+        return focusTabByUrl(config.popup.pages.ledger)
+          .map(() => ({
+            sendConfirmation: false,
+          }))
+          .mapErr(() => ({ reason: 'failedToFocusLedgerTab' }))
+      }
+
+      case messageDiscriminator.walletResponse: {
+        if (message.data?.items?.discriminator === 'transaction') {
+          const txIntentHash = message.data.items.send.transactionIntentHash
+          const networkId =
+            message.data?.metadata?.networkId || RadixNetwork.Ansharnet
+          logger?.debug('🔁 Polling', { txIntentHash, networkId })
+          const gatewayClient = createGatewayClient(networkId)
+
+          gatewayClient.pollTransactionStatus(txIntentHash).map((result) => {
+            notificationDispatcher.transaction(
+              networkId,
+              txIntentHash,
+              result.status,
+            )
+          })
+        }
+        return okAsync({ sendConfirmation: false })
+      }
+
+      case messageDiscriminator.dAppRequest: {
+        getConnectionPassword().map((connectionPassword) => {
+          if (connectionPassword) {
+            notificationDispatcher.request(message.data as WalletInteraction)
+          }
+        })
+
+        return okAsync({ sendConfirmation: false })
       }
 
       case messageDiscriminator.walletToLedger:
         return ledgerTabWatcher
           .restoreInitial()
           .andThen(() =>
-            createOrFocusPopupWindow(config.popup.pages.ledger)
+            ensureTab(config.popup.pages.ledger)
               .andThen((tab) =>
                 ledgerTabWatcher
                   .setWatchedTab(tab.id!, message.data)
-                  .map(() => tab)
+                  .map(() => tab),
               )
               .andThen((tab) =>
                 sendMessageWithConfirmation(
                   { ...message, source: 'background' },
-                  tab.id
-                )
+                  tab.id,
+                ),
               )
-              .map(() => ({ sendConfirmation: true }))
-              .mapErr(() => ({ reason: 'failedToOpenLedgerTab' }))
+              .map(() => ({ sendConfirmation: false }))
+              .mapErr(() => ({ reason: 'failedToOpenLedgerTab' })),
           )
           .mapErr(() => ({ reason: 'failedRestoringTabWatcher' }))
 

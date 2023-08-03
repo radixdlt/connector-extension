@@ -23,8 +23,8 @@ export const WalletSimulator = () => {
   const messages = {
     'Get UDI': getDeviceInfoPayload(),
     'Get Public Key': getDerivePublicKeyPayload(),
-    'Sign "Set Metadata" TX (Secp256k1)': getSignSecp256k1TransactionPayload(),
-    'Sign "Create Account" TX (Curve25519)': getSignEd25519TransactionPayload(),
+    'Sign TX (Secp256k1)': getSignSecp256k1TransactionPayload(),
+    'Sign TX (Curve25519)': getSignEd25519TransactionPayload(),
     'Sign Auth (Curve25519)': getSignEd222519ChallengePayload(),
     'Sign Auth (Secp256k1)': getSignSecp256k1ChallengePayload(),
   }
@@ -41,7 +41,7 @@ export const WalletSimulator = () => {
     getConnectionPassword().map((connectionPassword) => {
       if (connectionPassword) {
         connectorClient.setConnectionPassword(
-          Buffer.from(connectionPassword, 'hex')
+          Buffer.from(connectionPassword, 'hex'),
         )
       }
     })
@@ -50,7 +50,7 @@ export const WalletSimulator = () => {
       connectorClient.connected$.subscribe(setConnectorStatus)
 
     connectorClient.onMessage$.subscribe((msg) =>
-      setResponseMessage(JSON.stringify(msg, null, 2))
+      setResponseMessage(JSON.stringify(msg, null, 2)),
     )
 
     setConnector(connectorClient)
@@ -77,12 +77,12 @@ export const WalletSimulator = () => {
   }
 
   return (
-    <Box p="medium">
+    <Box p="medium" bg="white" rounded mr="lg">
       <Header dark>Wallet Simulator</Header>
       <Box justify="between">
         <Box flex="row">
           <Text bold>Connector</Text>
-          <Text ml="medium">{connectorStatus ? '🟢' : '🔴'}</Text>
+          <Text ml="md">{connectorStatus ? '🟢' : '🔴'}</Text>
         </Box>
         <Button onClick={toggleConnection}>
           {connectorStatus ? 'Disconnect' : 'Connect'}
@@ -95,8 +95,8 @@ export const WalletSimulator = () => {
         <Box>
           {Object.entries(messages).map(([button, value]) => (
             <Button
-              ml="small"
-              mb="small"
+              ml="sm"
+              mb="sm"
               size="small"
               key={button}
               onClick={() => setMessage(JSON.stringify(value, null, 2))}

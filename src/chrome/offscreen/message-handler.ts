@@ -12,6 +12,7 @@ import {
   SendMessageWithConfirmation,
 } from '../messages/_types'
 import { LedgerResponse, isLedgerRequest } from 'ledger/schemas'
+import { sendMessage } from 'chrome/helpers/send-message'
 
 export type OffscreenMessageHandler = ReturnType<typeof OffscreenMessageHandler>
 export const OffscreenMessageHandler = (input: {
@@ -32,7 +33,7 @@ export const OffscreenMessageHandler = (input: {
   return (
     message: Message,
     sendMessageWithConfirmation: SendMessageWithConfirmation,
-    tabId?: number
+    tabId?: number,
   ): MessageHandlerOutput => {
     switch (message.discriminator) {
       case messageDiscriminator.walletMessage: {
@@ -40,16 +41,16 @@ export const OffscreenMessageHandler = (input: {
           logger.debug(
             '🪪 -> 📒: walletToLedgerSubject',
             message.data.interactionId,
-            message.data.discriminator
+            message.data.discriminator,
           )
 
           return sendMessageWithConfirmation(
-            createMessage.walletToLedger('offScreen', message.data)
+            createMessage.walletToLedger('offScreen', message.data),
           ).map(() => ({ sendConfirmation: false }))
         } else {
           incomingWalletMessageQueue.add(
             message.data,
-            message.data.interactionId
+            message.data.interactionId,
           )
         }
 
@@ -60,7 +61,7 @@ export const OffscreenMessageHandler = (input: {
         const { connectionPassword } = message
         if (connectionPassword) {
           connectorClient.setConnectionPassword(
-            Buffer.from(connectionPassword, 'hex')
+            Buffer.from(connectionPassword, 'hex'),
           )
           connectorClient.connect()
         } else {
@@ -72,7 +73,7 @@ export const OffscreenMessageHandler = (input: {
       case messageDiscriminator.dAppRequest: {
         const { interactionId, metadata } = message.data
         return messageRouter
-          .add(tabId!, interactionId, metadata.origin)
+          .add(tabId!, interactionId, metadata)
           .asyncAndThen(() => {
             if (message.data?.items?.discriminator === 'cancelRequest')
               return dAppRequestQueue
@@ -82,15 +83,22 @@ export const OffscreenMessageHandler = (input: {
                     createMessage.sendMessageEventToDapp(
                       'offScreen',
                       'requestCancelSuccess',
-                      interactionId
+                      interactionId,
                     ),
-                    tabId!
-                  )
+                    tabId,
+                  ),
                 )
 
             return dAppRequestQueue.add(message.data, interactionId)
           })
           .map(() => ({ sendConfirmation: true }))
+      }
+
+      case messageDiscriminator.offscreenLog: {
+        const level = message.log._meta.logLevelName.toLowerCase() || 'debug'
+        delete message.log._meta
+        ;(logger as any)?.[level](...Object.values(message.log))
+        return okAsync({ sendConfirmation: false })
       }
 
       case messageDiscriminator.incomingWalletMessage:
@@ -99,9 +107,23 @@ export const OffscreenMessageHandler = (input: {
           .mapErr(() => ({ reason: 'tabIdNotFound' }))
           .andThen((tabId) =>
             sendMessageWithConfirmation(
+              // this is targetted to particular dApp
               createMessage.walletResponse('offScreen', message.data),
-              tabId
-            )
+              tabId,
+            ),
+          )
+          .andThen(() => messageRouter.getNetworkId(message.data.interactionId))
+          .mapErr(() => ({ reason: 'networkIdNotFound' }))
+          .map((networkId) =>
+            sendMessage(
+              // this is for background script to handle notifications
+              createMessage.walletResponse('offScreen', {
+                ...message.data,
+                metadata: {
+                  networkId,
+                },
+              }),
+            ),
           )
           .map(() => ({ sendConfirmation: true }))
 
