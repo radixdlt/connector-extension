@@ -6,6 +6,7 @@ import { ConfirmationMessageError, Message } from '../messages/_types'
 import { errAsync, okAsync, ResultAsync } from 'neverthrow'
 import { logger } from 'utils/logger'
 import { MessageLifeCycleEvent } from 'chrome/dapp/_types'
+import { getConnectionPassword } from 'chrome/helpers/get-connection-password'
 
 const chromeDAppClient = ChromeDAppClient()
 
@@ -57,3 +58,7 @@ chrome.storage.onChanged.addListener(
       )
   },
 )
+
+getConnectionPassword().map((connectionPassword) => {
+  sendMessageToDapp(createMessage.extensionStatus(!!connectionPassword))
+})
