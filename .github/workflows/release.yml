@@ -30,7 +30,7 @@ jobs:
         run: npm run build:rcnet
         
       - name: Github PreRelease
-        if: github.ref == 'refs/heads/develop'
+        if: github.ref == 'refs/heads/develop' || github.ref == 'refs/heads/release/ledger'
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }} 
           GOOGLE_CLIENT_ID: ${{ secrets.CLIENT_ID }}
