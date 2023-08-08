@@ -1,4 +1,4 @@
-import { PopupWindow, Text } from 'components'
+import { Button, PopupWindow, Text } from 'components'
 import { useEffect, useState } from 'react'
 import {
   LedgerResponse,
@@ -76,34 +76,6 @@ const viewsDefinition = {
   }),
 }
 
-const renderContent = (discriminator: string) => {
-  if (discriminator === LedgerDiscriminator.getDeviceInfo) {
-    return (
-      <Text>
-        Connect the <strong>Ledger S, S+</strong>, or <strong>Nano X</strong>{' '}
-        hardware wallet device you want to connect to your Radix Wallet.
-      </Text>
-    )
-  }
-
-  if (discriminator === LedgerDiscriminator.derivePublicKeys) {
-    return (
-      <Text>
-        Connect the following hardware wallet device to create an account.
-      </Text>
-    )
-  }
-
-  if (
-    [
-      LedgerDiscriminator.signTransaction,
-      LedgerDiscriminator.signChallenge,
-    ].includes(discriminator)
-  ) {
-    return <Text>Connect the following hardware wallet device to sign.</Text>
-  }
-}
-
 export const Ledger = () => {
   const [progressMessage, setProgressMessage] = useState<string | undefined>()
   const [error, setError] = useState<string | undefined>()
@@ -115,6 +87,51 @@ export const Ledger = () => {
     sendMessage(createMessage.ledgerResponse(response)).map(() =>
       window.close(),
     )
+  }
+
+  const renderContent = (discriminator: string) => {
+    if (discriminator === LedgerDiscriminator.getDeviceInfo) {
+      return (
+        <>
+          <Text>
+            Connect the <strong>Ledger S, S+</strong>, or{' '}
+            <strong>Nano X</strong> hardware wallet device you want to connect
+            to your Radix Wallet.
+          </Text>
+
+          {!error && (
+            <Button
+              mt="2xl"
+              px="2xl"
+              onClick={() => {
+                viewDefinition
+                  ?.requestFunction(currentMessage?.data)
+                  .then(ledgerResponseHandler)
+              }}
+            >
+              Continue
+            </Button>
+          )}
+        </>
+      )
+    }
+
+    if (discriminator === LedgerDiscriminator.derivePublicKeys) {
+      return (
+        <Text>
+          Connect the following hardware wallet device to create an account.
+        </Text>
+      )
+    }
+
+    if (
+      [
+        LedgerDiscriminator.signTransaction,
+        LedgerDiscriminator.signChallenge,
+      ].includes(discriminator)
+    ) {
+      return <Text>Connect the following hardware wallet device to sign.</Text>
+    }
   }
 
   const ledgerResponseHandler = async (response: Result<any, any>) => {
@@ -161,6 +178,7 @@ export const Ledger = () => {
           [
             LedgerDiscriminator.signChallenge,
             LedgerDiscriminator.signTransaction,
+            LedgerDiscriminator.getDeviceInfo,
           ].includes(message.data.discriminator)
         ) {
           sendMessage(createMessage.focusLedgerTab())
@@ -185,7 +203,11 @@ export const Ledger = () => {
   }, [])
 
   useEffect(() => {
-    if (viewDefinition && currentMessage) {
+    if (
+      viewDefinition &&
+      currentMessage &&
+      currentMessage.data.discriminator !== LedgerDiscriminator.getDeviceInfo
+    ) {
       viewDefinition
         .requestFunction(currentMessage.data)
         .then(ledgerResponseHandler)
