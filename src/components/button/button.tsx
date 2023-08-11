@@ -17,6 +17,12 @@ export const Button = styled('button', {
 
   variants: {
     ...m,
+    px: {
+      '2xl': {
+        paddingLeft: '$2xl',
+        paddingRight: '$2xl',
+      },
+    },
     full: {
       true: {
         width: '$1',

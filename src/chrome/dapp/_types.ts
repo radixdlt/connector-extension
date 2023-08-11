@@ -10,6 +10,7 @@ export const messageLifeCycleEvent = {
   receivedByWallet: 'receivedByWallet',
   requestCancelSuccess: 'requestCancelSuccess',
   requestCancelFail: 'requestCancelFail',
+  extensionStatus: 'extensionStatus',
 } as const
 
 export type MessageLifeCycleEvent = keyof typeof messageLifeCycleEvent

@@ -9,6 +9,7 @@ export const messageDiscriminator = {
   closeLedgerTab: 'closeLedgerTab',
   focusLedgerTab: 'focusLedgerTab',
   closeDappTab: 'closeDappTab',
+  extensionStatus: 'extensionStatus',
   ledgerResponse: 'ledgerResponse',
   walletToLedger: 'walletToLedger',
   walletResponse: 'walletResponse',
@@ -67,6 +68,14 @@ export type SendMessageWithConfirmation<T = any> = (
 >
 
 export type Messages = {
+  [messageDiscriminator.extensionStatus]: MessageBuilder<
+    MessageDiscriminator['extensionStatus'],
+    {
+      eventType: MessageDiscriminator['extensionStatus']
+      isWalletLinked: boolean
+      isExtensionAvailable: true
+    }
+  >
   [messageDiscriminator.confirmation]:
     | ConfirmationMessageSuccess
     | ConfirmationMessageError

@@ -1,7 +1,7 @@
 import { createMessage } from 'chrome/messages/create-message'
 import { ConnectorClient } from 'connector/connector-client'
 import { MessagesRouter } from 'message-router'
-import { ResultAsync, errAsync, okAsync } from 'neverthrow'
+import { ResultAsync, errAsync, ok, okAsync } from 'neverthrow'
 import { Queue } from 'queues/queue'
 import { AppLogger, logger as appLogger } from 'utils/logger'
 import {
@@ -75,6 +75,7 @@ export const OffscreenMessageHandler = (input: {
         return messageRouter
           .add(tabId!, interactionId, metadata)
           .asyncAndThen(() => {
+            if (!interactionId) return okAsync(null)
             if (message.data?.items?.discriminator === 'cancelRequest')
               return dAppRequestQueue
                 .cancel(interactionId)

@@ -11,6 +11,7 @@ import {
 } from '../messages/_types'
 import { AppLogger } from 'utils/logger'
 import { MessageLifeCycleEvent } from 'chrome/dapp/_types'
+import { getConnectionPassword } from 'chrome/helpers/get-connection-password'
 
 export type ContentScriptMessageHandlerOptions = {
   logger?: AppLogger
@@ -51,6 +52,22 @@ export const ContentScriptMessageHandler =
       }
 
       case messageDiscriminator.incomingDappMessage: {
+        if (
+          message.data.discriminator === messageDiscriminator.extensionStatus
+        ) {
+          return getConnectionPassword()
+            .andThen((connectionPassword) =>
+              sendMessageToDapp(
+                createMessage.extensionStatus(!!connectionPassword),
+              ).map(() => ({ sendConfirmation: false })),
+            )
+            .mapErr((error) => {
+              return {
+                reason: 'unableToGetConnectionPassword',
+              }
+            })
+        }
+
         return sendMessageEventToDapp(
           message.data.interactionId,
           'receivedByExtension',
