@@ -35,7 +35,6 @@ const manifest = defineManifest(async () => {
     manifest_version: 3,
     name: 'Radix Wallet Connector',
     version: `${major}.${minor}.${patch}`,
-    version_name: version,
     action: {
       default_popup: 'src/pairing/index.html',
     },
