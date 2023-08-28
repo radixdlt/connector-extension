@@ -9,7 +9,7 @@ const { version } = packageJson
 const isDevToolsActive = !!process.env.DEV_TOOLS
 
 // Convert from Semver (example: 0.1.0-beta6)
-const [major, minor, patch, label = '0'] = version
+const [major, minor, patch] = version
   // can only contain digits, dots, or dash
   .replace(/[^\d.-]+/g, '')
   // split into version parts
@@ -34,7 +34,7 @@ const manifest = defineManifest(async () => {
   return {
     manifest_version: 3,
     name: 'Radix Wallet Connector',
-    version: `${major}.${minor}.${patch}.${label}`,
+    version: `${major}.${minor}.${patch}`,
     version_name: version,
     action: {
       default_popup: 'src/pairing/index.html',
