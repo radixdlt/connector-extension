@@ -53,6 +53,15 @@ export const BackgroundMessageHandler =
             data: { connectionPassword },
           }))
 
+      case messageDiscriminator.openParingPopup:
+        return openParingPopup()
+          .mapErr(() => ({
+            reason: 'failedToOpenParingPopup',
+          }))
+          .map(() => ({
+            sendConfirmation: false,
+          }))
+
       case messageDiscriminator.detectWalletLink:
         return getConnectionPassword()
           .andThen((connectionPassword) =>
