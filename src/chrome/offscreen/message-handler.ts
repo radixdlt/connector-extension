@@ -35,7 +35,7 @@ export const OffscreenMessageHandler = (input: {
     sendMessageWithConfirmation: SendMessageWithConfirmation,
     tabId?: number,
   ): MessageHandlerOutput => {
-    switch (message.discriminator) {
+    switch (message?.discriminator) {
       case messageDiscriminator.walletMessage: {
         if (isLedgerRequest(message.data)) {
           logger.debug(

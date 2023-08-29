@@ -36,7 +36,7 @@ export const ContentScriptMessageHandler =
     message: Message,
     sendMessageWithConfirmation: SendMessageWithConfirmation,
   ): MessageHandlerOutput => {
-    switch (message.discriminator) {
+    switch (message?.discriminator) {
       case messageDiscriminator.sendMessageEventToDapp:
         return sendMessageEventToDapp(
           message.interactionId,
@@ -53,7 +53,7 @@ export const ContentScriptMessageHandler =
 
       case messageDiscriminator.incomingDappMessage: {
         if (
-          message.data.discriminator === messageDiscriminator.extensionStatus
+          message.data?.discriminator === messageDiscriminator.extensionStatus
         ) {
           return getConnectionPassword()
             .andThen((connectionPassword) =>

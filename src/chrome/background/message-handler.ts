@@ -41,7 +41,7 @@ export const BackgroundMessageHandler =
     message: Message,
     sendMessageWithConfirmation: SendMessageWithConfirmation,
   ): MessageHandlerOutput => {
-    switch (message.discriminator) {
+    switch (message?.discriminator) {
       case messageDiscriminator.getConnectionPassword:
         return getConnectionPassword()
           .mapErr((error) => ({
