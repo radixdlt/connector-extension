@@ -73,6 +73,12 @@ const buildConfig: UserConfigExport = {
   build: {
     sourcemap: isDevToolsActive ? 'inline' : false,
     rollupOptions: {
+      onwarn(warning, warn) {
+        if (warning.code === 'MODULE_LEVEL_DIRECTIVE') {
+          return
+        }
+        warn(warning)
+      },
       input: {
         options: 'src/options/index.html',
         ledger: 'src/ledger/index.html',
