@@ -14,6 +14,7 @@ export const messageDiscriminator = {
   walletToLedger: 'walletToLedger',
   walletResponse: 'walletResponse',
   toContentScript: 'toContentScript',
+  openParingPopup: 'openParingPopup',
   walletMessage: 'walletMessage',
   sendMessageToTab: 'sendMessageToTab',
   detectWalletLink: 'detectWalletLink',
@@ -68,6 +69,10 @@ export type SendMessageWithConfirmation<T = any> = (
 >
 
 export type Messages = {
+  [messageDiscriminator.openParingPopup]: MessageBuilder<
+    MessageDiscriminator['openParingPopup'],
+    any
+  >
   [messageDiscriminator.extensionStatus]: MessageBuilder<
     MessageDiscriminator['extensionStatus'],
     {

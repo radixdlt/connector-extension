@@ -12,6 +12,7 @@ import {
 import { AppLogger } from 'utils/logger'
 import { MessageLifeCycleEvent } from 'chrome/dapp/_types'
 import { getConnectionPassword } from 'chrome/helpers/get-connection-password'
+import { sendMessage } from 'chrome/messages/send-message'
 
 export type ContentScriptMessageHandlerOptions = {
   logger?: AppLogger
@@ -36,7 +37,7 @@ export const ContentScriptMessageHandler =
     message: Message,
     sendMessageWithConfirmation: SendMessageWithConfirmation,
   ): MessageHandlerOutput => {
-    switch (message.discriminator) {
+    switch (message?.discriminator) {
       case messageDiscriminator.sendMessageEventToDapp:
         return sendMessageEventToDapp(
           message.interactionId,
@@ -52,42 +53,47 @@ export const ContentScriptMessageHandler =
       }
 
       case messageDiscriminator.incomingDappMessage: {
-        if (
-          message.data.discriminator === messageDiscriminator.extensionStatus
-        ) {
-          return getConnectionPassword()
-            .andThen((connectionPassword) =>
-              sendMessageToDapp(
-                createMessage.extensionStatus(!!connectionPassword),
-              ).map(() => ({ sendConfirmation: false })),
+        switch (message.data?.discriminator) {
+          case messageDiscriminator.extensionStatus:
+            return getConnectionPassword()
+              .andThen((connectionPassword) =>
+                sendMessageToDapp(
+                  createMessage.extensionStatus(!!connectionPassword),
+                ).map(() => ({ sendConfirmation: false })),
+              )
+              .mapErr((error) => {
+                return {
+                  reason: 'unableToGetConnectionPassword',
+                }
+              })
+          case messageDiscriminator.openParingPopup:
+            return sendMessage(createMessage.openParingPopup())
+              .map(() => ({
+                sendConfirmation: false,
+              }))
+              .mapErr(() => ({ reason: 'unableToOpenParingPopup' }))
+          default:
+            return sendMessageEventToDapp(
+              message.data.interactionId,
+              'receivedByExtension',
             )
-            .mapErr((error) => {
-              return {
-                reason: 'unableToGetConnectionPassword',
-              }
-            })
+              .andThen(() =>
+                ResultAsync.combine([
+                  sendMessageWithConfirmation(
+                    createMessage.dAppRequest(
+                      'contentScript',
+                      addMetadata(message.data),
+                    ),
+                  ),
+                  sendMessageWithConfirmation(
+                    createMessage.detectWalletLink('contentScript'),
+                  ),
+                ]),
+              )
+              .map(() => ({
+                sendConfirmation: false,
+              }))
         }
-
-        return sendMessageEventToDapp(
-          message.data.interactionId,
-          'receivedByExtension',
-        )
-          .andThen(() =>
-            ResultAsync.combine([
-              sendMessageWithConfirmation(
-                createMessage.dAppRequest(
-                  'contentScript',
-                  addMetadata(message.data),
-                ),
-              ),
-              sendMessageWithConfirmation(
-                createMessage.detectWalletLink('contentScript'),
-              ),
-            ]),
-          )
-          .map(() => ({
-            sendConfirmation: false,
-          }))
       }
 
       default:

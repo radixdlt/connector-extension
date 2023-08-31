@@ -41,7 +41,7 @@ export const BackgroundMessageHandler =
     message: Message,
     sendMessageWithConfirmation: SendMessageWithConfirmation,
   ): MessageHandlerOutput => {
-    switch (message.discriminator) {
+    switch (message?.discriminator) {
       case messageDiscriminator.getConnectionPassword:
         return getConnectionPassword()
           .mapErr((error) => ({
@@ -51,6 +51,15 @@ export const BackgroundMessageHandler =
           .map((connectionPassword) => ({
             sendConfirmation: true,
             data: { connectionPassword },
+          }))
+
+      case messageDiscriminator.openParingPopup:
+        return openParingPopup()
+          .mapErr(() => ({
+            reason: 'failedToOpenParingPopup',
+          }))
+          .map(() => ({
+            sendConfirmation: false,
           }))
 
       case messageDiscriminator.detectWalletLink:

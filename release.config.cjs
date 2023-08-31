@@ -131,6 +131,7 @@ module.exports = {
     [
       '@semantic-release/exec',
       {
+        prepareCmd: './update-version-name.sh ${nextRelease.version}',
         publishCmd: 'npm run build:cd',
       },
     ],

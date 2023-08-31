@@ -10,6 +10,9 @@ import {
 import { MessageLifeCycleEvent } from 'chrome/dapp/_types'
 
 export const createMessage = {
+  openParingPopup: () => ({
+    discriminator: 'openParingPopup',
+  }),
   extensionStatus: (isWalletLinked: boolean) => ({
     eventType: 'extensionStatus',
     isExtensionAvailable: true,
