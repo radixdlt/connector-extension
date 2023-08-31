@@ -28,6 +28,8 @@ export const LedgerInstructionCode = {
   SignTxSecp256k1Smart: '52',
   SignAuthEd25519: '61',
   SignAuthSecp256k1: '71',
+  DeriveAndDisplayAddressEd25519: '81',
+  DeriveAndDisplayAddressSecp256k1: '91',
 } as const
 
 export type LedgerError = Values<typeof LedgerErrorCode>
