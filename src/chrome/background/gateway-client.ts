@@ -65,5 +65,6 @@ export const createGatewayClient = (networkId: number) =>
   GatewayClient({
     gatewayApi: GatewayApiClient.initialize({
       basePath: RadixNetworkConfigById[networkId].gatewayUrl,
+      applicationName: 'Radix Connector Extension',
     }),
   })
