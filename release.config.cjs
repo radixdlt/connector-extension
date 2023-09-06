@@ -140,6 +140,14 @@ module.exports = {
       {
         assets: [
           {
+            path: 'production--radix-connector.zip',
+            label: 'production--radix-connector.zip',
+          },
+          {
+            path: 'production--radix-connector-with-dev-tools.zip',
+            label: 'production--radix-connector-with-dev-tools.zip',
+          },
+          {
             path: 'rcnet--radix-connector.zip',
             label: 'rcnet--radix-connector.zip',
           },
@@ -159,12 +167,12 @@ module.exports = {
       },
     ],
     [
-      "semantic-release-chrome",
+      'semantic-release-chrome',
       {
-        "extensionId": "${EXTENSION_ID}",
-        "asset": "radix-connector.zip",
-        "target": "${TARGET}"
-      }
-    ]
+        extensionId: '${EXTENSION_ID}',
+        asset: 'radix-connector.zip',
+        target: '${TARGET}',
+      },
+    ],
   ],
 }

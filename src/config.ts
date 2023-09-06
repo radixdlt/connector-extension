@@ -28,6 +28,18 @@ const turnServers = {
       credential: 'password',
     },
   ],
+  production: [
+    {
+      urls: 'turn:turn-udp.radixdlt.com:80?transport=udp',
+      username: 'username',
+      credential: 'password',
+    },
+    {
+      urls: 'turn:turn-tcp.radixdlt.com:80?transport=tcp',
+      username: 'username',
+      credential: 'password',
+    },
+  ],
   development: [
     {
       urls: 'turn:turn-dev-udp.rdx-works-main.extratools.works:80?transport=udp',
