@@ -170,7 +170,7 @@ module.exports = {
       'semantic-release-chrome',
       {
         extensionId: '${EXTENSION_ID}',
-        asset: 'radix-connector.zip',
+        asset: 'production-radix-connector.zip',
         target: '${TARGET}',
       },
     ],
