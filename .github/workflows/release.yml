@@ -20,18 +20,18 @@ jobs:
       - name: Use Node.js
         uses: actions/setup-node@v3
         with:
-          node-version: '20.x'
+          node-version: '18.12.0'
 
       - name: Install dependencies
         run: npm pkg delete scripts.prepare && npm ci
 
-      - name: Build rcnet extension
-        run: npm run build:rcnet
-        
+      - name: Build production extension
+        run: npm run build:production
+
       - name: Github PreRelease
         if: github.ref == 'refs/heads/develop'
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }} 
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           GOOGLE_CLIENT_ID: ${{ secrets.CLIENT_ID }}
           GOOGLE_CLIENT_SECRET: ${{ secrets.CLIENT_SECRET }}
           GOOGLE_REFRESH_TOKEN: ${{ secrets.REFRESH_TOKEN }}
@@ -46,7 +46,7 @@ jobs:
       - name: Github Release & Upload to webstore
         if: github.ref == 'refs/heads/main'
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }} 
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           GOOGLE_CLIENT_ID: ${{ secrets.CLIENT_ID }}
           GOOGLE_CLIENT_SECRET: ${{ secrets.CLIENT_SECRET }}
           GOOGLE_REFRESH_TOKEN: ${{ secrets.REFRESH_TOKEN }}
