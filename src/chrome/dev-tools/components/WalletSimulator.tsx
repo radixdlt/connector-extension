@@ -1,5 +1,5 @@
-import { config } from 'config'
-import { ConnectorClient } from 'connector/connector-client'
+import { defaultConnectionConfig } from 'config'
+import { ConnectorClient } from '@radixdlt/radix-connect-webrtc'
 import { useState, useEffect } from 'react'
 import { logger } from 'utils/logger'
 import { Box, Button, Header, Text } from 'components'
@@ -33,10 +33,11 @@ export const WalletSimulator = () => {
     let connectorClient = ConnectorClient({
       source: 'wallet',
       target: 'extension',
-      signalingServerBaseUrl: config.signalingServer.baseUrl,
       isInitiator: false,
       logger,
     })
+
+    connectorClient.setConnectionConfig(defaultConnectionConfig)
 
     getConnectionPassword().map((connectionPassword) => {
       if (connectionPassword) {

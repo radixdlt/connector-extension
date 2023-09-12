@@ -148,14 +148,6 @@ module.exports = {
             label: 'production--radix-connector-with-dev-tools.zip',
           },
           {
-            path: 'rcnet--radix-connector.zip',
-            label: 'rcnet--radix-connector.zip',
-          },
-          {
-            path: 'rcnet--radix-connector-with-dev-tools.zip',
-            label: 'rcnet--radix-connector-with-dev-tools.zip',
-          },
-          {
             path: 'development--radix-connector.zip',
             label: 'development--radix-connector.zip',
           },

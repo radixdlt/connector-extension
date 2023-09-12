@@ -3,8 +3,8 @@ import { ConnectionStatus } from './components/connection-status'
 import { PopupWindow } from 'components'
 import { useEffect, useState } from 'react'
 import { chromeLocalStore } from 'chrome/helpers/chrome-local-store'
-import { ConnectorClient } from 'connector/connector-client'
-import { config } from 'config'
+import { ConnectorClient } from '@radixdlt/radix-connect-webrtc'
+import { config, defaultConnectionConfig } from 'config'
 import { ok } from 'neverthrow'
 import { logger } from 'utils/logger'
 
@@ -20,10 +20,11 @@ export const Paring = () => {
     const connectorClient = ConnectorClient({
       source: 'extension',
       target: 'wallet',
-      signalingServerBaseUrl: config.signalingServer.baseUrl,
       isInitiator: config.webRTC.isInitiator,
       logger,
     })
+
+    connectorClient.setConnectionConfig(defaultConnectionConfig)
 
     chrome.storage.onChanged.addListener((changes, area) => {
       if (area === 'local' && changes['connectionPassword']) {

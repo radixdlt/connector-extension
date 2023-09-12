@@ -1,5 +1,5 @@
-import { config } from 'config'
-import { ConnectorClient } from 'connector/connector-client'
+import { config, defaultConnectionConfig } from 'config'
+import { ConnectorClient } from '@radixdlt/radix-connect-webrtc'
 import { LedgerResponse } from 'ledger/schemas'
 import { logger } from 'utils/logger'
 import { Queue } from 'queues/queue'
@@ -16,10 +16,11 @@ const messageRouter = MessagesRouter({ logger })
 const connectorClient = ConnectorClient({
   source: 'extension',
   target: 'wallet',
-  signalingServerBaseUrl: config.signalingServer.baseUrl,
-  isInitiator: true,
+  isInitiator: config.webRTC.isInitiator,
   logger,
 })
+
+connectorClient.setConnectionConfig(defaultConnectionConfig)
 
 connectorClient.connect()
 

@@ -1,5 +1,5 @@
 import { createMessage } from 'chrome/messages/create-message'
-import { ConnectorClient } from 'connector/connector-client'
+import { ConnectorClient } from '@radixdlt/radix-connect-webrtc'
 import { MessagesRouter } from 'message-router'
 import { ResultAsync, errAsync, ok, okAsync } from 'neverthrow'
 import { Queue } from 'queues/queue'
