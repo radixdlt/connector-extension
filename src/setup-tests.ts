@@ -16,6 +16,9 @@ global.navigator.hid = {
   getDevices: () => Promise.resolve([]),
 }
 
+global.CSS = {
+  supports: (k, v) => false,
+}
 global.chrome = chrome
 global.chrome.storage = {
   onChanged: {
@@ -42,9 +45,3 @@ global.chrome.runtime = {
 
 global.crypto.subtle = webcrypto.subtle
 global.crypto.randomUUID = randomUUID
-
-import(process.env.CI ? 'wrtc' : '@koush/wrtc').then((webRTC) => {
-  global.RTCPeerConnection = webRTC.RTCPeerConnection
-  global.RTCIceCandidate = webRTC.RTCIceCandidate
-  global.RTCSessionDescription = webRTC.RTCSessionDescription
-})
