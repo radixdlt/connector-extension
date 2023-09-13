@@ -5,6 +5,8 @@ import { ResultAsync } from 'neverthrow'
 export const messageDiscriminator = {
   getConnectionPassword: 'getConnectionPassword',
   setConnectionPassword: 'setConnectionPassword',
+  setRadixConnectConfiguration: 'setRadixConnectConfiguration',
+  getExtensionOptions: 'getExtensionOptions',
   dAppRequest: 'dAppRequest',
   closeLedgerTab: 'closeLedgerTab',
   focusLedgerTab: 'focusLedgerTab',
@@ -94,7 +96,10 @@ export type Messages = {
     MessageDiscriminator['offscreenLog'],
     { log: any }
   >
-
+  [messageDiscriminator.getExtensionOptions]: MessageBuilder<
+    MessageDiscriminator['getExtensionOptions'],
+    {}
+  >
   [messageDiscriminator.getConnectionPassword]: MessageBuilder<
     MessageDiscriminator['getConnectionPassword'],
     {}

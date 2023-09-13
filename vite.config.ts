@@ -7,6 +7,7 @@ import packageJson from './package.json'
 const { version } = packageJson
 
 const isDevToolsActive = !!process.env.DEV_TOOLS
+const versionName = process.env.GITHUB_REF_NAME || 'local'
 
 // Convert from Semver (example: 0.1.0-beta6)
 const [major, minor, patch] = version
@@ -35,7 +36,7 @@ const manifest = defineManifest(async () => {
     manifest_version: 3,
     name: 'Radix Wallet Connector',
     version: `${major}.${minor}.${patch}`,
-    version_name: version,
+    version_name: version === '0.0.0' ? versionName : version,
     action: {
       default_popup: 'src/pairing/index.html',
     },

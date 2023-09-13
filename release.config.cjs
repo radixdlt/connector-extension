@@ -140,20 +140,12 @@ module.exports = {
       {
         assets: [
           {
-            path: 'production--radix-connector.zip',
-            label: 'production--radix-connector.zip',
+            path: 'radix-connector.zip',
+            label: 'radix-connector.zip',
           },
           {
-            path: 'production--radix-connector-with-dev-tools.zip',
-            label: 'production--radix-connector-with-dev-tools.zip',
-          },
-          {
-            path: 'development--radix-connector.zip',
-            label: 'development--radix-connector.zip',
-          },
-          {
-            path: 'development--radix-connector-with-dev-tools.zip',
-            label: 'development--radix-connector-with-dev-tools.zip',
+            path: 'radix-connector-with-dev-tools.zip',
+            label: 'radix-connector-with-dev-tools.zip',
           },
         ],
       },

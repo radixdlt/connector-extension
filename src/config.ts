@@ -21,7 +21,7 @@ const developmentConfig: Required<ConnectionConfig> = {
   ],
 }
 
-const radixConnectConfig: Record<string, Required<ConnectionConfig>> = {
+export const radixConnectConfig: Record<string, Required<ConnectionConfig>> = {
   production: {
     signalingServerBaseUrl: 'wss://signaling-server.radixdlt.com',
     turnServers: [
@@ -46,16 +46,19 @@ export const mode = import.meta.env.MODE as
   | 'development'
   | 'test'
 
+export const defaultRadixConnectConfig =
+  import.meta.env.VITE_GITHUB_REF_NAME === 'main' ? 'production' : 'development'
+
 export const defaultConnectionConfig: ConnectionConfig = {
-  turnServers: radixConnectConfig[mode].turnServers,
+  turnServers: radixConnectConfig[defaultRadixConnectConfig].turnServers,
   signalingServerBaseUrl:
     import.meta.env.VITE_APP_SIGNALING_SERVER_BASE_URL ||
-    radixConnectConfig[mode].signalingServerBaseUrl,
+    radixConnectConfig[defaultRadixConnectConfig].signalingServerBaseUrl,
 }
 
 export const config = {
   environment: process.env.NODE_ENV,
-  logLevel: import.meta.env.VITE_APP_LOG_LEVEL as LogLevelNumbers,
+  logLevel: (import.meta.env.VITE_APP_LOG_LEVEL || 0) as LogLevelNumbers,
   version,
   secrets: {
     connectionPasswordByteLength: 32,
