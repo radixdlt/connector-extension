@@ -13,6 +13,7 @@ const ledgerDiscriminator = union([
   literal('derivePublicKeys'),
   literal('signTransaction'),
   literal('signChallenge'),
+  literal('deriveAndDisplayAddress'),
 ])
 
 export const LedgerDiscriminator: Record<
@@ -23,6 +24,7 @@ export const LedgerDiscriminator: Record<
   derivePublicKeys: 'derivePublicKeys',
   signTransaction: 'signTransaction',
   signChallenge: 'signChallenge',
+  deriveAndDisplayAddress: 'deriveAndDisplayAddress',
 } as const
 
 export const LedgerDeviceSchema = object({
@@ -46,6 +48,17 @@ export const LedgerDeviceIdRequestSchema = object({
 })
 
 export type LedgerDeviceIdRequest = z.infer<typeof LedgerDeviceIdRequestSchema>
+
+export const LedgerDeriveAndDisplayAddressRequestSchema = object({
+  interactionId: string(),
+  discriminator: literal('deriveAndDisplayAddress'),
+  keyParameters: KeyParametersSchema,
+  ledgerDevice: LedgerDeviceSchema,
+})
+
+export type LedgerDeriveAndDisplayAddressRequest = z.infer<
+  typeof LedgerDeriveAndDisplayAddressRequestSchema
+>
 
 export const LedgerPublicKeyRequestSchema = object({
   interactionId: string(),
@@ -91,6 +104,7 @@ export const LedgerRequestSchema = union([
   LedgerPublicKeyRequestSchema,
   LedgerSignTransactionRequestSchema,
   LedgerSignChallengeRequestSchema,
+  LedgerDeriveAndDisplayAddressRequestSchema,
 ]).describe('LedgerRequest')
 
 export type LedgerRequest = z.infer<typeof LedgerRequestSchema>
@@ -115,6 +129,13 @@ export const DerivedPublicKeySchema = object({
 })
 
 export type DerivedPublicKey = z.infer<typeof DerivedPublicKeySchema>
+
+export const DerivedAddressSchema = object({
+  derivedKey: DerivedPublicKeySchema,
+  address: string(),
+})
+
+export type DerivedAddress = z.infer<typeof DerivedAddressSchema>
 
 export const SignatureOfSignerSchema = object({
   derivedPublicKey: DerivedPublicKeySchema,
@@ -143,6 +164,12 @@ export type LedgerSignTransactionResponse = z.infer<
   typeof LedgerSignTransactionResponseSchema
 >
 
+export const LedgerDeriveAndDisplayAddressResponseSchema = object({
+  interactionId: string(),
+  discriminator: literal('deriveAndDisplayAddress'),
+  success: DerivedAddressSchema,
+})
+
 export const LedgerSignChallengeResponseSchema = object({
   interactionId: string(),
   discriminator: literal('signChallenge'),
@@ -166,6 +193,7 @@ export const LedgerSuccessResponseSchema = union([
   LedgerPublicKeyResponseSchema,
   LedgerSignTransactionResponseSchema,
   LedgerSignChallengeResponseSchema,
+  LedgerDeriveAndDisplayAddressResponseSchema,
 ])
 
 export type LedgerSuccessResponse = z.infer<typeof LedgerSuccessResponseSchema>

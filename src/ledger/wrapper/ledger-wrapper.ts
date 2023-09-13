@@ -2,6 +2,7 @@ import TransportWebHID from '@ledgerhq/hw-transport-webhid'
 import {
   DerivedPublicKey,
   KeyParameters,
+  LedgerDeriveAndDisplayAddressRequest,
   LedgerDeviceIdRequest,
   LedgerPublicKeyRequest,
   LedgerSignChallengeRequest,
@@ -53,6 +54,7 @@ const getCurveConfig = ({ curve }: KeyParameters) =>
       signAuth: LedgerInstructionCode.SignAuthEd25519,
       getPublicKey: LedgerInstructionCode.GetPubKeyEd25519,
       signTxSmart: LedgerInstructionCode.SignTxEd255519Smart,
+      deriveAndDisplay: LedgerInstructionCode.DeriveAndDisplayAddressEd25519,
     },
     secp256k1: {
       publicKeyByteCount: 33,
@@ -61,6 +63,7 @@ const getCurveConfig = ({ curve }: KeyParameters) =>
       signAuth: LedgerInstructionCode.SignAuthSecp256k1,
       getPublicKey: LedgerInstructionCode.GetPubKeySecp256k1,
       signTxSmart: LedgerInstructionCode.SignTxSecp256k1Smart,
+      deriveAndDisplay: LedgerInstructionCode.DeriveAndDisplayAddressSecp256k1,
     },
   })[curve]
 
@@ -300,6 +303,27 @@ export const LedgerWrapper = ({
         }),
     )
 
+  const deriveAndDisplayAddress = (
+    params: Omit<
+      LedgerDeriveAndDisplayAddressRequest,
+      'discriminator' | 'interactionId'
+    >,
+  ) => {
+    wrapDataExchange((exchange) =>
+      exchange(LedgerInstructionCode.GetDeviceId)
+        .andThen(ensureCorrectDeviceId(params.ledgerDevice.id))
+        .andThen(() => {
+          const keyParameter = params.keyParameters
+          const { deriveAndDisplay } = getCurveConfig(keyParameter)
+          const encodedDerivationPath = encodeDerivationPath(
+            keyParameter.derivationPath,
+          )
+
+          return exchange(deriveAndDisplay, encodedDerivationPath)
+        }),
+    )
+  }
+
   const signAuth = (
     params: Omit<LedgerSignChallengeRequest, 'discriminator' | 'interactionId'>,
   ): ResultAsync<SignatureOfSigner[], string> =>
@@ -478,6 +502,10 @@ export const LedgerWrapper = ({
     signTransaction: (params: LedgerSignTransactionRequest) => {
       lastInteractionId = params.interactionId
       return signTransaction(params)
+    },
+    deriveAndDisplayAddress: (params: LedgerDeriveAndDisplayAddressRequest) => {
+      lastInteractionId = params.interactionId
+      return deriveAndDisplayAddress(params)
     },
     getLastInteractionId: () => lastInteractionId,
     progress$: ledgerSubjects.onProgressSubject.asObservable(),
