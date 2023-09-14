@@ -67,7 +67,6 @@ const getSignTxPayload = (
   },
   displayHash: true,
   compiledTransactionIntent,
-  mode: 'verbose',
 })
 
 export const getSignEd25519TransactionPayload =

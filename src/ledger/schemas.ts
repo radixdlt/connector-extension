@@ -78,7 +78,7 @@ export const LedgerSignTransactionRequestSchema = object({
   ledgerDevice: LedgerDeviceSchema,
   displayHash: boolean(),
   compiledTransactionIntent: string(),
-  mode: union([literal('verbose'), literal('summary')]),
+  mode: union([literal('verbose'), literal('summary')]).optional(),
 })
 
 export type LedgerSignTransactionRequest = z.infer<

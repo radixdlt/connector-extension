@@ -271,7 +271,6 @@ describe('Ledger Babylon Wrapper', () => {
         signers: keysParameters,
         displayHash: false,
         compiledTransactionIntent: compiledTxHex.setMetadata,
-        mode: 'verbose',
       })
 
       expect(result.isErr()).toBeTruthy()
@@ -282,7 +281,7 @@ describe('Ledger Babylon Wrapper', () => {
       const ledger = createLedgerWrapperWithMockedTransport(
         getExpectedTransactionSigningExchanges({
           p1: '00',
-          instructionCode: LedgerInstructionCode.SignTxEd255519,
+          instructionCode: LedgerInstructionCode.SignTxEd25519,
           encodedDerivationPath:
             '19068000002c800003fe8000000a8000020d800005b480000001',
           finalOutput:
@@ -302,7 +301,6 @@ describe('Ledger Babylon Wrapper', () => {
         ],
         displayHash: false,
         compiledTransactionIntent: compiledTxHex.setMetadata,
-        mode: 'verbose',
       })
 
       if (result.isErr()) throw result.error
@@ -324,7 +322,7 @@ describe('Ledger Babylon Wrapper', () => {
     it('should sign summary TX using secp256k1', async () => {
       const ledger = createLedgerWrapperWithMockedTransport(
         getExpectedTransactionSigningExchanges({
-          instructionCode: LedgerInstructionCode.SignTxSecp256k1Smart,
+          instructionCode: LedgerInstructionCode.SignTxSecp256k1,
           p1: '01',
           encodedDerivationPath: '15058000002c800003fe8000000a8000020d800004d6',
           finalOutput:
@@ -344,7 +342,6 @@ describe('Ledger Babylon Wrapper', () => {
         ],
         displayHash: true,
         compiledTransactionIntent: compiledTxHex.setMetadata,
-        mode: 'summary',
       })
 
       if (result.isErr()) throw result.error
