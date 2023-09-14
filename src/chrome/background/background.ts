@@ -40,9 +40,16 @@ const handleStorageChange = (changes: {
   [key: string]: chrome.storage.StorageChange
 }) => {
   if (changes['connectionPassword'])
-    return handleConnectionPasswordChange(
-      changes['connectionPassword']?.newValue,
+    handleConnectionPasswordChange(changes['connectionPassword']?.newValue)
+
+  if (changes['options']) {
+    messageHandler.sendMessageAndWaitForConfirmation(
+      createMessage.setConnectorExtensionOptions(
+        'background',
+        changes['options'].newValue,
+      ),
     )
+  }
 }
 
 const ledgerTabWatcher = LedgerTabWatcher()

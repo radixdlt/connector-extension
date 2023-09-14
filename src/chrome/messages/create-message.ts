@@ -1,3 +1,4 @@
+import { ConnectorExtensionOptions } from './../../options/index'
 import { LedgerRequest, LedgerResponse } from 'ledger/schemas'
 import {
   Messages,
@@ -31,6 +32,22 @@ export const createMessage = {
     discriminator: 'setConnectionPassword',
     messageId: crypto.randomUUID(),
     connectionPassword,
+    source,
+  }),
+  setConnectorExtensionOptions: (
+    source: MessageSource,
+    connectorExtensionOptions: ConnectorExtensionOptions,
+  ) => ({
+    discriminator: 'setRadixConnectConfiguration',
+    messageId: crypto.randomUUID(),
+    connectorExtensionOptions,
+    source,
+  }),
+  getExtensionOptions: (
+    source: MessageSource,
+  ): Messages['getExtensionOptions'] => ({
+    discriminator: 'getExtensionOptions',
+    messageId: crypto.randomUUID(),
     source,
   }),
   getConnectionPassword: (

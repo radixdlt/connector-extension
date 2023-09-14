@@ -1,4 +1,4 @@
-import { config, defaultConnectionConfig } from 'config'
+import { config } from 'config'
 import { ConnectorClient } from '@radixdlt/radix-connect-webrtc'
 import { LedgerResponse } from 'ledger/schemas'
 import { logger } from 'utils/logger'
@@ -10,6 +10,7 @@ import { OffscreenMessageHandler } from 'chrome/offscreen/message-handler'
 import { MessageClient } from 'chrome/messages/message-client'
 import { Message } from 'chrome/messages/_types'
 import { filter, switchMap, timer, withLatestFrom } from 'rxjs'
+import { ConnectorExtensionOptions } from 'options'
 
 const messageRouter = MessagesRouter({ logger })
 
@@ -19,8 +20,6 @@ const connectorClient = ConnectorClient({
   isInitiator: config.webRTC.isInitiator,
   logger,
 })
-
-connectorClient.setConnectionConfig(defaultConnectionConfig)
 
 connectorClient.connect()
 
@@ -111,6 +110,16 @@ connectorClient.onMessage$.subscribe((message) => {
 chrome.runtime.onMessage.addListener((message: Message, sender) => {
   messageClient.onMessage(message, sender.tab?.id)
 })
+
+messageClient
+  .sendMessageAndWaitForConfirmation<{ options: ConnectorExtensionOptions }>(
+    createMessage.getExtensionOptions('offScreen'),
+  )
+  .andThen(({ options }) =>
+    messageClient.handleMessage(
+      createMessage.setConnectorExtensionOptions('offScreen', options),
+    ),
+  )
 
 const TWO_MINUTES = 120_000
 const everyTwoMinute$ = timer(0, TWO_MINUTES)
