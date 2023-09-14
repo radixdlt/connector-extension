@@ -50,10 +50,9 @@ const getCurveConfig = ({ curve }: KeyParameters) =>
     curve25519: {
       publicKeyByteCount: 32,
       signatureByteCount: 64,
-      signTx: LedgerInstructionCode.SignTxEd255519,
+      signTx: LedgerInstructionCode.SignTxEd25519,
       signAuth: LedgerInstructionCode.SignAuthEd25519,
       getPublicKey: LedgerInstructionCode.GetPubKeyEd25519,
-      signTxSmart: LedgerInstructionCode.SignTxEd255519Smart,
       deriveAndDisplay: LedgerInstructionCode.DeriveAndDisplayAddressEd25519,
     },
     secp256k1: {
@@ -62,7 +61,6 @@ const getCurveConfig = ({ curve }: KeyParameters) =>
       signTx: LedgerInstructionCode.SignTxSecp256k1,
       signAuth: LedgerInstructionCode.SignAuthSecp256k1,
       getPublicKey: LedgerInstructionCode.GetPubKeySecp256k1,
-      signTxSmart: LedgerInstructionCode.SignTxSecp256k1Smart,
       deriveAndDisplay: LedgerInstructionCode.DeriveAndDisplayAddressSecp256k1,
     },
   })[curve]
@@ -212,16 +210,13 @@ export const LedgerWrapper = ({
   ) => {
     const {
       signTx,
-      signTxSmart,
       signatureByteCount,
       publicKeyByteCount,
       signAuth: signAuthCommand,
     } = getCurveConfig(signer)
-    const command = params?.mode === 'summary' ? signTxSmart : signTx
-
     const encodedDerivationPath = encodeDerivationPath(signer.derivationPath)
     return {
-      command,
+      command: signTx,
       signAuthCommand,
       encodedDerivationPath,
       signatureByteCount,
