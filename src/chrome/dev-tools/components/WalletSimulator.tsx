@@ -1,5 +1,5 @@
-import { config } from 'config'
-import { ConnectorClient } from 'connector/connector-client'
+import { radixConnectConfig } from 'config'
+import { ConnectorClient } from '@radixdlt/radix-connect-webrtc'
 import { useState, useEffect } from 'react'
 import { logger } from 'utils/logger'
 import { Box, Button, Header, Text } from 'components'
@@ -12,6 +12,8 @@ import {
   getSignSecp256k1TransactionPayload,
 } from '../example'
 import { getConnectionPassword } from 'chrome/helpers/get-connection-password'
+import { getExtensionOptions } from 'options'
+
 export const WalletSimulator = () => {
   const [connector, setConnector] =
     useState<ReturnType<typeof ConnectorClient>>()
@@ -33,9 +35,33 @@ export const WalletSimulator = () => {
     let connectorClient = ConnectorClient({
       source: 'wallet',
       target: 'extension',
-      signalingServerBaseUrl: config.signalingServer.baseUrl,
       isInitiator: false,
       logger,
+    })
+
+    getExtensionOptions().map((options) => {
+      connectorClient.setConnectionConfig(
+        radixConnectConfig[options.radixConnectConfiguration],
+      )
+    })
+
+    chrome.storage.onChanged.addListener((changes) => {
+      if (changes['options']) {
+        if (
+          changes['options'].newValue.radixConnectConfiguration !==
+          changes['options'].oldValue.radixConnectConfiguration
+        ) {
+          connectorClient.setConnectionConfig(
+            radixConnectConfig[
+              changes['options'].newValue.radixConnectConfiguration
+            ],
+          )
+        }
+      }
+      if (changes['connectionPassword']) {
+        const { newValue } = changes['connectionPassword']
+        connector?.setConnectionPassword(Buffer.from(newValue, 'hex'))
+      }
     })
 
     getConnectionPassword().map((connectionPassword) => {

@@ -136,6 +136,7 @@ module.exports = {
     [
       '@semantic-release/exec',
       {
+        prepareCmd: './update-version-name.sh ${nextRelease.version}',
         publishCmd: 'npm run build:cd',
       },
     ],
@@ -144,31 +145,23 @@ module.exports = {
       {
         assets: [
           {
-            path: 'rcnet--radix-connector.zip',
-            label: 'rcnet--radix-connector.zip',
+            path: 'radix-connector.zip',
+            label: 'radix-connector.zip',
           },
           {
-            path: 'rcnet--radix-connector-with-dev-tools.zip',
-            label: 'rcnet--radix-connector-with-dev-tools.zip',
-          },
-          {
-            path: 'development--radix-connector.zip',
-            label: 'development--radix-connector.zip',
-          },
-          {
-            path: 'development--radix-connector-with-dev-tools.zip',
-            label: 'development--radix-connector-with-dev-tools.zip',
+            path: 'radix-connector-with-dev-tools.zip',
+            label: 'radix-connector-with-dev-tools.zip',
           },
         ],
       },
     ],
     [
-      "semantic-release-chrome",
+      'semantic-release-chrome',
       {
-        "extensionId": "${EXTENSION_ID}",
-        "asset": "radix-connector.zip",
-        "target": "${TARGET}"
-      }
-    ]
+        extensionId: '${EXTENSION_ID}',
+        asset: 'radix-connector.zip',
+        target: '${TARGET}',
+      },
+    ],
   ],
 }

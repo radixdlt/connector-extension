@@ -3,10 +3,11 @@ import { ConnectionStatus } from './components/connection-status'
 import { PopupWindow } from 'components'
 import { useEffect, useState } from 'react'
 import { chromeLocalStore } from 'chrome/helpers/chrome-local-store'
-import { ConnectorClient } from 'connector/connector-client'
-import { config } from 'config'
+import { ConnectorClient } from '@radixdlt/radix-connect-webrtc'
 import { ok } from 'neverthrow'
 import { logger } from 'utils/logger'
+import { getExtensionOptions } from 'options'
+import { config, radixConnectConfig } from 'config'
 
 export const Paring = () => {
   const [pairingState, setPairingState] = useState<
@@ -20,12 +21,29 @@ export const Paring = () => {
     const connectorClient = ConnectorClient({
       source: 'extension',
       target: 'wallet',
-      signalingServerBaseUrl: config.signalingServer.baseUrl,
       isInitiator: config.webRTC.isInitiator,
       logger,
     })
 
+    getExtensionOptions().map((options) => {
+      connectorClient.setConnectionConfig(
+        radixConnectConfig[options.radixConnectConfiguration],
+      )
+    })
+
     chrome.storage.onChanged.addListener((changes, area) => {
+      if (changes['options']) {
+        if (
+          changes['options'].newValue.radixConnectConfiguration !==
+          changes['options'].oldValue.radixConnectConfiguration
+        ) {
+          connectorClient.setConnectionConfig(
+            radixConnectConfig[
+              changes['options'].newValue.radixConnectConfiguration
+            ],
+          )
+        }
+      }
       if (area === 'local' && changes['connectionPassword']) {
         const { newValue } = changes['connectionPassword']
         if (!newValue) connect()

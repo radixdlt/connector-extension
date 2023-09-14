@@ -8,18 +8,19 @@ To get you all ready
 
 then build
 
-`DEV_TOOLS=true npm run build:development`
+* version with dev tools `npm run build:dev`
+* version without dev tools `npm run build`
 
-you can optionally start HMR by
+you can optionally start hot module reload by
 
-`npm run dev`
+`npm start`
 
-# Known Issues
+## Known Development Issues
 
-## Hot Module Reload aka `npm run dev`
+### Hot Module Reload `npm start`
 
 Pages are initialized in a different way when working in HMR mode. You may encounter issues inside dev tools or ledger pages. When working particularly with chrome messaging it's safer to always rebuild using `npm run build:*` commands. 
 
-## Chrome Extensions Jest Mocks
+### Chrome Extensions Jest Mocks
 
 Currently, [`jest-chrome` does not support `jest` newer than 27](https://github.com/extend-chrome/jest-chrome/issues/19). Appropriate override has been set inside `package.json` in order to make installation pass smoothly

@@ -19,6 +19,7 @@ import {
   WalletInteraction,
 } from './notification-dispatcher'
 import { RadixNetwork } from '@radixdlt/babylon-gateway-api-sdk'
+import { getExtensionOptions } from 'options'
 
 export type BackgroundMessageHandler = ReturnType<
   typeof BackgroundMessageHandler
@@ -41,7 +42,17 @@ export const BackgroundMessageHandler =
     message: Message,
     sendMessageWithConfirmation: SendMessageWithConfirmation,
   ): MessageHandlerOutput => {
-    switch (message.discriminator) {
+    switch (message?.discriminator) {
+      case messageDiscriminator.getExtensionOptions:
+        return getExtensionOptions()
+          .mapErr((error) => ({
+            reason: 'failedToGetExtensionOptions',
+            jsError: Error('failedToGetExtensionOptions'),
+          }))
+          .map((options) => ({
+            sendConfirmation: true,
+            data: { options },
+          }))
       case messageDiscriminator.getConnectionPassword:
         return getConnectionPassword()
           .mapErr((error) => ({
@@ -51,6 +62,15 @@ export const BackgroundMessageHandler =
           .map((connectionPassword) => ({
             sendConfirmation: true,
             data: { connectionPassword },
+          }))
+
+      case messageDiscriminator.openParingPopup:
+        return openParingPopup()
+          .mapErr(() => ({
+            reason: 'failedToOpenParingPopup',
+          }))
+          .map(() => ({
+            sendConfirmation: false,
           }))
 
       case messageDiscriminator.detectWalletLink:

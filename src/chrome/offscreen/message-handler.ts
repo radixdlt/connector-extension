@@ -1,5 +1,5 @@
 import { createMessage } from 'chrome/messages/create-message'
-import { ConnectorClient } from 'connector/connector-client'
+import { ConnectorClient } from '@radixdlt/radix-connect-webrtc'
 import { MessagesRouter } from 'message-router'
 import { ResultAsync, errAsync, okAsync } from 'neverthrow'
 import { Queue } from 'queues/queue'
@@ -13,6 +13,7 @@ import {
 } from '../messages/_types'
 import { LedgerResponse, isLedgerRequest } from 'ledger/schemas'
 import { sendMessage } from 'chrome/helpers/send-message'
+import { radixConnectConfig } from 'config'
 
 export type OffscreenMessageHandler = ReturnType<typeof OffscreenMessageHandler>
 export const OffscreenMessageHandler = (input: {
@@ -35,7 +36,7 @@ export const OffscreenMessageHandler = (input: {
     sendMessageWithConfirmation: SendMessageWithConfirmation,
     tabId?: number,
   ): MessageHandlerOutput => {
-    switch (message.discriminator) {
+    switch (message?.discriminator) {
       case messageDiscriminator.walletMessage: {
         if (isLedgerRequest(message.data)) {
           logger.debug(
@@ -70,11 +71,22 @@ export const OffscreenMessageHandler = (input: {
         return okAsync({ sendConfirmation: true })
       }
 
+      case messageDiscriminator.setRadixConnectConfiguration: {
+        const { connectorExtensionOptions } = message
+        connectorClient.setConnectionConfig(
+          radixConnectConfig[
+            connectorExtensionOptions.radixConnectConfiguration
+          ],
+        )
+        return okAsync({ sendConfirmation: true })
+      }
+
       case messageDiscriminator.dAppRequest: {
         const { interactionId, metadata } = message.data
         return messageRouter
           .add(tabId!, interactionId, metadata)
           .asyncAndThen(() => {
+            if (!interactionId) return okAsync(null)
             if (message.data?.items?.discriminator === 'cancelRequest')
               return dAppRequestQueue
                 .cancel(interactionId)

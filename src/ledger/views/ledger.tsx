@@ -74,6 +74,14 @@ const viewsDefinition = {
     ledgerDevice: request.ledgerDevice,
     requestFunction: ledger.signAuth,
   }),
+  [LedgerDiscriminator.deriveAndDisplayAddress]: (
+    request: LedgerPublicKeyRequest,
+  ) => ({
+    header: 'Ledger Connection Request',
+    content: LedgerDiscriminator.deriveAndDisplayAddress,
+    ledgerDevice: request.ledgerDevice,
+    requestFunction: ledger.deriveAndDisplayAddress,
+  }),
 }
 
 export const Ledger = () => {

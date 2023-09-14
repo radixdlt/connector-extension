@@ -1,4 +1,4 @@
-import { err, errAsync, ok, okAsync, ResultAsync } from 'neverthrow'
+import { errAsync, ok, okAsync, ResultAsync } from 'neverthrow'
 import { AppLogger } from 'utils/logger'
 
 export type MessagesRouter = ReturnType<typeof MessagesRouter>

@@ -5,6 +5,8 @@ import { ResultAsync } from 'neverthrow'
 export const messageDiscriminator = {
   getConnectionPassword: 'getConnectionPassword',
   setConnectionPassword: 'setConnectionPassword',
+  setRadixConnectConfiguration: 'setRadixConnectConfiguration',
+  getExtensionOptions: 'getExtensionOptions',
   dAppRequest: 'dAppRequest',
   closeLedgerTab: 'closeLedgerTab',
   focusLedgerTab: 'focusLedgerTab',
@@ -14,6 +16,7 @@ export const messageDiscriminator = {
   walletToLedger: 'walletToLedger',
   walletResponse: 'walletResponse',
   toContentScript: 'toContentScript',
+  openParingPopup: 'openParingPopup',
   walletMessage: 'walletMessage',
   sendMessageToTab: 'sendMessageToTab',
   detectWalletLink: 'detectWalletLink',
@@ -68,6 +71,10 @@ export type SendMessageWithConfirmation<T = any> = (
 >
 
 export type Messages = {
+  [messageDiscriminator.openParingPopup]: MessageBuilder<
+    MessageDiscriminator['openParingPopup'],
+    any
+  >
   [messageDiscriminator.extensionStatus]: MessageBuilder<
     MessageDiscriminator['extensionStatus'],
     {
@@ -89,7 +96,10 @@ export type Messages = {
     MessageDiscriminator['offscreenLog'],
     { log: any }
   >
-
+  [messageDiscriminator.getExtensionOptions]: MessageBuilder<
+    MessageDiscriminator['getExtensionOptions'],
+    {}
+  >
   [messageDiscriminator.getConnectionPassword]: MessageBuilder<
     MessageDiscriminator['getConnectionPassword'],
     {}
