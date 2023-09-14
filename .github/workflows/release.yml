@@ -26,12 +26,10 @@ jobs:
       - name: Install dependencies
         run: npm pkg delete scripts.prepare && npm ci
 
-      - name: Build extension
-        run: npm run build
-
       - name: Github PreRelease
         if: github.ref == 'refs/heads/develop' || github.ref == 'refs/heads/release/ledger'
         env:
+          VITE_GITHUB_REF_NAME: ${{ github.env.GITHUB_REF_NAME }} 
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           GOOGLE_CLIENT_ID: ${{ secrets.CLIENT_ID }}
           GOOGLE_CLIENT_SECRET: ${{ secrets.CLIENT_SECRET }}
@@ -47,6 +45,7 @@ jobs:
       - name: Github Release & Upload to webstore
         if: github.ref == 'refs/heads/main'
         env:
+          VITE_GITHUB_REF_NAME: ${{ github.env.GITHUB_REF_NAME }} 
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           GOOGLE_CLIENT_ID: ${{ secrets.CLIENT_ID }}
           GOOGLE_CLIENT_SECRET: ${{ secrets.CLIENT_SECRET }}

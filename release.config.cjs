@@ -136,8 +136,8 @@ module.exports = {
     [
       '@semantic-release/exec',
       {
-        prepareCmd: './update-version-name.sh ${nextRelease.version}',
-        publishCmd: 'npm run build:cd',
+        // prepareCmd: './update-version-name.sh ${nextRelease.version}',
+        prepareCmd: 'npm run build:cd',
       },
     ],
     [
@@ -161,6 +161,7 @@ module.exports = {
         extensionId: '${EXTENSION_ID}',
         asset: 'radix-connector.zip',
         target: '${TARGET}',
+        distFolder: 'radix-connector',
       },
     ],
   ],

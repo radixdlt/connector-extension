@@ -46,8 +46,9 @@ export const mode = import.meta.env.MODE as
   | 'development'
   | 'test'
 
-export const defaultRadixConnectConfig =
-  import.meta.env.VITE_GITHUB_REF_NAME === 'main' ? 'production' : 'development'
+console.log(import.meta.env.VITE_GITHUB_REF_NAME)
+
+export const defaultRadixConnectConfig = 'production'
 
 export const defaultConnectionConfig: ConnectionConfig = {
   turnServers: radixConnectConfig[defaultRadixConnectConfig].turnServers,
