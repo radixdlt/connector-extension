@@ -6,6 +6,11 @@ module.exports = {
       channel: 'alpha',
       prerelease: 'alpha',
     },
+    {
+      name: 'release/([a-z0-9-]+)',
+      channel: '${name.replace(/^release\\//g, "")}',
+      prerelease: '${name.replace(/^release\\//g, "")}',
+    },
   ],
   plugins: [
     [
@@ -131,8 +136,7 @@ module.exports = {
     [
       '@semantic-release/exec',
       {
-        prepareCmd: './update-version-name.sh ${nextRelease.version}',
-        publishCmd: 'npm run build:cd',
+        prepareCmd: 'npm run build:cd',
       },
     ],
     [
@@ -141,11 +145,11 @@ module.exports = {
         assets: [
           {
             path: 'radix-connector.zip',
-            label: 'radix-connector.zip',
+            label: 'Chrome Extension',
           },
           {
             path: 'radix-connector-with-dev-tools.zip',
-            label: 'radix-connector-with-dev-tools.zip',
+            label: 'Chrome Extension (Dev Tools included)',
           },
         ],
       },
@@ -154,8 +158,9 @@ module.exports = {
       'semantic-release-chrome',
       {
         extensionId: '${EXTENSION_ID}',
-        asset: 'radix-connector.zip',
+        asset: 'radix-connector_v${nextRelease.version}.zip',
         target: '${TARGET}',
+        distFolder: 'radix-connector',
       },
     ],
   ],
