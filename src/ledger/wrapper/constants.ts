@@ -15,6 +15,10 @@ export const LedgerErrorCode = {
   DeviceMismatch: 'DeviceMismatch',
   UnlockDevice: '5515',
   BadIns: '6e01',
+
+  // Error code sent to wallet
+  Generic: 0,
+  BlindSigningNotEnabledButRequired: 1,
 } as const
 
 export const LedgerInstructionCode = {

@@ -10,6 +10,7 @@ import {
   getSignSecp256k1ChallengePayload,
   getSignEd25519TransactionPayload,
   getSignSecp256k1TransactionPayload,
+  getDeriveAndDisplayPayload,
 } from '../example'
 import { getConnectionPassword } from 'chrome/helpers/get-connection-password'
 import { getExtensionOptions } from 'options'
@@ -25,6 +26,7 @@ export const WalletSimulator = () => {
   const messages = {
     'Get UDI': getDeviceInfoPayload(),
     'Get Public Key': getDerivePublicKeyPayload(),
+    'Derive & Display (Curve25519)': getDeriveAndDisplayPayload(),
     'Sign TX (Secp256k1)': getSignSecp256k1TransactionPayload(),
     'Sign TX (Curve25519)': getSignEd25519TransactionPayload(),
     'Sign Auth (Curve25519)': getSignEd222519ChallengePayload(),
