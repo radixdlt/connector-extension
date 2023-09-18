@@ -19,6 +19,7 @@ export const LedgerErrorCode = {
   // Error code sent to wallet
   Generic: 0,
   BlindSigningNotEnabledButRequired: 1,
+  UserRejectedSigningOfTransaction: 2,
 } as const
 
 export const LedgerInstructionCode = {
