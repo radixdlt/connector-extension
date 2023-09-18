@@ -323,7 +323,7 @@ export const LedgerWrapper = ({
                     ...keyParameter,
                     publicKey,
                   },
-                  address: Buffer.from(result, 'hex').subarray(1).toString(),
+                  address: Buffer.from(result, 'hex').toString(),
                 }),
               ),
           )
