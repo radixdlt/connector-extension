@@ -86,6 +86,7 @@ const viewsDefinition = {
 
 export const Ledger = () => {
   const [progressMessage, setProgressMessage] = useState<string | undefined>()
+  const [currentId, setCurrentId] = useState<number | undefined>()
   const [error, setError] = useState<string | undefined>()
   const [currentMessage, setCurrentMessage] =
     useState<Messages['walletToLedger']>()
@@ -171,6 +172,20 @@ export const Ledger = () => {
   }
 
   useEffect(() => {
+    const disconnectHandler = (event: HIDConnectionEvent) => {
+      if (event.device.productId === currentId && currentMessage) {
+        respond(
+          createLedgerErrorResponse(currentMessage.data, 'deviceDisconnected'),
+        )
+      }
+    }
+    navigator.hid.addEventListener('disconnect', disconnectHandler)
+    return () => {
+      navigator.hid.removeEventListener('disconnect', disconnectHandler)
+    }
+  }, [currentId])
+
+  useEffect(() => {
     const subscription = new Subscription()
     const readMessage = (message: unknown) => {
       if (isWalletToLedgerFromBackground(message)) {
@@ -202,6 +217,12 @@ export const Ledger = () => {
     subscription.add(
       ledger.progress$.subscribe((message) => setProgressMessage(message)),
     )
+    subscription.add(
+      ledger.connectedDeviceId$.subscribe((connectedDeviceId) =>
+        setCurrentId(connectedDeviceId),
+      ),
+    )
+
     chrome.runtime.onMessage.addListener(readMessage)
 
     return () => {
