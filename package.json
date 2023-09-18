@@ -28,7 +28,7 @@
   "dependencies": {
     "@emotion/react": "^11.11.1",
     "@emotion/styled": "^11.11.0",
-    "@ledgerhq/hw-transport-webhid": "^6.27.12",
+    "@ledgerhq/hw-transport-webhid": "^6.27.19",
     "@mui/material": "^5.14.0",
     "@radixdlt/babylon-gateway-api-sdk": "^1.0.0-rc.3.2",
     "@radixdlt/radix-connect-webrtc": "^0.4.2",
