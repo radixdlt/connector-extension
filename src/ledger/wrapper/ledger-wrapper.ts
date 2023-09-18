@@ -303,21 +303,32 @@ export const LedgerWrapper = ({
       LedgerDeriveAndDisplayAddressRequest,
       'discriminator' | 'interactionId'
     >,
-  ) => {
+  ) =>
     wrapDataExchange((exchange) =>
       exchange(LedgerInstructionCode.GetDeviceId)
         .andThen(ensureCorrectDeviceId(params.ledgerDevice.id))
         .andThen(() => {
           const keyParameter = params.keyParameters
-          const { deriveAndDisplay } = getCurveConfig(keyParameter)
+          const { deriveAndDisplay, getPublicKey } =
+            getCurveConfig(keyParameter)
           const encodedDerivationPath = encodeDerivationPath(
             keyParameter.derivationPath,
           )
 
-          return exchange(deriveAndDisplay, encodedDerivationPath)
+          return exchange(getPublicKey, encodedDerivationPath).andThen(
+            (publicKey) =>
+              exchange(deriveAndDisplay, encodedDerivationPath).map(
+                (result) => ({
+                  derivedKey: {
+                    ...keyParameter,
+                    publicKey,
+                  },
+                  address: result.slice(2),
+                }),
+              ),
+          )
         }),
     )
-  }
 
   const signAuth = (
     params: Omit<LedgerSignChallengeRequest, 'discriminator' | 'interactionId'>,

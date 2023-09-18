@@ -1,4 +1,5 @@
 import { z, literal, object, string, union, boolean } from 'zod'
+import { LedgerErrorCode } from './wrapper/constants'
 
 const curve = union([literal('curve25519'), literal('secp256k1')])
 
@@ -213,6 +214,7 @@ export const isLedgerRequest = (message: any): message is LedgerRequest =>
     'derivePublicKeys',
     'signTransaction',
     'signChallenge',
+    'deriveAndDisplayAddress',
   ].includes(message?.discriminator)
 
 export const isDeviceIdRequest = (
@@ -254,10 +256,16 @@ export const createLedgerErrorResponse = (
     discriminator,
   }: Pick<LedgerRequest, 'interactionId' | 'discriminator'>,
   message: string,
-) => ({
-  interactionId,
-  discriminator,
-  error: {
-    message,
-  },
-})
+) => {
+  return {
+    interactionId,
+    discriminator,
+    error: {
+      code:
+        message === '6e38'
+          ? LedgerErrorCode.BlindSigningNotEnabledButRequired
+          : LedgerErrorCode.Generic,
+      message: message,
+    },
+  }
+}
