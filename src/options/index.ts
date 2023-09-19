@@ -1,13 +1,17 @@
 import { chromeStorageSync } from 'chrome/helpers/chrome-storage-sync'
+import { logger } from 'utils/logger'
+import { defaultRadixConnectConfig } from 'config'
 
 export type ConnectorExtensionOptions = {
   showDAppRequestNotifications?: boolean
   showTransactionResultNotifications?: boolean
+  radixConnectConfiguration: string
 }
 
 export const defaultConnectorExtensionOptions: ConnectorExtensionOptions = {
   showDAppRequestNotifications: true,
   showTransactionResultNotifications: true,
+  radixConnectConfiguration: defaultRadixConnectConfig,
 }
 
 export const getSingleOptionValue = (key: keyof ConnectorExtensionOptions) =>
@@ -30,4 +34,11 @@ export const getExtensionOptions = () => {
       ...options,
     }))
     .mapErr(() => defaultConnectorExtensionOptions)
+}
+
+export const setConnectorExtensionOptions = (
+  connectorExtensionOptions: ConnectorExtensionOptions,
+) => {
+  logger.debug('setConnectorExtensionOptions', connectorExtensionOptions)
+  chromeStorageSync.setSingleItem('options', connectorExtensionOptions)
 }

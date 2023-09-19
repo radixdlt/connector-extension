@@ -6,6 +6,11 @@ module.exports = {
       channel: 'alpha',
       prerelease: 'alpha',
     },
+    {
+      name: 'release/([a-z0-9-]+)',
+      channel: '${name.replace(/^release\\//g, "")}',
+      prerelease: '${name.replace(/^release\\//g, "")}',
+    },
   ],
   plugins: [
     [
@@ -131,8 +136,7 @@ module.exports = {
     [
       '@semantic-release/exec',
       {
-        prepareCmd: './update-version-name.sh ${nextRelease.version}',
-        publishCmd: 'npm run build:cd',
+        prepareCmd: 'npm run build:cd',
       },
     ],
     [
@@ -140,28 +144,12 @@ module.exports = {
       {
         assets: [
           {
-            path: 'production--radix-connector.zip',
-            label: 'production--radix-connector.zip',
+            path: 'radix-connector.zip',
+            label: 'Chrome Extension',
           },
           {
-            path: 'production--radix-connector-with-dev-tools.zip',
-            label: 'production--radix-connector-with-dev-tools.zip',
-          },
-          {
-            path: 'rcnet--radix-connector.zip',
-            label: 'rcnet--radix-connector.zip',
-          },
-          {
-            path: 'rcnet--radix-connector-with-dev-tools.zip',
-            label: 'rcnet--radix-connector-with-dev-tools.zip',
-          },
-          {
-            path: 'development--radix-connector.zip',
-            label: 'development--radix-connector.zip',
-          },
-          {
-            path: 'development--radix-connector-with-dev-tools.zip',
-            label: 'development--radix-connector-with-dev-tools.zip',
+            path: 'radix-connector-with-dev-tools.zip',
+            label: 'Chrome Extension (Dev Tools included)',
           },
         ],
       },
@@ -170,8 +158,9 @@ module.exports = {
       'semantic-release-chrome',
       {
         extensionId: '${EXTENSION_ID}',
-        asset: 'radix-connector.zip',
+        asset: 'radix-connector_v${nextRelease.version}.zip',
         target: '${TARGET}',
+        distFolder: 'radix-connector',
       },
     ],
   ],

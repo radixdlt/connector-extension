@@ -1,4 +1,5 @@
-import { z, literal, object, string, union, boolean } from 'zod'
+import { z, literal, object, string, union, boolean, number } from 'zod'
+import { LedgerErrorCode } from './wrapper/constants'
 
 const curve = union([literal('curve25519'), literal('secp256k1')])
 
@@ -13,6 +14,7 @@ const ledgerDiscriminator = union([
   literal('derivePublicKeys'),
   literal('signTransaction'),
   literal('signChallenge'),
+  literal('deriveAndDisplayAddress'),
 ])
 
 export const LedgerDiscriminator: Record<
@@ -23,6 +25,7 @@ export const LedgerDiscriminator: Record<
   derivePublicKeys: 'derivePublicKeys',
   signTransaction: 'signTransaction',
   signChallenge: 'signChallenge',
+  deriveAndDisplayAddress: 'deriveAndDisplayAddress',
 } as const
 
 export const LedgerDeviceSchema = object({
@@ -47,6 +50,17 @@ export const LedgerDeviceIdRequestSchema = object({
 
 export type LedgerDeviceIdRequest = z.infer<typeof LedgerDeviceIdRequestSchema>
 
+export const LedgerDeriveAndDisplayAddressRequestSchema = object({
+  interactionId: string(),
+  discriminator: literal('deriveAndDisplayAddress'),
+  keyParameters: KeyParametersSchema,
+  ledgerDevice: LedgerDeviceSchema,
+})
+
+export type LedgerDeriveAndDisplayAddressRequest = z.infer<
+  typeof LedgerDeriveAndDisplayAddressRequestSchema
+>
+
 export const LedgerPublicKeyRequestSchema = object({
   interactionId: string(),
   discriminator: literal('derivePublicKeys'),
@@ -65,7 +79,7 @@ export const LedgerSignTransactionRequestSchema = object({
   ledgerDevice: LedgerDeviceSchema,
   displayHash: boolean(),
   compiledTransactionIntent: string(),
-  mode: union([literal('verbose'), literal('summary')]),
+  mode: union([literal('verbose'), literal('summary')]).optional(),
 })
 
 export type LedgerSignTransactionRequest = z.infer<
@@ -91,6 +105,7 @@ export const LedgerRequestSchema = union([
   LedgerPublicKeyRequestSchema,
   LedgerSignTransactionRequestSchema,
   LedgerSignChallengeRequestSchema,
+  LedgerDeriveAndDisplayAddressRequestSchema,
 ]).describe('LedgerRequest')
 
 export type LedgerRequest = z.infer<typeof LedgerRequestSchema>
@@ -115,6 +130,13 @@ export const DerivedPublicKeySchema = object({
 })
 
 export type DerivedPublicKey = z.infer<typeof DerivedPublicKeySchema>
+
+export const DerivedAddressSchema = object({
+  derivedKey: DerivedPublicKeySchema,
+  address: string(),
+})
+
+export type DerivedAddress = z.infer<typeof DerivedAddressSchema>
 
 export const SignatureOfSignerSchema = object({
   derivedPublicKey: DerivedPublicKeySchema,
@@ -143,6 +165,12 @@ export type LedgerSignTransactionResponse = z.infer<
   typeof LedgerSignTransactionResponseSchema
 >
 
+export const LedgerDeriveAndDisplayAddressResponseSchema = object({
+  interactionId: string(),
+  discriminator: literal('deriveAndDisplayAddress'),
+  success: DerivedAddressSchema,
+})
+
 export const LedgerSignChallengeResponseSchema = object({
   interactionId: string(),
   discriminator: literal('signChallenge'),
@@ -157,6 +185,7 @@ export const LedgerErrorResponseSchema = object({
   interactionId: string(),
   discriminator: ledgerDiscriminator,
   error: object({
+    code: number(),
     message: string(),
   }),
 })
@@ -166,6 +195,7 @@ export const LedgerSuccessResponseSchema = union([
   LedgerPublicKeyResponseSchema,
   LedgerSignTransactionResponseSchema,
   LedgerSignChallengeResponseSchema,
+  LedgerDeriveAndDisplayAddressResponseSchema,
 ])
 
 export type LedgerSuccessResponse = z.infer<typeof LedgerSuccessResponseSchema>
@@ -185,6 +215,7 @@ export const isLedgerRequest = (message: any): message is LedgerRequest =>
     'derivePublicKeys',
     'signTransaction',
     'signChallenge',
+    'deriveAndDisplayAddress',
   ].includes(message?.discriminator)
 
 export const isDeviceIdRequest = (
@@ -226,10 +257,19 @@ export const createLedgerErrorResponse = (
     discriminator,
   }: Pick<LedgerRequest, 'interactionId' | 'discriminator'>,
   message: string,
-) => ({
-  interactionId,
-  discriminator,
-  error: {
-    message,
-  },
-})
+): LedgerErrorResponse => {
+  const errorMapping: Record<string, number> = {
+    '6e38': LedgerErrorCode.BlindSigningNotEnabledButRequired,
+    '6e50': LedgerErrorCode.UserRejectedSigningOfTransaction,
+  }
+  return {
+    interactionId,
+    discriminator,
+    error: {
+      code: errorMapping[message]
+        ? errorMapping[message]
+        : LedgerErrorCode.Generic,
+      message: message,
+    },
+  }
+}

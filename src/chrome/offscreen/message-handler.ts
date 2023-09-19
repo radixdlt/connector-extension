@@ -1,7 +1,7 @@
 import { createMessage } from 'chrome/messages/create-message'
-import { ConnectorClient } from 'connector/connector-client'
+import { ConnectorClient } from '@radixdlt/radix-connect-webrtc'
 import { MessagesRouter } from 'message-router'
-import { ResultAsync, errAsync, ok, okAsync } from 'neverthrow'
+import { ResultAsync, errAsync, okAsync } from 'neverthrow'
 import { Queue } from 'queues/queue'
 import { AppLogger, logger as appLogger } from 'utils/logger'
 import {
@@ -13,6 +13,7 @@ import {
 } from '../messages/_types'
 import { LedgerResponse, isLedgerRequest } from 'ledger/schemas'
 import { sendMessage } from 'chrome/helpers/send-message'
+import { radixConnectConfig } from 'config'
 
 export type OffscreenMessageHandler = ReturnType<typeof OffscreenMessageHandler>
 export const OffscreenMessageHandler = (input: {
@@ -67,6 +68,16 @@ export const OffscreenMessageHandler = (input: {
         } else {
           connectorClient.disconnect()
         }
+        return okAsync({ sendConfirmation: true })
+      }
+
+      case messageDiscriminator.setRadixConnectConfiguration: {
+        const { connectorExtensionOptions } = message
+        connectorClient.setConnectionConfig(
+          radixConnectConfig[
+            connectorExtensionOptions.radixConnectConfiguration
+          ],
+        )
         return okAsync({ sendConfirmation: true })
       }
 

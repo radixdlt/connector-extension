@@ -2,15 +2,13 @@
 
 set -e
 
-ENV=$1
+NAME="radix-connector"
+DEV_NAME="radix-connector-with-dev-tools"
 
-NAME="$ENV--radix-connector"
-DEV_NAME="$ENV--radix-connector-with-dev-tools"
-
-npm run build:${ENV}
+npm run build
 mv dist $NAME
 
-DEV_TOOLS=true npm run build:${ENV}
+DEV_TOOLS=true npm run build
 mv dist $DEV_NAME
 
 zip --recurse-paths ${NAME}.zip ${NAME}

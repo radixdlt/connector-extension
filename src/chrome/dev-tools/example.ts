@@ -1,3 +1,4 @@
+import { LedgerDeriveAndDisplayAddressRequest } from './../../ledger/schemas'
 import {
   KeyParameters,
   LedgerDeviceIdRequest,
@@ -20,6 +21,21 @@ export const getDeviceInfoPayload = (): LedgerDeviceIdRequest => ({
   discriminator: 'getDeviceInfo',
 })
 
+export const getDeriveAndDisplayPayload =
+  (): LedgerDeriveAndDisplayAddressRequest => ({
+    interactionId: crypto.randomUUID(),
+    discriminator: 'deriveAndDisplayAddress',
+    keyParameters: {
+      curve: 'curve25519',
+      derivationPath: 'm/44H/1022H/10H/525H/1460H/0H',
+    },
+    ledgerDevice: {
+      name: 'My Ledger Device',
+      model: 'nanoS',
+      id: '02c66e1c1ee74b57d0e944d34f97cc07e6ddf08c70b9e71cf373fd1c191be85c',
+    },
+  })
+
 export const getDerivePublicKeyPayload = (): LedgerPublicKeyRequest => ({
   interactionId: crypto.randomUUID(),
   discriminator: 'derivePublicKeys',
@@ -32,7 +48,7 @@ export const getDerivePublicKeyPayload = (): LedgerPublicKeyRequest => ({
   ledgerDevice: {
     name: 'My Ledger Device',
     model: 'nanoS',
-    id: '41ac202687326a4fc6cb677e9fd92d08b91ce46c669950d58790d4d5e583adc0',
+    id: '02c66e1c1ee74b57d0e944d34f97cc07e6ddf08c70b9e71cf373fd1c191be85c',
   },
 })
 
@@ -67,7 +83,6 @@ const getSignTxPayload = (
   },
   displayHash: true,
   compiledTransactionIntent,
-  mode: 'verbose',
 })
 
 export const getSignEd25519TransactionPayload =

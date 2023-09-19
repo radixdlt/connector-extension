@@ -2,6 +2,7 @@ import TransportWebHID from '@ledgerhq/hw-transport-webhid'
 import {
   DerivedPublicKey,
   KeyParameters,
+  LedgerDeriveAndDisplayAddressRequest,
   LedgerDeviceIdRequest,
   LedgerPublicKeyRequest,
   LedgerSignChallengeRequest,
@@ -49,10 +50,10 @@ const getCurveConfig = ({ curve }: KeyParameters) =>
     curve25519: {
       publicKeyByteCount: 32,
       signatureByteCount: 64,
-      signTx: LedgerInstructionCode.SignTxEd255519,
+      signTx: LedgerInstructionCode.SignTxEd25519,
       signAuth: LedgerInstructionCode.SignAuthEd25519,
       getPublicKey: LedgerInstructionCode.GetPubKeyEd25519,
-      signTxSmart: LedgerInstructionCode.SignTxEd255519Smart,
+      deriveAndDisplay: LedgerInstructionCode.DeriveAndDisplayAddressEd25519,
     },
     secp256k1: {
       publicKeyByteCount: 33,
@@ -60,7 +61,7 @@ const getCurveConfig = ({ curve }: KeyParameters) =>
       signTx: LedgerInstructionCode.SignTxSecp256k1,
       signAuth: LedgerInstructionCode.SignAuthSecp256k1,
       getPublicKey: LedgerInstructionCode.GetPubKeySecp256k1,
-      signTxSmart: LedgerInstructionCode.SignTxSecp256k1Smart,
+      deriveAndDisplay: LedgerInstructionCode.DeriveAndDisplayAddressSecp256k1,
     },
   })[curve]
 
@@ -108,6 +109,8 @@ export const LedgerWrapper = ({
         if (devices.length === 0) {
           setProgressMessage('Waiting for Ledger device connection')
         }
+
+        ledgerSubjects.connectedDeviceIdSubject.next(devices?.[0]?.productId)
 
         return ok(undefined)
       })
@@ -209,16 +212,13 @@ export const LedgerWrapper = ({
   ) => {
     const {
       signTx,
-      signTxSmart,
       signatureByteCount,
       publicKeyByteCount,
       signAuth: signAuthCommand,
     } = getCurveConfig(signer)
-    const command = params?.mode === 'summary' ? signTxSmart : signTx
-
     const encodedDerivationPath = encodeDerivationPath(signer.derivationPath)
     return {
-      command,
+      command: signTx,
       signAuthCommand,
       encodedDerivationPath,
       signatureByteCount,
@@ -296,6 +296,38 @@ export const LedgerWrapper = ({
                 ),
               ),
             okAsync([]),
+          )
+        }),
+    )
+
+  const deriveAndDisplayAddress = (
+    params: Omit<
+      LedgerDeriveAndDisplayAddressRequest,
+      'discriminator' | 'interactionId'
+    >,
+  ) =>
+    wrapDataExchange((exchange) =>
+      exchange(LedgerInstructionCode.GetDeviceId)
+        .andThen(ensureCorrectDeviceId(params.ledgerDevice.id))
+        .andThen(() => {
+          const keyParameter = params.keyParameters
+          const { deriveAndDisplay, getPublicKey } =
+            getCurveConfig(keyParameter)
+          const encodedDerivationPath = encodeDerivationPath(
+            keyParameter.derivationPath,
+          )
+
+          return exchange(getPublicKey, encodedDerivationPath).andThen(
+            (publicKey) =>
+              exchange(deriveAndDisplay, encodedDerivationPath).map(
+                (result) => ({
+                  derivedKey: {
+                    ...keyParameter,
+                    publicKey,
+                  },
+                  address: Buffer.from(result, 'hex').toString(),
+                }),
+              ),
           )
         }),
     )
@@ -479,8 +511,13 @@ export const LedgerWrapper = ({
       lastInteractionId = params.interactionId
       return signTransaction(params)
     },
+    deriveAndDisplayAddress: (params: LedgerDeriveAndDisplayAddressRequest) => {
+      lastInteractionId = params.interactionId
+      return deriveAndDisplayAddress(params)
+    },
     getLastInteractionId: () => lastInteractionId,
     progress$: ledgerSubjects.onProgressSubject.asObservable(),
+    connectedDeviceId$: ledgerSubjects.connectedDeviceIdSubject.asObservable(),
   }
 }
 
