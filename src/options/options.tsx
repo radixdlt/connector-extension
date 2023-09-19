@@ -18,7 +18,7 @@ import {
   ThemeProvider,
   createTheme,
 } from '@mui/material'
-import { radixConnectConfig } from 'config'
+import { isPublicRelease, radixConnectConfig } from 'config'
 
 const theme = createTheme({
   typography: {
@@ -89,35 +89,41 @@ export const Options = () => {
                   }
                   label="Show transaction result desktop notifications"
                 />
-                <Divider style={{ margin: '20px 0 20px' }}>
-                  Radix Connect
-                </Divider>
-                <FormControl
-                  fullWidth
-                  size="small"
-                  margin="normal"
-                  style={{ textAlign: 'left' }}
-                >
-                  <InputLabel id="radixConnectName">
-                    Signaling Server
-                  </InputLabel>
-                  <Select
-                    labelId="radixConnectName"
-                    value={connectorExtensionOptions.radixConnectConfiguration}
-                    label="Signaling Server"
-                    onChange={(ev) =>
-                      handleRadixConnectConfigurationChange(ev.target.value)
-                    }
-                  >
-                    {Object.entries(radixConnectConfig)
-                      .filter(([key]) => key !== 'test')
-                      .map(([name, config]) => (
-                        <MenuItem key={name} value={name}>
-                          {name} ({config.signalingServerBaseUrl})
-                        </MenuItem>
-                      ))}
-                  </Select>
-                </FormControl>
+                {isPublicRelease ? null : (
+                  <>
+                    <Divider style={{ margin: '20px 0 20px' }}>
+                      Radix Connect
+                    </Divider>
+                    <FormControl
+                      fullWidth
+                      size="small"
+                      margin="normal"
+                      style={{ textAlign: 'left' }}
+                    >
+                      <InputLabel id="radixConnectName">
+                        Signaling Server
+                      </InputLabel>
+                      <Select
+                        labelId="radixConnectName"
+                        value={
+                          connectorExtensionOptions.radixConnectConfiguration
+                        }
+                        label="Signaling Server"
+                        onChange={(ev) =>
+                          handleRadixConnectConfigurationChange(ev.target.value)
+                        }
+                      >
+                        {Object.entries(radixConnectConfig)
+                          .filter(([key]) => key !== 'test')
+                          .map(([name, config]) => (
+                            <MenuItem key={name} value={name}>
+                              {name} ({config.signalingServerBaseUrl})
+                            </MenuItem>
+                          ))}
+                      </Select>
+                    </FormControl>
+                  </>
+                )}
               </FormGroup>
             )}
           </Box>
