@@ -1,4 +1,4 @@
-import { z, literal, object, string, union, boolean } from 'zod'
+import { z, literal, object, string, union, boolean, number } from 'zod'
 import { LedgerErrorCode } from './wrapper/constants'
 
 const curve = union([literal('curve25519'), literal('secp256k1')])
@@ -185,6 +185,7 @@ export const LedgerErrorResponseSchema = object({
   interactionId: string(),
   discriminator: ledgerDiscriminator,
   error: object({
+    code: number(),
     message: string(),
   }),
 })
@@ -256,15 +257,18 @@ export const createLedgerErrorResponse = (
     discriminator,
   }: Pick<LedgerRequest, 'interactionId' | 'discriminator'>,
   message: string,
-) => {
+): LedgerErrorResponse => {
+  const errorMapping: Record<string, number> = {
+    '6e38': LedgerErrorCode.BlindSigningNotEnabledButRequired,
+    '6e50': LedgerErrorCode.UserRejectedSigningOfTransaction,
+  }
   return {
     interactionId,
     discriminator,
     error: {
-      code:
-        message === '6e38'
-          ? LedgerErrorCode.BlindSigningNotEnabledButRequired
-          : LedgerErrorCode.Generic,
+      code: errorMapping[message]
+        ? errorMapping[message]
+        : LedgerErrorCode.Generic,
       message: message,
     },
   }

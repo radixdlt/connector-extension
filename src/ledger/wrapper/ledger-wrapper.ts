@@ -110,6 +110,8 @@ export const LedgerWrapper = ({
           setProgressMessage('Waiting for Ledger device connection')
         }
 
+        ledgerSubjects.connectedDeviceIdSubject.next(devices?.[0]?.productId)
+
         return ok(undefined)
       })
       .andThen(() =>
@@ -515,6 +517,7 @@ export const LedgerWrapper = ({
     },
     getLastInteractionId: () => lastInteractionId,
     progress$: ledgerSubjects.onProgressSubject.asObservable(),
+    connectedDeviceId$: ledgerSubjects.connectedDeviceIdSubject.asObservable(),
   }
 }
 
