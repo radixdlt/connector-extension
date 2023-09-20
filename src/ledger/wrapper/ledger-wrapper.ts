@@ -181,9 +181,12 @@ export const LedgerWrapper = ({
     (expectedDeviceId: string) => (ledgerDeviceId: string) => {
       setProgressMessage('Checking Ledger Device ID')
 
-      return ledgerDeviceId === expectedDeviceId
-        ? ok(undefined)
-        : err(LedgerErrorCode.DeviceMismatch)
+      if (ledgerDeviceId === expectedDeviceId) {
+        return ok(undefined)
+      } else {
+        ledgerSubjects.connectedDeviceIdSubject.next(undefined)
+        return err(LedgerErrorCode.DeviceMismatch)
+      }
     }
 
   const parseGetPublicKeyParams =
