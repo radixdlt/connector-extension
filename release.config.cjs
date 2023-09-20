@@ -158,7 +158,7 @@ module.exports = {
       'semantic-release-chrome',
       {
         extensionId: '${EXTENSION_ID}',
-        asset: 'radix-connector_v${nextRelease.version}.zip',
+        asset: 'radix-connector_chrome-store.zip',
         target: '${TARGET}',
         distFolder: 'radix-connector',
       },
