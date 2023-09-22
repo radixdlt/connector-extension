@@ -1,4 +1,4 @@
-[![License](https://img.shields.io/badge/License-Apache_2.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
+[![License](https://img.shields.io/badge/License-Apache_2.0-blue.svg)](LICENSE)
 
 # Extension
 
@@ -11,16 +11,9 @@ then build
 * version with dev tools `npm run build:dev`
 * version without dev tools `npm run build`
 
-you can optionally start hot module reload by
+you can optionally start hot module reload by `npm start`
 
-`npm start`
+# License
 
-## Known Development Issues
+The Radix Connector Extension code is released under [Apache 2.0 license](LICENSE). Binaries are licensed under the [Radix Software EULA](http://www.radixdlt.com/terms/genericEULA)
 
-### Hot Module Reload `npm start`
-
-Pages are initialized in a different way when working in HMR mode. You may encounter issues inside dev tools or ledger pages. When working particularly with chrome messaging it's safer to always rebuild using `npm run build:*` commands. 
-
-### Chrome Extensions Jest Mocks
-
-Currently, [`jest-chrome` does not support `jest` newer than 27](https://github.com/extend-chrome/jest-chrome/issues/19). Appropriate override has been set inside `package.json` in order to make installation pass smoothly
