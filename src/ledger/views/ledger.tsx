@@ -250,6 +250,9 @@ export const Ledger = () => {
           <Text>
             Please review the request on your connected Ledger device.
           </Text>
+          <Text size="small" color="radixGrey2" mt="lg" negativeMarginBottom>
+            {progressMessage}
+          </Text>
         </LedgerMask>
       ) : (
         <LedgerMask
