@@ -79,7 +79,6 @@ export const LedgerWrapper = ({
     string
   > => {
     if (currentTransport) {
-      setProgressMessage('Finalizing existing ledger communication')
       return ResultAsync.fromPromise(
         currentTransport.close().then(() => {
           currentTransport = undefined
@@ -106,10 +105,6 @@ export const LedgerWrapper = ({
           return err(LedgerErrorCode.MultipleLedgerConnected)
         }
 
-        if (devices.length === 0) {
-          setProgressMessage('Waiting for Ledger device connection')
-        }
-
         ledgerSubjects.connectedDeviceIdSubject.next(devices?.[0]?.productId)
 
         return ok(undefined)
@@ -120,7 +115,7 @@ export const LedgerWrapper = ({
           () => LedgerErrorCode.FailedToCreateTransport,
         ).map((transport) => {
           currentTransport = transport
-          setProgressMessage('Creating Ledger device connection')
+          setProgressMessage(' ')
           const exchange: ExchangeFn = (
             command: LedgerInstructionCode,
             data = '',
@@ -179,8 +174,6 @@ export const LedgerWrapper = ({
 
   const ensureCorrectDeviceId =
     (expectedDeviceId: string) => (ledgerDeviceId: string) => {
-      setProgressMessage('Checking Ledger Device ID')
-
       if (ledgerDeviceId === expectedDeviceId) {
         return ok(undefined)
       } else {
@@ -284,7 +277,6 @@ export const LedgerWrapper = ({
         .andThen(ensureCorrectDeviceId(params.ledgerDevice.id))
         .andThen(parseGetPublicKeyParams(params))
         .andThen((keysParameters) => {
-          setProgressMessage('Getting public keys...')
           return keysParameters.reduce(
             (
               acc: ResultAsync<DerivedPublicKey[], string>,
@@ -346,12 +338,6 @@ export const LedgerWrapper = ({
           params.signers.reduce(
             (acc: ResultAsync<SignatureOfSigner[], string>, signer, index) =>
               acc.andThen((signatures) => {
-                setProgressMessage(
-                  `Gathering ${index + 1} out of ${
-                    params.signers.length
-                  } signatures`,
-                )
-
                 const {
                   signAuthCommand,
                   signatureByteCount,
@@ -406,11 +392,7 @@ export const LedgerWrapper = ({
         .andThen(parseSignTransactionParams(params))
         .andThen(({ p1, apduChunks }) =>
           params.signers.reduce(
-            (
-              signersAcc: ResultAsync<SignatureOfSigner[], string>,
-              signer,
-              index,
-            ) => {
+            (signersAcc: ResultAsync<SignatureOfSigner[], string>, signer) => {
               const {
                 command,
                 signatureByteCount,
@@ -419,24 +401,27 @@ export const LedgerWrapper = ({
               } = parseSignerParams(signer, params)
               const digestLength = 32 * 2
               return signersAcc.andThen((previousValue) => {
-                setProgressMessage(
-                  `Gathering ${index + 1} out of ${
-                    params.signers.length
-                  } signatures`,
-                )
                 return exchange(command, encodedDerivationPath, { p1 })
                   .andThen(() =>
                     apduChunks.reduce(
                       (
                         acc: ResultAsync<string, string>,
                         { chunk, instructionClass },
-                      ) =>
-                        acc.andThen(() =>
-                          exchange(command, chunk, {
+                        index,
+                      ) => {
+                        return acc.andThen(() => {
+                          setProgressMessage(
+                            `Sent ${index + 1} out of ${
+                              apduChunks.length
+                            } chunks`,
+                          )
+                          return exchange(command, chunk, {
                             instructionClass,
                             p1,
-                          }),
-                        ),
+                          })
+                        })
+                      },
+
                       okAsync(''),
                     ),
                   )

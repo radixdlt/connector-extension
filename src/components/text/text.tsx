@@ -73,6 +73,11 @@ export const Text = styled('p', {
         display: 'inline',
       },
     },
+    negativeMarginBottom: {
+      true: {
+        marginBottom: '-20px',
+      },
+    },
     ...m,
   },
 })
