@@ -22,7 +22,7 @@ import { LedgerErrorCode } from 'ledger/wrapper/constants'
 const ErrorMessages: Record<string, string> = {
   [LedgerErrorCode.MultipleLedgerConnected]: 'Multiple Devices Found',
   [LedgerErrorCode.UnlockDevice]: 'Ledger Device Locked',
-  [LedgerErrorCode.BadIns]: 'Radix Babylon app is not opened',
+  [LedgerErrorCode.BadIns]: 'Radix Babylon app is not open on Ledger device',
   [LedgerErrorCode.NoDevicesConnected]: 'No Device Found',
   [LedgerErrorCode.FailedToListLedgerDevices]: 'No Device Found',
   [LedgerErrorCode.FailedToCreateTransport]: 'No Device Found',
