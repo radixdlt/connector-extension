@@ -412,8 +412,8 @@ export const LedgerWrapper = ({
                         return acc.andThen(() => {
                           if (apduChunks.length > 30) {
                             setProgressMessage(
-                              `Please wait a moment - this is a large transaction... (${Math.ceil(
-                                index + 1 / apduChunks.length,
+                              `Please wait a moment - this is a large transaction... (${Math.round(
+                                (index + 1 / apduChunks.length) * 100,
                               )} %)`,
                             )
                           }
