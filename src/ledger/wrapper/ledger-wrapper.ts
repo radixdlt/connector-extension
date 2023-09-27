@@ -410,11 +410,14 @@ export const LedgerWrapper = ({
                         index,
                       ) => {
                         return acc.andThen(() => {
-                          setProgressMessage(
-                            `Sent ${index + 1} out of ${
-                              apduChunks.length
-                            } chunks`,
-                          )
+                          if (apduChunks.length > 30) {
+                            setProgressMessage(
+                              `Please wait a moment - this is a large transaction... (${Math.round(
+                                (index + 1 / apduChunks.length) * 100,
+                              )} %)`,
+                            )
+                          }
+
                           return exchange(command, chunk, {
                             instructionClass,
                             p1,

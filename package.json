@@ -31,7 +31,7 @@
     "@ledgerhq/hw-transport-webhid": "^6.27.19",
     "@mui/material": "^5.14.0",
     "@radixdlt/babylon-gateway-api-sdk": "^1.0.1",
-    "@radixdlt/radix-connect-webrtc": "^0.4.2",
+    "@radixdlt/radix-connect-webrtc": "^1.0.0",
     "@stitches/react": "^1.2.8",
     "@types/blake2b": "^2.1.0",
     "bech32": "^2.0.0",
@@ -49,7 +49,7 @@
     "react-qr-code": "^2.0.8",
     "react-use": "^17.4.0",
     "rxjs": "^7.8.1",
-    "tslog": "^4.7.1",
+    "tslog": "4.8.0",
     "zod": "^3.19.1"
   },
   "devDependencies": {
