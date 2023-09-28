@@ -20,7 +20,7 @@ export const ConnectionPassword = ({
       <Box textAlign="center">
         <Link
           style={{ fontSize: '16px', color: 'white', fontWeight: 'bold' }}
-          href="https://radixdlt.com"
+          href="https://wallet.radixdlt.com"
           target="_blank"
         >
           {`Don't have Radix Wallet?`}
