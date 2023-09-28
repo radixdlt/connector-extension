@@ -37,7 +37,7 @@ const manifest = defineManifest(async () => {
     name: 'Radix Wallet Connector',
     version: `${major}.${minor}.${patch}`,
     description:
-      'The Radix Connector browser extension is a companion to the Radix Wallet app for mobile. It links to your Radix Wallet and allows it to interact with dApps running on the Radix network in your Chrome browser. It also makes it possible to connect and use Ledger hardware wallet devices with your Radix Wallet.',
+      'Link your Radix Wallet and allow it to interact with dApps running on the Radix network in your Chrome browser.',
     version_name: version === '0.0.0' ? versionName : version,
     action: {
       default_popup: 'src/pairing/index.html',
