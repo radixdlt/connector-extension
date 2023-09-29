@@ -35,7 +35,7 @@ export const Paring = () => {
       if (changes['options']) {
         if (
           changes['options'].newValue.radixConnectConfiguration !==
-          changes['options'].oldValue.radixConnectConfiguration
+          changes['options'].oldValue?.radixConnectConfiguration
         ) {
           connectorClient.setConnectionConfig(
             radixConnectConfig[
