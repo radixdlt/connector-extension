@@ -102,7 +102,7 @@ jobs:
       - name: Build extension with dev tools
         run: npm run build
         env:
-          DEV_TOOLS: true
+          VITE_DEV_TOOLS: true
           VITE_GITHUB_REF_NAME: ${{ github.ref_name }} 
 
       - uses: actions/upload-artifact@v3

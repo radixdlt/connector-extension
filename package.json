@@ -13,10 +13,10 @@
   "bugs": "https://github.com/radixdlt/connector-extension/issues",
   "license": "Apache-2.0",
   "scripts": {
-    "start": "DEV_TOOLS=true vite",
-    "start:local": "DEV_TOOLS=true vite --mode localhost",
+    "start": "VITE_DEV_TOOLS=true vite",
+    "start:local": "VITE_DEV_TOOLS=true vite --mode localhost",
     "build": "tsc && vite build",
-    "build:dev": "tsc && DEV_TOOLS=true vite build",
+    "build:dev": "tsc && VITE_DEV_TOOLS=true vite build",
     "build:cd": "./build.sh",
     "preview": "vite preview",
     "prettier": "prettier --write src",
