@@ -20,7 +20,7 @@ const openRadixDevToolsPage = async () => {
   }
 }
 
-chrome.contextMenus.removeAll(() => {
+chrome.contextMenus?.removeAll(() => {
   chrome.contextMenus.create({
     id: 'radix-dev-tools',
     title: 'Radix Dev Tools',

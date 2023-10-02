@@ -6,7 +6,7 @@ import packageJson from './package.json'
 
 const { version } = packageJson
 
-const isDevToolsActive = !!process.env.DEV_TOOLS
+const isDevToolsActive = process.env.VITE_DEV_TOOLS === 'true'
 const versionName = process.env.GITHUB_REF_NAME || 'local'
 
 // Convert from Semver (example: 0.1.0-beta6)
@@ -25,7 +25,11 @@ const manifest = defineManifest(async () => {
     'scripting',
     'notifications',
   ]
-  const matches = ['https://*/*']
+  const matches = [
+    'https://*/*',
+    'http://localhost:*/*',
+    'http://127.0.0.1:*/*',
+  ]
 
   if (isDevToolsActive) {
     permissions.push('contextMenus')
@@ -36,6 +40,8 @@ const manifest = defineManifest(async () => {
     manifest_version: 3,
     name: 'Radix Wallet Connector',
     version: `${major}.${minor}.${patch}`,
+    description:
+      'Link your Radix Wallet and allow it to interact with dApps running on the Radix network in your Chrome browser.',
     version_name: version === '0.0.0' ? versionName : version,
     action: {
       default_popup: 'src/pairing/index.html',

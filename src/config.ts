@@ -48,6 +48,8 @@ export const mode = import.meta.env.MODE as
 
 const githubRefName = import.meta.env.VITE_GITHUB_REF_NAME || ''
 
+export const isDevMode = import.meta.env.VITE_DEV_TOOLS === 'true'
+
 export const isPublicRelease =
   githubRefName === 'main' || githubRefName.includes('release/')
 

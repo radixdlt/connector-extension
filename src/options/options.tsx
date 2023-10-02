@@ -18,7 +18,7 @@ import {
   ThemeProvider,
   createTheme,
 } from '@mui/material'
-import { isPublicRelease, radixConnectConfig } from 'config'
+import { isDevMode, isPublicRelease, radixConnectConfig } from 'config'
 
 const theme = createTheme({
   typography: {
@@ -89,7 +89,7 @@ export const Options = () => {
                   }
                   label="Show transaction result desktop notifications"
                 />
-                {isPublicRelease ? null : (
+                {isPublicRelease && !isDevMode ? null : (
                   <>
                     <Divider style={{ margin: '20px 0 20px' }}>
                       Radix Connect
