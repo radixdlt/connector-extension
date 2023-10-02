@@ -6,7 +6,7 @@ import packageJson from './package.json'
 
 const { version } = packageJson
 
-const isDevToolsActive = !!process.env.DEV_TOOLS
+const isDevToolsActive = process.env.VITE_DEV_TOOLS === 'true'
 const versionName = process.env.GITHUB_REF_NAME || 'local'
 
 // Convert from Semver (example: 0.1.0-beta6)
@@ -25,7 +25,11 @@ const manifest = defineManifest(async () => {
     'scripting',
     'notifications',
   ]
-  const matches = ['https://*/*']
+  const matches = [
+    'https://*/*',
+    'http://localhost:*/*',
+    'http://127.0.0.1:*/*',
+  ]
 
   if (isDevToolsActive) {
     permissions.push('contextMenus')

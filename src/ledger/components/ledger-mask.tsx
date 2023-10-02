@@ -40,7 +40,8 @@ export const LedgerMask = (props: {
           <ol style={{ marginLeft: '0', paddingInlineStart: '20px' }}>
             <li>Connect one Ledger device to this computer via USB.</li>
             <li>
-              Unlock it with your PIN and open the “Radix Babylon” app on it.
+              Unlock it with your PIN and open the “Radix Babylon” app on it. If
+              you see <strong>Pending Review</strong>, push any button.
             </li>
             <li> Click retry here.</li>
           </ol>

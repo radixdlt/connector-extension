@@ -8,7 +8,7 @@ DEV_NAME="radix-connector-with-dev-tools"
 npm run build
 mv dist $NAME
 
-DEV_TOOLS=true npm run build
+VITE_DEV_TOOLS=true npm run build
 mv dist $DEV_NAME
 
 zip --recurse-paths ${NAME}.zip ${NAME}
