@@ -25,11 +25,7 @@ const manifest = defineManifest(async () => {
     'scripting',
     'notifications',
   ]
-  const matches = [
-    'https://*/*',
-    'http://localhost:*/*',
-    'http://127.0.0.1:*/*',
-  ]
+  const matches = ['https://*/*', 'http://localhost/*', 'http://127.0.0.1/*']
 
   if (isDevToolsActive) {
     permissions.push('contextMenus')
