@@ -18,6 +18,7 @@ import { Subscription } from 'rxjs'
 import { LedgerMask } from 'ledger/components/ledger-mask'
 import { Result } from 'neverthrow'
 import { LedgerErrorCode } from 'ledger/wrapper/constants'
+import { offscreenLogger } from 'utils/logger'
 
 const ErrorMessages: Record<string, string> = {
   [LedgerErrorCode.MultipleLedgerConnected]: 'Multiple Devices Found',
@@ -173,6 +174,9 @@ export const Ledger = () => {
 
   useEffect(() => {
     const disconnectHandler = (event: HIDConnectionEvent) => {
+      offscreenLogger.debug(
+        `HID device disconnected, productId: ${event.device.productId}, currentId: ${currentId}`,
+      )
       if (event.device.productId === currentId && currentMessage) {
         respond(
           createLedgerErrorResponse(currentMessage.data, 'deviceDisconnected'),
@@ -218,9 +222,10 @@ export const Ledger = () => {
       ledger.progress$.subscribe((message) => setProgressMessage(message)),
     )
     subscription.add(
-      ledger.connectedDeviceId$.subscribe((connectedDeviceId) =>
-        setCurrentId(connectedDeviceId),
-      ),
+      ledger.connectedDeviceId$.subscribe((connectedDeviceId) => {
+        offscreenLogger.debug(`Current device ID: ${connectedDeviceId}`)
+        setCurrentId(connectedDeviceId)
+      }),
     )
 
     chrome.runtime.onMessage.addListener(readMessage)

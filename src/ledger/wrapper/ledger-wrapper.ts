@@ -74,11 +74,32 @@ export const LedgerWrapper = ({
   const setProgressMessage = (message: string) =>
     ledgerSubjects.onProgressSubject.next(message)
 
+  const listLedgerDevices = () =>
+    ResultAsync.fromPromise(
+      transport.list(),
+      () => LedgerErrorCode.FailedToListLedgerDevices,
+    ).andThen((devices) => {
+      offscreenLogger.debug(
+        'Found Ledger devices',
+        devices.map(
+          ({ productName, productId }) => `${productId}, ${productName}`,
+        ),
+      )
+      if (devices.length > 1) {
+        return err(LedgerErrorCode.MultipleLedgerConnected)
+      }
+
+      ledgerSubjects.connectedDeviceIdSubject.next(devices?.[0]?.productId)
+
+      return ok(undefined)
+    })
+
   const createLedgerTransport = (): ResultAsync<
     { closeTransport: () => ResultAsync<void, string>; exchange: ExchangeFn },
     string
   > => {
     if (currentTransport) {
+      offscreenLogger.debug('📒 closing current transport')
       return ResultAsync.fromPromise(
         currentTransport.close().then(() => {
           currentTransport = undefined
@@ -90,30 +111,16 @@ export const LedgerWrapper = ({
       ).andThen(() => createLedgerTransport())
     }
 
-    return ResultAsync.fromPromise(
-      transport.list(),
-      () => LedgerErrorCode.FailedToListLedgerDevices,
-    )
-      .andThen((devices) => {
-        offscreenLogger.debug(
-          'Found Ledger devices',
-          devices.map(
-            ({ productName, productId }) => `${productId}, ${productName}`,
-          ),
-        )
-        if (devices.length > 1) {
-          return err(LedgerErrorCode.MultipleLedgerConnected)
-        }
-
-        ledgerSubjects.connectedDeviceIdSubject.next(devices?.[0]?.productId)
-
-        return ok(undefined)
-      })
-      .andThen(() =>
-        ResultAsync.fromPromise(
-          transport.create(),
-          () => LedgerErrorCode.FailedToCreateTransport,
-        ).map((transport) => {
+    return listLedgerDevices().andThen(() =>
+      ResultAsync.fromPromise(
+        transport.create(),
+        () => LedgerErrorCode.FailedToCreateTransport,
+      )
+        .andThen((transport) => {
+          offscreenLogger.debug('📒 transport layer created')
+          return listLedgerDevices().map(() => transport)
+        })
+        .map((transport) => {
           currentTransport = transport
           setProgressMessage(' ')
           const exchange: ExchangeFn = (
@@ -143,6 +150,7 @@ export const LedgerWrapper = ({
           return {
             closeTransport: () => {
               setProgressMessage('')
+              ledgerSubjects.connectedDeviceIdSubject.next(undefined)
               currentTransport = undefined
               return ResultAsync.fromPromise(
                 transport.close(),
@@ -152,7 +160,7 @@ export const LedgerWrapper = ({
             exchange,
           }
         }),
-      )
+    )
   }
 
   const wrapDataExchange = (
@@ -163,11 +171,13 @@ export const LedgerWrapper = ({
         fn(exchange)
           .andThen((response) => closeTransport().map(() => response))
           .mapErr((error) => {
+            ledgerSubjects.connectedDeviceIdSubject.next(undefined)
             closeTransport()
             return error
           }),
       )
       .mapErr((error) => {
+        ledgerSubjects.connectedDeviceIdSubject.next(undefined)
         setProgressMessage('')
         return error
       })
@@ -199,13 +209,7 @@ export const LedgerWrapper = ({
         }),
       )
 
-  const parseSignerParams = (
-    signer: KeyParameters,
-    params?: Omit<
-      LedgerSignTransactionRequest,
-      'discriminator' | 'interactionId'
-    >,
-  ) => {
+  const parseSignerParams = (signer: KeyParameters) => {
     const {
       signTx,
       signatureByteCount,
@@ -398,7 +402,7 @@ export const LedgerWrapper = ({
                 signatureByteCount,
                 publicKeyByteCount,
                 encodedDerivationPath,
-              } = parseSignerParams(signer, params)
+              } = parseSignerParams(signer)
               const digestLength = 32 * 2
               return signersAcc.andThen((previousValue) => {
                 return exchange(command, encodedDerivationPath, { p1 })
