@@ -25,11 +25,7 @@ const manifest = defineManifest(async () => {
     'scripting',
     'notifications',
   ]
-  const matches = [
-    'https://*/*',
-    'http://localhost:*/*',
-    'http://127.0.0.1:*/*',
-  ]
+  const matches = ['https://*/*', 'http://localhost/*', 'http://127.0.0.1/*']
 
   if (isDevToolsActive) {
     permissions.push('contextMenus')
@@ -41,7 +37,7 @@ const manifest = defineManifest(async () => {
     name: 'Radix Wallet Connector',
     version: `${major}.${minor}.${patch}`,
     description:
-      'Link your Radix Wallet and allow it to interact with dApps running on the Radix network in your Chrome browser.',
+      'Only used with the Radix Wallet mobile app. Link Wallet Connector to your wallet to use dApps in Chrome, or use Ledger devices.',
     version_name: version === '0.0.0' ? versionName : version,
     action: {
       default_popup: 'src/pairing/index.html',
