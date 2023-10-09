@@ -39,10 +39,10 @@ jobs:
         env:
           VITE_GITHUB_REF_NAME: ${{ github.ref_name }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          GOOGLE_CLIENT_ID: ${{ secrets.GH_CLIENT_ID }}
-          GOOGLE_CLIENT_SECRET: ${{ secrets.GH_CLIENT_SECRET }}
-          GOOGLE_REFRESH_TOKEN: ${{ secrets.GH_REFRESH_TOKEN }}
-          GOOGLE_EXTENSION_ID: ${{ secrets.GH_EXTENSION_ID }}
+          GOOGLE_CLIENT_ID: ${{ env.GH_CLIENT_ID }}
+          GOOGLE_CLIENT_SECRET: ${{ env.GH_CLIENT_SECRET }}
+          GOOGLE_REFRESH_TOKEN: ${{ env.GH_REFRESH_TOKEN }}
+          GOOGLE_EXTENSION_ID: ${{ env.GH_EXTENSION_ID }}
           TARGET_RELEASE: local
         run: |
           sed -i "s/\${EXTENSION_ID}/$GOOGLE_EXTENSION_ID/g" release.config.cjs
@@ -55,10 +55,10 @@ jobs:
         env:
           VITE_GITHUB_REF_NAME: ${{ github.ref_name }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          GOOGLE_CLIENT_ID: ${{ secrets.GH_CLIENT_ID }}
-          GOOGLE_CLIENT_SECRET: ${{ secrets.GH_CLIENT_SECRET }}
-          GOOGLE_REFRESH_TOKEN: ${{ secrets.GH_REFRESH_TOKEN }}
-          GOOGLE_EXTENSION_ID: ${{ secrets.GH_EXTENSION_ID }}
+          GOOGLE_CLIENT_ID: ${{ env.GH_CLIENT_ID }}
+          GOOGLE_CLIENT_SECRET: ${{ env.GH_CLIENT_SECRET }}
+          GOOGLE_REFRESH_TOKEN: ${{ env.GH_REFRESH_TOKEN }}
+          GOOGLE_EXTENSION_ID: ${{ env.GH_EXTENSION_ID }}
           TARGET_RELEASE: trustedTesters
         run: |
           sed -i "s/\${EXTENSION_ID}/$GOOGLE_EXTENSION_ID/g" release.config.cjs
