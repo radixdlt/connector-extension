@@ -130,7 +130,7 @@ export const BackgroundMessageHandler =
         if (message.data?.items?.discriminator === 'transaction') {
           const txIntentHash = message.data.items.send.transactionIntentHash
           const networkId =
-            message.data?.metadata?.networkId || RadixNetwork.Ansharnet
+            message.data?.metadata?.networkId || RadixNetwork.Mainnet
           logger?.debug('🔁 Polling', { txIntentHash, networkId })
           const gatewayClient = createGatewayClient(networkId)
 

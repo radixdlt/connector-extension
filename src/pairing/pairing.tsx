@@ -22,7 +22,7 @@ export const Paring = () => {
       source: 'extension',
       target: 'wallet',
       isInitiator: config.webRTC.isInitiator,
-      logger,
+      logger: logger.getSubLogger({ name: 'pairing' }),
     })
 
     getExtensionOptions().map((options) => {

@@ -9,6 +9,7 @@ import {
   messageDiscriminator,
 } from './_types'
 import { MessageLifeCycleEvent } from 'chrome/dapp/_types'
+import { ILogObj, ILogObjMeta } from 'tslog/dist/types/interfaces'
 
 export const createMessage = {
   openParingPopup: () => ({
@@ -19,11 +20,22 @@ export const createMessage = {
     isExtensionAvailable: true,
     isWalletLinked,
   }),
-  offscreenLog: (log: any): Messages['offscreenLog'] => ({
+  offscreenLog: (log: ILogObjMeta & ILogObj): Messages['offscreenLog'] => ({
     source: 'any',
     discriminator: 'offscreenLog',
     messageId: crypto.randomUUID(),
     log,
+  }),
+  log: (log: ILogObjMeta & ILogObj): Messages['log'] => ({
+    source: 'any',
+    discriminator: 'log',
+    messageId: crypto.randomUUID(),
+    log,
+  }),
+  downloadLogs: (): Messages['downloadLogs'] => ({
+    source: 'background',
+    discriminator: 'downloadLogs',
+    messageId: crypto.randomUUID(),
   }),
   setConnectionPassword: (
     source: MessageSource,
