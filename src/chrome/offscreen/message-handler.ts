@@ -1,3 +1,4 @@
+import { LogsClient } from './logs-client'
 import { createMessage } from 'chrome/messages/create-message'
 import { ConnectorClient } from '@radixdlt/radix-connect-webrtc'
 import { MessagesRouter } from 'message-router'
@@ -17,6 +18,7 @@ import { radixConnectConfig } from 'config'
 
 export type OffscreenMessageHandler = ReturnType<typeof OffscreenMessageHandler>
 export const OffscreenMessageHandler = (input: {
+  logsClient: LogsClient
   connectorClient: ConnectorClient
   dAppRequestQueue: Queue<any>
   ledgerToWalletQueue: Queue<LedgerResponse>
@@ -24,6 +26,7 @@ export const OffscreenMessageHandler = (input: {
   messageRouter: MessagesRouter
   logger?: AppLogger
 }): MessageHandler => {
+  const logsClient = input.logsClient
   const connectorClient = input.connectorClient
   const dAppRequestQueue = input.dAppRequestQueue
   const ledgerToWalletQueue = input.ledgerToWalletQueue
@@ -39,11 +42,7 @@ export const OffscreenMessageHandler = (input: {
     switch (message?.discriminator) {
       case messageDiscriminator.walletMessage: {
         if (isLedgerRequest(message.data)) {
-          logger.debug(
-            '🪪 -> 📒: walletToLedgerSubject',
-            message.data.interactionId,
-            message.data.discriminator,
-          )
+          logger.debug('🪪 -> 📒: walletToLedgerSubject', message.data)
 
           return sendMessageWithConfirmation(
             createMessage.walletToLedger('offScreen', message.data),
@@ -106,7 +105,18 @@ export const OffscreenMessageHandler = (input: {
           .map(() => ({ sendConfirmation: true }))
       }
 
+      case messageDiscriminator.downloadLogs: {
+        logsClient.download()
+        return okAsync({ sendConfirmation: false })
+      }
+
+      case messageDiscriminator.log: {
+        logsClient.add(message.log)
+        return okAsync({ sendConfirmation: false })
+      }
+
       case messageDiscriminator.offscreenLog: {
+        logsClient.add({ ...message.log })
         const level = message.log._meta.logLevelName.toLowerCase() || 'debug'
         delete message.log._meta
         ;(logger as any)?.[level](...Object.values(message.log))

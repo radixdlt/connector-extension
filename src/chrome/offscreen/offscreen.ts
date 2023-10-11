@@ -1,7 +1,7 @@
 import { config } from 'config'
 import { ConnectorClient } from '@radixdlt/radix-connect-webrtc'
 import { LedgerResponse } from 'ledger/schemas'
-import { logger } from 'utils/logger'
+import { logger as utilsLogger } from 'utils/logger'
 import { Queue } from 'queues/queue'
 import { Worker } from 'queues/worker'
 import { MessagesRouter } from 'message-router'
@@ -11,6 +11,14 @@ import { MessageClient } from 'chrome/messages/message-client'
 import { Message } from 'chrome/messages/_types'
 import { filter, switchMap, timer, withLatestFrom } from 'rxjs'
 import { ConnectorExtensionOptions } from 'options'
+import { LogsClient } from './logs-client'
+
+const logsClient = LogsClient()
+
+utilsLogger.attachTransport((logObj) => {
+  logsClient.add(logObj)
+})
+const logger = utilsLogger.getSubLogger({ name: 'offscreen' })
 
 const messageRouter = MessagesRouter({ logger })
 
@@ -98,6 +106,7 @@ const messageClient = MessageClient(
     incomingWalletMessageQueue,
     messageRouter,
     logger,
+    logsClient,
   }),
   'offScreen',
   { logger },

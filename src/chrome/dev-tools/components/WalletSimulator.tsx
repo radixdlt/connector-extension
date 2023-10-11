@@ -38,7 +38,7 @@ export const WalletSimulator = () => {
       source: 'wallet',
       target: 'extension',
       isInitiator: false,
-      logger,
+      logger: logger.getSubLogger({ name: 'devTools' }),
     })
 
     getExtensionOptions().map((options) => {

@@ -1,4 +1,4 @@
-import { config } from 'config'
+import { config, isDevMode } from 'config'
 import { closePopup } from '../helpers/close-popup'
 // @ts-ignore
 import content from '../content-script/content-script?script'
@@ -8,7 +8,7 @@ import { BackgroundMessageHandler } from './message-handler'
 import { createMessage } from '../messages/create-message'
 import { MessageClient } from '../messages/message-client'
 import { openParingPopup } from '../helpers/open-pairing-popup'
-import { AppLogger } from 'utils/logger'
+import { logger as utilsLogger } from 'utils/logger'
 import { LedgerTabWatcher } from './ledger-tab-watcher'
 import {
   txNotificationPrefix,
@@ -16,10 +16,10 @@ import {
 } from './notification-dispatcher'
 import { createAndFocusTab } from 'chrome/helpers/create-and-focus-tab'
 import { RadixNetworkConfigById } from '@radixdlt/babylon-gateway-api-sdk'
+import { openRadixDevToolsPage } from './open-radix-dev-tools-page'
+import { sendMessage } from 'chrome/messages/send-message'
 
-const backgroundLogger = {
-  debug: (...args: string[]) => console.log(JSON.stringify(args, null, 2)),
-} as unknown as AppLogger
+const logger = utilsLogger.getSubLogger({ name: 'background' })
 
 const handleOnInstallExtension = async () => {
   for (const tab of await chrome.tabs.query({})) {
@@ -56,11 +56,11 @@ const ledgerTabWatcher = LedgerTabWatcher()
 
 const messageHandler = MessageClient(
   BackgroundMessageHandler({
-    logger: backgroundLogger,
+    logger,
     ledgerTabWatcher: ledgerTabWatcher,
   }),
   'background',
-  { logger: backgroundLogger },
+  { logger },
 )
 
 const handleConnectionPasswordChange = (connectionPassword?: string) =>
@@ -110,7 +110,34 @@ chrome.storage.onChanged.addListener(handleStorageChange)
 chrome.action.onClicked.addListener(openParingPopup)
 chrome.runtime.onInstalled.addListener(handleOnInstallExtension)
 chrome.runtime.onStartup.addListener(() => {
-  backgroundLogger.debug('onStartup')
+  logger.debug('onStartup')
 })
 
 createOffscreen()
+
+chrome.contextMenus?.removeAll(() => {
+  if (isDevMode) {
+    chrome.contextMenus.create({
+      id: 'radix-dev-tools',
+      title: 'Radix Dev Tools',
+      contexts: ['all'],
+    })
+  }
+
+  chrome.contextMenus.create({
+    id: 'radix-ce-logs',
+    title: 'Export Logs',
+    contexts: ['all'],
+  })
+})
+
+chrome.contextMenus.onClicked.addListener((data) => {
+  switch (data.menuItemId) {
+    case 'radix-dev-tools':
+      openRadixDevToolsPage()
+      return
+    case 'radix-ce-logs':
+      sendMessage(createMessage.downloadLogs())
+      return
+  }
+})

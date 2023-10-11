@@ -34,7 +34,7 @@ const messageHandler = MessageClient(
   ContentScriptMessageHandler({
     sendMessageToDapp,
     sendMessageEventToDapp,
-    logger: logger,
+    logger: logger.getSubLogger({ name: 'content-script' }),
   }),
   'contentScript',
   { logger },
