@@ -23,7 +23,6 @@ export const messageDiscriminator = {
   sendMessageToTab: 'sendMessageToTab',
   detectWalletLink: 'detectWalletLink',
   confirmation: 'confirmation',
-  offscreenLog: 'offscreenLog',
   log: 'log',
   downloadLogs: 'downloadLogs',
   incomingDappMessage: 'incomingDappMessage',
@@ -94,11 +93,6 @@ export type Messages = {
   [messageDiscriminator.sendMessageEventToDapp]: MessageBuilder<
     MessageDiscriminator['sendMessageEventToDapp'],
     { messageEvent: MessageLifeCycleEvent; interactionId: string }
-  >
-
-  [messageDiscriminator.offscreenLog]: MessageBuilder<
-    MessageDiscriminator['offscreenLog'],
-    { log: ILogObjMeta & ILogObj }
   >
   [messageDiscriminator.log]: MessageBuilder<
     MessageDiscriminator['log'],
