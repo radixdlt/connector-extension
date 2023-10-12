@@ -24,6 +24,8 @@ const ErrorMessages: Record<string, string> = {
   [LedgerErrorCode.MultipleLedgerConnected]: 'Multiple Devices Found',
   [LedgerErrorCode.UnlockDevice]: 'Ledger Device Locked',
   [LedgerErrorCode.BadIns]: 'Radix Babylon app is not open on Ledger device',
+  [LedgerErrorCode.WrongDataLength]:
+    'Radix Babylon app is not open on Ledger device',
   [LedgerErrorCode.NoDevicesConnected]: 'No Device Found',
   [LedgerErrorCode.FailedToListLedgerDevices]: 'No Device Found',
   [LedgerErrorCode.FailedToCreateTransport]: 'No Device Found',

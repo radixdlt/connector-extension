@@ -15,6 +15,7 @@ export const LedgerErrorCode = {
   DeviceMismatch: 'DeviceMismatch',
   UnlockDevice: '5515',
   BadIns: '6e01',
+  WrongDataLength: '6a87',
 
   // Error code sent to wallet
   Generic: 0,
