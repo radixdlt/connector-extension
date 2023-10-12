@@ -11,7 +11,7 @@ import {
 } from 'ledger/schemas'
 import { ResultAsync, err, ok, okAsync } from 'neverthrow'
 import { bufferToChunks } from 'utils'
-import { offscreenLogger } from 'utils/logger'
+import { logger as utilsLogger } from 'utils/logger'
 import {
   LedgerErrorCode,
   LedgerInstructionCode,
@@ -22,6 +22,8 @@ import { getDataLength } from './utils'
 import { LedgerSubjects } from './subjects'
 import { parseSignAuth } from './parse-sign-auth'
 import Transport from '@ledgerhq/hw-transport'
+
+export const ledgerLogger = utilsLogger.getSubLogger({ name: 'ledger' })
 
 export type LedgerOptions = Partial<{
   transport: typeof TransportWebHID
@@ -79,7 +81,7 @@ export const LedgerWrapper = ({
       transport.list(),
       () => LedgerErrorCode.FailedToListLedgerDevices,
     ).andThen((devices) => {
-      offscreenLogger.debug(
+      ledgerLogger.debug(
         'Found Ledger devices',
         devices.map(
           ({ productName, productId }) => `${productId}, ${productName}`,
@@ -99,13 +101,13 @@ export const LedgerWrapper = ({
     string
   > => {
     if (currentTransport) {
-      offscreenLogger.debug('📒 closing current transport')
+      ledgerLogger.debug('📒 closing current transport')
       return ResultAsync.fromPromise(
         currentTransport.close().then(() => {
           currentTransport = undefined
         }),
         (e) => {
-          offscreenLogger.error(e)
+          ledgerLogger.error(e)
           return 'failedToCloseExistingTransport'
         },
       ).andThen(() => createLedgerTransport())
@@ -117,7 +119,7 @@ export const LedgerWrapper = ({
         () => LedgerErrorCode.FailedToCreateTransport,
       )
         .andThen((transport) => {
-          offscreenLogger.debug('📒 transport layer created')
+          ledgerLogger.debug('📒 transport layer created')
           return listLedgerDevices().map(() => transport)
         })
         .map((transport) => {
@@ -132,13 +134,13 @@ export const LedgerWrapper = ({
             }: AdditionalExchangeParams = {},
           ) => {
             const ledgerInput = `${instructionClass}${command}${p1}00${data}`
-            offscreenLogger.debug('📒 sending', ledgerInput)
+            ledgerLogger.debug('📒 sending', ledgerInput)
             return ResultAsync.fromPromise(
               transport.exchange(Buffer.from(ledgerInput, 'hex')),
               () => LedgerErrorCode.FailedToExchangeData,
             ).andThen((buffer) => {
               const stringifiedResponse = buffer.toString('hex')
-              offscreenLogger.debug(`📒 received`, stringifiedResponse)
+              ledgerLogger.debug(`📒 received`, stringifiedResponse)
               const statusCode = stringifiedResponse.slice(-4)
               if (statusCode !== '9000') {
                 return err(statusCode)
@@ -171,7 +173,6 @@ export const LedgerWrapper = ({
         fn(exchange)
           .andThen((response) => closeTransport().map(() => response))
           .mapErr((error) => {
-            ledgerSubjects.connectedDeviceIdSubject.next(undefined)
             closeTransport()
             return error
           }),
@@ -187,7 +188,6 @@ export const LedgerWrapper = ({
       if (ledgerDeviceId === expectedDeviceId) {
         return ok(undefined)
       } else {
-        ledgerSubjects.connectedDeviceIdSubject.next(undefined)
         return err(LedgerErrorCode.DeviceMismatch)
       }
     }
@@ -437,7 +437,7 @@ export const LedgerWrapper = ({
                       result.length - digestLength !==
                       (signatureByteCount + publicKeyByteCount) * 2
                     ) {
-                      offscreenLogger.error(
+                      ledgerLogger.error(
                         `Result length is ${result.length} whereas it should be (signature) ${signatureByteCount} bytes * 2 + (publicKey) ${publicKeyByteCount} bytes * 2 + digest length: ${digestLength}`,
                       )
                       return err(
@@ -453,14 +453,14 @@ export const LedgerWrapper = ({
                     )
 
                     if (signature.length !== signatureByteCount * 2) {
-                      offscreenLogger.error(
+                      ledgerLogger.error(
                         `Signature length is ${signature.length} whereas it should be ${signatureByteCount} bytes * 2`,
                       )
                       return err('Signature has incorrect length.')
                     }
 
                     if (publicKey.length !== publicKeyByteCount * 2) {
-                      offscreenLogger.error(
+                      ledgerLogger.error(
                         `Public Key length is ${publicKey.length} whereas it should be ${publicKeyByteCount} bytes * 2`,
                       )
                       return err('PublicKey has incorrect length.')

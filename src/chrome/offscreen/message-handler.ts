@@ -115,14 +115,6 @@ export const OffscreenMessageHandler = (input: {
         return okAsync({ sendConfirmation: false })
       }
 
-      case messageDiscriminator.offscreenLog: {
-        logsClient.add({ ...message.log })
-        const level = message.log._meta.logLevelName.toLowerCase() || 'debug'
-        delete message.log._meta
-        ;(logger as any)?.[level](...Object.values(message.log))
-        return okAsync({ sendConfirmation: false })
-      }
-
       case messageDiscriminator.incomingWalletMessage:
         return messageRouter
           .getTabId(message.data.interactionId)

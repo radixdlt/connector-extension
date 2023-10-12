@@ -10,16 +10,6 @@ export const logger = new Logger({
   minLevel: config.logLevel,
 })
 
-export const offscreenLogger = new Logger({
-  prettyLogTemplate: '{{hh}}:{{MM}}:{{ss}}:{{ms}}\t{{logLevelName}}\t',
-  prettyLogTimeZone: 'UTC',
-  minLevel: config.logLevel,
-})
-
 logger.attachTransport((logObj) => {
   sendMessage(createMessage.log(logObj))
-})
-
-offscreenLogger.attachTransport((logObj) => {
-  sendMessage(createMessage.offscreenLog(logObj))
 })

@@ -20,12 +20,6 @@ export const createMessage = {
     isExtensionAvailable: true,
     isWalletLinked,
   }),
-  offscreenLog: (log: ILogObjMeta & ILogObj): Messages['offscreenLog'] => ({
-    source: 'any',
-    discriminator: 'offscreenLog',
-    messageId: crypto.randomUUID(),
-    log,
-  }),
   log: (log: ILogObjMeta & ILogObj): Messages['log'] => ({
     source: 'any',
     discriminator: 'log',
