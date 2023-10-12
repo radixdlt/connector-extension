@@ -65,7 +65,6 @@
     "@testing-library/jest-dom": "^5.16.5",
     "@testing-library/react": "^14.0.0",
     "@testing-library/user-event": "^14.4.3",
-    "@types/blake2b": "^2.1.0",
     "@types/chai": "^4.3.3",
     "@types/chrome": "^0.0.241",
     "@types/elliptic": "^6.4.14",
