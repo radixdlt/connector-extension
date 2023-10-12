@@ -171,5 +171,13 @@ module.exports = {
         distFolder: 'radix-connector',
       },
     ],
+    [
+      '@saithodev/semantic-release-backmerge',
+      {
+        backmergeBranches: [{ from: 'main', to: 'develop' }],
+        backmergeStrategy: 'merge',
+        fastForwardMode: 'ff',
+      },
+    ],
   ],
 }

@@ -61,6 +61,7 @@
     "@esbuild-plugins/node-globals-polyfill": "^0.2.3",
     "@esbuild-plugins/node-modules-polyfill": "^0.2.2",
     "@hirez_io/observer-spy": "^2.2.0",
+    "@saithodev/semantic-release-backmerge": "^3.2.1",
     "@semantic-release/exec": "^6.0.3",
     "@testing-library/jest-dom": "^5.16.5",
     "@testing-library/react": "^14.0.0",
