@@ -6,14 +6,10 @@ import { Logger } from 'tslog'
 export type AppLogger = typeof logger
 export const logger = new Logger({
   prettyLogTemplate: '{{hh}}:{{MM}}:{{ss}}:{{ms}}\t{{logLevelName}}\t',
+  prettyLogTimeZone: 'UTC',
   minLevel: config.logLevel,
 })
 
-export const offscreenLogger = new Logger({
-  prettyLogTemplate: '{{hh}}:{{MM}}:{{ss}}:{{ms}}\t{{logLevelName}}\t',
-  minLevel: config.logLevel,
-})
-
-offscreenLogger.attachTransport((logObj) => {
-  sendMessage(createMessage.offscreenLog(logObj))
+logger.attachTransport((logObj) => {
+  sendMessage(createMessage.log(logObj))
 })

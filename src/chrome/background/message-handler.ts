@@ -127,10 +127,21 @@ export const BackgroundMessageHandler =
       }
 
       case messageDiscriminator.walletResponse: {
-        if (message.data?.items?.discriminator === 'transaction') {
-          const txIntentHash = message.data.items.send.transactionIntentHash
-          const networkId =
-            message.data?.metadata?.networkId || RadixNetwork.Ansharnet
+        const canBePolled = (message: any) => {
+          return (
+            message.data?.items?.discriminator === 'transaction' &&
+            message.data?.items?.send?.transactionIntentHash &&
+            message.data?.metadata?.networkId
+          )
+        }
+
+        const getPollParams = (message: any) => ({
+          txIntentHash: message.data.items.send.transactionIntentHash,
+          networkId: message.data?.metadata?.networkId,
+        })
+
+        if (canBePolled(message)) {
+          const { txIntentHash, networkId } = getPollParams(message)
           logger?.debug('🔁 Polling', { txIntentHash, networkId })
           const gatewayClient = createGatewayClient(networkId)
 

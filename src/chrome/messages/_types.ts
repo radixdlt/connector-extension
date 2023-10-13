@@ -1,6 +1,8 @@
 import { MessageLifeCycleEvent } from 'chrome/dapp/_types'
 import { LedgerRequest, LedgerResponse } from 'ledger/schemas'
 import { ResultAsync } from 'neverthrow'
+import { ILogObjMeta } from 'tslog/dist/types/interfaces'
+import { ILogObj } from 'tslog'
 
 export const messageDiscriminator = {
   getConnectionPassword: 'getConnectionPassword',
@@ -21,7 +23,8 @@ export const messageDiscriminator = {
   sendMessageToTab: 'sendMessageToTab',
   detectWalletLink: 'detectWalletLink',
   confirmation: 'confirmation',
-  offscreenLog: 'offscreenLog',
+  log: 'log',
+  downloadLogs: 'downloadLogs',
   incomingDappMessage: 'incomingDappMessage',
   incomingWalletMessage: 'incomingWalletMessage',
   sendMessageEventToDapp: 'sendMessageEventToDapp',
@@ -91,10 +94,13 @@ export type Messages = {
     MessageDiscriminator['sendMessageEventToDapp'],
     { messageEvent: MessageLifeCycleEvent; interactionId: string }
   >
-
-  [messageDiscriminator.offscreenLog]: MessageBuilder<
-    MessageDiscriminator['offscreenLog'],
-    { log: any }
+  [messageDiscriminator.log]: MessageBuilder<
+    MessageDiscriminator['log'],
+    { log: ILogObjMeta & ILogObj }
+  >
+  [messageDiscriminator.downloadLogs]: MessageBuilder<
+    MessageDiscriminator['downloadLogs'],
+    {}
   >
   [messageDiscriminator.getExtensionOptions]: MessageBuilder<
     MessageDiscriminator['getExtensionOptions'],

@@ -12,7 +12,7 @@ import {
 } from '../schemas'
 import { createMessage } from 'chrome/messages/create-message'
 import { Messages } from 'chrome/messages/_types'
-import { ledger } from '../wrapper/ledger-wrapper'
+import { ledger, ledgerLogger } from '../wrapper/ledger-wrapper'
 import { sendMessage } from 'chrome/helpers/send-message'
 import { Subscription } from 'rxjs'
 import { LedgerMask } from 'ledger/components/ledger-mask'
@@ -23,6 +23,8 @@ const ErrorMessages: Record<string, string> = {
   [LedgerErrorCode.MultipleLedgerConnected]: 'Multiple Devices Found',
   [LedgerErrorCode.UnlockDevice]: 'Ledger Device Locked',
   [LedgerErrorCode.BadIns]: 'Radix Babylon app is not open on Ledger device',
+  [LedgerErrorCode.WrongDataLength]:
+    'Radix Babylon app is not open on Ledger device',
   [LedgerErrorCode.NoDevicesConnected]: 'No Device Found',
   [LedgerErrorCode.FailedToListLedgerDevices]: 'No Device Found',
   [LedgerErrorCode.FailedToCreateTransport]: 'No Device Found',
@@ -173,6 +175,9 @@ export const Ledger = () => {
 
   useEffect(() => {
     const disconnectHandler = (event: HIDConnectionEvent) => {
+      ledgerLogger.debug(
+        `HID device disconnected, productId: ${event.device.productId}, currentId: ${currentId}`,
+      )
       if (event.device.productId === currentId && currentMessage) {
         respond(
           createLedgerErrorResponse(currentMessage.data, 'deviceDisconnected'),
@@ -218,9 +223,10 @@ export const Ledger = () => {
       ledger.progress$.subscribe((message) => setProgressMessage(message)),
     )
     subscription.add(
-      ledger.connectedDeviceId$.subscribe((connectedDeviceId) =>
-        setCurrentId(connectedDeviceId),
-      ),
+      ledger.connectedDeviceId$.subscribe((connectedDeviceId) => {
+        ledgerLogger.debug(`Current device ID: ${connectedDeviceId}`)
+        setCurrentId(connectedDeviceId)
+      }),
     )
 
     chrome.runtime.onMessage.addListener(readMessage)

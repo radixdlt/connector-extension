@@ -11,7 +11,7 @@ import {
 } from 'ledger/schemas'
 import { ResultAsync, err, ok, okAsync } from 'neverthrow'
 import { bufferToChunks } from 'utils'
-import { offscreenLogger } from 'utils/logger'
+import { logger as utilsLogger } from 'utils/logger'
 import {
   LedgerErrorCode,
   LedgerInstructionCode,
@@ -22,6 +22,8 @@ import { getDataLength } from './utils'
 import { LedgerSubjects } from './subjects'
 import { parseSignAuth } from './parse-sign-auth'
 import Transport from '@ledgerhq/hw-transport'
+
+export const ledgerLogger = utilsLogger.getSubLogger({ name: 'ledger' })
 
 export type LedgerOptions = Partial<{
   transport: typeof TransportWebHID
@@ -74,46 +76,53 @@ export const LedgerWrapper = ({
   const setProgressMessage = (message: string) =>
     ledgerSubjects.onProgressSubject.next(message)
 
+  const listLedgerDevices = () =>
+    ResultAsync.fromPromise(
+      transport.list(),
+      () => LedgerErrorCode.FailedToListLedgerDevices,
+    ).andThen((devices) => {
+      ledgerLogger.debug(
+        'Found Ledger devices',
+        devices.map(
+          ({ productName, productId }) => `${productId}, ${productName}`,
+        ),
+      )
+      if (devices.length > 1) {
+        return err(LedgerErrorCode.MultipleLedgerConnected)
+      }
+
+      ledgerSubjects.connectedDeviceIdSubject.next(devices?.[0]?.productId)
+
+      return ok(undefined)
+    })
+
   const createLedgerTransport = (): ResultAsync<
     { closeTransport: () => ResultAsync<void, string>; exchange: ExchangeFn },
     string
   > => {
     if (currentTransport) {
+      ledgerLogger.debug('📒 closing current transport')
       return ResultAsync.fromPromise(
         currentTransport.close().then(() => {
           currentTransport = undefined
         }),
         (e) => {
-          offscreenLogger.error(e)
+          ledgerLogger.error(e)
           return 'failedToCloseExistingTransport'
         },
       ).andThen(() => createLedgerTransport())
     }
 
-    return ResultAsync.fromPromise(
-      transport.list(),
-      () => LedgerErrorCode.FailedToListLedgerDevices,
-    )
-      .andThen((devices) => {
-        offscreenLogger.debug(
-          'Found Ledger devices',
-          devices.map(
-            ({ productName, productId }) => `${productId}, ${productName}`,
-          ),
-        )
-        if (devices.length > 1) {
-          return err(LedgerErrorCode.MultipleLedgerConnected)
-        }
-
-        ledgerSubjects.connectedDeviceIdSubject.next(devices?.[0]?.productId)
-
-        return ok(undefined)
-      })
-      .andThen(() =>
-        ResultAsync.fromPromise(
-          transport.create(),
-          () => LedgerErrorCode.FailedToCreateTransport,
-        ).map((transport) => {
+    return listLedgerDevices().andThen(() =>
+      ResultAsync.fromPromise(
+        transport.create(),
+        () => LedgerErrorCode.FailedToCreateTransport,
+      )
+        .andThen((transport) => {
+          ledgerLogger.debug('📒 transport layer created')
+          return listLedgerDevices().map(() => transport)
+        })
+        .map((transport) => {
           currentTransport = transport
           setProgressMessage(' ')
           const exchange: ExchangeFn = (
@@ -125,13 +134,13 @@ export const LedgerWrapper = ({
             }: AdditionalExchangeParams = {},
           ) => {
             const ledgerInput = `${instructionClass}${command}${p1}00${data}`
-            offscreenLogger.debug('📒 sending', ledgerInput)
+            ledgerLogger.debug('📒 sending', ledgerInput)
             return ResultAsync.fromPromise(
               transport.exchange(Buffer.from(ledgerInput, 'hex')),
               () => LedgerErrorCode.FailedToExchangeData,
             ).andThen((buffer) => {
               const stringifiedResponse = buffer.toString('hex')
-              offscreenLogger.debug(`📒 received`, stringifiedResponse)
+              ledgerLogger.debug(`📒 received`, stringifiedResponse)
               const statusCode = stringifiedResponse.slice(-4)
               if (statusCode !== '9000') {
                 return err(statusCode)
@@ -143,6 +152,7 @@ export const LedgerWrapper = ({
           return {
             closeTransport: () => {
               setProgressMessage('')
+              ledgerSubjects.connectedDeviceIdSubject.next(undefined)
               currentTransport = undefined
               return ResultAsync.fromPromise(
                 transport.close(),
@@ -152,7 +162,7 @@ export const LedgerWrapper = ({
             exchange,
           }
         }),
-      )
+    )
   }
 
   const wrapDataExchange = (
@@ -168,6 +178,7 @@ export const LedgerWrapper = ({
           }),
       )
       .mapErr((error) => {
+        ledgerSubjects.connectedDeviceIdSubject.next(undefined)
         setProgressMessage('')
         return error
       })
@@ -177,7 +188,6 @@ export const LedgerWrapper = ({
       if (ledgerDeviceId === expectedDeviceId) {
         return ok(undefined)
       } else {
-        ledgerSubjects.connectedDeviceIdSubject.next(undefined)
         return err(LedgerErrorCode.DeviceMismatch)
       }
     }
@@ -199,13 +209,7 @@ export const LedgerWrapper = ({
         }),
       )
 
-  const parseSignerParams = (
-    signer: KeyParameters,
-    params?: Omit<
-      LedgerSignTransactionRequest,
-      'discriminator' | 'interactionId'
-    >,
-  ) => {
+  const parseSignerParams = (signer: KeyParameters) => {
     const {
       signTx,
       signatureByteCount,
@@ -398,7 +402,7 @@ export const LedgerWrapper = ({
                 signatureByteCount,
                 publicKeyByteCount,
                 encodedDerivationPath,
-              } = parseSignerParams(signer, params)
+              } = parseSignerParams(signer)
               const digestLength = 32 * 2
               return signersAcc.andThen((previousValue) => {
                 return exchange(command, encodedDerivationPath, { p1 })
@@ -413,7 +417,7 @@ export const LedgerWrapper = ({
                           if (apduChunks.length > 30) {
                             setProgressMessage(
                               `Please wait a moment - this is a large transaction... (${Math.round(
-                                (index + 1 / apduChunks.length) * 100,
+                                ((index + 1) / apduChunks.length) * 100,
                               )} %)`,
                             )
                           }
@@ -433,7 +437,7 @@ export const LedgerWrapper = ({
                       result.length - digestLength !==
                       (signatureByteCount + publicKeyByteCount) * 2
                     ) {
-                      offscreenLogger.error(
+                      ledgerLogger.error(
                         `Result length is ${result.length} whereas it should be (signature) ${signatureByteCount} bytes * 2 + (publicKey) ${publicKeyByteCount} bytes * 2 + digest length: ${digestLength}`,
                       )
                       return err(
@@ -449,14 +453,14 @@ export const LedgerWrapper = ({
                     )
 
                     if (signature.length !== signatureByteCount * 2) {
-                      offscreenLogger.error(
+                      ledgerLogger.error(
                         `Signature length is ${signature.length} whereas it should be ${signatureByteCount} bytes * 2`,
                       )
                       return err('Signature has incorrect length.')
                     }
 
                     if (publicKey.length !== publicKeyByteCount * 2) {
-                      offscreenLogger.error(
+                      ledgerLogger.error(
                         `Public Key length is ${publicKey.length} whereas it should be ${publicKeyByteCount} bytes * 2`,
                       )
                       return err('PublicKey has incorrect length.')
