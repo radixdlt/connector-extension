@@ -127,7 +127,7 @@ chrome.contextMenus?.removeAll(() => {
   chrome.contextMenus.create({
     id: 'radix-ce-logs',
     title: 'Export Logs',
-    contexts: ['all'],
+    contexts: ['action'],
   })
 })
 
