@@ -53,6 +53,7 @@ const manifest = defineManifest(async () => {
         matches,
         js: ['src/chrome/content-script/content-script.ts'],
         run_at: 'document_idle',
+        all_frames: true,
       },
     ],
     options_page: 'src/options/index.html',

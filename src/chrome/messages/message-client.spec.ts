@@ -3,18 +3,18 @@ import { errAsync, okAsync } from 'neverthrow'
 import { filter, firstValueFrom } from 'rxjs'
 import { Logger } from 'tslog'
 import { BackgroundMessageHandler } from '../background/message-handler'
-import { ContentScriptMessageHandler } from '../content-script/message-handler'
 import { OffscreenMessageHandler } from '../offscreen/message-handler'
 import { createMessage } from './create-message'
 import { MessageClient } from './message-client'
 import { MessageSubjects } from './subjects'
+import { ContentScriptMessageHandler } from 'chrome/content-script/message-handler'
 
 const logger = new Logger()
 
 const dAppRequestQueue = { add: () => okAsync(undefined) } as any
 
 const createTestHelper = ({
-  messageRouter = MessagesRouter({ logger }),
+  messageRouter = MessagesRouter(),
   messageClientSubjects = MessageSubjects(),
   backgroundMessageClient = MessageClient(
     BackgroundMessageHandler({
@@ -139,7 +139,10 @@ describe('message client', () => {
   // so it has to proxy the message through background message handler
   it('should send wallet response to dApp', async () => {
     const testHelper = createTestHelper({})
-    testHelper.messageRouter.add(1, '456', { origin: 'origin', networkId: 1 })
+    testHelper.messageRouter.add(1, '456', {
+      origin: 'http://localhost',
+      networkId: 1,
+    })
     testHelper.mockIncomingWalletMessage({ interactionId: '456' }, 1)
 
     await Promise.all([
