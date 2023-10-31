@@ -20,7 +20,7 @@ utilsLogger.attachTransport((logObj) => {
 })
 const logger = utilsLogger.getSubLogger({ name: 'offscreen' })
 
-const messageRouter = MessagesRouter({ logger })
+const messageRouter = MessagesRouter()
 
 const connectorClient = ConnectorClient({
   source: 'extension',
@@ -40,15 +40,15 @@ const dAppRequestQueue = Queue<any>({
       .sendMessage(job.data, { timeout: config.webRTC.confirmationTimeout })
       .map(() =>
         messageRouter
-          .getTabId(job.data.interactionId)
-          .andThen((tabId) =>
+          .getByInteractionId(job.data.interactionId)
+          .andThen((metadata) =>
             messageClient.sendMessageAndWaitForConfirmation(
               createMessage.sendMessageEventToDapp(
                 'offScreen',
                 'receivedByWallet',
-                job.data.interactionId,
+                { interactionId: job.data.interactionId, metadata },
               ),
-              tabId,
+              metadata.tabId,
             ),
           ),
       )

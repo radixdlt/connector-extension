@@ -1,13 +1,11 @@
 import { errAsync, ok, okAsync, ResultAsync } from 'neverthrow'
-import { AppLogger } from 'utils/logger'
 
 export type MessagesRouter = ReturnType<typeof MessagesRouter>
 
-export const MessagesRouter = ({ logger }: { logger: AppLogger }) => {
-  const store = new Map<
-    string,
-    { tabId: number; origin: string; networkId: number }
-  >()
+type Item = { tabId: number; origin: string; networkId: number }
+
+export const MessagesRouter = () => {
+  const store = new Map<string, Item>()
 
   const add = (
     tabId: number,
@@ -19,16 +17,18 @@ export const MessagesRouter = ({ logger }: { logger: AppLogger }) => {
     return ok(undefined)
   }
 
-  const getTabId = (interactionId: string): ResultAsync<number, Error> => {
+  const getByInteractionId = (
+    interactionId: string,
+  ): ResultAsync<Item, Error> => {
     const values = store.get(interactionId)
-    return values ? okAsync(values.tabId) : errAsync(new Error('No tab found'))
+    return values ? okAsync(values) : errAsync(new Error('Item not found'))
   }
 
   const getNetworkId = (interactionId: string): ResultAsync<number, Error> => {
     const values = store.get(interactionId)
     return values
       ? okAsync(values.networkId)
-      : errAsync(new Error('No tab found'))
+      : errAsync(new Error('Item not found'))
   }
 
   const getInteractionIdsByTabId = (
@@ -56,7 +56,7 @@ export const MessagesRouter = ({ logger }: { logger: AppLogger }) => {
 
   return {
     add,
-    getTabId,
+    getByInteractionId,
     store,
     getNetworkId,
     getInteractionIdsByTabId,

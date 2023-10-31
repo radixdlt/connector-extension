@@ -21,10 +21,15 @@ const sendMessageToDapp = (
 }
 
 const sendMessageEventToDapp = (
-  interactionId: string,
+  data: { interactionId: string; metadata: { origin: string } },
   eventType: MessageLifeCycleEvent,
 ): ResultAsync<undefined, ConfirmationMessageError['error']> => {
-  const result = chromeDAppClient.sendMessageEvent(interactionId, eventType)
+  if (window.location.origin !== data.metadata.origin) return okAsync(undefined)
+
+  const result = chromeDAppClient.sendMessageEvent(
+    data.interactionId,
+    eventType,
+  )
   return result.isErr()
     ? errAsync({ reason: 'unableToSendMessageEventToDapp' })
     : okAsync(undefined)
