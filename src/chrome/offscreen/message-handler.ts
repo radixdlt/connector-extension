@@ -94,7 +94,7 @@ export const OffscreenMessageHandler = (input: {
                     createMessage.sendMessageEventToDapp(
                       'offScreen',
                       'requestCancelSuccess',
-                      interactionId,
+                      { interactionId, metadata },
                     ),
                     tabId,
                   ),
@@ -117,28 +117,27 @@ export const OffscreenMessageHandler = (input: {
 
       case messageDiscriminator.incomingWalletMessage:
         return messageRouter
-          .getTabId(message.data.interactionId)
+          .getByInteractionId(message.data.interactionId)
           .mapErr(() => ({ reason: 'tabIdNotFound' }))
-          .andThen((tabId) =>
-            sendMessageWithConfirmation(
-              // this is targetted to particular dApp
-              createMessage.walletResponse('offScreen', message.data),
-              tabId,
-            ),
-          )
-          .andThen(() => messageRouter.getNetworkId(message.data.interactionId))
-          .mapErr(() => ({ reason: 'networkIdNotFound' }))
-          .map((networkId) =>
+          .andThen((metadata) => {
             sendMessage(
               // this is for background script to handle notifications
               createMessage.walletResponse('offScreen', {
                 ...message.data,
                 metadata: {
-                  networkId,
+                  networkId: metadata.networkId,
                 },
               }),
-            ),
-          )
+            )
+            return sendMessageWithConfirmation(
+              // this is targeted to particular dApp
+              createMessage.walletResponse('offScreen', {
+                walletResponse: message.data,
+                metadata,
+              }),
+              metadata.tabId,
+            )
+          })
           .map(() => ({ sendConfirmation: true }))
 
       case messageDiscriminator.ledgerResponse:

@@ -92,7 +92,10 @@ export type Messages = {
 
   [messageDiscriminator.sendMessageEventToDapp]: MessageBuilder<
     MessageDiscriminator['sendMessageEventToDapp'],
-    { messageEvent: MessageLifeCycleEvent; interactionId: string }
+    {
+      messageEvent: MessageLifeCycleEvent
+      data: { interactionId: string; metadata: { origin: string } }
+    }
   >
   [messageDiscriminator.log]: MessageBuilder<
     MessageDiscriminator['log'],

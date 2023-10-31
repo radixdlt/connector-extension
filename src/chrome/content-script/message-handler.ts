@@ -1,5 +1,5 @@
 import { addMetadata } from 'chrome/helpers/add-metadata'
-import { errAsync, ResultAsync } from 'neverthrow'
+import { errAsync, okAsync, ResultAsync } from 'neverthrow'
 import { createMessage } from '../messages/create-message'
 import {
   ConfirmationMessageError,
@@ -20,7 +20,7 @@ export type ContentScriptMessageHandlerOptions = {
     message: any,
   ) => ResultAsync<undefined, ConfirmationMessageError['error']>
   sendMessageEventToDapp: (
-    interactionId: string,
+    data: { interactionId: string; metadata: { origin: string } },
     eventType: MessageLifeCycleEvent,
   ) => ResultAsync<undefined, ConfirmationMessageError['error']>
 }
@@ -38,18 +38,25 @@ export const ContentScriptMessageHandler =
     sendMessageWithConfirmation: SendMessageWithConfirmation,
   ): MessageHandlerOutput => {
     switch (message?.discriminator) {
-      case messageDiscriminator.sendMessageEventToDapp:
-        return sendMessageEventToDapp(
-          message.interactionId,
-          message.messageEvent,
-        ).map(() => ({
-          sendConfirmation: true,
-        }))
+      case messageDiscriminator.sendMessageEventToDapp: {
+        return sendMessageEventToDapp(message.data, message.messageEvent).map(
+          () => ({
+            sendConfirmation: true,
+          }),
+        )
+      }
 
       case messageDiscriminator.walletResponse: {
-        return sendMessageToDapp(message.data).map(() => ({
-          sendConfirmation: true,
-        }))
+        const walletResponse = message.data.walletResponse
+        const { origin } = message.data.metadata
+
+        const doesOriginMatch = window.location.origin === origin
+
+        return doesOriginMatch
+          ? sendMessageToDapp(walletResponse).map(() => ({
+              sendConfirmation: true,
+            }))
+          : okAsync({ sendConfirmation: false })
       }
 
       case messageDiscriminator.incomingDappMessage: {
@@ -74,7 +81,10 @@ export const ContentScriptMessageHandler =
               .mapErr(() => ({ reason: 'unableToOpenParingPopup' }))
           default:
             return sendMessageEventToDapp(
-              message.data.interactionId,
+              {
+                interactionId: message.data.interactionId,
+                metadata: { origin: window.location.origin },
+              },
               'receivedByExtension',
             )
               .andThen(() =>

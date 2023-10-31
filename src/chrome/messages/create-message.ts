@@ -180,12 +180,12 @@ export const createMessage = {
   sendMessageEventToDapp: (
     source: MessageSource,
     messageEvent: MessageLifeCycleEvent,
-    interactionId: string,
+    data: { interactionId: string; metadata: { origin: string } },
   ): Messages['sendMessageEventToDapp'] => ({
     source,
     discriminator: 'sendMessageEventToDapp',
     messageId: crypto.randomUUID(),
     messageEvent,
-    interactionId,
+    data,
   }),
 } as const
