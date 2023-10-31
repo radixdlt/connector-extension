@@ -45,7 +45,7 @@ module.exports = {
           },
           {
             type: 'ci',
-            release: 'patch',
+            release: false,
           },
           {
             type: 'build',
@@ -176,6 +176,7 @@ module.exports = {
       {
         backmergeBranches: [{ from: 'main', to: 'develop' }],
         backmergeStrategy: 'merge',
+        clearWorkspace: true,
         fastForwardMode: 'ff',
       },
     ],
