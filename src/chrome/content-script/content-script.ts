@@ -7,8 +7,15 @@ import { errAsync, okAsync, ResultAsync } from 'neverthrow'
 import { logger } from 'utils/logger'
 import { MessageLifeCycleEvent } from 'chrome/dapp/_types'
 import { getConnectionPassword } from 'chrome/helpers/get-connection-password'
+import {
+  WalletInteractionWithOrigin,
+  ExtensionInteraction,
+} from '@radixdlt/radix-connect-schemas'
+import { sendMessage } from 'chrome/helpers/send-message'
 
-const chromeDAppClient = ChromeDAppClient()
+const appLogger = logger.getSubLogger({ name: 'content-script' })
+
+const chromeDAppClient = ChromeDAppClient(appLogger)
 
 const sendMessageToDapp = (
   message: Record<string, any>,
@@ -39,16 +46,48 @@ const messageHandler = MessageClient(
   ContentScriptMessageHandler({
     sendMessageToDapp,
     sendMessageEventToDapp,
-    logger: logger.getSubLogger({ name: 'content-script' }),
+    logger,
   }),
   'contentScript',
-  { logger },
+  { logger: appLogger },
 )
 
-chromeDAppClient.messageListener((message) => {
-  messageHandler.onMessage(createMessage.incomingDappMessage('dApp', message))
-})
+const handleWalletInteraction = async (
+  walletInteraction: WalletInteractionWithOrigin,
+) => {
+  sendMessage(createMessage.dAppRequest('contentScript', walletInteraction))
+}
 
+const handleExtensionInteraction = async (
+  extensionInteraction: ExtensionInteraction,
+) => {
+  switch (extensionInteraction.discriminator) {
+    case 'openPopup':
+      await sendMessage(createMessage.openParingPopup())
+      break
+
+    case 'extensionStatus':
+      await getConnectionPassword().map((connectionPassword) => {
+        sendMessageToDapp(createMessage.extensionStatus(!!connectionPassword))
+      })
+      break
+
+    default:
+      logger.error({
+        reason: 'InvalidExtensionRequest',
+        interaction: extensionInteraction,
+      })
+      break
+  }
+}
+
+// incoming messages from dApps
+chromeDAppClient.messageListener(
+  handleWalletInteraction,
+  handleExtensionInteraction,
+)
+
+// incoming messages from extension
 chrome.runtime.onMessage.addListener((message: Message) => {
   messageHandler.onMessage(message)
 })

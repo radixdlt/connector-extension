@@ -15,12 +15,13 @@ import {
 import { LedgerResponse, isLedgerRequest } from 'ledger/schemas'
 import { sendMessage } from 'chrome/helpers/send-message'
 import { radixConnectConfig } from 'config'
+import { WalletInteractionWithOrigin } from '@radixdlt/radix-connect-schemas'
 
 export type OffscreenMessageHandler = ReturnType<typeof OffscreenMessageHandler>
 export const OffscreenMessageHandler = (input: {
   logsClient: LogsClient
   connectorClient: ConnectorClient
-  dAppRequestQueue: Queue<any>
+  dAppRequestQueue: Queue<WalletInteractionWithOrigin>
   ledgerToWalletQueue: Queue<LedgerResponse>
   incomingWalletMessageQueue: Queue<any>
   messageRouter: MessagesRouter
@@ -81,12 +82,13 @@ export const OffscreenMessageHandler = (input: {
       }
 
       case messageDiscriminator.dAppRequest: {
-        const { interactionId, metadata } = message.data
+        const walletInteraction: WalletInteractionWithOrigin = message.data
+        const { interactionId, metadata } = walletInteraction
+
         return messageRouter
           .add(tabId!, interactionId, metadata)
           .asyncAndThen(() => {
-            if (!interactionId) return okAsync(null)
-            if (message.data?.items?.discriminator === 'cancelRequest')
+            if (walletInteraction.items.discriminator === 'cancelRequest')
               return dAppRequestQueue
                 .cancel(interactionId)
                 .andThen(() =>
@@ -100,7 +102,7 @@ export const OffscreenMessageHandler = (input: {
                   ),
                 )
 
-            return dAppRequestQueue.add(message.data, interactionId)
+            return dAppRequestQueue.add(walletInteraction, interactionId)
           })
           .map(() => ({ sendConfirmation: true }))
       }
