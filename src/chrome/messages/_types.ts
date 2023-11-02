@@ -3,6 +3,7 @@ import { LedgerRequest, LedgerResponse } from 'ledger/schemas'
 import { ResultAsync } from 'neverthrow'
 import { ILogObjMeta } from 'tslog/dist/types/interfaces'
 import { ILogObj } from 'tslog'
+import { WalletInteractionWithOrigin } from '@radixdlt/radix-connect-schemas'
 
 export const messageDiscriminator = {
   getConnectionPassword: 'getConnectionPassword',
@@ -151,7 +152,7 @@ export type Messages = {
   >
   [messageDiscriminator.dAppRequest]: MessageBuilder<
     MessageDiscriminator['dAppRequest'],
-    { data: Record<string, any> }
+    { data: WalletInteractionWithOrigin }
   >
   [messageDiscriminator.walletMessage]: MessageBuilder<
     MessageDiscriminator['walletMessage'],

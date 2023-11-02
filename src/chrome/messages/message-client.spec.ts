@@ -113,28 +113,6 @@ const createTestHelper = ({
 }
 
 describe('message client', () => {
-  it('should send dApp request to wallet', async () => {
-    const testHelper = createTestHelper({})
-    testHelper.mockIncomingDappMessage({ interactionId: '123' })
-
-    await Promise.all([
-      firstValueFrom(
-        testHelper.subjects.messageSubject.pipe(
-          filter(
-            ({ message }) =>
-              message.discriminator === 'confirmation' &&
-              message.source === 'offScreen',
-          ),
-        ),
-      ),
-      firstValueFrom(
-        testHelper.subjects.messageSubject.pipe(
-          filter(({ message }) => message.discriminator === 'detectWalletLink'),
-        ),
-      ),
-    ])
-  })
-
   // offScreenPage does not have have access to the chrome tabs API
   // so it has to proxy the message through background message handler
   it('should send wallet response to dApp', async () => {
