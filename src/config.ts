@@ -5,6 +5,7 @@ import { ConnectionConfig } from '@radixdlt/radix-connect-webrtc'
 const { version } = packageJson
 
 const developmentConfig: Required<ConnectionConfig> = {
+  iceTransportPolicy: 'relay',
   signalingServerBaseUrl:
     'wss://signaling-server-dev.rdx-works-main.extratools.works',
   turnServers: [
@@ -23,6 +24,7 @@ const developmentConfig: Required<ConnectionConfig> = {
 
 export const radixConnectConfig: Record<string, Required<ConnectionConfig>> = {
   production: {
+    iceTransportPolicy: 'relay',
     signalingServerBaseUrl: 'wss://signaling-server.radixdlt.com',
     turnServers: [
       {
