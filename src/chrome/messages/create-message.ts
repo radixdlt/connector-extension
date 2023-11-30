@@ -10,6 +10,7 @@ import {
 } from './_types'
 import { MessageLifeCycleEvent } from 'chrome/dapp/_types'
 import { ILogObj, ILogObjMeta } from 'tslog/dist/types/interfaces'
+import { WalletInteractionWithOrigin } from '@radixdlt/radix-connect-schemas'
 
 export const createMessage = {
   openParingPopup: () => ({
@@ -73,7 +74,10 @@ export const createMessage = {
     discriminator: 'detectWalletLink',
     messageId: crypto.randomUUID(),
   }),
-  dAppRequest: (source: MessageSource, data: any): Messages['dAppRequest'] => ({
+  dAppRequest: (
+    source: MessageSource,
+    data: WalletInteractionWithOrigin,
+  ): Messages['dAppRequest'] => ({
     source,
     discriminator: 'dAppRequest',
     messageId: crypto.randomUUID(),

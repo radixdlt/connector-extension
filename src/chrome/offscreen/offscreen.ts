@@ -12,6 +12,7 @@ import { Message } from 'chrome/messages/_types'
 import { filter, switchMap, timer, withLatestFrom } from 'rxjs'
 import { ConnectorExtensionOptions } from 'options'
 import { LogsClient } from './logs-client'
+import { WalletInteractionWithOrigin } from '@radixdlt/radix-connect-schemas'
 
 const logsClient = LogsClient()
 
@@ -31,7 +32,7 @@ const connectorClient = ConnectorClient({
 
 connectorClient.connect()
 
-const dAppRequestQueue = Queue<any>({
+const dAppRequestQueue = Queue<WalletInteractionWithOrigin>({
   key: 'dAppRequestQueue',
   logger,
   paused: true,
