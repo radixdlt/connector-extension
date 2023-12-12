@@ -28,6 +28,7 @@ const ErrorMessages: Record<string, string> = {
   [LedgerErrorCode.NoDevicesConnected]: 'No Device Found',
   [LedgerErrorCode.FailedToListLedgerDevices]: 'No Device Found',
   [LedgerErrorCode.FailedToCreateTransport]: 'No Device Found',
+  [LedgerErrorCode.DeviceIsLocked]: 'No Device Found',
   [LedgerErrorCode.FailedToExchangeData]:
     'Restart Babylon app on Ledger device',
   [LedgerErrorCode.DeviceMismatch]: `Wrong Device Connected`,
