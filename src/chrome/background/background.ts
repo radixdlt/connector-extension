@@ -141,3 +141,8 @@ chrome.contextMenus.onClicked.addListener((data) => {
       return
   }
 })
+
+chrome.idle.onStateChanged.addListener((state) => {
+  logger.debug('💻 onStateChanged:', state)
+  if (state === 'active') sendMessage(createMessage.restartConnector())
+})

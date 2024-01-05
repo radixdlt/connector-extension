@@ -192,4 +192,9 @@ export const createMessage = {
     messageEvent,
     data,
   }),
+  restartConnector: (): Messages['restartConnector'] => ({
+    source: 'any',
+    discriminator: 'restartConnector',
+    messageId: crypto.randomUUID(),
+  }),
 } as const
