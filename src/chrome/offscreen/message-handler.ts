@@ -71,6 +71,11 @@ export const OffscreenMessageHandler = (input: {
         return okAsync({ sendConfirmation: true })
       }
 
+      case messageDiscriminator.restartConnector: {
+        connectorClient.restart()
+        return okAsync({ sendConfirmation: true })
+      }
+
       case messageDiscriminator.setRadixConnectConfiguration: {
         const { connectorExtensionOptions } = message
         connectorClient.setConnectionConfig(
