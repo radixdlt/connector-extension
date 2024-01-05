@@ -18,7 +18,6 @@ import {
   notificationDispatcher,
   WalletInteraction,
 } from './notification-dispatcher'
-import { RadixNetwork } from '@radixdlt/babylon-gateway-api-sdk'
 import { getExtensionOptions } from 'options'
 
 export type BackgroundMessageHandler = ReturnType<

@@ -29,6 +29,7 @@ export const messageDiscriminator = {
   incomingDappMessage: 'incomingDappMessage',
   incomingWalletMessage: 'incomingWalletMessage',
   sendMessageEventToDapp: 'sendMessageEventToDapp',
+  restartConnector: 'restartConnector',
 } as const
 
 export type MessageDiscriminator = typeof messageDiscriminator
@@ -169,6 +170,10 @@ export type Messages = {
   [messageDiscriminator.walletToLedger]: MessageBuilder<
     MessageDiscriminator['walletToLedger'],
     { data: LedgerRequest }
+  >
+  [messageDiscriminator.restartConnector]: MessageBuilder<
+    MessageDiscriminator['restartConnector'],
+    {}
   >
 }
 
