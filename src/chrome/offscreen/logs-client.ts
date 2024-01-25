@@ -6,11 +6,13 @@ export type Log = ILogObjMeta & ILogObj
 export type LogsClient = ReturnType<typeof LogsClient>
 
 export const LogsClient = (
-  { maxLogsLength } = {
+  { maxLogsLength, htmlElementId } = {
+    htmlElementId: 'logs',
     maxLogsLength: 1000,
   },
 ) => {
   let browser: string
+  const element = document.getElementById(htmlElementId)
   const logs: string[] = []
   return {
     add: (logObj: Log) => {
@@ -24,15 +26,17 @@ export const LogsClient = (
         .filter(Boolean)
         .join('-')
 
-      logs.push(
-        `[${prefix}] ${Object.values(rest)
-          .map((singleLog) =>
-            typeof singleLog === 'object'
-              ? JSON.stringify(singleLog, null, 2)
-              : singleLog,
-          )
-          .join(' ')}`,
-      )
+      const log = `[${prefix}] ${Object.values(rest)
+        .map((singleLog) =>
+          typeof singleLog === 'object'
+            ? JSON.stringify(singleLog, null, 2)
+            : singleLog,
+        )
+        .join(' ')}`
+
+      logs.push(log)
+      element?.prepend(log)
+      element?.prepend(document.createElement('br'))
 
       if (logs.length > maxLogsLength) {
         logs.shift()
