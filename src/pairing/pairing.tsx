@@ -23,6 +23,7 @@ export const Paring = () => {
       target: 'wallet',
       isInitiator: config.webRTC.isInitiator,
       logger: logger.getSubLogger({ name: 'pairing' }),
+      negotiationTimeout: 10_000,
     })
 
     getExtensionOptions().map((options) => {
