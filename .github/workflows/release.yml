@@ -47,7 +47,7 @@ jobs:
         run: |
           sed -i "s/\${EXTENSION_ID}/$GOOGLE_EXTENSION_ID/g" release.config.cjs
           sed -i "s/\${TARGET}/$TARGET_RELEASE/g" release.config.cjs
-          sed -i "s/\radix-connector_v${nextRelease.version}.zip/radix-connector_v${nextRelease.version}-BETA.zip/g" release.config.cjs
+          sed -i "s/\}.zip/}-BETA.zip/g" release.config.cjs
           npx semantic-release --verifyConditions | tee out
           echo "RELEASE_VERSION=$(grep 'Created tag ' out | awk -F 'Created tag ' '{print $2}')" >> $GITHUB_ENV
 
