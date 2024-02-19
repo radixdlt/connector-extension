@@ -43,11 +43,12 @@ jobs:
           GOOGLE_CLIENT_SECRET: ${{ env.GH_CLIENT_SECRET }}
           GOOGLE_REFRESH_TOKEN: ${{ env.GH_REFRESH_TOKEN }}
           GOOGLE_EXTENSION_ID: ${{ env.GH_EXTENSION_ID }}
-          TARGET_RELEASE: trustedTesters
+          TARGET_RELEASE: draft
         run: |
+          sed -i "s/    name:.*/    name: 'Radix Wallet Connector - BETA'/" vite.config.ts
+          sed -i -E '/^ *description:.*$/ {N; s/.*/    description: '"'"'THIS EXTENSION IS FOR BETA TESTING'"'"',/}' vite.config.ts
           sed -i "s/\${EXTENSION_ID}/$GOOGLE_EXTENSION_ID/g" release.config.cjs
           sed -i "s/\${TARGET}/$TARGET_RELEASE/g" release.config.cjs
-          sed -i "s/\}.zip/}-BETA.zip/g" release.config.cjs
           npx semantic-release --verifyConditions | tee out
           echo "RELEASE_VERSION=$(grep 'Created tag ' out | awk -F 'Created tag ' '{print $2}')" >> $GITHUB_ENV
 
