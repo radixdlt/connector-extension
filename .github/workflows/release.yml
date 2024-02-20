@@ -35,15 +35,15 @@ jobs:
           parse_json: true
 
       - name: Github PreRelease
-        if: startsWith(github.ref_name, 'release/') || github.ref == 'refs/heads/develop'
+        if: github.ref == 'refs/heads/develop'
         env:
           VITE_GITHUB_REF_NAME: ${{ github.ref_name }}
           GITHUB_TOKEN: ${{ secrets.SEMANTIC_RELEASE_TOKEN }}
           GOOGLE_CLIENT_ID: ${{ env.GH_CLIENT_ID }}
           GOOGLE_CLIENT_SECRET: ${{ env.GH_CLIENT_SECRET }}
           GOOGLE_REFRESH_TOKEN: ${{ env.GH_REFRESH_TOKEN }}
-          GOOGLE_EXTENSION_ID: ${{ env.GH_EXTENSION_ID }}
-          TARGET_RELEASE: draft
+          GOOGLE_EXTENSION_ID: ${{ env.GH_BETA_EXTENSION_ID }}
+          TARGET_RELEASE: trustedTesters
         run: |
           sed -i "s/    name:.*/    name: 'Radix Wallet Connector - BETA'/" vite.config.ts
           sed -i -E '/^ *description:.*$/ {N; s/.*/    description: '"'"'THIS EXTENSION IS FOR BETA TESTING'"'"',/}' vite.config.ts
