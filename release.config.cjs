@@ -163,7 +163,7 @@ module.exports = {
       },
     ],
     [
-      'semantic-release-chrome',
+      '@owlcode/semantic-release-chrome',
       {
         extensionId: '${EXTENSION_ID}',
         asset: 'radix-connector_v${nextRelease.version}.zip',
