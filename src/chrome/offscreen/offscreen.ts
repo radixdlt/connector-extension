@@ -28,6 +28,7 @@ const connectorClient = ConnectorClient({
   target: 'wallet',
   isInitiator: config.webRTC.isInitiator,
   logger,
+  negotiationTimeout: 10_000,
 })
 
 connectorClient.connect()
