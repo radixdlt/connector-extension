@@ -1,6 +1,7 @@
 import { chromeStorageSync } from 'chrome/helpers/chrome-storage-sync'
 import { logger } from 'utils/logger'
 import { defaultRadixConnectConfig } from 'config'
+import { ResultAsync } from 'neverthrow'
 
 export type ConnectorExtensionOptions = {
   showDAppRequestNotifications?: boolean
@@ -26,7 +27,10 @@ export const getShowDAppRequestNotifications = () =>
 export const getShowTransactionResultNotifications = () =>
   getSingleOptionValue('showTransactionResultNotifications')
 
-export const getExtensionOptions = () => {
+export const getExtensionOptions = (): ResultAsync<
+  ConnectorExtensionOptions,
+  ConnectorExtensionOptions
+> => {
   return chromeStorageSync
     .getSingleItem('options')
     .map((options) => ({

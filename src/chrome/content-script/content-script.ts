@@ -6,12 +6,12 @@ import { ConfirmationMessageError, Message } from '../messages/_types'
 import { errAsync, okAsync, ResultAsync } from 'neverthrow'
 import { logger } from 'utils/logger'
 import { MessageLifeCycleEvent } from 'chrome/dapp/_types'
-import { getConnectionPassword } from 'chrome/helpers/get-connection-password'
 import {
   WalletInteractionWithOrigin,
   ExtensionInteraction,
 } from '@radixdlt/radix-connect-schemas'
 import { sendMessage } from 'chrome/helpers/send-message'
+import { hasConnections } from 'chrome/helpers/get-connections'
 
 const appLogger = logger.getSubLogger({ name: 'content-script' })
 
@@ -67,8 +67,8 @@ const handleExtensionInteraction = async (
       break
 
     case 'extensionStatus':
-      await getConnectionPassword().map((connectionPassword) => {
-        sendMessageToDapp(createMessage.extensionStatus(!!connectionPassword))
+      await hasConnections().map((hasConnections) => {
+        sendMessageToDapp(createMessage.extensionStatus(hasConnections))
       })
       break
 
@@ -103,6 +103,6 @@ chrome.storage.onChanged.addListener(
   },
 )
 
-getConnectionPassword().map((connectionPassword) => {
-  sendMessageToDapp(createMessage.extensionStatus(!!connectionPassword))
+hasConnections().map((hasConnections) => {
+  sendMessageToDapp(createMessage.extensionStatus(hasConnections))
 })

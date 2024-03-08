@@ -11,6 +11,7 @@ import {
 import { MessageLifeCycleEvent } from 'chrome/dapp/_types'
 import { ILogObj, ILogObjMeta } from 'tslog/dist/types/interfaces'
 import { WalletInteractionWithOrigin } from '@radixdlt/radix-connect-schemas'
+import { Connections } from 'pairing/state/connections'
 
 export const createMessage = {
   openParingPopup: () => ({
@@ -32,13 +33,18 @@ export const createMessage = {
     discriminator: 'downloadLogs',
     messageId: crypto.randomUUID(),
   }),
-  setConnectionPassword: (
-    source: MessageSource,
-    connectionPassword?: string,
-  ): Messages['setConnectionPassword'] => ({
-    discriminator: 'setConnectionPassword',
+  getConnections: (source: MessageSource): Messages['getConnections'] => ({
+    discriminator: 'getConnections',
     messageId: crypto.randomUUID(),
-    connectionPassword,
+    source,
+  }),
+  setConnections: (
+    source: MessageSource,
+    connections: Connections,
+  ): Messages['setConnections'] => ({
+    discriminator: 'setConnections',
+    messageId: crypto.randomUUID(),
+    connections,
     source,
   }),
   setConnectorExtensionOptions: (
@@ -54,13 +60,6 @@ export const createMessage = {
     source: MessageSource,
   ): Messages['getExtensionOptions'] => ({
     discriminator: 'getExtensionOptions',
-    messageId: crypto.randomUUID(),
-    source,
-  }),
-  getConnectionPassword: (
-    source: MessageSource,
-  ): Messages['getConnectionPassword'] => ({
-    discriminator: 'getConnectionPassword',
     messageId: crypto.randomUUID(),
     source,
   }),

@@ -5,6 +5,7 @@ export const Button = styled('button', {
   backgroundColor: '$primaryButton',
   borderWidth: 0,
   cursor: 'pointer',
+  boxSizing: 'border-box',
   display: 'inline-flex',
   alignItems: 'center',
   justifyContent: 'center',
@@ -26,6 +27,14 @@ export const Button = styled('button', {
     full: {
       true: {
         width: '$1',
+      },
+    },
+    disabled: {
+      true: {
+        backgroundColor: '$secondaryButton',
+        color: 'rgba(208,208,214,1)',
+        cursor: 'not-allowed',
+        pointerEvents: 'none',
       },
     },
     size: {
