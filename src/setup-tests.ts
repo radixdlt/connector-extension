@@ -41,6 +41,10 @@ global.chrome.storage = {
 }
 global.chrome.runtime = {
   sendMessage: () => Promise.resolve(),
+  onMessage: {
+    addListener: () => {},
+    removeListener: () => {},
+  },
 }
 
 global.crypto.subtle = webcrypto.subtle

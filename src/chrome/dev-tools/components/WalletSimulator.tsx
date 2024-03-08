@@ -12,8 +12,8 @@ import {
   getSignSecp256k1TransactionPayload,
   getDeriveAndDisplayPayload,
 } from '../example'
-import { getConnectionPassword } from 'chrome/helpers/get-connection-password'
 import { getExtensionOptions } from 'options'
+import { getConnections } from 'chrome/helpers/get-connections'
 
 export const WalletSimulator = () => {
   const [connector, setConnector] =
@@ -66,10 +66,11 @@ export const WalletSimulator = () => {
       }
     })
 
-    getConnectionPassword().map((connectionPassword) => {
-      if (connectionPassword) {
+    getConnections().map((connections) => {
+      const firstConnection = connections && connections?.[0]
+      if (firstConnection) {
         connectorClient.setConnectionPassword(
-          Buffer.from(connectionPassword, 'hex'),
+          Buffer.from(firstConnection.password, 'hex'),
         )
       }
     })

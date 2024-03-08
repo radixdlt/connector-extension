@@ -4,12 +4,16 @@ import { ResultAsync } from 'neverthrow'
 import { ILogObjMeta } from 'tslog/dist/types/interfaces'
 import { ILogObj } from 'tslog'
 import { WalletInteractionWithOrigin } from '@radixdlt/radix-connect-schemas'
+import { Connections } from 'pairing/state/connections'
 
 export const messageDiscriminator = {
-  getConnectionPassword: 'getConnectionPassword',
-  setConnectionPassword: 'setConnectionPassword',
+  getConnections: 'getConnections',
+  setConnections: 'setConnections',
   setRadixConnectConfiguration: 'setRadixConnectConfiguration',
   getExtensionOptions: 'getExtensionOptions',
+  getSessionRouterData: 'getSessionRouterData',
+  setSessionRouterData: 'setSessionRouterData',
+  removeSessionId: 'removeSessionId',
   dAppRequest: 'dAppRequest',
   closeLedgerTab: 'closeLedgerTab',
   focusLedgerTab: 'focusLedgerTab',
@@ -111,13 +115,13 @@ export type Messages = {
     MessageDiscriminator['getExtensionOptions'],
     {}
   >
-  [messageDiscriminator.getConnectionPassword]: MessageBuilder<
-    MessageDiscriminator['getConnectionPassword'],
-    {}
+  [messageDiscriminator.setConnections]: MessageBuilder<
+    MessageDiscriminator['setConnections'],
+    { connections: Connections }
   >
-  [messageDiscriminator.setConnectionPassword]: MessageBuilder<
-    MessageDiscriminator['setConnectionPassword'],
-    { connectionPassword?: string }
+  [messageDiscriminator.getConnections]: MessageBuilder<
+    MessageDiscriminator['getConnections'],
+    {}
   >
   [messageDiscriminator.sendMessageToTab]: MessageBuilder<
     MessageDiscriminator['sendMessageToTab'],

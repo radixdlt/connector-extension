@@ -5,7 +5,7 @@ import { Logger } from 'tslog'
 
 export type AppLogger = typeof logger
 export const logger = new Logger({
-  prettyLogTemplate: '{{hh}}:{{MM}}:{{ss}}:{{ms}}\t{{logLevelName}}\t',
+  prettyLogTemplate: '{{hh}}:{{MM}}:{{ss}}:{{ms}} {{name}}',
   prettyLogTimeZone: 'UTC',
   minLevel: config.logLevel,
 })

@@ -3,7 +3,39 @@ html {
   background-repeat: no-repeat;
   background-position: center;
   background-size: cover;
+  --color-light: #fff;
 }
 body {
   box-sizing: border-box;
+}
+
+:root {
+  --color-radix-grey-1: '#003057';
+  --color-radix-white: '#fff';
+}
+
+.MuiPaper-root {
+  padding-top: 0 !important;
+  padding-bottom: 0 !important;
+}
+::-webkit-scrollbar {
+  display: none;
+}
+
+.rename-wallet-link__input {
+  border-radius: 8px;
+  border: 1px solid var(--Grey-3, #e2e5ed);
+  background: var(--Grey-2, #f4f5f9);
+  margin: 8px 0;
+  padding: 14px 16px;
+}
+
+.rename-wallet-link__error {
+  color: #c82020;
+  display: flex;
+  align-items: center;
+  font-size: 14px;
+  gap: 4px;
+  min-height: 18px;
+  margin-bottom: 8px;
 }
