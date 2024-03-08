@@ -1,5 +1,4 @@
-import { AppLogger, logger as utilsLogger } from 'utils/logger'
-import { MessagesRouter } from 'chrome/offscreen/wallet-connection/messages-router'
+import { logger as utilsLogger } from 'utils/logger'
 import { createMessage } from 'chrome/messages/create-message'
 import { OffscreenMessageHandler } from 'chrome/offscreen/message-handler'
 import { MessageClient } from 'chrome/messages/message-client'
@@ -10,6 +9,7 @@ import { LogsClient } from './logs-client'
 import { Connections } from 'pairing/state/connections'
 import { WalletConnectionClient } from './wallet-connection/wallet-connection-client'
 import { walletConnectionClientFactory } from './wallet-connection/factory'
+import { ClientId, SessionId } from './session-router'
 
 const logsClient = LogsClient()
 
@@ -44,6 +44,14 @@ messageClient
     messageClient.handleMessage(
       createMessage.setConnectorExtensionOptions('offScreen', options),
     ),
+  )
+
+messageClient
+  .sendMessageAndWaitForConfirmation<Record<SessionId, ClientId>>(
+    createMessage.getSessionRouterData(),
+  )
+  .andThen((data) =>
+    messageClient.handleMessage(createMessage.setSessionRouterData(data)),
   )
 
 const TWO_MINUTES = 120_000

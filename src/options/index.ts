@@ -4,12 +4,14 @@ import { defaultRadixConnectConfig } from 'config'
 import { ResultAsync } from 'neverthrow'
 
 export type ConnectorExtensionOptions = {
+  clientId: string
   showDAppRequestNotifications?: boolean
   showTransactionResultNotifications?: boolean
   radixConnectConfiguration: string
 }
 
 export const defaultConnectorExtensionOptions: ConnectorExtensionOptions = {
+  clientId: crypto.randomUUID(),
   showDAppRequestNotifications: true,
   showTransactionResultNotifications: true,
   radixConnectConfiguration: defaultRadixConnectConfig,

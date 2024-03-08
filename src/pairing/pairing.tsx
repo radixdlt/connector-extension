@@ -5,7 +5,7 @@ import { logger } from 'utils/logger'
 import { config, radixConnectConfig } from 'config'
 import { useConnectionsClient } from './state/connections'
 import { useConnectorOptions } from './state/options'
-import { Subscription, filter, map, withLatestFrom } from 'rxjs'
+import { Subscription, filter, map, tap, withLatestFrom } from 'rxjs'
 import { useNavigate } from 'react-router-dom'
 
 export const Pairing = () => {
@@ -37,6 +37,16 @@ export const Pairing = () => {
 
     const subscription = new Subscription()
 
+    const linkClientInteraction$ = connectorClient.onMessage$.pipe(
+      filter((message) => message.discriminator === 'linkClient'),
+    )
+
+    const sendLinkClientInteraction = connectorClient.sendMessage({
+      discriminator: 'linkClient',
+      clientId: connectorOptions.clientId,
+      purpose: 'general',
+    })
+
     const hexConnectionPassword$ = connectorClient.connectionPassword$.pipe(
       filter(Boolean),
       map((buffer) => buffer.toString('hex')),
@@ -50,10 +60,14 @@ export const Pairing = () => {
 
     subscription.add(
       connectorClient.connected$
-        .pipe(filter(Boolean), withLatestFrom(hexConnectionPassword$))
+        .pipe(
+          filter(Boolean),
+          tap(() => {}),
+          withLatestFrom(hexConnectionPassword$),
+        )
         .subscribe(([, password]) => {
           connectionsClient
-            .add(password)
+            .addOrUpdate(password, crypto.randomUUID())
             .map(() => connectorClient.disconnect())
             .map(() => navigate('/'))
         }),

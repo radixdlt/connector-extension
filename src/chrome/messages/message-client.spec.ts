@@ -11,6 +11,7 @@ import { OffscreenMessageHandler } from 'chrome/offscreen/message-handler'
 import { walletConnectionClientFactory } from 'chrome/offscreen/wallet-connection/factory'
 import { WalletConnectionMessageHandler } from 'chrome/offscreen/wallet-connection/message-handler'
 import { Message } from './_types'
+import { SessionRouter } from 'chrome/offscreen/session-router'
 
 const logger = new Logger()
 
@@ -47,7 +48,9 @@ const createTestHelper = ({
       ledgerToWalletQueue,
       incomingWalletMessageQueue,
       messagesRouter,
+      sessionRouter: SessionRouter(),
       logger,
+      clientId: 'random-mock-client-id',
     }),
     'offScreen',
     createInput(messageClientSubjects),
@@ -60,8 +63,11 @@ const createTestHelper = ({
         [
           '456',
           walletConnectionClientFactory({
-            connectionPassword: '',
-            walletName: 'Test Mock Wallet',
+            connection: {
+              password: '',
+              walletName: 'Test Mock Wallet',
+              clientId: 'mock',
+            },
             logger,
             messagesRouter,
             connectorClient: {

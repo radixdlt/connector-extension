@@ -103,6 +103,8 @@ chrome.storage.onChanged.addListener(
   },
 )
 
+logger.debug('content-script loaded')
+
 hasConnections().map((hasConnections) => {
   sendMessageToDapp(createMessage.extensionStatus(hasConnections))
 })

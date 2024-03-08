@@ -22,6 +22,8 @@ import {
   WalletInteraction,
 } from './notification-dispatcher'
 import { getExtensionOptions } from 'options'
+import { chromeLocalStore } from 'chrome/helpers/chrome-local-store'
+import { RadixNetworkConfigById } from '@radixdlt/babylon-gateway-api-sdk'
 
 export type BackgroundMessageHandler = ReturnType<
   typeof BackgroundMessageHandler
@@ -44,6 +46,8 @@ export const BackgroundMessageHandler =
     message: Message,
     sendMessageWithConfirmation: SendMessageWithConfirmation,
   ): MessageHandlerOutput => {
+    if (message?.discriminator !== 'log')
+      logger?.debug('incoming bg message', message.discriminator)
     switch (message?.discriminator) {
       case messageDiscriminator.getExtensionOptions:
         return getExtensionOptions()
@@ -129,11 +133,47 @@ export const BackgroundMessageHandler =
       }
 
       case messageDiscriminator.walletResponse: {
+        const sessionId = message.data?.metadata?.sessionId
+        const clientId = message.data?.metadata?.clientId
+
+        logger?.debug('bg knows about', sessionId, clientId, message.data)
+        if (
+          sessionId &&
+          clientId &&
+          message.data?.discriminator &&
+          message.data.discriminator !== 'failure'
+        ) {
+          chromeLocalStore.getSingleItem('sessionRouter').map((data) => {
+            if (!data) {
+              logger?.debug('adding sessionId->clientId mapping')
+              return chromeLocalStore.setSingleItem('sessionRouter', {
+                [sessionId]: clientId,
+              })
+            }
+
+            if (data[sessionId] && data[sessionId] !== clientId) {
+              logger?.warn(
+                `sessionRouter has clientId ${data[sessionId]} for ${sessionId} but we've just had a response from ${clientId}`,
+              )
+            } else if (!data[sessionId]) {
+              logger?.debug('adding sessionId->clientId mapping')
+              return chromeLocalStore.setSingleItem('sessionRouter', {
+                ...data,
+                [sessionId]: clientId,
+              })
+            }
+
+            logger?.debug('not updating clientId nor sessionId')
+          })
+        }
+
         const canBePolled = (message: any) => {
           return (
             message.data?.items?.discriminator === 'transaction' &&
             message.data?.items?.send?.transactionIntentHash &&
-            message.data?.metadata?.networkId
+            message.data?.metadata?.networkId &&
+            RadixNetworkConfigById[message.data?.metadata?.networkId]
+              ?.gatewayUrl
           )
         }
 
@@ -156,6 +196,22 @@ export const BackgroundMessageHandler =
           })
         }
         return okAsync({ sendConfirmation: false })
+      }
+
+      case messageDiscriminator.getSessionRouterData: {
+        return chromeLocalStore
+          .getItem('sessionRouter')
+          .map((data) => ({
+            sendConfirmation: true,
+            data,
+          }))
+          .mapErr(() => ({
+            reason: 'failedToGetSessionRouterData',
+          }))
+      }
+
+      case messageDiscriminator.addToSessionRouter: {
+        logger?.debug(message)
       }
 
       case messageDiscriminator.dAppRequest: {

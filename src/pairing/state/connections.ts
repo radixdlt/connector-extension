@@ -5,6 +5,7 @@ import { useEffect, useState } from 'react'
 export type Connection = {
   walletName: string
   password: string
+  clientId: string
 }
 
 const defaultConnections = {}
@@ -76,22 +77,36 @@ const ConnectionsClient = (connections?: Connections | null) => {
     return Object.entries(connections || {})
   }
 
-  const add = (password: string) => {
+  const addOrUpdate = (password: string, clientId: string) => {
+    if (connections && connections[clientId]) {
+      connections[clientId] = {
+        ...connections[clientId],
+        password,
+      }
+      return chromeLocalStore.setItem({
+        connections: {
+          ...(connections || {}),
+          [clientId]: connections[clientId],
+        },
+      })
+    }
+
     return chromeLocalStore.setItem({
       connections: {
         ...(connections || {}),
-        [crypto.randomUUID()]: {
+        [clientId]: {
           walletName: `Radix Wallet ${
             Object.keys(connections || {}).length + 1
           }`,
+          clientId,
           password,
-        } satisfies Connection,
+        },
       },
     })
   }
 
   return {
-    add,
+    addOrUpdate,
     remove,
     entries,
     isLoading,

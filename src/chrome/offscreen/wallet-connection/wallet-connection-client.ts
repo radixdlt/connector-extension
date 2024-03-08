@@ -15,6 +15,7 @@ import { WalletConnectionMessageHandler } from './message-handler'
 import { Message } from 'chrome/messages/_types'
 import { Subscription } from 'rxjs'
 import { SyncClient } from './sync-client'
+import { SessionRouter } from '../session-router'
 
 export type WalletConnectionClient = ReturnType<typeof WalletConnectionClient>
 
@@ -24,13 +25,18 @@ export const WalletConnectionClient = ({
   logger = utilsLogger,
   syncClient,
   connectorClient,
+  clientId,
+  sessionRouter,
 }: {
   connectionPassword: string
   messagesRouter: MessagesRouter
   logger: AppLogger
   syncClient: SyncClient
   connectorClient: ConnectorClient
+  clientId: string
+  sessionRouter: SessionRouter
 }) => {
+  logger.info('WalletConnectionClient created', clientId)
   connectorClient.setConnectionPassword(Buffer.from(connectionPassword, 'hex'))
 
   const dAppRequestQueue = Queue<WalletInteractionWithOrigin>({
@@ -141,7 +147,9 @@ export const WalletConnectionClient = ({
       ledgerToWalletQueue,
       incomingWalletMessageQueue,
       messagesRouter,
+      sessionRouter,
       logger,
+      clientId,
     }),
     'offScreen',
     { logger },
