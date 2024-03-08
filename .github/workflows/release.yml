@@ -43,7 +43,7 @@ jobs:
           GOOGLE_CLIENT_SECRET: ${{ env.GH_CLIENT_SECRET }}
           GOOGLE_REFRESH_TOKEN: ${{ env.GH_REFRESH_TOKEN }}
           GOOGLE_EXTENSION_ID: ${{ env.GH_BETA_EXTENSION_ID }}
-          TARGET_RELEASE: trustedTesters
+          TARGET_RELEASE: default
         run: |
           sed -i "s/    name:.*/    name: 'Radix Wallet Connector - BETA',/" vite.config.ts
           sed -i -E '/^ *description:.*$/ {N; s/.*/    description: '"'"'THIS EXTENSION IS FOR BETA TESTING'"'"',/}' vite.config.ts
