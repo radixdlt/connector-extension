@@ -5,10 +5,15 @@ import { Link } from 'react-router-dom'
 
 export const ConnectionPassword = ({
   connectionPassword,
+  clientId,
+  purpose,
 }: {
   connectionPassword?: string
+  clientId?: string
+  purpose?: 'general'
 }) => {
   if (!connectionPassword) return null
+
   const connectionsClient = useConnectionsClient()
   return (
     <>
@@ -22,8 +27,16 @@ export const ConnectionPassword = ({
         Scan the QR code with the Radix Wallet app on your mobile phone to start
         using it with dApps in this web browser.
       </PairingHeader>
+
       <Box mt="3xl" p="none">
-        <QrCode value={connectionPassword} data-testid="custom-element" />
+        <QrCode
+          value={JSON.stringify({
+            password: connectionPassword,
+            clientId,
+            purpose,
+          })}
+          data-testid="custom-element"
+        />
       </Box>
 
       <Box textAlign="center">

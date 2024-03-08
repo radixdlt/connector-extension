@@ -46,8 +46,6 @@ export const BackgroundMessageHandler =
     message: Message,
     sendMessageWithConfirmation: SendMessageWithConfirmation,
   ): MessageHandlerOutput => {
-    if (message?.discriminator !== 'log')
-      logger?.debug('incoming bg message', message.discriminator)
     switch (message?.discriminator) {
       case messageDiscriminator.getExtensionOptions:
         return getExtensionOptions()
@@ -132,11 +130,21 @@ export const BackgroundMessageHandler =
           .mapErr(() => ({ reason: 'failedToFocusLedgerTab' }))
       }
 
+      case messageDiscriminator.removeSessionId: {
+        chromeLocalStore.getSingleItem('sessionRouter').andThen((data) => {
+          if (!data) {
+            return okAsync(undefined)
+          }
+
+          const { [message.sessionId]: _, ...rest } = data
+          return chromeLocalStore.setSingleItem('sessionRouter', rest)
+        })
+      }
+
       case messageDiscriminator.walletResponse: {
         const sessionId = message.data?.metadata?.sessionId
         const clientId = message.data?.metadata?.clientId
 
-        logger?.debug('bg knows about', sessionId, clientId, message.data)
         if (
           sessionId &&
           clientId &&
@@ -145,7 +153,6 @@ export const BackgroundMessageHandler =
         ) {
           chromeLocalStore.getSingleItem('sessionRouter').map((data) => {
             if (!data) {
-              logger?.debug('adding sessionId->clientId mapping')
               return chromeLocalStore.setSingleItem('sessionRouter', {
                 [sessionId]: clientId,
               })
@@ -156,14 +163,11 @@ export const BackgroundMessageHandler =
                 `sessionRouter has clientId ${data[sessionId]} for ${sessionId} but we've just had a response from ${clientId}`,
               )
             } else if (!data[sessionId]) {
-              logger?.debug('adding sessionId->clientId mapping')
               return chromeLocalStore.setSingleItem('sessionRouter', {
                 ...data,
                 [sessionId]: clientId,
               })
             }
-
-            logger?.debug('not updating clientId nor sessionId')
           })
         }
 
@@ -208,10 +212,6 @@ export const BackgroundMessageHandler =
           .mapErr(() => ({
             reason: 'failedToGetSessionRouterData',
           }))
-      }
-
-      case messageDiscriminator.addToSessionRouter: {
-        logger?.debug(message)
       }
 
       case messageDiscriminator.dAppRequest: {

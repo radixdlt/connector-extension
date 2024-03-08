@@ -62,6 +62,12 @@ const handleExtensionInteraction = async (
   extensionInteraction: ExtensionInteraction,
 ) => {
   switch (extensionInteraction.discriminator) {
+    case 'removeSessionId':
+      await sendMessage(
+        createMessage.removeSessionId(extensionInteraction.sessionId),
+      )
+      break
+
     case 'openPopup':
       await sendMessage(createMessage.openParingPopup())
       break
@@ -102,8 +108,6 @@ chrome.storage.onChanged.addListener(
       )
   },
 )
-
-logger.debug('content-script loaded')
 
 hasConnections().map((hasConnections) => {
   sendMessageToDapp(createMessage.extensionStatus(hasConnections))

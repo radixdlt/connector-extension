@@ -26,6 +26,10 @@ export const createMessage = {
     discriminator: messageDiscriminator.setSessionRouterData,
     data,
   }),
+  removeSessionId: (sessionId: string) => ({
+    discriminator: messageDiscriminator.removeSessionId,
+    sessionId,
+  }),
   extensionStatus: (isWalletLinked: boolean) => ({
     eventType: 'extensionStatus',
     isExtensionAvailable: true,
@@ -85,9 +89,9 @@ export const createMessage = {
   dAppRequest: (
     source: MessageSource,
     data: WalletInteractionWithOrigin,
-  ): Messages[typeof messageDiscriminator.dAppRequest] => ({
+  ): Messages['dAppRequest'] => ({
     source,
-    discriminator: messageDiscriminator.dAppRequest,
+    discriminator: 'dAppRequest',
     messageId: crypto.randomUUID(),
     data,
   }),

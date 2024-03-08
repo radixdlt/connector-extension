@@ -74,7 +74,6 @@ export const WalletConnectionMessageHandler = (input: {
             const clientIdForSessionId = sessionRouter.getClientId(
               arbitraryData?.sessionId,
             )
-            logger.info('clientIdForSessionId', clientIdForSessionId)
             if (walletInteraction.items.discriminator === 'cancelRequest') {
               return dAppRequestQueue
                 .cancel(interactionId)
@@ -90,14 +89,7 @@ export const WalletConnectionMessageHandler = (input: {
                 )
             }
 
-            logger.debug(
-              'almost adding to request queue',
-              clientId,
-              arbitraryData?.sessionId,
-            )
-
             if ([undefined, clientId].includes(clientIdForSessionId)) {
-              logger.debug('add')
               return dAppRequestQueue.add(
                 {
                   items,
