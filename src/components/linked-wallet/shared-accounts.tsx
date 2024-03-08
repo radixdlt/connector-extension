@@ -18,10 +18,6 @@ export const SharedAccounts = (props: {
           {props.accounts?.map((account) => (
             <Account key={account.address} account={account} />
           ))}
-
-          <Button secondary full>
-            Link New Account
-          </Button>
         </Box>
       </Collapse>
 
