@@ -12,7 +12,7 @@ export const useConnectorOptions = () => {
       changes: Record<string, chrome.storage.StorageChange>,
       area: string,
     ) => {
-      if (changes['options'] && area === 'sync') {
+      if (changes['options'] && area === 'local') {
         setConnectorOptions(changes['options'].newValue)
       }
     }
