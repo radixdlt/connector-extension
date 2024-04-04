@@ -10,7 +10,10 @@ import {
 import { WalletConnectionClient } from './wallet-connection/wallet-connection-client'
 import { radixConnectConfig } from 'config'
 import { Connections } from 'pairing/state/connections'
-import type { walletConnectionClientFactory } from './wallet-connection/factory'
+import {
+  sessionRouter,
+  type walletConnectionClientFactory,
+} from './wallet-connection/factory'
 
 export type OffscreenMessageHandler = ReturnType<typeof OffscreenMessageHandler>
 export const OffscreenMessageHandler = (input: {
@@ -21,6 +24,7 @@ export const OffscreenMessageHandler = (input: {
 }): MessageHandler => {
   let radixConnectConfiguration: string
   const logsClient = input.logsClient
+  const logger = input.logger
   const connectionsMap = input.connectionsMap
 
   return (message: Message): MessageHandlerOutput => {
@@ -33,11 +37,12 @@ export const OffscreenMessageHandler = (input: {
             connectionsMap.delete(id)
           }
 
+          logger?.debug('connection', connection)
+
           connectionsMap.set(
             id,
             input.walletConnectionClientFactory({
-              connectionPassword: connection.password,
-              walletName: connection.walletName,
+              connection,
               logger: input.logger || appLogger,
               radixConnectConfiguration,
             }),
@@ -55,7 +60,7 @@ export const OffscreenMessageHandler = (input: {
       }
 
       case messageDiscriminator.restartConnector: {
-        for (const [key, connection] of connectionsMap) {
+        for (const [, connection] of connectionsMap) {
           connection.connectorClient.restart()
         }
         return okAsync({ sendConfirmation: true })
@@ -66,7 +71,7 @@ export const OffscreenMessageHandler = (input: {
         radixConnectConfiguration =
           connectorExtensionOptions.radixConnectConfiguration
 
-        for (const [id, connection] of connectionsMap) {
+        for (const [, connection] of connectionsMap) {
           connection.setConnectionConfig(
             radixConnectConfig[
               connectorExtensionOptions.radixConnectConfiguration
@@ -74,6 +79,13 @@ export const OffscreenMessageHandler = (input: {
           )
         }
 
+        return okAsync({ sendConfirmation: true })
+      }
+
+      case messageDiscriminator.setSessionRouterData: {
+        const { data } = message
+        sessionRouter.refreshStore(data)
+        logger?.info('setSessionRouterData', data)
         return okAsync({ sendConfirmation: true })
       }
 

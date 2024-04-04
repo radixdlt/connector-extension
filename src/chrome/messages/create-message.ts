@@ -12,10 +12,19 @@ import { MessageLifeCycleEvent } from 'chrome/dapp/_types'
 import { ILogObj, ILogObjMeta } from 'tslog/dist/types/interfaces'
 import { WalletInteractionWithOrigin } from '@radixdlt/radix-connect-schemas'
 import { Connections } from 'pairing/state/connections'
+import { ClientId, SessionId } from 'chrome/offscreen/session-router'
 
 export const createMessage = {
   openParingPopup: () => ({
     discriminator: 'openParingPopup',
+  }),
+  getSessionRouterData: () => ({
+    discriminator: messageDiscriminator.getSessionRouterData,
+    source: 'offscreen',
+  }),
+  setSessionRouterData: (data: Record<SessionId, ClientId>) => ({
+    discriminator: messageDiscriminator.setSessionRouterData,
+    data,
   }),
   extensionStatus: (isWalletLinked: boolean) => ({
     eventType: 'extensionStatus',
@@ -76,9 +85,9 @@ export const createMessage = {
   dAppRequest: (
     source: MessageSource,
     data: WalletInteractionWithOrigin,
-  ): Messages['dAppRequest'] => ({
+  ): Messages[typeof messageDiscriminator.dAppRequest] => ({
     source,
-    discriminator: 'dAppRequest',
+    discriminator: messageDiscriminator.dAppRequest,
     messageId: crypto.randomUUID(),
     data,
   }),

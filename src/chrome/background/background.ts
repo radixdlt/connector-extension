@@ -19,6 +19,8 @@ import { RadixNetworkConfigById } from '@radixdlt/babylon-gateway-api-sdk'
 import { openRadixDevToolsPage } from './open-radix-dev-tools-page'
 import { sendMessage } from 'chrome/messages/send-message'
 import { Connections } from 'pairing/state/connections'
+import { SessionRouter } from 'chrome/offscreen/session-router'
+import { createTab } from 'chrome/helpers/create-tab'
 
 const logger = utilsLogger.getSubLogger({ name: 'background' })
 
@@ -53,6 +55,12 @@ const handleStorageChange = (
         'background',
         changes['options'].newValue,
       ),
+    )
+  }
+
+  if (changes['sessionRouter'] && area === 'local') {
+    messageHandler.sendMessageAndWaitForConfirmation(
+      createMessage.setSessionRouterData(changes['sessionRouter'].newValue),
     )
   }
 }
@@ -114,11 +122,20 @@ chrome.notifications.onButtonClicked.addListener(handleNotificationClick)
 chrome.storage.onChanged.addListener(handleStorageChange)
 chrome.action.onClicked.addListener(openParingPopup)
 chrome.runtime.onInstalled.addListener(handleOnInstallExtension)
+
+if (isDevMode) {
+  chrome.runtime.onInstalled.addListener(() => {
+    createTab(
+      `chrome-extension://${chrome.runtime.id}/src/chrome/offscreen/index.html`,
+    )
+  })
+} else {
+  createOffscreen()
+}
+
 chrome.runtime.onStartup.addListener(() => {
   logger.debug('onStartup')
 })
-
-createOffscreen()
 
 chrome.contextMenus?.removeAll(() => {
   if (isDevMode) {

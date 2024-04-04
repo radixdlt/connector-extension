@@ -11,6 +11,9 @@ export const messageDiscriminator = {
   setConnections: 'setConnections',
   setRadixConnectConfiguration: 'setRadixConnectConfiguration',
   getExtensionOptions: 'getExtensionOptions',
+  getSessionRouterData: 'getSessionRouterData',
+  setSessionRouterData: 'setSessionRouterData',
+  addToSessionRouter: 'addToSessionRouter',
   dAppRequest: 'dAppRequest',
   closeLedgerTab: 'closeLedgerTab',
   focusLedgerTab: 'focusLedgerTab',
@@ -153,7 +156,7 @@ export type Messages = {
     { data: Record<string, any> }
   >
   [messageDiscriminator.dAppRequest]: MessageBuilder<
-    MessageDiscriminator['dAppRequest'],
+    MessageDiscriminator[typeof messageDiscriminator.dAppRequest],
     { data: WalletInteractionWithOrigin }
   >
   [messageDiscriminator.walletMessage]: MessageBuilder<

@@ -1,6 +1,6 @@
 import { createMessage } from 'chrome/messages/create-message'
 import { MessagesRouter } from 'chrome/offscreen/wallet-connection/messages-router'
-import { ResultAsync, errAsync, okAsync } from 'neverthrow'
+import { ResultAsync, errAsync, ok, okAsync } from 'neverthrow'
 import { Queue } from 'queues/queue'
 import { AppLogger, logger as appLogger } from 'utils/logger'
 
@@ -15,6 +15,7 @@ import {
   messageDiscriminator,
 } from 'chrome/messages/_types'
 import { syncClient } from './sync-client'
+import { SessionRouter } from '../session-router'
 
 export type WalletConnectionMessageHandler = ReturnType<
   typeof WalletConnectionMessageHandler
@@ -24,12 +25,16 @@ export const WalletConnectionMessageHandler = (input: {
   ledgerToWalletQueue: Queue<LedgerResponse>
   incomingWalletMessageQueue: Queue<any>
   messagesRouter: MessagesRouter
+  sessionRouter: SessionRouter
   logger?: AppLogger
+  clientId: string
 }): MessageHandler => {
   const dAppRequestQueue = input.dAppRequestQueue
   const ledgerToWalletQueue = input.ledgerToWalletQueue
   const incomingWalletMessageQueue = input.incomingWalletMessageQueue
   const messagesRouter = input.messagesRouter
+  const sessionRouter = input.sessionRouter
+  const clientId = input.clientId
   const logger = input.logger || appLogger
 
   return (
@@ -57,12 +62,20 @@ export const WalletConnectionMessageHandler = (input: {
 
       case messageDiscriminator.dAppRequest: {
         const walletInteraction: WalletInteractionWithOrigin = message.data
-        const { interactionId, metadata } = walletInteraction
+        const { interactionId, metadata, arbitraryData, items } =
+          walletInteraction
 
         return messagesRouter
-          .add(tabId!, interactionId, metadata)
+          .add(tabId!, interactionId, {
+            ...metadata,
+            sessionId: arbitraryData?.sessionId,
+          })
           .asyncAndThen(() => {
-            if (walletInteraction.items.discriminator === 'cancelRequest')
+            const clientIdForSessionId = sessionRouter.getClientId(
+              arbitraryData?.sessionId,
+            )
+            logger.info('clientIdForSessionId', clientIdForSessionId)
+            if (walletInteraction.items.discriminator === 'cancelRequest') {
               return dAppRequestQueue
                 .cancel(interactionId)
                 .andThen(() =>
@@ -75,8 +88,27 @@ export const WalletConnectionMessageHandler = (input: {
                     tabId,
                   ),
                 )
+            }
 
-            return dAppRequestQueue.add(walletInteraction, interactionId)
+            logger.debug(
+              'almost adding to request queue',
+              clientId,
+              arbitraryData?.sessionId,
+            )
+
+            if ([undefined, clientId].includes(clientIdForSessionId)) {
+              logger.debug('add')
+              return dAppRequestQueue.add(
+                {
+                  items,
+                  metadata,
+                  interactionId,
+                } as WalletInteractionWithOrigin,
+                interactionId,
+              )
+            }
+
+            return okAsync(undefined)
           })
           .map(() => ({ sendConfirmation: true }))
       }
@@ -92,6 +124,8 @@ export const WalletConnectionMessageHandler = (input: {
                 ...message.data,
                 metadata: {
                   networkId: metadata.networkId,
+                  sessionId: metadata.sessionId,
+                  clientId,
                 },
               }),
             )
