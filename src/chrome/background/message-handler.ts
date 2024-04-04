@@ -143,29 +143,29 @@ export const BackgroundMessageHandler =
 
       case messageDiscriminator.walletResponse: {
         const sessionId = message.data?.metadata?.sessionId
-        const clientId = message.data?.metadata?.clientId
+        const walletPublicKey = message.data?.metadata?.walletPublicKey
 
         if (
           sessionId &&
-          clientId &&
+          walletPublicKey &&
           message.data?.discriminator &&
           message.data.discriminator !== 'failure'
         ) {
           chromeLocalStore.getSingleItem('sessionRouter').map((data) => {
             if (!data) {
               return chromeLocalStore.setSingleItem('sessionRouter', {
-                [sessionId]: clientId,
+                [sessionId]: walletPublicKey,
               })
             }
 
-            if (data[sessionId] && data[sessionId] !== clientId) {
+            if (data[sessionId] && data[sessionId] !== walletPublicKey) {
               logger?.warn(
-                `sessionRouter has clientId ${data[sessionId]} for ${sessionId} but we've just had a response from ${clientId}`,
+                `sessionRouter has walletPublicKey ${data[sessionId]} for ${sessionId} but we've just had a response from ${walletPublicKey}`,
               )
             } else if (!data[sessionId]) {
               return chromeLocalStore.setSingleItem('sessionRouter', {
                 ...data,
-                [sessionId]: clientId,
+                [sessionId]: walletPublicKey,
               })
             }
           })

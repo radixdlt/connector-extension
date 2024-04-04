@@ -25,7 +25,7 @@ export const WalletConnectionClient = ({
   logger = utilsLogger,
   syncClient,
   connectorClient,
-  clientId,
+  walletPublicKey,
   sessionRouter,
 }: {
   connectionPassword: string
@@ -33,10 +33,10 @@ export const WalletConnectionClient = ({
   logger: AppLogger
   syncClient: SyncClient
   connectorClient: ConnectorClient
-  clientId: string
+  walletPublicKey: string
   sessionRouter: SessionRouter
 }) => {
-  logger.info('WalletConnectionClient created', clientId)
+  logger.info('WalletConnectionClient created', walletPublicKey)
   connectorClient.setConnectionPassword(Buffer.from(connectionPassword, 'hex'))
 
   const dAppRequestQueue = Queue<WalletInteractionWithOrigin>({
@@ -149,7 +149,7 @@ export const WalletConnectionClient = ({
       messagesRouter,
       sessionRouter,
       logger,
-      clientId,
+      walletPublicKey,
     }),
     'offScreen',
     { logger },

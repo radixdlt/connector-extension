@@ -1,11 +1,15 @@
+import { getLinkingSignatureMessage } from './../../crypto/get-linking-message'
+import { ed25519 } from '@noble/curves/ed25519'
 import { chromeLocalStore } from 'chrome/helpers/chrome-local-store'
+import { Message } from 'chrome/messages/_types'
 import { chrome } from 'jest-chrome'
+import { err, errAsync } from 'neverthrow'
 import { useEffect, useState } from 'react'
 
 export type Connection = {
   walletName: string
   password: string
-  clientId: string
+  walletPublicKey: string
 }
 
 const defaultConnections = {}
@@ -77,16 +81,24 @@ const ConnectionsClient = (connections?: Connections | null) => {
     return Object.entries(connections || {})
   }
 
-  const addOrUpdate = (password: string, clientId: string) => {
-    if (connections && connections[clientId]) {
-      connections[clientId] = {
-        ...connections[clientId],
+  const addOrUpdate = (password: string, interaction: Message) => {
+    const walletPublickey = interaction.publicKey
+    const signature = interaction.signature
+    const message = getLinkingSignatureMessage(Buffer.from(password, 'hex'))
+    const validSignature = ed25519.verify(signature, message, walletPublickey)
+
+    if (!validSignature) {
+      return errAsync({ cause: 'Invalid Signature' } as Error)
+    }
+    if (connections && connections[walletPublickey]) {
+      connections[walletPublickey] = {
+        ...connections[walletPublickey],
         password,
       }
       return chromeLocalStore.setItem({
         connections: {
           ...(connections || {}),
-          [clientId]: connections[clientId],
+          [walletPublickey]: connections[walletPublickey],
         },
       })
     }
@@ -94,11 +106,11 @@ const ConnectionsClient = (connections?: Connections | null) => {
     return chromeLocalStore.setItem({
       connections: {
         ...(connections || {}),
-        [clientId]: {
+        [walletPublickey]: {
           walletName: `Radix Wallet ${
             Object.keys(connections || {}).length + 1
           }`,
-          clientId,
+          walletPublickey,
           password,
         },
       },

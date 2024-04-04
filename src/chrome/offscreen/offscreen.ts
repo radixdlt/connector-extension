@@ -9,7 +9,7 @@ import { LogsClient } from './logs-client'
 import { Connections } from 'pairing/state/connections'
 import { WalletConnectionClient } from './wallet-connection/wallet-connection-client'
 import { walletConnectionClientFactory } from './wallet-connection/factory'
-import { ClientId, SessionId } from './session-router'
+import { WalletPublicKey, SessionId } from './session-router'
 
 const logsClient = LogsClient()
 
@@ -47,7 +47,7 @@ messageClient
   )
 
 messageClient
-  .sendMessageAndWaitForConfirmation<Record<SessionId, ClientId>>(
+  .sendMessageAndWaitForConfirmation<Record<SessionId, WalletPublicKey>>(
     createMessage.getSessionRouterData(),
   )
   .andThen((data) =>

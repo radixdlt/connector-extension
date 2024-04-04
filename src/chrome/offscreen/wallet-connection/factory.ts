@@ -39,7 +39,7 @@ export const walletConnectionClientFactory = (input: {
     connectorClient,
     syncClient,
     connectionPassword: input.connection.password,
-    clientId: input.connection.clientId,
+    walletPublicKey: input.connection.walletPublicKey,
     sessionRouter,
     logger,
   })

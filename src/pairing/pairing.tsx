@@ -5,8 +5,11 @@ import { logger } from 'utils/logger'
 import { config, radixConnectConfig } from 'config'
 import { useConnectionsClient } from './state/connections'
 import { useConnectorOptions } from './state/options'
-import { Subscription, filter, map, withLatestFrom } from 'rxjs'
+import { Subscription, filter, map, tap, withLatestFrom } from 'rxjs'
 import { useNavigate } from 'react-router-dom'
+import { blakeHashBufferToHex } from 'crypto/blake2b'
+import { ed25519 } from '@noble/curves/ed25519'
+import { getLinkingSignatureMessage } from 'crypto/get-linking-message'
 
 export const Pairing = () => {
   const [connectionPassword, setConnectionPassword] = useState<
@@ -15,11 +18,12 @@ export const Pairing = () => {
   const connectionsClient = useConnectionsClient()
   const connectorOptions = useConnectorOptions()
   const navigate = useNavigate()
-  const [clientId, setClientId] = useState<string>()
+  const [publicKey, setPublicKey] = useState<string>()
+  const [signature, setSignature] = useState<string>()
   useEffect(() => {
     if (!connectorOptions) return
 
-    setClientId(connectorOptions.clientId)
+    setPublicKey(Buffer.from(connectorOptions.publicKey).toString('hex'))
 
     const connectorClient = ConnectorClient({
       source: 'extension',
@@ -45,6 +49,14 @@ export const Pairing = () => {
 
     const hexConnectionPassword$ = connectorClient.connectionPassword$.pipe(
       filter(Boolean),
+      tap((passwordBuffer) => {
+        const message = getLinkingSignatureMessage(passwordBuffer)
+        setSignature(
+          Buffer.from(
+            ed25519.sign(message, connectorOptions.privateKey),
+          ).toString('hex'),
+        )
+      }),
       map((buffer) => buffer.toString('hex')),
     )
 
@@ -63,7 +75,7 @@ export const Pairing = () => {
         )
         .subscribe(([[, password], interaction]) => {
           connectionsClient
-            .addOrUpdate(password, interaction.clientId)
+            .addOrUpdate(password, interaction)
             .map(() => connectorClient.disconnect())
             .map(() => navigate('/'))
         }),
@@ -82,7 +94,8 @@ export const Pairing = () => {
       <ConnectionPassword
         connectionPassword={connectionPassword}
         purpose="general"
-        clientId={clientId}
+        publicKey={publicKey}
+        signature={signature}
       />
     </>
   )

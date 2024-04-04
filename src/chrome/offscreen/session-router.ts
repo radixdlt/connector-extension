@@ -1,23 +1,23 @@
 export type SessionRouter = ReturnType<typeof SessionRouter>
 
 export type SessionId = string
-export type ClientId = string
+export type WalletPublicKey = string
 
 export const SessionRouter = () => {
-  const store = new Map<SessionId, ClientId>()
+  const store = new Map<SessionId, WalletPublicKey>()
 
-  const getClientId = (sessionId: SessionId) => store.get(sessionId)
+  const getWalletPublicKey = (sessionId: SessionId) => store.get(sessionId)
 
-  const refreshStore = (data: Record<SessionId, ClientId>) => {
+  const refreshStore = (data: Record<SessionId, WalletPublicKey>) => {
     store.clear()
-    Object.entries(data).forEach(([sessionId, clientId]) => {
-      store.set(sessionId, clientId)
+    Object.entries(data).forEach(([sessionId, walletPublicKey]) => {
+      store.set(sessionId, walletPublicKey)
     })
   }
 
   return {
     refreshStore,
-    getClientId,
+    getWalletPublicKey,
     store,
   }
 }

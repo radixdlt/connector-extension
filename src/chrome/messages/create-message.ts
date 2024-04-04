@@ -12,7 +12,7 @@ import { MessageLifeCycleEvent } from 'chrome/dapp/_types'
 import { ILogObj, ILogObjMeta } from 'tslog/dist/types/interfaces'
 import { WalletInteractionWithOrigin } from '@radixdlt/radix-connect-schemas'
 import { Connections } from 'pairing/state/connections'
-import { ClientId, SessionId } from 'chrome/offscreen/session-router'
+import { WalletPublicKey, SessionId } from 'chrome/offscreen/session-router'
 
 export const createMessage = {
   openParingPopup: () => ({
@@ -22,7 +22,7 @@ export const createMessage = {
     discriminator: messageDiscriminator.getSessionRouterData,
     source: 'offscreen',
   }),
-  setSessionRouterData: (data: Record<SessionId, ClientId>) => ({
+  setSessionRouterData: (data: Record<SessionId, WalletPublicKey>) => ({
     discriminator: messageDiscriminator.setSessionRouterData,
     data,
   }),

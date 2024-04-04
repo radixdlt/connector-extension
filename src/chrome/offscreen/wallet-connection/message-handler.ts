@@ -27,14 +27,14 @@ export const WalletConnectionMessageHandler = (input: {
   messagesRouter: MessagesRouter
   sessionRouter: SessionRouter
   logger?: AppLogger
-  clientId: string
+  walletPublicKey: string
 }): MessageHandler => {
   const dAppRequestQueue = input.dAppRequestQueue
   const ledgerToWalletQueue = input.ledgerToWalletQueue
   const incomingWalletMessageQueue = input.incomingWalletMessageQueue
   const messagesRouter = input.messagesRouter
   const sessionRouter = input.sessionRouter
-  const clientId = input.clientId
+  const walletPublicKey = input.walletPublicKey
   const logger = input.logger || appLogger
 
   return (
@@ -71,9 +71,8 @@ export const WalletConnectionMessageHandler = (input: {
             sessionId: arbitraryData?.sessionId,
           })
           .asyncAndThen(() => {
-            const clientIdForSessionId = sessionRouter.getClientId(
-              arbitraryData?.sessionId,
-            )
+            const walletPublicKeyForSessionId =
+              sessionRouter.getWalletPublicKey(arbitraryData?.sessionId)
             if (walletInteraction.items.discriminator === 'cancelRequest') {
               return dAppRequestQueue
                 .cancel(interactionId)
@@ -89,7 +88,9 @@ export const WalletConnectionMessageHandler = (input: {
                 )
             }
 
-            if ([undefined, clientId].includes(clientIdForSessionId)) {
+            if (
+              [undefined, walletPublicKey].includes(walletPublicKeyForSessionId)
+            ) {
               return dAppRequestQueue.add(
                 {
                   items,
@@ -117,7 +118,7 @@ export const WalletConnectionMessageHandler = (input: {
                 metadata: {
                   networkId: metadata.networkId,
                   sessionId: metadata.sessionId,
-                  clientId,
+                  walletPublicKey,
                 },
               }),
             )

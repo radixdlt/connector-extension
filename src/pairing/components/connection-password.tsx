@@ -5,14 +5,16 @@ import { Link } from 'react-router-dom'
 
 export const ConnectionPassword = ({
   connectionPassword,
-  clientId,
+  publicKey,
+  signature,
   purpose,
 }: {
   connectionPassword?: string
-  clientId?: string
+  publicKey?: string
+  signature?: string
   purpose?: 'general'
 }) => {
-  if (!connectionPassword) return null
+  if (!connectionPassword || !publicKey || !signature) return null
 
   const connectionsClient = useConnectionsClient()
   return (
@@ -32,7 +34,8 @@ export const ConnectionPassword = ({
         <QrCode
           value={JSON.stringify({
             password: connectionPassword,
-            clientId,
+            publicKey,
+            signature,
             purpose,
           })}
           data-testid="custom-element"
