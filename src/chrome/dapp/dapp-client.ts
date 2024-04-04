@@ -61,14 +61,10 @@ export const ChromeDAppClient = (logger: AppLogger) => {
           interactionId: crypto.randomUUID(),
         } as ExtensionInteraction)
 
-      if (message.interactionId)
-        sendMessage({
-          interactionId: message.interactionId,
-          discriminator: 'failure',
-          error: 'InvalidDappRequest',
-        })
-
-      logger.error({ reason: 'InvalidDappRequest', message })
+      if (message.interactionId) {
+        logger.warn({ reason: 'UnrecognizedDappRequest', message })
+        return onDappRequest(addOriginToWalletInteraction(message))
+      }      
     })
   }
 
