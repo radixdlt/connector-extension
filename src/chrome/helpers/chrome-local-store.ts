@@ -16,4 +16,14 @@ export const chromeLocalStore = {
       chrome.storage.local.get(key),
       (error) => error as Error,
     ),
+  setSingleItem: (key: string, value: any) =>
+    ResultAsync.fromPromise(
+      chrome.storage.local.set({ [key]: value }),
+      (error) => error as Error,
+    ),
+  getSingleItem: (key: string) =>
+    ResultAsync.fromPromise(
+      chrome.storage.local.get(key).then((result) => result[key]),
+      (error) => error as Error,
+    ),
 } as const

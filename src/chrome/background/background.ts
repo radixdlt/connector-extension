@@ -47,7 +47,7 @@ const handleStorageChange = (
     handleConnectionsChange(changes['connections']?.newValue)
   }
 
-  if (changes['options'] && area === 'sync') {
+  if (changes['options'] && area === 'local') {
     messageHandler.sendMessageAndWaitForConfirmation(
       createMessage.setConnectorExtensionOptions(
         'background',

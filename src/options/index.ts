@@ -1,4 +1,4 @@
-import { chromeStorageSync } from 'chrome/helpers/chrome-storage-sync'
+import { chromeLocalStore } from 'chrome/helpers/chrome-local-store'
 import { logger } from 'utils/logger'
 import { defaultRadixConnectConfig } from 'config'
 import { ResultAsync } from 'neverthrow'
@@ -16,7 +16,7 @@ export const defaultConnectorExtensionOptions: ConnectorExtensionOptions = {
 }
 
 export const getSingleOptionValue = (key: keyof ConnectorExtensionOptions) =>
-  chromeStorageSync
+  chromeLocalStore
     .getSingleItem('options')
     .map((options) => options?.[key] || defaultConnectorExtensionOptions[key])
     .mapErr(() => defaultConnectorExtensionOptions[key])
@@ -31,7 +31,7 @@ export const getExtensionOptions = (): ResultAsync<
   ConnectorExtensionOptions,
   ConnectorExtensionOptions
 > => {
-  return chromeStorageSync
+  return chromeLocalStore
     .getSingleItem('options')
     .map((options) => ({
       ...defaultConnectorExtensionOptions,
@@ -44,5 +44,5 @@ export const setConnectorExtensionOptions = (
   connectorExtensionOptions: ConnectorExtensionOptions,
 ) => {
   logger.debug('setConnectorExtensionOptions', connectorExtensionOptions)
-  chromeStorageSync.setSingleItem('options', connectorExtensionOptions)
+  chromeLocalStore.setSingleItem('options', connectorExtensionOptions)
 }
