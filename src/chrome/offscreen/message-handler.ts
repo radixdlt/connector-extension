@@ -55,7 +55,9 @@ export const OffscreenMessageHandler = (input: {
       }
 
       case messageDiscriminator.restartConnector: {
-        connectorClient.restart()
+        for (const [key, connection] of connectionsMap) {
+          connection.connectorClient.restart()
+        }
         return okAsync({ sendConfirmation: true })
       }
 
