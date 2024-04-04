@@ -18,6 +18,7 @@ import { createAndFocusTab } from 'chrome/helpers/create-and-focus-tab'
 import { RadixNetworkConfigById } from '@radixdlt/babylon-gateway-api-sdk'
 import { openRadixDevToolsPage } from './open-radix-dev-tools-page'
 import { sendMessage } from 'chrome/messages/send-message'
+import { Connections } from 'pairing/state/connections'
 
 const logger = utilsLogger.getSubLogger({ name: 'background' })
 
@@ -36,13 +37,17 @@ const handleOnInstallExtension = async () => {
   }
 }
 
-const handleStorageChange = (changes: {
-  [key: string]: chrome.storage.StorageChange
-}) => {
-  if (changes['connectionPassword'])
-    handleConnectionPasswordChange(changes['connectionPassword']?.newValue)
+const handleStorageChange = (
+  changes: {
+    [key: string]: chrome.storage.StorageChange
+  },
+  area: string,
+) => {
+  if (changes['connections'] && area === 'local') {
+    handleConnectionsChange(changes['connections']?.newValue)
+  }
 
-  if (changes['options']) {
+  if (changes['options'] && area === 'sync') {
     messageHandler.sendMessageAndWaitForConfirmation(
       createMessage.setConnectorExtensionOptions(
         'background',
@@ -63,10 +68,10 @@ const messageHandler = MessageClient(
   { logger },
 )
 
-const handleConnectionPasswordChange = (connectionPassword?: string) =>
+const handleConnectionsChange = (connections?: Connections) =>
   messageHandler
     .sendMessageAndWaitForConfirmation(
-      createMessage.setConnectionPassword('background', connectionPassword),
+      createMessage.setConnections('background', connections || {}),
     )
     .map(() => {
       setTimeout(() => {

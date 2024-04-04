@@ -54,6 +54,9 @@ export const MessagesRouter = () => {
       return interactionIds
     })
 
+  const removeByInteractionId = (interactionId: string) =>
+    store.delete(interactionId)
+
   return {
     add,
     getByInteractionId,
@@ -61,6 +64,7 @@ export const MessagesRouter = () => {
     getNetworkId,
     getInteractionIdsByTabId,
     removeByTabId,
+    removeByInteractionId,
     getAndRemoveByTabId,
   }
 }

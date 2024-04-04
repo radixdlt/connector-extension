@@ -1,67 +1,57 @@
-import { Box, Button, Text } from '../../components'
+import { Box, Button } from '../../components'
 import { PairingHeader } from './pairing-header'
-import WalletConnectedIcon from '../assets/wallet-connect-active-icon.svg'
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
+import { LinkedWallet } from 'components/linked-wallet/linked-wallet'
+import { Link, useNavigate } from 'react-router-dom'
+import { useConnectionsClient } from 'pairing/state/connections'
+import { ForgetThisWallet } from './forget-this-wallet'
+import { RenameWalletLink } from './rename-wallet-link'
 
-type ConnectionStatusProps = {
-  onForgetWallet: () => void
-}
+export const ConnectionStatus = () => {
+  const navigate = useNavigate()
+  const connectionsClient = useConnectionsClient()
+  const connections = connectionsClient.connections
+  const [connectionIdToForget, setConnectionIdToForget] = useState<string>('')
+  const [connectionIdToChangeName, setConnectionIdToChangeName] =
+    useState<string>('')
 
-export const ConnectionStatus = ({ onForgetWallet }: ConnectionStatusProps) => {
-  const [isConfirming, setIsConfirming] = useState(false)
+  useEffect(() => {
+    if (connectionsClient.isLoading()) return
+    if (connectionsClient.hasNoConnections()) {
+      navigate('/pairing')
+    }
+  }, [connections])
 
-  const renderConfirmation = () => {
-    if (!isConfirming) return null
+  const forgetWallet = () => {
+    connectionsClient.remove(connectionIdToForget)
+    setConnectionIdToForget('')
+  }
+
+  const updateWalletName = (walletName: string) => {
+    connectionsClient.updateName(walletName, connectionIdToChangeName)
+    setConnectionIdToChangeName('')
+  }
+
+  const renderForgetWalletConfirmation = () => {
+    if (!connectionIdToForget) return null
 
     return (
-      <Box
-        position="absolute"
-        bg="dark"
-        style={{ margin: '-17px -32px', height: '100vh' }}
-        full
-        items="center"
-        justify="center"
-      >
-        <Box
-          flex="col"
-          bg="white"
-          p="medium"
-          style={{
-            borderRadius: '16px',
-            maxWidth: '75vw',
-          }}
-        >
-          <Text
-            mt="md"
-            style={{
-              color: '#003057',
-              fontSize: '18px',
-              fontWeight: '600',
-              textAlign: 'center',
-            }}
-          >
-            Forget Wallet
-          </Text>
-          <Text
-            style={{
-              color: '#8A8FA4',
-              margin: '16px 0',
-              fontSize: '14px',
-              textAlign: 'center',
-            }}
-          >
-            This browser will no longer connect to your Radix Wallet
-          </Text>
-          <Box items="center" style={{ gap: '8px' }}>
-            <Button secondary onClick={() => setIsConfirming(false)}>
-              Cancel
-            </Button>
-            <Button onClick={() => onForgetWallet()} full>
-              Forget
-            </Button>
-          </Box>
-        </Box>
-      </Box>
+      <ForgetThisWallet
+        forgetWallet={forgetWallet}
+        cancel={() => setConnectionIdToForget('')}
+      />
+    )
+  }
+
+  const renderChangeWalletName = () => {
+    if (!connectionIdToChangeName || !connections) return null
+
+    return (
+      <RenameWalletLink
+        cancel={() => setConnectionIdToChangeName('')}
+        updateName={(updatedName) => updateWalletName(updatedName)}
+        initialValue={connections[connectionIdToChangeName].walletName}
+      />
     )
   }
   return (
@@ -69,54 +59,44 @@ export const ConnectionStatus = ({ onForgetWallet }: ConnectionStatusProps) => {
       <Box
         py="small"
         flex="col"
-        justify="between"
-        style={
-          isConfirming
+        style={{
+          ...(connectionIdToForget || connectionIdToChangeName
             ? { filter: `blur(10px)`, height: '100%' }
-            : { height: '100%' }
-        }
+            : { height: '100%' }),
+        }}
       >
-        <Box>
-          <PairingHeader header="Radix Wallet Connector" />
-          <Box
-            mt="3xl"
-            bg="white"
-            style={{
-              borderRadius: '16px',
-              boxShadow: '0px 4px 7px rgba(0, 0, 0, 0.25)',
-              padding: '30px',
-              display: 'flex',
-            }}
-          >
-            <img src={WalletConnectedIcon} />
-            <Box style={{ marginLeft: '20px' }}>
-              <Text
-                style={{
-                  color: '#003057',
-                  fontSize: '16px',
-                  lineHeight: '23px',
-                  fontWeight: '600',
-                }}
-              >
-                Radix Wallet linked
-              </Text>
-              <Text style={{ color: '#8A8FA4' }}>to this web browser</Text>
-            </Box>
+        <PairingHeader header="Radix Wallet Connector" />
+        <Box style={{ maxHeight: 530, overflowY: 'scroll' }}>
+          <Box>
+            {connectionsClient.entries().map(([id, connection]) => (
+              <LinkedWallet
+                key={id}
+                accounts={[]}
+                name={connection.walletName}
+                onForgetWallet={() => setConnectionIdToForget(id)}
+                onRequestAccountList={() => {}}
+                onRenameWalletLink={() => setConnectionIdToChangeName(id)}
+              />
+            ))}
           </Box>
-        </Box>
-        <Box px="medium" mt="3xl" style={{ textAlign: 'center' }}>
-          <Button
-            text
-            onClick={() => {
-              setIsConfirming(true)
-            }}
-            style={{ fontSize: '16px', color: 'white', fontWeight: 'bold' }}
-          >
-            Forget this Radix Wallet
-          </Button>
+          <Link to="/pairing">
+            <Button
+              text
+              full
+              style={{
+                fontSize: '16px',
+                color: 'white',
+                marginTop: '32px',
+                fontWeight: 'bold',
+              }}
+            >
+              Link New Wallet
+            </Button>
+          </Link>
         </Box>
       </Box>
-      {renderConfirmation()}
+      {renderForgetWalletConfirmation()}
+      {renderChangeWalletName()}
     </>
   )
 }

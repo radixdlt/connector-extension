@@ -8,7 +8,10 @@ import {
   SendMessageWithConfirmation,
   MessageHandlerOutput,
 } from '../messages/_types'
-import { getConnectionPassword as getConnectionPasswordFn } from '../helpers/get-connection-password'
+import {
+  getConnections as getConnectionsFn,
+  hasConnections,
+} from '../helpers/get-connections'
 import { config } from 'config'
 import { LedgerTabWatcher } from './ledger-tab-watcher'
 import { ensureTab } from 'chrome/helpers/ensure-tab'
@@ -27,13 +30,13 @@ export const BackgroundMessageHandler =
   ({
     logger,
     ledgerTabWatcher = LedgerTabWatcher(),
-    getConnectionPassword = getConnectionPasswordFn,
+    getConnections = getConnectionsFn,
     closePopup = closePopupFn,
     openParingPopup = openParingPopupFn,
   }: Partial<{
     logger?: AppLogger
     ledgerTabWatcher: ReturnType<typeof LedgerTabWatcher>
-    getConnectionPassword: () => ResultAsync<any, Error>
+    getConnections: () => ResultAsync<any, Error>
     closePopup: () => ResultAsync<any, Error>
     openParingPopup: () => ResultAsync<any, Error>
   }>) =>
@@ -52,15 +55,15 @@ export const BackgroundMessageHandler =
             sendConfirmation: true,
             data: { options },
           }))
-      case messageDiscriminator.getConnectionPassword:
-        return getConnectionPassword()
+      case messageDiscriminator.getConnections:
+        return getConnections()
           .mapErr((error) => ({
-            reason: 'failedToGetConnectionPassword',
+            reason: 'failedToGetConnections',
             jsError: error,
           }))
-          .map((connectionPassword) => ({
+          .map((data) => ({
             sendConfirmation: true,
-            data: { connectionPassword },
+            data,
           }))
 
       case messageDiscriminator.openParingPopup:
@@ -73,11 +76,11 @@ export const BackgroundMessageHandler =
           }))
 
       case messageDiscriminator.detectWalletLink:
-        return getConnectionPassword()
-          .andThen((connectionPassword) =>
-            connectionPassword
-              ? closePopup().map(() => !!connectionPassword)
-              : openParingPopup().map(() => !!connectionPassword),
+        return hasConnections()
+          .andThen((hasConnections) =>
+            hasConnections
+              ? closePopup().map(() => hasConnections)
+              : openParingPopup().map(() => hasConnections),
           )
           .map((isLinked) => ({
             sendConfirmation: true,
@@ -156,8 +159,8 @@ export const BackgroundMessageHandler =
       }
 
       case messageDiscriminator.dAppRequest: {
-        getConnectionPassword().map((connectionPassword) => {
-          if (connectionPassword) {
+        hasConnections().map((hasConnections) => {
+          if (hasConnections) {
             notificationDispatcher.request(message.data as WalletInteraction)
           }
         })
