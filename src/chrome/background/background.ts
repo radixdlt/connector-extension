@@ -19,8 +19,8 @@ import { RadixNetworkConfigById } from '@radixdlt/babylon-gateway-api-sdk'
 import { openRadixDevToolsPage } from './open-radix-dev-tools-page'
 import { sendMessage } from 'chrome/messages/send-message'
 import { Connections } from 'pairing/state/connections'
-import { SessionRouter } from 'chrome/offscreen/session-router'
 import { createTab } from 'chrome/helpers/create-tab'
+import { getExtensionOptions, setConnectorExtensionOptions } from 'options'
 
 const logger = utilsLogger.getSubLogger({ name: 'background' })
 
@@ -37,6 +37,8 @@ const handleOnInstallExtension = async () => {
       }
     } catch (err) {}
   }
+
+  getExtensionOptions().map(setConnectorExtensionOptions)
 }
 
 const handleStorageChange = (
@@ -123,15 +125,7 @@ chrome.storage.onChanged.addListener(handleStorageChange)
 chrome.action.onClicked.addListener(openParingPopup)
 chrome.runtime.onInstalled.addListener(handleOnInstallExtension)
 
-if (isDevMode) {
-  chrome.runtime.onInstalled.addListener(() => {
-    createTab(
-      `chrome-extension://${chrome.runtime.id}/src/chrome/offscreen/index.html`,
-    )
-  })
-} else {
-  createOffscreen()
-}
+createOffscreen()
 
 chrome.runtime.onStartup.addListener(() => {
   logger.debug('onStartup')

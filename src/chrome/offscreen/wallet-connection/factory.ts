@@ -31,6 +31,7 @@ export const walletConnectionClientFactory = (input: {
       target: 'wallet',
       isInitiator: config.webRTC.isInitiator,
       logger,
+      negotiationTimeout: 10_000,
     })
 
   const client = WalletConnectionClient({

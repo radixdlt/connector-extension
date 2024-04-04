@@ -13,7 +13,7 @@ export const messageDiscriminator = {
   getExtensionOptions: 'getExtensionOptions',
   getSessionRouterData: 'getSessionRouterData',
   setSessionRouterData: 'setSessionRouterData',
-  addToSessionRouter: 'addToSessionRouter',
+  removeSessionId: 'removeSessionId',
   dAppRequest: 'dAppRequest',
   closeLedgerTab: 'closeLedgerTab',
   focusLedgerTab: 'focusLedgerTab',
@@ -156,7 +156,7 @@ export type Messages = {
     { data: Record<string, any> }
   >
   [messageDiscriminator.dAppRequest]: MessageBuilder<
-    MessageDiscriminator[typeof messageDiscriminator.dAppRequest],
+    MessageDiscriminator['dAppRequest'],
     { data: WalletInteractionWithOrigin }
   >
   [messageDiscriminator.walletMessage]: MessageBuilder<
