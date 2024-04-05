@@ -130,17 +130,6 @@ export const BackgroundMessageHandler =
           .mapErr(() => ({ reason: 'failedToFocusLedgerTab' }))
       }
 
-      case messageDiscriminator.removeSessionId: {
-        chromeLocalStore.getSingleItem('sessionRouter').andThen((data) => {
-          if (!data) {
-            return okAsync(undefined)
-          }
-
-          const { [message.sessionId]: _, ...rest } = data
-          return chromeLocalStore.setSingleItem('sessionRouter', rest)
-        })
-      }
-
       case messageDiscriminator.walletResponse: {
         const sessionId = message.data?.metadata?.sessionId
         const walletPublicKey = message.data?.metadata?.walletPublicKey
