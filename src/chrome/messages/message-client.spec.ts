@@ -1,49 +1,86 @@
-import { MessagesRouter } from 'message-router'
+import { MessagesRouter } from 'chrome/offscreen/wallet-connection/messages-router'
 import { errAsync, okAsync } from 'neverthrow'
-import { filter, firstValueFrom } from 'rxjs'
+import { Observable, filter, firstValueFrom, of } from 'rxjs'
 import { Logger } from 'tslog'
 import { BackgroundMessageHandler } from '../background/message-handler'
-import { OffscreenMessageHandler } from '../offscreen/message-handler'
 import { createMessage } from './create-message'
 import { MessageClient } from './message-client'
 import { MessageSubjects } from './subjects'
 import { ContentScriptMessageHandler } from 'chrome/content-script/message-handler'
+import { OffscreenMessageHandler } from 'chrome/offscreen/message-handler'
+import { walletConnectionClientFactory } from 'chrome/offscreen/wallet-connection/factory'
+import { WalletConnectionMessageHandler } from 'chrome/offscreen/wallet-connection/message-handler'
+import { Message } from './_types'
+import { SessionRouter } from 'chrome/offscreen/session-router'
 
 const logger = new Logger()
 
 const dAppRequestQueue = { add: () => okAsync(undefined) } as any
+const ledgerToWalletQueue = { add: () => okAsync(undefined) } as any
+const incomingWalletMessageQueue = { add: () => okAsync(undefined) } as any
+
+const createInput = (subjects: MessageSubjects) => ({
+  logger,
+  subjects,
+  sendMessage: (message: Message, tabId?: number) => {
+    logger.debug('sendMessage', { message, tabId })
+    subjects.messageSubject.next({ message, tabId })
+
+    return okAsync(undefined)
+  },
+})
 
 const createTestHelper = ({
-  messageRouter = MessagesRouter(),
+  messagesRouter = MessagesRouter(),
   messageClientSubjects = MessageSubjects(),
   backgroundMessageClient = MessageClient(
     BackgroundMessageHandler({
       logger,
-      getConnectionPassword: () => okAsync(''),
+      getConnections: () => okAsync({}),
       openParingPopup: () => okAsync(undefined),
     }),
     'background',
-    {
-      logger,
-      subjects: messageClientSubjects,
-      sendMessage: (message, tabId?: number) => {
-        logger.debug('sendMessage', { message, tabId })
-        messageClientSubjects.messageSubject.next({ message, tabId })
-
-        return okAsync(undefined)
-      },
-    },
+    createInput(messageClientSubjects),
   ),
+  walletConnectionMessageClient = MessageClient(
+    WalletConnectionMessageHandler({
+      dAppRequestQueue,
+      ledgerToWalletQueue,
+      incomingWalletMessageQueue,
+      messagesRouter,
+      sessionRouter: SessionRouter(),
+      logger,
+      walletPublicKey: 'random-mock-client-id',
+    }),
+    'offScreen',
+    createInput(messageClientSubjects),
+  ),
+
   offScreenMessageClient = MessageClient(
     OffscreenMessageHandler({
       logger,
-      messageRouter,
-      dAppRequestQueue,
-      connectorClient: {
-        connect: () => {},
-        disconnect: () => {},
-        setConnectionPassword: () => okAsync(undefined),
-      },
+      connectionsMap: new Map([
+        [
+          '456',
+          walletConnectionClientFactory({
+            connection: {
+              password: '',
+              walletName: 'Test Mock Wallet',
+              walletPublicKey: 'mock',
+            },
+            logger,
+            messagesRouter,
+            connectorClient: {
+              connect: () => {},
+              disconnect: () => {},
+              setConnectionPassword: () => okAsync(undefined),
+              connected$: of(false),
+              onMessage$: new Observable(),
+            } as any,
+          }),
+        ],
+      ]),
+      walletConnectionClientFactory: () => ({}) as any,
     } as any),
     'offScreen',
     {
@@ -67,21 +104,14 @@ const createTestHelper = ({
       logger,
     }),
     'contentScript',
-    {
-      logger,
-      subjects: messageClientSubjects,
-      sendMessage: (message, tabId?: number) => {
-        logger.debug('sendMessage', message)
-        messageClientSubjects.messageSubject.next({ message, tabId })
-        return okAsync(undefined)
-      },
-    },
+    createInput(messageClientSubjects),
   ),
 }: Partial<{
   messagesRouter: MessagesRouter
   backgroundMessageClient: MessageClient
   offScreenMessageClient: MessageClient
   contentScriptMessageClient: MessageClient
+  walletConnectionMessageClient: MessageClient
   messageRouter: MessagesRouter
   messageClientSubjects: MessageSubjects
 }>) => {
@@ -95,7 +125,7 @@ const createTestHelper = ({
     message: Record<string, any>,
     tabId?: number,
   ) => {
-    offScreenMessageClient.onMessage(
+    walletConnectionMessageClient.onMessage(
       createMessage.incomingWalletMessage('wallet', message),
       tabId,
     )
@@ -108,7 +138,7 @@ const createTestHelper = ({
     contentScriptMessageClient,
     mockIncomingDappMessage,
     mockIncomingWalletMessage,
-    messageRouter,
+    messagesRouter,
   }
 }
 
@@ -117,7 +147,7 @@ describe('message client', () => {
   // so it has to proxy the message through background message handler
   it('should send wallet response to dApp', async () => {
     const testHelper = createTestHelper({})
-    testHelper.messageRouter.add(1, '456', {
+    testHelper.messagesRouter.add(1, '456', {
       origin: 'http://localhost',
       networkId: 1,
     })
@@ -153,7 +183,7 @@ describe('message client', () => {
       backgroundMessageClient: MessageClient(
         BackgroundMessageHandler({
           logger,
-          getConnectionPassword: () => okAsync(''),
+          getConnections: () => okAsync({}),
           openParingPopup: () => okAsync(undefined),
         }),
         'background',
@@ -173,7 +203,7 @@ describe('message client', () => {
       ),
     })
 
-    testHelper.messageRouter.add(1, '456', { origin: 'origin', networkId: 1 })
+    testHelper.messagesRouter.add(1, '456', { origin: 'origin', networkId: 1 })
     testHelper.mockIncomingWalletMessage({ interactionId: '456' }, 1)
 
     await Promise.all([

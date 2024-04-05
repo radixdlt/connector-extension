@@ -8,7 +8,10 @@ import {
   SendMessageWithConfirmation,
   MessageHandlerOutput,
 } from '../messages/_types'
-import { getConnectionPassword as getConnectionPasswordFn } from '../helpers/get-connection-password'
+import {
+  getConnections as getConnectionsFn,
+  hasConnections,
+} from '../helpers/get-connections'
 import { config } from 'config'
 import { LedgerTabWatcher } from './ledger-tab-watcher'
 import { ensureTab } from 'chrome/helpers/ensure-tab'
@@ -19,6 +22,8 @@ import {
   WalletInteraction,
 } from './notification-dispatcher'
 import { getExtensionOptions } from 'options'
+import { chromeLocalStore } from 'chrome/helpers/chrome-local-store'
+import { RadixNetworkConfigById } from '@radixdlt/babylon-gateway-api-sdk'
 
 export type BackgroundMessageHandler = ReturnType<
   typeof BackgroundMessageHandler
@@ -27,13 +32,13 @@ export const BackgroundMessageHandler =
   ({
     logger,
     ledgerTabWatcher = LedgerTabWatcher(),
-    getConnectionPassword = getConnectionPasswordFn,
+    getConnections = getConnectionsFn,
     closePopup = closePopupFn,
     openParingPopup = openParingPopupFn,
   }: Partial<{
     logger?: AppLogger
     ledgerTabWatcher: ReturnType<typeof LedgerTabWatcher>
-    getConnectionPassword: () => ResultAsync<any, Error>
+    getConnections: () => ResultAsync<any, Error>
     closePopup: () => ResultAsync<any, Error>
     openParingPopup: () => ResultAsync<any, Error>
   }>) =>
@@ -52,15 +57,15 @@ export const BackgroundMessageHandler =
             sendConfirmation: true,
             data: { options },
           }))
-      case messageDiscriminator.getConnectionPassword:
-        return getConnectionPassword()
+      case messageDiscriminator.getConnections:
+        return getConnections()
           .mapErr((error) => ({
-            reason: 'failedToGetConnectionPassword',
+            reason: 'failedToGetConnections',
             jsError: error,
           }))
-          .map((connectionPassword) => ({
+          .map((data) => ({
             sendConfirmation: true,
-            data: { connectionPassword },
+            data,
           }))
 
       case messageDiscriminator.openParingPopup:
@@ -73,11 +78,11 @@ export const BackgroundMessageHandler =
           }))
 
       case messageDiscriminator.detectWalletLink:
-        return getConnectionPassword()
-          .andThen((connectionPassword) =>
-            connectionPassword
-              ? closePopup().map(() => !!connectionPassword)
-              : openParingPopup().map(() => !!connectionPassword),
+        return hasConnections()
+          .andThen((hasConnections) =>
+            hasConnections
+              ? closePopup().map(() => hasConnections)
+              : openParingPopup().map(() => hasConnections),
           )
           .map((isLinked) => ({
             sendConfirmation: true,
@@ -125,12 +130,54 @@ export const BackgroundMessageHandler =
           .mapErr(() => ({ reason: 'failedToFocusLedgerTab' }))
       }
 
+      case messageDiscriminator.removeSessionId: {
+        chromeLocalStore.getSingleItem('sessionRouter').andThen((data) => {
+          if (!data) {
+            return okAsync(undefined)
+          }
+
+          const { [message.sessionId]: _, ...rest } = data
+          return chromeLocalStore.setSingleItem('sessionRouter', rest)
+        })
+      }
+
       case messageDiscriminator.walletResponse: {
+        const sessionId = message.data?.metadata?.sessionId
+        const walletPublicKey = message.data?.metadata?.walletPublicKey
+
+        if (
+          sessionId &&
+          walletPublicKey &&
+          message.data?.discriminator &&
+          message.data.discriminator !== 'failure'
+        ) {
+          chromeLocalStore.getSingleItem('sessionRouter').map((data) => {
+            if (!data) {
+              return chromeLocalStore.setSingleItem('sessionRouter', {
+                [sessionId]: walletPublicKey,
+              })
+            }
+
+            if (data[sessionId] && data[sessionId] !== walletPublicKey) {
+              logger?.warn(
+                `sessionRouter has walletPublicKey ${data[sessionId]} for ${sessionId} but we've just had a response from ${walletPublicKey}`,
+              )
+            } else if (!data[sessionId]) {
+              return chromeLocalStore.setSingleItem('sessionRouter', {
+                ...data,
+                [sessionId]: walletPublicKey,
+              })
+            }
+          })
+        }
+
         const canBePolled = (message: any) => {
           return (
             message.data?.items?.discriminator === 'transaction' &&
             message.data?.items?.send?.transactionIntentHash &&
-            message.data?.metadata?.networkId
+            message.data?.metadata?.networkId &&
+            RadixNetworkConfigById[message.data?.metadata?.networkId]
+              ?.gatewayUrl
           )
         }
 
@@ -155,9 +202,21 @@ export const BackgroundMessageHandler =
         return okAsync({ sendConfirmation: false })
       }
 
+      case messageDiscriminator.getSessionRouterData: {
+        return chromeLocalStore
+          .getItem('sessionRouter')
+          .map((data) => ({
+            sendConfirmation: true,
+            data,
+          }))
+          .mapErr(() => ({
+            reason: 'failedToGetSessionRouterData',
+          }))
+      }
+
       case messageDiscriminator.dAppRequest: {
-        getConnectionPassword().map((connectionPassword) => {
-          if (connectionPassword) {
+        hasConnections().map((hasConnections) => {
+          if (hasConnections) {
             notificationDispatcher.request(message.data as WalletInteraction)
           }
         })

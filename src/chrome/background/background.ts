@@ -18,6 +18,9 @@ import { createAndFocusTab } from 'chrome/helpers/create-and-focus-tab'
 import { RadixNetworkConfigById } from '@radixdlt/babylon-gateway-api-sdk'
 import { openRadixDevToolsPage } from './open-radix-dev-tools-page'
 import { sendMessage } from 'chrome/messages/send-message'
+import { Connections } from 'pairing/state/connections'
+import { createTab } from 'chrome/helpers/create-tab'
+import { getExtensionOptions, setConnectorExtensionOptions } from 'options'
 
 const logger = utilsLogger.getSubLogger({ name: 'background' })
 
@@ -34,20 +37,32 @@ const handleOnInstallExtension = async () => {
       }
     } catch (err) {}
   }
+
+  getExtensionOptions().map(setConnectorExtensionOptions)
 }
 
-const handleStorageChange = (changes: {
-  [key: string]: chrome.storage.StorageChange
-}) => {
-  if (changes['connectionPassword'])
-    handleConnectionPasswordChange(changes['connectionPassword']?.newValue)
+const handleStorageChange = (
+  changes: {
+    [key: string]: chrome.storage.StorageChange
+  },
+  area: string,
+) => {
+  if (changes['connections'] && area === 'local') {
+    handleConnectionsChange(changes['connections']?.newValue)
+  }
 
-  if (changes['options']) {
+  if (changes['options'] && area === 'local') {
     messageHandler.sendMessageAndWaitForConfirmation(
       createMessage.setConnectorExtensionOptions(
         'background',
         changes['options'].newValue,
       ),
+    )
+  }
+
+  if (changes['sessionRouter'] && area === 'local') {
+    messageHandler.sendMessageAndWaitForConfirmation(
+      createMessage.setSessionRouterData(changes['sessionRouter'].newValue),
     )
   }
 }
@@ -63,10 +78,10 @@ const messageHandler = MessageClient(
   { logger },
 )
 
-const handleConnectionPasswordChange = (connectionPassword?: string) =>
+const handleConnectionsChange = (connections?: Connections) =>
   messageHandler
     .sendMessageAndWaitForConfirmation(
-      createMessage.setConnectionPassword('background', connectionPassword),
+      createMessage.setConnections('background', connections || {}),
     )
     .map(() => {
       setTimeout(() => {
@@ -109,11 +124,12 @@ chrome.notifications.onButtonClicked.addListener(handleNotificationClick)
 chrome.storage.onChanged.addListener(handleStorageChange)
 chrome.action.onClicked.addListener(openParingPopup)
 chrome.runtime.onInstalled.addListener(handleOnInstallExtension)
+
+createOffscreen()
+
 chrome.runtime.onStartup.addListener(() => {
   logger.debug('onStartup')
 })
-
-createOffscreen()
 
 chrome.contextMenus?.removeAll(() => {
   if (isDevMode) {
