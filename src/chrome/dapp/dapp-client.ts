@@ -64,7 +64,7 @@ export const ChromeDAppClient = (logger: AppLogger) => {
       if (message.interactionId) {
         logger.warn({ reason: 'UnrecognizedDappRequest', message })
         return onDappRequest(addOriginToWalletInteraction(message))
-      }      
+      }
     })
   }
 

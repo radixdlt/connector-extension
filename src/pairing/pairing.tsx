@@ -5,9 +5,8 @@ import { logger } from 'utils/logger'
 import { config, radixConnectConfig } from 'config'
 import { useConnectionsClient } from './state/connections'
 import { useConnectorOptions } from './state/options'
-import { Subscription, filter, map, tap, withLatestFrom } from 'rxjs'
+import { Subscription, combineLatest, filter, map, switchMap, tap } from 'rxjs'
 import { useNavigate } from 'react-router-dom'
-import { blakeHashBufferToHex } from 'crypto/blake2b'
 import { ed25519 } from '@noble/curves/ed25519'
 import { getLinkingSignatureMessage } from 'crypto/get-linking-message'
 
@@ -70,10 +69,11 @@ export const Pairing = () => {
       connectorClient.connected$
         .pipe(
           filter(Boolean),
-          withLatestFrom(hexConnectionPassword$),
-          withLatestFrom(linkClientInteraction$),
+          switchMap(() =>
+            combineLatest([hexConnectionPassword$, linkClientInteraction$]),
+          ),
         )
-        .subscribe(([[, password], interaction]) => {
+        .subscribe(([password, interaction]) => {
           connectionsClient
             .addOrUpdate(password, interaction)
             .map(() => connectorClient.disconnect())
