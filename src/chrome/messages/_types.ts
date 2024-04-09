@@ -13,7 +13,6 @@ export const messageDiscriminator = {
   getExtensionOptions: 'getExtensionOptions',
   getSessionRouterData: 'getSessionRouterData',
   setSessionRouterData: 'setSessionRouterData',
-  removeSessionId: 'removeSessionId',
   dAppRequest: 'dAppRequest',
   closeLedgerTab: 'closeLedgerTab',
   focusLedgerTab: 'focusLedgerTab',

@@ -5,6 +5,7 @@ import { Message } from 'chrome/messages/_types'
 import { chrome } from 'jest-chrome'
 import { err, errAsync } from 'neverthrow'
 import { useEffect, useState } from 'react'
+import { logger } from 'utils/logger'
 
 export type Connection = {
   walletName: string
@@ -84,12 +85,16 @@ const ConnectionsClient = (connections?: Connections | null) => {
   const addOrUpdate = (password: string, interaction: Message) => {
     const walletPublickey = interaction.publicKey
     const signature = interaction.signature
-    const message = getLinkingSignatureMessage(Buffer.from(password, 'hex'))
-    const validSignature = ed25519.verify(signature, message, walletPublickey)
+    if (signature) {
+      const message = getLinkingSignatureMessage(Buffer.from(password, 'hex'))
+      const validSignature = ed25519.verify(signature, message, walletPublickey)
 
-    if (!validSignature) {
-      return errAsync({ cause: 'Invalid Signature' } as Error)
+      if (!validSignature) {
+        logger.warn('Invalid Signature')
+        // return errAsync({ cause: 'Invalid Signature' } as Error)
+      }
     }
+    
     if (connections && connections[walletPublickey]) {
       connections[walletPublickey] = {
         ...connections[walletPublickey],
