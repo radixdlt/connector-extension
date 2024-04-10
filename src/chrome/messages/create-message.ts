@@ -1,5 +1,9 @@
 import { ConnectorExtensionOptions } from './../../options/index'
-import { LedgerRequest, LedgerResponse } from 'ledger/schemas'
+import {
+  AccountListResponseInteraction,
+  LedgerRequest,
+  LedgerResponse,
+} from 'ledger/schemas'
 import {
   Messages,
   ConfirmationMessageError,
@@ -21,6 +25,15 @@ export const createMessage = {
   getSessionRouterData: () => ({
     discriminator: messageDiscriminator.getSessionRouterData,
     source: 'offscreen',
+  }),
+  sendAccountListRequest: (walletPublicKey: string, interactionId: string) => ({
+    discriminator: messageDiscriminator.accountListRequestInteraction,
+    source: 'popup',
+    messageId: crypto.randomUUID(),
+    data: {
+      walletPublicKey,
+      interactionId,
+    },
   }),
   setSessionRouterData: (data: Record<SessionId, WalletPublicKey>) => ({
     discriminator: messageDiscriminator.setSessionRouterData,
@@ -121,6 +134,17 @@ export const createMessage = {
     source,
     discriminator: messageDiscriminator.walletToLedger,
     messageId: crypto.randomUUID(),
+    data: message,
+  }),
+  walletToExtension: (
+    source: MessageSource,
+    message: AccountListResponseInteraction,
+    walletPublicKey: string,
+  ): Messages['walletToExtension'] => ({
+    source,
+    discriminator: messageDiscriminator.walletToExtension,
+    messageId: crypto.randomUUID(),
+    walletPublicKey,
     data: message,
   }),
   ledgerResponse: (message: LedgerResponse): Messages['ledgerResponse'] => ({

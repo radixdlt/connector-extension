@@ -129,24 +129,24 @@ export const getSignSecp256k1ChallengePayload = () =>
     },
   ])
 
-  export const getRejectAccountListRequestPayload = () => {
-    return {
-      interactionId: '',
-      discriminator: 'accountListRejectedResponse',
-    }
+export const getRejectAccountListRequestPayload = () => {
+  return {
+    interactionId: '',
+    discriminator: 'accountListRejectedResponse',
   }
+}
 
-  export const getAccountListResponsePayload = () => {
-    return {
-      interactionId: '',
-      discriminator: 'accountListResponse',
-      accounts: [
-        {
-          label: 'Account 1',
-          address:
-            'account_rdx12y4l35lh2543nff9pyyzvsh64ssu0dv6fq20gg8suslwmjvkylejgj',
-          appearanceId: 0,
-        },
-      ],
-    }
+export const getAccountListResponsePayload = () => {
+  return {
+    interactionId: '',
+    discriminator: 'accountListResponse',
+    accounts: [
+      {
+        label: 'Account 1',
+        address:
+          'account_rdx12y4l35lh2543nff9pyyzvsh64ssu0dv6fq20gg8suslwmjvkylejgj',
+        appearanceId: 0,
+      },
+    ],
   }
+}

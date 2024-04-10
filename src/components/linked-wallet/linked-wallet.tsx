@@ -11,16 +11,17 @@ export const LinkedWallet = ({
   name,
   accounts,
   onRenameWalletLink,
+  pendingAccountRequest,
   onForgetWallet,
   onRequestAccountList,
 }: {
   name: string
   accounts: Account[]
+  pendingAccountRequest?: boolean | undefined
   onRenameWalletLink: () => void
   onForgetWallet: () => void
   onRequestAccountList: () => void
 }) => {
-  const sharingAccountsEnabled = false // TODO: enable when wallet ready
   const [anchorEl, setAnchorEl] = React.useState<null | HTMLElement>(null)
   const open = Boolean(anchorEl)
   const handleClick = (event: React.MouseEvent<HTMLElement>) => {
@@ -117,12 +118,11 @@ export const LinkedWallet = ({
           </MenuItem>
         </Menu>
       </Box>
-      {sharingAccountsEnabled && (
-        <SharedAccounts
-          accounts={accounts}
-          onRequestAccountList={onRequestAccountList}
-        />
-      )}
+      <SharedAccounts
+        accounts={accounts}
+        pendingAccountRequest={pendingAccountRequest}
+        onRequestAccountList={onRequestAccountList}
+      />
     </Box>
   )
 }

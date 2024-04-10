@@ -5,7 +5,7 @@ import {
 } from '@radixdlt/radix-connect-webrtc'
 import { createMessage } from 'chrome/messages/create-message'
 import { config } from 'config'
-import { LedgerResponse } from 'ledger/schemas'
+import { AccountListRequestInteraction, LedgerResponse } from 'ledger/schemas'
 import { MessagesRouter } from 'chrome/offscreen/wallet-connection/messages-router'
 import { Queue } from 'queues/queue'
 import { AppLogger, logger as utilsLogger } from 'utils/logger'
@@ -76,8 +76,10 @@ export const WalletConnectionClient = ({
     ),
   })
 
-  const ledgerToWalletQueue = Queue<LedgerResponse>({
-    key: 'ledgerToWallet',
+  const extensionToWalletQueue = Queue<
+    LedgerResponse | AccountListRequestInteraction
+  >({
+    key: 'extensionToWalletQueue',
     logger,
     worker: Worker((job) =>
       connectorClient.sendMessage(job.data, {
@@ -117,10 +119,10 @@ export const WalletConnectionClient = ({
   subscription.add(
     connectorClient.connected$.subscribe((connected) => {
       if (connected) {
-        ledgerToWalletQueue.start()
+        extensionToWalletQueue.start()
         dAppRequestQueue.start()
       } else {
-        ledgerToWalletQueue.stop()
+        extensionToWalletQueue.stop()
         dAppRequestQueue.stop()
       }
     }),
@@ -144,7 +146,7 @@ export const WalletConnectionClient = ({
   const messageClient = MessageClient(
     WalletConnectionMessageHandler({
       dAppRequestQueue,
-      ledgerToWalletQueue,
+      extensionToWalletQueue,
       incomingWalletMessageQueue,
       messagesRouter,
       sessionRouter,
@@ -163,7 +165,7 @@ export const WalletConnectionClient = ({
       subscription.unsubscribe()
       connectorClient.destroy()
       dAppRequestQueue.destroy()
-      ledgerToWalletQueue.destroy()
+      extensionToWalletQueue.destroy()
       incomingWalletMessageQueue.destroy()
       chrome.runtime.onMessage.removeListener(chromeMessageListener)
     },
