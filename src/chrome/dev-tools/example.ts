@@ -128,3 +128,25 @@ export const getSignSecp256k1ChallengePayload = () =>
       derivationPath: 'm/44H/1022H/10H/525H/1238H',
     },
   ])
+
+  export const getRejectAccountListRequestPayload = () => {
+    return {
+      interactionId: '',
+      discriminator: 'accountListRejectedResponse',
+    }
+  }
+
+  export const getAccountListResponsePayload = () => {
+    return {
+      interactionId: '',
+      discriminator: 'accountListResponse',
+      accounts: [
+        {
+          label: 'Account 1',
+          address:
+            'account_rdx12y4l35lh2543nff9pyyzvsh64ssu0dv6fq20gg8suslwmjvkylejgj',
+          appearanceId: 0,
+        },
+      ],
+    }
+  }
