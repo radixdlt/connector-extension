@@ -19,7 +19,6 @@ import { RadixNetworkConfigById } from '@radixdlt/babylon-gateway-api-sdk'
 import { openRadixDevToolsPage } from './open-radix-dev-tools-page'
 import { sendMessage } from 'chrome/messages/send-message'
 import { Connections } from 'pairing/state/connections'
-import { createTab } from 'chrome/helpers/create-tab'
 import { getExtensionOptions, setConnectorExtensionOptions } from 'options'
 
 const logger = utilsLogger.getSubLogger({ name: 'background' })
@@ -38,7 +37,9 @@ const handleOnInstallExtension = async () => {
     } catch (err) {}
   }
 
-  getExtensionOptions().map(setConnectorExtensionOptions)
+  getExtensionOptions()
+    .andThen(setConnectorExtensionOptions)
+    .mapErr(() => logger.error('Failed to set extension options'))
 }
 
 const handleStorageChange = (
