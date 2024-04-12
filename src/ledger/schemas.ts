@@ -144,37 +144,12 @@ export const SignatureOfSignerSchema = object({
   signature: string(),
 })
 
-export type AccountListRequestInteraction = z.infer<
-  typeof AccountListRequestInteraction
->
-
-export const AccountListRequestInteraction = object({
+export type AccountListMessage = z.infer<typeof AccountListMessage>
+export const AccountListMessage = object({
   interactionId: string(),
-  discriminator: literal('accountListRequest'),
-})
-
-export type AccountListResponse = z.infer<typeof AccountListResponse>
-export const AccountListResponse = object({
-  interactionId: string(),
-  discriminator: literal('accountListResponse'),
+  discriminator: literal('accountList'),
   accounts: Account.array(),
 })
-
-export type AccountListRejectedResponse = z.infer<
-  typeof AccountListRejectedResponse
->
-export const AccountListRejectedResponse = object({
-  interactionId: string(),
-  discriminator: literal('accountListRejectedResponse'),
-})
-
-export type AccountListResponseInteraction = z.infer<
-  typeof AccountListResponseInteraction
->
-export const AccountListResponseInteraction = z.union([
-  AccountListResponse,
-  AccountListRejectedResponse,
-])
 
 export type LinkClientInteraction = z.infer<typeof LinkClientInteraction>
 export const LinkClientInteraction = object({

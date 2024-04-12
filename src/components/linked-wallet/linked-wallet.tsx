@@ -11,16 +11,12 @@ export const LinkedWallet = ({
   name,
   accounts,
   onRenameWalletLink,
-  pendingAccountRequest,
   onForgetWallet,
-  onRequestAccountList,
 }: {
   name: string
   accounts: Account[]
-  pendingAccountRequest?: boolean | undefined
   onRenameWalletLink: () => void
   onForgetWallet: () => void
-  onRequestAccountList: () => void
 }) => {
   const [anchorEl, setAnchorEl] = React.useState<null | HTMLElement>(null)
   const open = Boolean(anchorEl)
@@ -118,11 +114,7 @@ export const LinkedWallet = ({
           </MenuItem>
         </Menu>
       </Box>
-      <SharedAccounts
-        accounts={accounts}
-        pendingAccountRequest={pendingAccountRequest}
-        onRequestAccountList={onRequestAccountList}
-      />
+      <SharedAccounts accounts={accounts} />
     </Box>
   )
 }

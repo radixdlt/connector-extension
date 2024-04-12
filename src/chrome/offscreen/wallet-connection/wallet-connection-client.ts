@@ -5,7 +5,7 @@ import {
 } from '@radixdlt/radix-connect-webrtc'
 import { createMessage } from 'chrome/messages/create-message'
 import { config } from 'config'
-import { AccountListRequestInteraction, LedgerResponse } from 'ledger/schemas'
+import { LedgerResponse } from 'ledger/schemas'
 import { MessagesRouter } from 'chrome/offscreen/wallet-connection/messages-router'
 import { Queue } from 'queues/queue'
 import { AppLogger, logger as utilsLogger } from 'utils/logger'
@@ -76,9 +76,7 @@ export const WalletConnectionClient = ({
     ),
   })
 
-  const extensionToWalletQueue = Queue<
-    LedgerResponse | AccountListRequestInteraction
-  >({
+  const extensionToWalletQueue = Queue<LedgerResponse>({
     key: 'extensionToWalletQueue',
     logger,
     worker: Worker((job) =>

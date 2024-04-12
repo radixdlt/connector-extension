@@ -3,12 +3,7 @@ import { MessagesRouter } from 'chrome/offscreen/wallet-connection/messages-rout
 import { ResultAsync, errAsync, okAsync } from 'neverthrow'
 import { Queue } from 'queues/queue'
 import { AppLogger, logger as appLogger } from 'utils/logger'
-
-import {
-  AccountListRequestInteraction,
-  LedgerResponse,
-  isLedgerRequest,
-} from 'ledger/schemas'
+import { LedgerResponse, isLedgerRequest } from 'ledger/schemas'
 import { sendMessage } from 'chrome/helpers/send-message'
 import { WalletInteractionWithOrigin } from '@radixdlt/radix-connect-schemas'
 import {
@@ -26,7 +21,7 @@ export type WalletConnectionMessageHandler = ReturnType<
 >
 export const WalletConnectionMessageHandler = (input: {
   dAppRequestQueue: Queue<WalletInteractionWithOrigin>
-  extensionToWalletQueue: Queue<LedgerResponse | AccountListRequestInteraction>
+  extensionToWalletQueue: Queue<LedgerResponse>
   incomingWalletMessageQueue: Queue<any>
   messagesRouter: MessagesRouter
   sessionRouter: SessionRouter
@@ -54,12 +49,8 @@ export const WalletConnectionMessageHandler = (input: {
           return sendMessageWithConfirmation(
             createMessage.walletToLedger('offScreen', message.data),
           ).map(() => ({ sendConfirmation: false }))
-        } else if (
-          ['accountListResponse', 'accountListRejectedResponse'].includes(
-            message.data.discriminator,
-          )
-        ) {
-          logger.debug('🪪 -> 📒: wallet to extension', message.data)
+        } else if (['accountList'].includes(message.data.discriminator)) {
+          logger.debug('wallet to extension', message.data)
           return sendMessageWithConfirmation(
             createMessage.walletToExtension(
               'offScreen',
@@ -158,19 +149,6 @@ export const WalletConnectionMessageHandler = (input: {
         return extensionToWalletQueue
           .add(message.data, message.data.interactionId)
           .map(() => ({ sendConfirmation: false }))
-
-      case messageDiscriminator.accountListRequestInteraction:
-        if (message.data.walletPublicKey === walletPublicKey) {
-          return extensionToWalletQueue
-            .add(
-              {
-                discriminator: 'accountListRequest',
-                interactionId: message.data.interactionId,
-              },
-              message.data.interactionId,
-            )
-            .map(() => ({ sendConfirmation: true }))
-        }
 
       case messageDiscriminator.closeDappTab: {
         const { tabId } = message

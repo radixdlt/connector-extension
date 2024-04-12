@@ -77,12 +77,7 @@ export const Pairing = () => {
           connectionsClient
             .addOrUpdate(password, interaction)
             .map(() => connectorClient.disconnect())
-            .map(() =>
-              navigate({
-                pathname: '/',
-                search: `?newWallet=${interaction.publicKey}`,
-              }),
-            )
+            .map(() => navigate('/'))
         }),
     )
 

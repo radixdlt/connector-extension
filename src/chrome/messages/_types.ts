@@ -1,6 +1,6 @@
 import { MessageLifeCycleEvent } from 'chrome/dapp/_types'
 import {
-  AccountListResponseInteraction,
+  AccountListMessage,
   LedgerRequest,
   LedgerResponse,
 } from 'ledger/schemas'
@@ -14,7 +14,6 @@ export const messageDiscriminator = {
   getConnections: 'getConnections',
   setConnections: 'setConnections',
   setRadixConnectConfiguration: 'setRadixConnectConfiguration',
-  accountListRequestInteraction: 'accountListRequestInteraction',
   getExtensionOptions: 'getExtensionOptions',
   getSessionRouterData: 'getSessionRouterData',
   setSessionRouterData: 'setSessionRouterData',
@@ -179,7 +178,7 @@ export type Messages = {
   >
   [messageDiscriminator.walletToExtension]: MessageBuilder<
     MessageDiscriminator['walletToExtension'],
-    { data: AccountListResponseInteraction; walletPublicKey: string }
+    { data: AccountListMessage; walletPublicKey: string }
   >
   [messageDiscriminator.walletToLedger]: MessageBuilder<
     MessageDiscriminator['walletToLedger'],

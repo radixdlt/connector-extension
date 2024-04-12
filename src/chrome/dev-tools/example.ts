@@ -129,23 +129,21 @@ export const getSignSecp256k1ChallengePayload = () =>
     },
   ])
 
-export const getRejectAccountListRequestPayload = () => {
+export const getAccountListMessage = () => {
   return {
-    interactionId: '',
-    discriminator: 'accountListRejectedResponse',
-  }
-}
-
-export const getAccountListResponsePayload = () => {
-  return {
-    interactionId: '',
-    discriminator: 'accountListResponse',
+    discriminator: 'accountList',
     accounts: [
       {
-        label: 'Account 1',
+        label: 'My Main Account',
         address:
           'account_rdx12y4l35lh2543nff9pyyzvsh64ssu0dv6fq20gg8suslwmjvkylejgj',
         appearanceId: 0,
+      },
+      {
+        label: 'My Savings Account',
+        address:
+          'account_tdx_2_12y9as9p2utmxf9zc9gvsalvd6s69zump236ng3ztvfkjngm757zsa3',
+        appearanceId: 1,
       },
     ],
   }

@@ -215,7 +215,7 @@ export const BackgroundMessageHandler =
       }
 
       case messageDiscriminator.walletToExtension:
-        if (message.data?.discriminator === 'accountListResponse') {
+        if (message.data?.discriminator === 'accountList') {
           return getConnections()
             .map((connections) =>
               ConnectionsClient(connections).updateAccounts(

@@ -1,16 +1,10 @@
-import { Button } from 'components/button'
 import ChevronDown from './chevron-down.svg'
 import { Account as AccountType } from '@radixdlt/radix-connect-schemas'
 import { Account } from 'components/account/account'
 import { Box, Collapse } from '@mui/material'
 import { useState } from 'react'
-import { Spinner } from 'components/spinner/spinner'
 
-export const SharedAccounts = (props: {
-  accounts?: AccountType[]
-  pendingAccountRequest?: boolean | undefined
-  onRequestAccountList: () => void
-}) => {
+export const SharedAccounts = (props: { accounts?: AccountType[] }) => {
   const [isCollapsed, setIsCollapsed] = useState(true)
 
   return (
@@ -34,16 +28,7 @@ export const SharedAccounts = (props: {
           >
             <img src={ChevronDown} />
           </button>
-        ) : (
-          <Button
-            secondary
-            full
-            onClick={props.onRequestAccountList}
-            disabled={props.pendingAccountRequest}
-          >
-            {props.pendingAccountRequest ? <Spinner /> : 'Request Account List'}
-          </Button>
-        )}
+        ) : null}
       </Box>
     </Box>
   )

@@ -2,32 +2,19 @@ import { Box, Button } from '../../components'
 import { PairingHeader } from './pairing-header'
 import { useEffect, useState } from 'react'
 import { LinkedWallet } from 'components/linked-wallet/linked-wallet'
-import { Link, useNavigate, useSearchParams } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 import { useConnectionsClient } from 'pairing/state/connections'
 import { ForgetThisWallet } from './forget-this-wallet'
 import { RenameWalletLink } from './rename-wallet-link'
-import { sendMessage } from 'chrome/messages/send-message'
-import { createMessage } from 'chrome/messages/create-message'
-import { Message } from 'chrome/messages/_types'
 
 export const ConnectionStatus = () => {
   const navigate = useNavigate()
-  const [searchParams, setSearchParams] = useSearchParams()
   const connectionsClient = useConnectionsClient()
   const connections = connectionsClient.connections
-  const [pendingAccountRequest, setPendingAccountRequest] = useState<
-    Record<string, string>
-  >({})
+
   const [connectionIdToForget, setConnectionIdToForget] = useState<string>('')
   const [connectionIdToChangeName, setConnectionIdToChangeName] =
     useState<string>('')
-
-  useEffect(() => {
-    if (searchParams.has('newWallet')) {
-      sendAccountListRequest(searchParams.get('newWallet') as string)
-      setSearchParams({})
-    }
-  }, [searchParams])
 
   useEffect(() => {
     if (connectionsClient.isLoading()) return
@@ -35,26 +22,6 @@ export const ConnectionStatus = () => {
       navigate('/pairing')
     }
   }, [connections])
-
-  useEffect(() => {
-    const handler = (message: Message) => {
-      console.log(message)
-      if (message.discriminator === 'walletToExtension') {
-        const interactionId = message.data.interactionId
-        if (pendingAccountRequest[message.walletPublicKey] === interactionId) {
-          setPendingAccountRequest({
-            ...pendingAccountRequest,
-            [message.walletPublicKey]: '',
-          })
-        }
-      }
-    }
-    chrome.runtime.onMessage.addListener(handler)
-
-    return () => {
-      chrome.runtime.onMessage.removeListener(handler)
-    }
-  }, [pendingAccountRequest])
 
   const forgetWallet = () => {
     connectionsClient.remove(connectionIdToForget)
@@ -89,19 +56,6 @@ export const ConnectionStatus = () => {
     )
   }
 
-  const sendAccountListRequest = (connectionId: string) => {
-    const interactionId = crypto.randomUUID()
-    if (pendingAccountRequest[connectionId]) return
-    setPendingAccountRequest({
-      ...pendingAccountRequest,
-      [connectionId]: interactionId,
-    })
-
-    sendMessage(
-      createMessage.sendAccountListRequest(connectionId, interactionId),
-    )
-  }
-
   return (
     <>
       <Box
@@ -121,9 +75,7 @@ export const ConnectionStatus = () => {
                 key={id}
                 accounts={connection.accounts}
                 name={connection.walletName}
-                pendingAccountRequest={!!pendingAccountRequest[id]}
                 onForgetWallet={() => setConnectionIdToForget(id)}
-                onRequestAccountList={() => sendAccountListRequest(id)}
                 onRenameWalletLink={() => setConnectionIdToChangeName(id)}
               />
             ))}

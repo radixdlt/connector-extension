@@ -11,8 +11,7 @@ import {
   getSignEd25519TransactionPayload,
   getSignSecp256k1TransactionPayload,
   getDeriveAndDisplayPayload,
-  getRejectAccountListRequestPayload,
-  getAccountListResponsePayload,
+  getAccountListMessage,
 } from '../example'
 import { getExtensionOptions } from 'options'
 import { getConnections } from 'chrome/helpers/get-connections'
@@ -33,8 +32,7 @@ export const WalletSimulator = () => {
     'Sign TX (Curve25519)': getSignEd25519TransactionPayload(),
     'Sign Auth (Curve25519)': getSignEd222519ChallengePayload(),
     'Sign Auth (Secp256k1)': getSignSecp256k1ChallengePayload(),
-    'Reject Account List Request': getRejectAccountListRequestPayload(),
-    'Account List Response': getAccountListResponsePayload(),
+    'Account List Message': getAccountListMessage(),
   }
 
   useEffect(() => {
