@@ -1,5 +1,9 @@
 import { ConnectorExtensionOptions } from './../../options/index'
-import { LedgerRequest, LedgerResponse } from 'ledger/schemas'
+import {
+  AccountListMessage,
+  LedgerRequest,
+  LedgerResponse,
+} from 'ledger/schemas'
 import {
   Messages,
   ConfirmationMessageError,
@@ -121,6 +125,17 @@ export const createMessage = {
     source,
     discriminator: messageDiscriminator.walletToLedger,
     messageId: crypto.randomUUID(),
+    data: message,
+  }),
+  walletToExtension: (
+    source: MessageSource,
+    message: AccountListMessage,
+    walletPublicKey: string,
+  ): Messages['walletToExtension'] => ({
+    source,
+    discriminator: messageDiscriminator.walletToExtension,
+    messageId: crypto.randomUUID(),
+    walletPublicKey,
     data: message,
   }),
   ledgerResponse: (message: LedgerResponse): Messages['ledgerResponse'] => ({

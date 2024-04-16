@@ -8,16 +8,16 @@ const privateKey = ed25519.utils.randomPrivateKey()
 const publicKey = ed25519.getPublicKey(privateKey)
 
 export type ConnectorExtensionOptions = {
-  publicKey: Uint8Array
-  privateKey: Uint8Array
+  publicKey: string
+  privateKey: string
   showDAppRequestNotifications?: boolean
   showTransactionResultNotifications?: boolean
   radixConnectConfiguration: string
 }
 
 export const defaultConnectorExtensionOptions: ConnectorExtensionOptions = {
-  publicKey,
-  privateKey,
+  publicKey: Buffer.from(publicKey).toString('hex'),
+  privateKey: Buffer.from(privateKey).toString('hex'),
   showDAppRequestNotifications: true,
   showTransactionResultNotifications: true,
   radixConnectConfiguration: defaultRadixConnectConfig,
@@ -52,5 +52,5 @@ export const setConnectorExtensionOptions = (
   connectorExtensionOptions: ConnectorExtensionOptions,
 ) => {
   logger.debug('setConnectorExtensionOptions', connectorExtensionOptions)
-  chromeLocalStore.setSingleItem('options', connectorExtensionOptions)
+  return chromeLocalStore.setSingleItem('options', connectorExtensionOptions)
 }

@@ -11,6 +11,7 @@ export const ConnectionStatus = () => {
   const navigate = useNavigate()
   const connectionsClient = useConnectionsClient()
   const connections = connectionsClient.connections
+
   const [connectionIdToForget, setConnectionIdToForget] = useState<string>('')
   const [connectionIdToChangeName, setConnectionIdToChangeName] =
     useState<string>('')
@@ -54,6 +55,7 @@ export const ConnectionStatus = () => {
       />
     )
   }
+
   return (
     <>
       <Box
@@ -71,10 +73,9 @@ export const ConnectionStatus = () => {
             {connectionsClient.entries().map(([id, connection]) => (
               <LinkedWallet
                 key={id}
-                accounts={[]}
+                accounts={connection.accounts}
                 name={connection.walletName}
                 onForgetWallet={() => setConnectionIdToForget(id)}
-                onRequestAccountList={() => {}}
                 onRenameWalletLink={() => setConnectionIdToChangeName(id)}
               />
             ))}

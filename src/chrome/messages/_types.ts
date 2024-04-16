@@ -1,5 +1,9 @@
 import { MessageLifeCycleEvent } from 'chrome/dapp/_types'
-import { LedgerRequest, LedgerResponse } from 'ledger/schemas'
+import {
+  AccountListMessage,
+  LedgerRequest,
+  LedgerResponse,
+} from 'ledger/schemas'
 import { ResultAsync } from 'neverthrow'
 import { ILogObjMeta } from 'tslog/dist/types/interfaces'
 import { ILogObj } from 'tslog'
@@ -20,6 +24,7 @@ export const messageDiscriminator = {
   extensionStatus: 'extensionStatus',
   ledgerResponse: 'ledgerResponse',
   walletToLedger: 'walletToLedger',
+  walletToExtension: 'walletToExtension',
   walletResponse: 'walletResponse',
   toContentScript: 'toContentScript',
   openParingPopup: 'openParingPopup',
@@ -45,6 +50,7 @@ export const messageSource = {
   ledger: 'ledger',
   wallet: 'wallet',
   any: 'any',
+  popup: 'popup',
 } as const
 
 export type MessageSource = keyof typeof messageSource
@@ -169,6 +175,10 @@ export type Messages = {
   [messageDiscriminator.ledgerResponse]: MessageBuilder<
     MessageDiscriminator['ledgerResponse'],
     { data: LedgerResponse }
+  >
+  [messageDiscriminator.walletToExtension]: MessageBuilder<
+    MessageDiscriminator['walletToExtension'],
+    { data: AccountListMessage; walletPublicKey: string }
   >
   [messageDiscriminator.walletToLedger]: MessageBuilder<
     MessageDiscriminator['walletToLedger'],

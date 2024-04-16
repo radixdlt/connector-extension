@@ -16,7 +16,7 @@ import { SessionRouter } from 'chrome/offscreen/session-router'
 const logger = new Logger()
 
 const dAppRequestQueue = { add: () => okAsync(undefined) } as any
-const ledgerToWalletQueue = { add: () => okAsync(undefined) } as any
+const extensionToWalletQueue = { add: () => okAsync(undefined) } as any
 const incomingWalletMessageQueue = { add: () => okAsync(undefined) } as any
 
 const createInput = (subjects: MessageSubjects) => ({
@@ -45,7 +45,7 @@ const createTestHelper = ({
   walletConnectionMessageClient = MessageClient(
     WalletConnectionMessageHandler({
       dAppRequestQueue,
-      ledgerToWalletQueue,
+      extensionToWalletQueue,
       incomingWalletMessageQueue,
       messagesRouter,
       sessionRouter: SessionRouter(),
@@ -67,6 +67,7 @@ const createTestHelper = ({
               password: '',
               walletName: 'Test Mock Wallet',
               walletPublicKey: 'mock',
+              accounts: [],
             },
             logger,
             messagesRouter,

@@ -22,7 +22,7 @@ export const Pairing = () => {
   useEffect(() => {
     if (!connectorOptions) return
 
-    setPublicKey(Buffer.from(connectorOptions.publicKey).toString('hex'))
+    setPublicKey(connectorOptions.publicKey)
 
     const connectorClient = ConnectorClient({
       source: 'extension',

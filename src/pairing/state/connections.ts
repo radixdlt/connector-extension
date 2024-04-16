@@ -1,9 +1,10 @@
 import { getLinkingSignatureMessage } from './../../crypto/get-linking-message'
 import { ed25519 } from '@noble/curves/ed25519'
+import { Account } from '@radixdlt/radix-connect-schemas'
 import { chromeLocalStore } from 'chrome/helpers/chrome-local-store'
 import { Message } from 'chrome/messages/_types'
 import { chrome } from 'jest-chrome'
-import { err, errAsync } from 'neverthrow'
+import { errAsync } from 'neverthrow'
 import { useEffect, useState } from 'react'
 import { logger } from 'utils/logger'
 
@@ -11,6 +12,7 @@ export type Connection = {
   walletName: string
   password: string
   walletPublicKey: string
+  accounts: Account[]
 }
 
 const defaultConnections = {}
@@ -44,9 +46,9 @@ export const useConnections = () => {
   return connections
 }
 
-type ConnectionsClient = ReturnType<typeof ConnectionsClient>
+export type ConnectionsClient = ReturnType<typeof ConnectionsClient>
 
-const ConnectionsClient = (connections?: Connections | null) => {
+export const ConnectionsClient = (connections?: Connections | null) => {
   const updateName = (walletName: string, connectionId: string) => {
     if (!connections) return
     const connection = {
@@ -83,27 +85,26 @@ const ConnectionsClient = (connections?: Connections | null) => {
   }
 
   const addOrUpdate = (password: string, interaction: Message) => {
-    const walletPublickey = interaction.publicKey
+    const walletPublicKey = interaction.publicKey
     const signature = interaction.signature
     if (signature) {
       const message = getLinkingSignatureMessage(Buffer.from(password, 'hex'))
-      const validSignature = ed25519.verify(signature, message, walletPublickey)
+      const validSignature = ed25519.verify(signature, message, walletPublicKey)
 
       if (!validSignature) {
-        logger.warn('Invalid Signature')
-        // return errAsync({ cause: 'Invalid Signature' } as Error)
+        return errAsync({ cause: 'Invalid Signature' } as Error)
       }
     }
-    
-    if (connections && connections[walletPublickey]) {
-      connections[walletPublickey] = {
-        ...connections[walletPublickey],
+
+    if (connections && connections[walletPublicKey]) {
+      connections[walletPublicKey] = {
+        ...connections[walletPublicKey],
         password,
       }
       return chromeLocalStore.setItem({
         connections: {
           ...(connections || {}),
-          [walletPublickey]: connections[walletPublickey],
+          [walletPublicKey]: connections[walletPublicKey],
         },
       })
     }
@@ -111,13 +112,27 @@ const ConnectionsClient = (connections?: Connections | null) => {
     return chromeLocalStore.setItem({
       connections: {
         ...(connections || {}),
-        [walletPublickey]: {
+        [walletPublicKey]: {
           walletName: `Radix Wallet ${
             Object.keys(connections || {}).length + 1
           }`,
-          walletPublickey,
+          walletPublicKey,
           password,
         },
+      },
+    })
+  }
+
+  const updateAccounts = (walletPublicKey: string, accounts: Account[]) => {
+    if (!connections) return
+    const connection = {
+      ...connections[walletPublicKey],
+      accounts,
+    } satisfies Connection
+    return chromeLocalStore.setItem({
+      connections: {
+        ...connections,
+        [walletPublicKey]: connection,
       },
     })
   }
@@ -129,6 +144,7 @@ const ConnectionsClient = (connections?: Connections | null) => {
     isLoading,
     updateName,
     hasNoConnections,
+    updateAccounts,
     connections,
   }
 }

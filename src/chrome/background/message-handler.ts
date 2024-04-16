@@ -1,6 +1,6 @@
 import { closePopup as closePopupFn } from 'chrome/helpers/close-popup'
 import { openParingPopup as openParingPopupFn } from 'chrome/helpers/open-pairing-popup'
-import { errAsync, okAsync, ResultAsync } from 'neverthrow'
+import { errAsync, ok, okAsync, ResultAsync } from 'neverthrow'
 import { AppLogger } from 'utils/logger'
 import {
   messageDiscriminator,
@@ -24,6 +24,7 @@ import {
 import { getExtensionOptions } from 'options'
 import { chromeLocalStore } from 'chrome/helpers/chrome-local-store'
 import { RadixNetworkConfigById } from '@radixdlt/babylon-gateway-api-sdk'
+import { ConnectionsClient } from 'pairing/state/connections'
 
 export type BackgroundMessageHandler = ReturnType<
   typeof BackgroundMessageHandler
@@ -212,6 +213,21 @@ export const BackgroundMessageHandler =
 
         return okAsync({ sendConfirmation: false })
       }
+
+      case messageDiscriminator.walletToExtension:
+        if (message.data?.discriminator === 'accountList') {
+          return getConnections()
+            .map((connections) =>
+              ConnectionsClient(connections).updateAccounts(
+                message.walletPublicKey,
+                message.data.accounts,
+              ),
+            )
+            .map(() => ({ sendConfirmation: false }))
+            .mapErr(() => ({ reason: 'failedToUpdateAccounts' }))
+        }
+
+        return okAsync({ sendConfirmation: false })
 
       case messageDiscriminator.walletToLedger:
         return ledgerTabWatcher

@@ -76,8 +76,8 @@ export const WalletConnectionClient = ({
     ),
   })
 
-  const ledgerToWalletQueue = Queue<LedgerResponse>({
-    key: 'ledgerToWallet',
+  const extensionToWalletQueue = Queue<LedgerResponse>({
+    key: 'extensionToWalletQueue',
     logger,
     worker: Worker((job) =>
       connectorClient.sendMessage(job.data, {
@@ -117,10 +117,10 @@ export const WalletConnectionClient = ({
   subscription.add(
     connectorClient.connected$.subscribe((connected) => {
       if (connected) {
-        ledgerToWalletQueue.start()
+        extensionToWalletQueue.start()
         dAppRequestQueue.start()
       } else {
-        ledgerToWalletQueue.stop()
+        extensionToWalletQueue.stop()
         dAppRequestQueue.stop()
       }
     }),
@@ -144,7 +144,7 @@ export const WalletConnectionClient = ({
   const messageClient = MessageClient(
     WalletConnectionMessageHandler({
       dAppRequestQueue,
-      ledgerToWalletQueue,
+      extensionToWalletQueue,
       incomingWalletMessageQueue,
       messagesRouter,
       sessionRouter,
@@ -163,7 +163,7 @@ export const WalletConnectionClient = ({
       subscription.unsubscribe()
       connectorClient.destroy()
       dAppRequestQueue.destroy()
-      ledgerToWalletQueue.destroy()
+      extensionToWalletQueue.destroy()
       incomingWalletMessageQueue.destroy()
       chrome.runtime.onMessage.removeListener(chromeMessageListener)
     },

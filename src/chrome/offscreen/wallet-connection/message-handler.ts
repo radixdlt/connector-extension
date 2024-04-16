@@ -1,9 +1,8 @@
 import { createMessage } from 'chrome/messages/create-message'
 import { MessagesRouter } from 'chrome/offscreen/wallet-connection/messages-router'
-import { ResultAsync, errAsync, ok, okAsync } from 'neverthrow'
+import { ResultAsync, errAsync, okAsync } from 'neverthrow'
 import { Queue } from 'queues/queue'
 import { AppLogger, logger as appLogger } from 'utils/logger'
-
 import { LedgerResponse, isLedgerRequest } from 'ledger/schemas'
 import { sendMessage } from 'chrome/helpers/send-message'
 import { WalletInteractionWithOrigin } from '@radixdlt/radix-connect-schemas'
@@ -22,7 +21,7 @@ export type WalletConnectionMessageHandler = ReturnType<
 >
 export const WalletConnectionMessageHandler = (input: {
   dAppRequestQueue: Queue<WalletInteractionWithOrigin>
-  ledgerToWalletQueue: Queue<LedgerResponse>
+  extensionToWalletQueue: Queue<LedgerResponse>
   incomingWalletMessageQueue: Queue<any>
   messagesRouter: MessagesRouter
   sessionRouter: SessionRouter
@@ -30,7 +29,7 @@ export const WalletConnectionMessageHandler = (input: {
   walletPublicKey: string
 }): MessageHandler => {
   const dAppRequestQueue = input.dAppRequestQueue
-  const ledgerToWalletQueue = input.ledgerToWalletQueue
+  const extensionToWalletQueue = input.extensionToWalletQueue
   const incomingWalletMessageQueue = input.incomingWalletMessageQueue
   const messagesRouter = input.messagesRouter
   const sessionRouter = input.sessionRouter
@@ -49,6 +48,15 @@ export const WalletConnectionMessageHandler = (input: {
 
           return sendMessageWithConfirmation(
             createMessage.walletToLedger('offScreen', message.data),
+          ).map(() => ({ sendConfirmation: false }))
+        } else if (['accountList'].includes(message.data.discriminator)) {
+          logger.debug('wallet to extension', message.data)
+          return sendMessageWithConfirmation(
+            createMessage.walletToExtension(
+              'offScreen',
+              message.data,
+              walletPublicKey,
+            ),
           ).map(() => ({ sendConfirmation: false }))
         } else {
           incomingWalletMessageQueue.add(
@@ -138,7 +146,7 @@ export const WalletConnectionMessageHandler = (input: {
           })
 
       case messageDiscriminator.ledgerResponse:
-        return ledgerToWalletQueue
+        return extensionToWalletQueue
           .add(message.data, message.data.interactionId)
           .map(() => ({ sendConfirmation: false }))
 

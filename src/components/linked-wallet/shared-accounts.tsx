@@ -1,14 +1,10 @@
-import { Button } from 'components/button'
 import ChevronDown from './chevron-down.svg'
 import { Account as AccountType } from '@radixdlt/radix-connect-schemas'
 import { Account } from 'components/account/account'
 import { Box, Collapse } from '@mui/material'
 import { useState } from 'react'
 
-export const SharedAccounts = (props: {
-  accounts?: AccountType[]
-  onRequestAccountList: () => void
-}) => {
+export const SharedAccounts = (props: { accounts?: AccountType[] }) => {
   const [isCollapsed, setIsCollapsed] = useState(true)
 
   return (
@@ -32,11 +28,7 @@ export const SharedAccounts = (props: {
           >
             <img src={ChevronDown} />
           </button>
-        ) : (
-          <Button secondary full onClick={props.onRequestAccountList}>
-            Request Account List
-          </Button>
-        )}
+        ) : null}
       </Box>
     </Box>
   )
