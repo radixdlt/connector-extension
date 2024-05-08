@@ -5,7 +5,7 @@ import * as React from 'react'
 import Menu from '@mui/material/Menu'
 import MenuItem from '@mui/material/MenuItem'
 import { SharedAccounts } from './shared-accounts'
-import { Account } from '@radixdlt/radix-connect-schemas'
+import { Account } from '@radixdlt/radix-dapp-toolkit'
 
 export const LinkedWallet = ({
   name,

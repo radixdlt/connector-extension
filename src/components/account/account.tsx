@@ -1,4 +1,4 @@
-import { Account as AccountType } from '@radixdlt/radix-connect-schemas'
+import { Account as AccountType } from '@radixdlt/radix-dapp-toolkit'
 
 declare global {
   namespace JSX {

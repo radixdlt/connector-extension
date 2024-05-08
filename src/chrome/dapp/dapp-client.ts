@@ -1,12 +1,14 @@
 import { MessageLifeCycleEvent, dAppEvent } from 'chrome/dapp/_types'
 import { ok } from 'neverthrow'
+
+import { AppLogger } from 'utils/logger'
+import { addOriginToWalletInteraction } from 'chrome/helpers/add-origin-to-wallet-interaction'
+import { safeParse } from 'valibot'
 import {
   WalletInteractionWithOrigin,
   WalletInteraction,
-  ExtensionInteraction,
-} from '@radixdlt/radix-connect-schemas'
-import { AppLogger } from 'utils/logger'
-import { addOriginToWalletInteraction } from 'chrome/helpers/add-origin-to-wallet-interaction'
+} from '@radixdlt/radix-dapp-toolkit'
+import { ExtensionInteraction } from 'schemas'
 
 export type ChromeDAppClient = ReturnType<typeof ChromeDAppClient>
 export const ChromeDAppClient = (logger: AppLogger) => {
@@ -38,17 +40,13 @@ export const ChromeDAppClient = (logger: AppLogger) => {
       if (message.interactionId)
         sendMessageEvent(message.interactionId, 'receivedByExtension')
 
-      const dAppInteractionResult = WalletInteraction.safeParse(message)
+      // For RDT > 1.6.0; this includes WalletInteraction
+      if (safeParse(ExtensionInteraction, message).success)
+        return onExtensionRequest(message)
 
-      if (dAppInteractionResult.success)
-        return onDappRequest(
-          addOriginToWalletInteraction(dAppInteractionResult.data),
-        )
-
-      const extensionInteractionResult = ExtensionInteraction.safeParse(message)
-
-      if (extensionInteractionResult.success)
-        return onExtensionRequest(extensionInteractionResult.data)
+      // For RDT < 1.6.0
+      if (safeParse(WalletInteraction, message).success)
+        return onDappRequest(addOriginToWalletInteraction(message))
 
       // openPopup is a special case, as it is missing interactionId in older walletSDK versions
       const isOpenPopupRequest =

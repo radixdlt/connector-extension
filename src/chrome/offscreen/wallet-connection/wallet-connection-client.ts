@@ -1,4 +1,4 @@
-import { WalletInteractionWithOrigin } from '@radixdlt/radix-connect-schemas'
+import { WalletInteractionWithOrigin } from '@radixdlt/radix-dapp-toolkit'
 import {
   ConnectionConfig,
   ConnectorClient,

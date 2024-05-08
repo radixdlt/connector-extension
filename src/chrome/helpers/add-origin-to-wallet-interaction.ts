@@ -1,7 +1,7 @@
 import {
   WalletInteraction,
   WalletInteractionWithOrigin,
-} from '@radixdlt/radix-connect-schemas'
+} from '@radixdlt/radix-dapp-toolkit'
 
 export const addOriginToWalletInteraction = (
   message: WalletInteraction,

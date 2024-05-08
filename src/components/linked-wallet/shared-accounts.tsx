@@ -1,5 +1,5 @@
 import ChevronDown from './chevron-down.svg'
-import { Account as AccountType } from '@radixdlt/radix-connect-schemas'
+import { Account as AccountType } from '@radixdlt/radix-dapp-toolkit'
 import { Account } from 'components/account/account'
 import { Box, Collapse } from '@mui/material'
 import { useState } from 'react'

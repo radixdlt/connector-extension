@@ -47,6 +47,16 @@ export const BackgroundMessageHandler =
     message: Message,
     sendMessageWithConfirmation: SendMessageWithConfirmation,
   ): MessageHandlerOutput => {
+    const walletInteractionHandler = (data: WalletInteraction) => {
+      hasConnections().map((hasConnections) => {
+        if (hasConnections) {
+          notificationDispatcher.request(data as WalletInteraction)
+        }
+      })
+
+      return okAsync({ sendConfirmation: false })
+    }
+
     switch (message?.discriminator) {
       case messageDiscriminator.getExtensionOptions:
         return getExtensionOptions()
@@ -212,6 +222,10 @@ export const BackgroundMessageHandler =
         })
 
         return okAsync({ sendConfirmation: false })
+      }
+
+      case messageDiscriminator.walletInteraction: {
+        return walletInteractionHandler(message.interaction.interaction)
       }
 
       case messageDiscriminator.walletToExtension:

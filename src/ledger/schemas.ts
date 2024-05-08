@@ -1,6 +1,5 @@
 import { z, literal, object, string, union, boolean, number } from 'zod'
 import { LedgerErrorCode } from './wrapper/constants'
-import { Account } from '@radixdlt/radix-connect-schemas'
 
 const curve = union([literal('curve25519'), literal('secp256k1')])
 
@@ -148,7 +147,11 @@ export type AccountListMessage = z.infer<typeof AccountListMessage>
 export const AccountListMessage = object({
   interactionId: string(),
   discriminator: literal('accountList'),
-  accounts: Account.array(),
+  accounts: object({
+    address: string(),
+    label: string(),
+    appearanceId: number(),
+  }).array(),
 })
 
 export type LinkClientInteraction = z.infer<typeof LinkClientInteraction>

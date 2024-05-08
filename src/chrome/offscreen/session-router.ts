@@ -6,7 +6,8 @@ export type WalletPublicKey = string
 export const SessionRouter = () => {
   const store = new Map<SessionId, WalletPublicKey>()
 
-  const getWalletPublicKey = (sessionId: SessionId) => store.get(sessionId)
+  const getWalletPublicKey = (sessionId?: SessionId) =>
+    sessionId ? store.get(sessionId) : undefined
 
   const refreshStore = (data: Record<SessionId, WalletPublicKey>) => {
     store.clear()
