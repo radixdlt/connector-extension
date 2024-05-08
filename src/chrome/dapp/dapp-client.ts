@@ -7,8 +7,8 @@ import { safeParse } from 'valibot'
 import {
   WalletInteractionWithOrigin,
   WalletInteraction,
+  ExtensionInteraction,
 } from '@radixdlt/radix-dapp-toolkit'
-import { ExtensionInteraction } from 'schemas'
 
 export type ChromeDAppClient = ReturnType<typeof ChromeDAppClient>
 export const ChromeDAppClient = (logger: AppLogger) => {

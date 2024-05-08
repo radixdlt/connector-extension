@@ -8,8 +8,10 @@ import { logger } from 'utils/logger'
 import { MessageLifeCycleEvent } from 'chrome/dapp/_types'
 import { sendMessage } from 'chrome/helpers/send-message'
 import { hasConnections } from 'chrome/helpers/get-connections'
-import { WalletInteractionWithOrigin } from '@radixdlt/radix-dapp-toolkit'
-import { ExtensionInteraction } from 'schemas'
+import {
+  WalletInteractionWithOrigin,
+  ExtensionInteraction,
+} from '@radixdlt/radix-dapp-toolkit'
 
 const appLogger = logger.getSubLogger({ name: 'content-script' })
 
@@ -70,8 +72,8 @@ const handleExtensionInteraction = async (
       })
       break
 
-    case 'cancelInteraction':
-      sendMessage(createMessage.cancelInteraction(extensionInteraction))
+    case 'cancelWalletInteraction':
+      sendMessage(createMessage.cancelWalletInteraction(extensionInteraction))
       break
 
     case 'walletInteraction':

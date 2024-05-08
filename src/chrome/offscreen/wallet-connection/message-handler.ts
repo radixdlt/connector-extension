@@ -5,7 +5,10 @@ import { Queue } from 'queues/queue'
 import { AppLogger, logger as appLogger } from 'utils/logger'
 import { LedgerResponse, isLedgerRequest } from 'ledger/schemas'
 import { sendMessage } from 'chrome/helpers/send-message'
-import { WalletInteractionWithOrigin } from '@radixdlt/radix-dapp-toolkit'
+import {
+  WalletInteractionWithOrigin,
+  WalletInteractionExtensionInteraction,
+} from '@radixdlt/radix-dapp-toolkit'
 import {
   Message,
   MessageHandler,
@@ -15,7 +18,6 @@ import {
 } from 'chrome/messages/_types'
 import { syncClient } from './sync-client'
 import { SessionRouter } from '../session-router'
-import { WalletInteractionExtensionInteraction } from 'schemas'
 
 const isExtensionMessage = (message: Message): boolean =>
   ['accountList', 'linkClient'].includes(message.discriminator)

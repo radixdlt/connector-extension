@@ -14,13 +14,13 @@ import {
 } from './_types'
 import { MessageLifeCycleEvent } from 'chrome/dapp/_types'
 import { ILogObj, ILogObjMeta } from 'tslog/dist/types/interfaces'
-import { WalletInteractionWithOrigin } from '@radixdlt/radix-dapp-toolkit'
+import {
+  WalletInteractionWithOrigin,
+  CancelWalletInteractionExtensionInteraction,
+  WalletInteractionExtensionInteraction,
+} from '@radixdlt/radix-dapp-toolkit'
 import { Connections } from 'pairing/state/connections'
 import { WalletPublicKey, SessionId } from 'chrome/offscreen/session-router'
-import {
-  CancelInteractionExtensionInteraction,
-  WalletInteractionExtensionInteraction,
-} from 'schemas'
 
 export const createMessage = {
   openParingPopup: () => ({
@@ -31,7 +31,9 @@ export const createMessage = {
     source: 'contentScript',
     interaction,
   }),
-  cancelInteraction: (interaction: CancelInteractionExtensionInteraction) => ({
+  cancelWalletInteraction: (
+    interaction: CancelWalletInteractionExtensionInteraction,
+  ) => ({
     discriminator: messageDiscriminator.cancelWalletInteraction,
     source: 'contentScript',
     interaction,
