@@ -7,7 +7,7 @@ import {
 import {
   ExponentialBackoff,
   ExponentialBackoffInput,
-} from './exponential-backoff'
+} from '@radixdlt/radix-dapp-toolkit'
 import { Result, ResultAsync } from 'neverthrow'
 import { firstValueFrom, switchMap, filter, first } from 'rxjs'
 
