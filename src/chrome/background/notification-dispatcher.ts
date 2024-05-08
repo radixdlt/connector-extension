@@ -1,29 +1,10 @@
 import { TransactionStatus } from '@radixdlt/babylon-gateway-api-sdk'
+import { WalletInteraction } from '@radixdlt/radix-dapp-toolkit'
 import { createNotification } from 'chrome/helpers/chrome-notifications'
 import {
   getShowDAppRequestNotifications,
   getShowTransactionResultNotifications,
 } from 'options'
-
-export type WalletInteraction = {
-  interactionId: string
-  items:
-    | {
-        discriminator: 'transaction' | 'unauthorizedRequest' | 'cancelRequest'
-      }
-    | {
-        discriminator: 'authorizedRequest'
-        auth: {
-          discriminator:
-            | 'usePersona'
-            | 'loginWithChallenge'
-            | 'loginWithoutChallenge'
-        }
-      }
-  metadata: {
-    version: number
-  }
-}
 
 export const txNotificationPrefix = 'transaction'
 export const txNotificationSplitter = '___'

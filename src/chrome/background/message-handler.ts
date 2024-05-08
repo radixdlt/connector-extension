@@ -1,6 +1,6 @@
 import { closePopup as closePopupFn } from 'chrome/helpers/close-popup'
 import { openParingPopup as openParingPopupFn } from 'chrome/helpers/open-pairing-popup'
-import { errAsync, ok, okAsync, ResultAsync } from 'neverthrow'
+import { errAsync, okAsync, ResultAsync } from 'neverthrow'
 import { AppLogger } from 'utils/logger'
 import {
   messageDiscriminator,
@@ -17,14 +17,12 @@ import { LedgerTabWatcher } from './ledger-tab-watcher'
 import { ensureTab } from 'chrome/helpers/ensure-tab'
 import { focusTabByUrl } from 'chrome/helpers/focus-tab'
 import { createGatewayModule } from './create-gateway-module'
-import {
-  notificationDispatcher,
-  WalletInteraction,
-} from './notification-dispatcher'
+import { notificationDispatcher } from './notification-dispatcher'
 import { getExtensionOptions } from 'options'
 import { chromeLocalStore } from 'chrome/helpers/chrome-local-store'
 import { RadixNetworkConfigById } from '@radixdlt/babylon-gateway-api-sdk'
 import { ConnectionsClient } from 'pairing/state/connections'
+import { WalletInteraction } from '@radixdlt/radix-dapp-toolkit'
 
 export type BackgroundMessageHandler = ReturnType<
   typeof BackgroundMessageHandler
