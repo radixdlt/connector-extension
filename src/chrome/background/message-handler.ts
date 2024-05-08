@@ -16,7 +16,7 @@ import { config } from 'config'
 import { LedgerTabWatcher } from './ledger-tab-watcher'
 import { ensureTab } from 'chrome/helpers/ensure-tab'
 import { focusTabByUrl } from 'chrome/helpers/focus-tab'
-import { createGatewayClient } from './gateway-client'
+import { createGatewayModule } from './create-gateway-module'
 import {
   notificationDispatcher,
   WalletInteraction,
@@ -189,9 +189,9 @@ export const BackgroundMessageHandler =
         if (canBePolled(message)) {
           const { txIntentHash, networkId } = getPollParams(message)
           logger?.debug('🔁 Polling', { txIntentHash, networkId })
-          const gatewayClient = createGatewayClient(networkId)
+          const gateway = createGatewayModule(networkId)
 
-          gatewayClient.pollTransactionStatus(txIntentHash).map((result) => {
+          gateway.pollTransactionStatus(txIntentHash).map((result) => {
             notificationDispatcher.transaction(
               networkId,
               txIntentHash,
