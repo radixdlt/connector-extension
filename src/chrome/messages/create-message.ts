@@ -15,8 +15,8 @@ import {
 import { MessageLifeCycleEvent } from 'chrome/dapp/_types'
 import { ILogObj, ILogObjMeta } from 'tslog/dist/types/interfaces'
 import {
-  WalletInteractionWithOrigin,
   CancelWalletInteractionExtensionInteraction,
+  WalletInteraction,
   WalletInteractionExtensionInteraction,
 } from '@radixdlt/radix-dapp-toolkit'
 import { Connections } from 'pairing/state/connections'
@@ -105,7 +105,7 @@ export const createMessage = {
   }),
   dAppRequest: (
     source: MessageSource,
-    data: WalletInteractionWithOrigin,
+    data: WalletInteraction,
   ): Messages['dAppRequest'] => ({
     source,
     discriminator: 'dAppRequest',

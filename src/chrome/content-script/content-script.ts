@@ -9,9 +9,10 @@ import { MessageLifeCycleEvent } from 'chrome/dapp/_types'
 import { sendMessage } from 'chrome/helpers/send-message'
 import { hasConnections } from 'chrome/helpers/get-connections'
 import {
-  WalletInteractionWithOrigin,
   ExtensionInteraction,
+  WalletInteraction,
 } from '@radixdlt/radix-dapp-toolkit'
+import { addOriginToWalletInteraction } from 'chrome/helpers/add-origin-to-wallet-interaction'
 
 const appLogger = logger.getSubLogger({ name: 'content-script' })
 
@@ -53,7 +54,7 @@ const messageHandler = MessageClient(
 )
 
 const handleWalletInteraction = async (
-  walletInteraction: WalletInteractionWithOrigin,
+  walletInteraction: WalletInteraction,
 ) => {
   sendMessage(createMessage.dAppRequest('contentScript', walletInteraction))
 }
@@ -73,11 +74,22 @@ const handleExtensionInteraction = async (
       break
 
     case 'cancelWalletInteraction':
-      sendMessage(createMessage.cancelWalletInteraction(extensionInteraction))
+      sendMessage(
+        createMessage.cancelWalletInteraction(
+          addOriginToWalletInteraction(extensionInteraction),
+        ),
+      )
       break
 
     case 'walletInteraction':
-      sendMessage(createMessage.walletInteraction(extensionInteraction))
+      sendMessage(
+        createMessage.walletInteraction({
+          ...extensionInteraction,
+          interaction: addOriginToWalletInteraction(
+            extensionInteraction.interaction,
+          ),
+        }),
+      )
       break
 
     default:

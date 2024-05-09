@@ -8,7 +8,7 @@ import { ResultAsync } from 'neverthrow'
 import { ILogObjMeta } from 'tslog/dist/types/interfaces'
 import { ILogObj } from 'tslog'
 import { Connections } from 'pairing/state/connections'
-import { WalletInteractionWithOrigin } from '@radixdlt/radix-dapp-toolkit'
+import { WalletInteraction } from '@radixdlt/radix-dapp-toolkit'
 
 export const messageDiscriminator = {
   getConnections: 'getConnections',
@@ -164,7 +164,7 @@ export type Messages = {
   >
   [messageDiscriminator.dAppRequest]: MessageBuilder<
     MessageDiscriminator['dAppRequest'],
-    { data: WalletInteractionWithOrigin }
+    { data: WalletInteraction }
   >
   [messageDiscriminator.walletMessage]: MessageBuilder<
     MessageDiscriminator['walletMessage'],

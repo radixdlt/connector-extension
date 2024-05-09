@@ -6,7 +6,7 @@ import { AppLogger, logger as appLogger } from 'utils/logger'
 import { LedgerResponse, isLedgerRequest } from 'ledger/schemas'
 import { sendMessage } from 'chrome/helpers/send-message'
 import {
-  WalletInteractionWithOrigin,
+  WalletInteraction,
   WalletInteractionExtensionInteraction,
 } from '@radixdlt/radix-dapp-toolkit'
 import {
@@ -26,7 +26,7 @@ export type WalletConnectionMessageHandler = ReturnType<
   typeof WalletConnectionMessageHandler
 >
 export const WalletConnectionMessageHandler = (input: {
-  dAppRequestQueue: Queue<WalletInteractionWithOrigin>
+  dAppRequestQueue: Queue<WalletInteraction>
   extensionToWalletQueue: Queue<LedgerResponse>
   incomingWalletMessageQueue: Queue<any>
   messagesRouter: MessagesRouter
@@ -129,7 +129,7 @@ export const WalletConnectionMessageHandler = (input: {
                   items,
                   metadata,
                   interactionId,
-                } as WalletInteractionWithOrigin,
+                } as WalletInteraction,
                 interactionId,
               )
             }
@@ -140,7 +140,7 @@ export const WalletConnectionMessageHandler = (input: {
       }
 
       case messageDiscriminator.dAppRequest: {
-        const walletInteraction: WalletInteractionWithOrigin = message.data
+        const walletInteraction: WalletInteraction = message.data
         const { interactionId, metadata, items } = walletInteraction
 
         return messagesRouter
@@ -166,7 +166,7 @@ export const WalletConnectionMessageHandler = (input: {
                 items,
                 metadata,
                 interactionId,
-              } as WalletInteractionWithOrigin,
+              } as WalletInteraction,
               interactionId,
             )
           })

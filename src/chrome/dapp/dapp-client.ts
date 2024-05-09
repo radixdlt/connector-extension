@@ -5,10 +5,13 @@ import { AppLogger } from 'utils/logger'
 import { addOriginToWalletInteraction } from 'chrome/helpers/add-origin-to-wallet-interaction'
 import { safeParse } from 'valibot'
 import {
-  WalletInteractionWithOrigin,
   WalletInteraction,
   ExtensionInteraction,
 } from '@radixdlt/radix-dapp-toolkit'
+import {
+  ExtenstionInteractionOptionalOrigin,
+  WalletInteractionWithOptionalOrigin,
+} from './schemas'
 
 export type ChromeDAppClient = ReturnType<typeof ChromeDAppClient>
 export const ChromeDAppClient = (logger: AppLogger) => {
@@ -31,7 +34,7 @@ export const ChromeDAppClient = (logger: AppLogger) => {
     })
 
   const messageListener = (
-    onDappRequest: (message: WalletInteractionWithOrigin) => void,
+    onDappRequest: (message: WalletInteraction) => void,
     onExtensionRequest: (message: ExtensionInteraction) => void,
   ) => {
     window.addEventListener(dAppEvent.send, (event) => {
@@ -40,12 +43,12 @@ export const ChromeDAppClient = (logger: AppLogger) => {
       if (message.interactionId)
         sendMessageEvent(message.interactionId, 'receivedByExtension')
 
-      // For RDT > 1.6.0; this includes WalletInteraction
-      if (safeParse(ExtensionInteraction, message).success)
+      // For RDT >= 1.6.0; this includes WalletInteraction
+      if (safeParse(ExtenstionInteractionOptionalOrigin, message).success)
         return onExtensionRequest(message)
 
       // For RDT < 1.6.0
-      if (safeParse(WalletInteraction, message).success)
+      if (safeParse(WalletInteractionWithOptionalOrigin, message).success)
         return onDappRequest(addOriginToWalletInteraction(message))
 
       // openPopup is a special case, as it is missing interactionId in older walletSDK versions
@@ -58,6 +61,11 @@ export const ChromeDAppClient = (logger: AppLogger) => {
           ...message,
           interactionId: crypto.randomUUID(),
         } as ExtensionInteraction)
+
+      if (message.sessionId) {
+        logger.warn({ reason: 'UnrecognizedExtensionRequest', message })
+        return onExtensionRequest(message)
+      }
 
       if (message.interactionId) {
         logger.warn({ reason: 'UnrecognizedDappRequest', message })

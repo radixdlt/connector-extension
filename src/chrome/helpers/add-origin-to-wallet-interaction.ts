@@ -1,11 +1,8 @@
-import {
-  WalletInteraction,
-  WalletInteractionWithOrigin,
-} from '@radixdlt/radix-dapp-toolkit'
-
-export const addOriginToWalletInteraction = (
-  message: WalletInteraction,
-): WalletInteractionWithOrigin => ({
+export const addOriginToWalletInteraction = <
+  T extends { metadata: { origin?: string } },
+>(
+  message: T,
+): T => ({
   ...message,
   metadata: {
     ...(message.metadata || {}),
