@@ -7,8 +7,8 @@ import {
 import { ResultAsync } from 'neverthrow'
 import { ILogObjMeta } from 'tslog/dist/types/interfaces'
 import { ILogObj } from 'tslog'
-import { WalletInteractionWithOrigin } from '@radixdlt/radix-connect-schemas'
 import { Connections } from 'pairing/state/connections'
+import { WalletInteraction } from '@radixdlt/radix-dapp-toolkit'
 
 export const messageDiscriminator = {
   getConnections: 'getConnections',
@@ -18,6 +18,8 @@ export const messageDiscriminator = {
   getSessionRouterData: 'getSessionRouterData',
   setSessionRouterData: 'setSessionRouterData',
   dAppRequest: 'dAppRequest',
+  walletInteraction: 'walletInteraction',
+  cancelWalletInteraction: 'cancelWalletInteraction',
   closeLedgerTab: 'closeLedgerTab',
   focusLedgerTab: 'focusLedgerTab',
   closeDappTab: 'closeDappTab',
@@ -162,7 +164,7 @@ export type Messages = {
   >
   [messageDiscriminator.dAppRequest]: MessageBuilder<
     MessageDiscriminator['dAppRequest'],
-    { data: WalletInteractionWithOrigin }
+    { data: WalletInteraction }
   >
   [messageDiscriminator.walletMessage]: MessageBuilder<
     MessageDiscriminator['walletMessage'],

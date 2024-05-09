@@ -1,9 +1,8 @@
 import { getLinkingSignatureMessage } from './../../crypto/get-linking-message'
 import { ed25519 } from '@noble/curves/ed25519'
-import { Account } from '@radixdlt/radix-connect-schemas'
+import { Account } from '@radixdlt/radix-dapp-toolkit'
 import { chromeLocalStore } from 'chrome/helpers/chrome-local-store'
 import { Message } from 'chrome/messages/_types'
-import { chrome } from 'jest-chrome'
 import { errAsync } from 'neverthrow'
 import { useEffect, useState } from 'react'
 import { logger } from 'utils/logger'
@@ -15,8 +14,6 @@ export type Connection = {
   accounts: Account[]
 }
 
-const defaultConnections = {}
-
 export type Connections = Record<string, Connection>
 
 export const useConnections = () => {
@@ -25,7 +22,7 @@ export const useConnections = () => {
   useEffect(() => {
     chromeLocalStore.getItem('connections').map((result) => {
       if (JSON.stringify(result.connections) !== JSON.stringify(connections)) {
-        setConnections(result.connections || defaultConnections)
+        setConnections(result.connections || null)
       }
     })
     const listener = (
@@ -41,7 +38,7 @@ export const useConnections = () => {
     return () => {
       chrome.storage.onChanged.removeListener(listener)
     }
-  })
+  }, [])
 
   return connections
 }
@@ -156,6 +153,7 @@ export const useConnectionsClient = () => {
   )
 
   useEffect(() => {
+    logger.debug('Connections updated', connections)
     setConnectionsClient(ConnectionsClient(connections))
   }, [connections])
 

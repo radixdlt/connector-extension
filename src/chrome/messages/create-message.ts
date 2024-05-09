@@ -14,13 +14,29 @@ import {
 } from './_types'
 import { MessageLifeCycleEvent } from 'chrome/dapp/_types'
 import { ILogObj, ILogObjMeta } from 'tslog/dist/types/interfaces'
-import { WalletInteractionWithOrigin } from '@radixdlt/radix-connect-schemas'
+import {
+  CancelWalletInteractionExtensionInteraction,
+  WalletInteraction,
+  WalletInteractionExtensionInteraction,
+} from '@radixdlt/radix-dapp-toolkit'
 import { Connections } from 'pairing/state/connections'
 import { WalletPublicKey, SessionId } from 'chrome/offscreen/session-router'
 
 export const createMessage = {
   openParingPopup: () => ({
     discriminator: 'openParingPopup',
+  }),
+  walletInteraction: (interaction: WalletInteractionExtensionInteraction) => ({
+    discriminator: messageDiscriminator.walletInteraction,
+    source: 'contentScript',
+    interaction,
+  }),
+  cancelWalletInteraction: (
+    interaction: CancelWalletInteractionExtensionInteraction,
+  ) => ({
+    discriminator: messageDiscriminator.cancelWalletInteraction,
+    source: 'contentScript',
+    interaction,
   }),
   getSessionRouterData: () => ({
     discriminator: messageDiscriminator.getSessionRouterData,
@@ -34,6 +50,7 @@ export const createMessage = {
     eventType: 'extensionStatus',
     isExtensionAvailable: true,
     isWalletLinked,
+    canHandleSessions: true,
   }),
   log: (log: ILogObjMeta & ILogObj): Messages['log'] => ({
     source: 'any',
@@ -88,7 +105,7 @@ export const createMessage = {
   }),
   dAppRequest: (
     source: MessageSource,
-    data: WalletInteractionWithOrigin,
+    data: WalletInteraction,
   ): Messages['dAppRequest'] => ({
     source,
     discriminator: 'dAppRequest',

@@ -5,7 +5,10 @@ import { Queue } from 'queues/queue'
 import { AppLogger, logger as appLogger } from 'utils/logger'
 import { LedgerResponse, isLedgerRequest } from 'ledger/schemas'
 import { sendMessage } from 'chrome/helpers/send-message'
-import { WalletInteractionWithOrigin } from '@radixdlt/radix-connect-schemas'
+import {
+  WalletInteraction,
+  WalletInteractionExtensionInteraction,
+} from '@radixdlt/radix-dapp-toolkit'
 import {
   Message,
   MessageHandler,
@@ -16,11 +19,14 @@ import {
 import { syncClient } from './sync-client'
 import { SessionRouter } from '../session-router'
 
+const isExtensionMessage = (message: Message): boolean =>
+  ['accountList', 'linkClient'].includes(message.discriminator)
+
 export type WalletConnectionMessageHandler = ReturnType<
   typeof WalletConnectionMessageHandler
 >
 export const WalletConnectionMessageHandler = (input: {
-  dAppRequestQueue: Queue<WalletInteractionWithOrigin>
+  dAppRequestQueue: Queue<WalletInteraction>
   extensionToWalletQueue: Queue<LedgerResponse>
   incomingWalletMessageQueue: Queue<any>
   messagesRouter: MessagesRouter
@@ -42,6 +48,7 @@ export const WalletConnectionMessageHandler = (input: {
     tabId?: number,
   ): MessageHandlerOutput => {
     switch (message?.discriminator) {
+      // Message from wallet to extension (incldues ledger, dApp and accountList message)
       case messageDiscriminator.walletMessage: {
         if (isLedgerRequest(message.data)) {
           logger.debug('🪪 -> 📒: walletToLedgerSubject', message.data)
@@ -49,7 +56,7 @@ export const WalletConnectionMessageHandler = (input: {
           return sendMessageWithConfirmation(
             createMessage.walletToLedger('offScreen', message.data),
           ).map(() => ({ sendConfirmation: false }))
-        } else if (['accountList'].includes(message.data.discriminator)) {
+        } else if (isExtensionMessage(message.data)) {
           logger.debug('wallet to extension', message.data)
           return sendMessageWithConfirmation(
             createMessage.walletToExtension(
@@ -68,20 +75,38 @@ export const WalletConnectionMessageHandler = (input: {
         return okAsync({ sendConfirmation: false })
       }
 
-      case messageDiscriminator.dAppRequest: {
-        const walletInteraction: WalletInteractionWithOrigin = message.data
-        const { interactionId, metadata, arbitraryData, items } =
-          walletInteraction
+      case messageDiscriminator.cancelWalletInteraction: {
+        const { interactionId, metadata } = message
+        return dAppRequestQueue
+          .cancel(interactionId)
+          .andThen(() =>
+            sendMessageWithConfirmation(
+              createMessage.sendMessageEventToDapp(
+                'offScreen',
+                'requestCancelSuccess',
+                { interactionId, metadata },
+              ),
+              tabId,
+            ),
+          )
+      }
+
+      // Message from dApp to wallet
+      case messageDiscriminator.walletInteraction: {
+        const walletInteraction =
+          message.interaction as WalletInteractionExtensionInteraction
+        const { interactionId, sessionId, interaction } = walletInteraction
+        const { metadata, items } = interaction
 
         return messagesRouter
           .add(tabId!, interactionId, {
             ...metadata,
-            sessionId: arbitraryData?.sessionId,
+            sessionId,
           })
           .asyncAndThen(() => {
             const walletPublicKeyForSessionId =
-              sessionRouter.getWalletPublicKey(arbitraryData?.sessionId)
-            if (walletInteraction.items.discriminator === 'cancelRequest') {
+              sessionRouter.getWalletPublicKey(sessionId)
+            if (items.discriminator === 'cancelRequest') {
               return dAppRequestQueue
                 .cancel(interactionId)
                 .andThen(() =>
@@ -104,12 +129,46 @@ export const WalletConnectionMessageHandler = (input: {
                   items,
                   metadata,
                   interactionId,
-                } as WalletInteractionWithOrigin,
+                } as WalletInteraction,
                 interactionId,
               )
             }
 
             return okAsync(undefined)
+          })
+          .map(() => ({ sendConfirmation: true }))
+      }
+
+      case messageDiscriminator.dAppRequest: {
+        const walletInteraction: WalletInteraction = message.data
+        const { interactionId, metadata, items } = walletInteraction
+
+        return messagesRouter
+          .add(tabId!, interactionId, metadata)
+          .asyncAndThen(() => {
+            if (walletInteraction.items.discriminator === 'cancelRequest') {
+              return dAppRequestQueue
+                .cancel(interactionId)
+                .andThen(() =>
+                  sendMessageWithConfirmation(
+                    createMessage.sendMessageEventToDapp(
+                      'offScreen',
+                      'requestCancelSuccess',
+                      { interactionId, metadata },
+                    ),
+                    tabId,
+                  ),
+                )
+            }
+
+            return dAppRequestQueue.add(
+              {
+                items,
+                metadata,
+                interactionId,
+              } as WalletInteraction,
+              interactionId,
+            )
           })
           .map(() => ({ sendConfirmation: true }))
       }

@@ -6,7 +6,7 @@ import { Pairing } from './pairing'
 import { ConnectionStatus } from './components/connection-status'
 import { PopupWindow } from 'components'
 import { ThemeProvider, createTheme } from '@mui/material'
-import '@radixdlt/connect-button'
+import '@radixdlt/radix-dapp-toolkit/connect-button'
 
 const theme = createTheme({
   typography: {

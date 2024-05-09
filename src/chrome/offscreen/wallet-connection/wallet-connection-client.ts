@@ -1,4 +1,3 @@
-import { WalletInteractionWithOrigin } from '@radixdlt/radix-connect-schemas'
 import {
   ConnectionConfig,
   ConnectorClient,
@@ -16,6 +15,7 @@ import { Message } from 'chrome/messages/_types'
 import { Subscription } from 'rxjs'
 import { SyncClient } from './sync-client'
 import { SessionRouter } from '../session-router'
+import { WalletInteraction } from '@radixdlt/radix-dapp-toolkit'
 
 export type WalletConnectionClient = ReturnType<typeof WalletConnectionClient>
 
@@ -39,7 +39,7 @@ export const WalletConnectionClient = ({
   logger.info('WalletConnectionClient created', walletPublicKey)
   connectorClient.setConnectionPassword(Buffer.from(connectionPassword, 'hex'))
 
-  const dAppRequestQueue = Queue<WalletInteractionWithOrigin>({
+  const dAppRequestQueue = Queue<WalletInteraction>({
     key: 'dAppRequestQueue',
     logger,
     paused: true,

@@ -1,6 +1,6 @@
 import { closePopup as closePopupFn } from 'chrome/helpers/close-popup'
 import { openParingPopup as openParingPopupFn } from 'chrome/helpers/open-pairing-popup'
-import { errAsync, ok, okAsync, ResultAsync } from 'neverthrow'
+import { errAsync, okAsync, ResultAsync } from 'neverthrow'
 import { AppLogger } from 'utils/logger'
 import {
   messageDiscriminator,
@@ -16,15 +16,13 @@ import { config } from 'config'
 import { LedgerTabWatcher } from './ledger-tab-watcher'
 import { ensureTab } from 'chrome/helpers/ensure-tab'
 import { focusTabByUrl } from 'chrome/helpers/focus-tab'
-import { createGatewayClient } from './gateway-client'
-import {
-  notificationDispatcher,
-  WalletInteraction,
-} from './notification-dispatcher'
+import { createGatewayModule } from './create-gateway-module'
+import { notificationDispatcher } from './notification-dispatcher'
 import { getExtensionOptions } from 'options'
 import { chromeLocalStore } from 'chrome/helpers/chrome-local-store'
 import { RadixNetworkConfigById } from '@radixdlt/babylon-gateway-api-sdk'
 import { ConnectionsClient } from 'pairing/state/connections'
+import { WalletInteraction } from '@radixdlt/radix-dapp-toolkit'
 
 export type BackgroundMessageHandler = ReturnType<
   typeof BackgroundMessageHandler
@@ -47,6 +45,16 @@ export const BackgroundMessageHandler =
     message: Message,
     sendMessageWithConfirmation: SendMessageWithConfirmation,
   ): MessageHandlerOutput => {
+    const walletInteractionHandler = (data: WalletInteraction) => {
+      hasConnections().map((hasConnections) => {
+        if (hasConnections) {
+          notificationDispatcher.request(data as WalletInteraction)
+        }
+      })
+
+      return okAsync({ sendConfirmation: false })
+    }
+
     switch (message?.discriminator) {
       case messageDiscriminator.getExtensionOptions:
         return getExtensionOptions()
@@ -179,9 +187,9 @@ export const BackgroundMessageHandler =
         if (canBePolled(message)) {
           const { txIntentHash, networkId } = getPollParams(message)
           logger?.debug('🔁 Polling', { txIntentHash, networkId })
-          const gatewayClient = createGatewayClient(networkId)
+          const gateway = createGatewayModule(networkId)
 
-          gatewayClient.pollTransactionStatus(txIntentHash).map((result) => {
+          gateway.pollTransactionStatus(txIntentHash).map((result) => {
             notificationDispatcher.transaction(
               networkId,
               txIntentHash,
@@ -212,6 +220,10 @@ export const BackgroundMessageHandler =
         })
 
         return okAsync({ sendConfirmation: false })
+      }
+
+      case messageDiscriminator.walletInteraction: {
+        return walletInteractionHandler(message.interaction.interaction)
       }
 
       case messageDiscriminator.walletToExtension:
