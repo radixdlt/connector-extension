@@ -113,13 +113,12 @@ chrome.runtime.onMessage.addListener((message: Message) => {
 })
 
 chrome.storage.onChanged.addListener(
-  (changes: { [key: string]: chrome.storage.StorageChange }) => {
-    if (changes['connectionPassword'])
-      sendMessageToDapp(
-        createMessage.extensionStatus(
-          !!changes['connectionPassword']?.newValue,
-        ),
-      )
+  (changes: { [key: string]: chrome.storage.StorageChange }, area: string) => {
+    if (changes['connections'] && area === 'local') {
+      hasConnections().map((hasConnections) => {
+        sendMessageToDapp(createMessage.extensionStatus(hasConnections))
+      })
+    }
   },
 )
 
