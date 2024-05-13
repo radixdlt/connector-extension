@@ -6,7 +6,7 @@ type QrCodeProps = {
 }
 
 export const QrCode = ({ value }: QrCodeProps) => (
-  <Box justify="center" p="none" mb="xl">
+  <Box justify="center" p="none">
     <Box
       style={{
         background: '#ECECEC',
