@@ -3,12 +3,14 @@ import {
   AccountListMessage,
   LedgerRequest,
   LedgerResponse,
+  LinkClientInteraction,
 } from 'ledger/schemas'
 import { ResultAsync } from 'neverthrow'
 import { ILogObjMeta } from 'tslog/dist/types/interfaces'
 import { ILogObj } from 'tslog'
 import { Connections } from 'pairing/state/connections'
-import { WalletInteraction } from '@radixdlt/radix-dapp-toolkit'
+import { Metadata, WalletInteraction } from '@radixdlt/radix-dapp-toolkit'
+import { ConnectorExtensionOptions } from 'options'
 
 export const messageDiscriminator = {
   getConnections: 'getConnections',
@@ -89,8 +91,34 @@ export type SendMessageWithConfirmation<T = any> = (
 export type Messages = {
   [messageDiscriminator.openParingPopup]: MessageBuilder<
     MessageDiscriminator['openParingPopup'],
-    any
+    {}
   >
+  [messageDiscriminator.walletInteraction]: MessageBuilder<
+    MessageDiscriminator['walletInteraction'],
+    {
+      interaction: {
+        interaction: WalletInteraction
+        sessionId?: string
+        interactionId: string
+      }
+    }
+  >
+
+  [messageDiscriminator.cancelWalletInteraction]: MessageBuilder<
+    MessageDiscriminator['cancelWalletInteraction'],
+    {
+      interaction: {
+        interactionId: string
+        metadata: Metadata
+      }
+    }
+  >
+
+  [messageDiscriminator.getSessionRouterData]: MessageBuilder<
+    MessageDiscriminator['getSessionRouterData'],
+    {}
+  >
+
   [messageDiscriminator.extensionStatus]: MessageBuilder<
     MessageDiscriminator['extensionStatus'],
     {
@@ -113,6 +141,16 @@ export type Messages = {
   [messageDiscriminator.log]: MessageBuilder<
     MessageDiscriminator['log'],
     { log: ILogObjMeta & ILogObj }
+  >
+  [messageDiscriminator.setRadixConnectConfiguration]: MessageBuilder<
+    MessageDiscriminator['setRadixConnectConfiguration'],
+    {
+      connectorExtensionOptions: ConnectorExtensionOptions
+    }
+  >
+  [messageDiscriminator.setSessionRouterData]: MessageBuilder<
+    MessageDiscriminator['setSessionRouterData'],
+    { data: Record<string, string> }
   >
   [messageDiscriminator.downloadLogs]: MessageBuilder<
     MessageDiscriminator['downloadLogs'],
@@ -180,7 +218,10 @@ export type Messages = {
   >
   [messageDiscriminator.walletToExtension]: MessageBuilder<
     MessageDiscriminator['walletToExtension'],
-    { data: AccountListMessage; walletPublicKey: string }
+    {
+      data: AccountListMessage | LinkClientInteraction
+      walletPublicKey: string
+    }
   >
   [messageDiscriminator.walletToLedger]: MessageBuilder<
     MessageDiscriminator['walletToLedger'],

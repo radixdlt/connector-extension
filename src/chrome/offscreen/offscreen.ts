@@ -51,7 +51,9 @@ messageClient
     createMessage.getSessionRouterData(),
   )
   .andThen((data) =>
-    messageClient.handleMessage(createMessage.setSessionRouterData(data)),
+    messageClient.handleMessage(
+      createMessage.setSessionRouterData(data, 'offScreen'),
+    ),
   )
 
 const TWO_MINUTES = 120_000

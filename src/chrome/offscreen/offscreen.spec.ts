@@ -59,7 +59,7 @@ describe('offscreen', () => {
         },
       },
       discriminator: 'setConnections',
-    })
+    } as any)
 
     expect(connections.get('1')).toBeDefined()
   })
@@ -78,7 +78,7 @@ describe('offscreen', () => {
         },
       },
       discriminator: 'setConnections',
-    })
+    } as any)
 
     expect(connections.get('1')).toBeDefined()
     expect(connections.get('2')).toBeDefined()
@@ -91,7 +91,7 @@ describe('offscreen', () => {
         },
       },
       discriminator: 'setConnections',
-    })
+    } as any)
 
     expect(connections.get('1')).toBeDefined()
     expect(connections.get('2')).toBeUndefined()
@@ -107,7 +107,7 @@ describe('offscreen', () => {
         },
       },
       discriminator: 'setConnections',
-    })
+    } as any)
     messageClient.handleMessage({
       connections: {
         '1': {
@@ -120,7 +120,7 @@ describe('offscreen', () => {
         },
       },
       discriminator: 'setConnections',
-    })
+    } as any)
     expect(connections.get('1')).toBeDefined()
     expect(connections.get('2')).toBeDefined()
   })

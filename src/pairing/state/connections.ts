@@ -2,7 +2,7 @@ import { getLinkingSignatureMessage } from './../../crypto/get-linking-message'
 import { ed25519 } from '@noble/curves/ed25519'
 import { Account } from '@radixdlt/radix-dapp-toolkit'
 import { chromeLocalStore } from 'chrome/helpers/chrome-local-store'
-import { Message } from 'chrome/messages/_types'
+import { LinkClientInteraction } from 'ledger/schemas'
 import { errAsync } from 'neverthrow'
 import { useEffect, useState } from 'react'
 import { logger } from 'utils/logger'
@@ -81,7 +81,10 @@ export const ConnectionsClient = (connections?: Connections | null) => {
     return Object.entries(connections || {})
   }
 
-  const addOrUpdate = (password: string, interaction: Message) => {
+  const addOrUpdate = (
+    password: string,
+    interaction: LinkClientInteraction,
+  ) => {
     const walletPublicKey = interaction.publicKey
     const signature = interaction.signature
     if (signature) {

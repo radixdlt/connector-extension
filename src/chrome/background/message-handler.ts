@@ -227,12 +227,13 @@ export const BackgroundMessageHandler =
       }
 
       case messageDiscriminator.walletToExtension:
-        if (message.data?.discriminator === 'accountList') {
+        const { data } = message
+        if (data?.discriminator === 'accountList') {
           return getConnections()
             .map((connections) =>
               ConnectionsClient(connections).updateAccounts(
                 message.walletPublicKey,
-                message.data.accounts,
+                data.accounts,
               ),
             )
             .map(() => ({ sendConfirmation: false }))

@@ -3,7 +3,12 @@ import { MessagesRouter } from 'chrome/offscreen/wallet-connection/messages-rout
 import { ResultAsync, errAsync, okAsync } from 'neverthrow'
 import { Queue } from 'queues/queue'
 import { AppLogger, logger as appLogger } from 'utils/logger'
-import { LedgerResponse, isLedgerRequest } from 'ledger/schemas'
+import {
+  AccountListMessage,
+  LedgerResponse,
+  LinkClientInteraction,
+  isLedgerRequest,
+} from 'ledger/schemas'
 import { sendMessage } from 'chrome/helpers/send-message'
 import {
   WalletInteraction,
@@ -19,7 +24,9 @@ import {
 import { syncClient } from './sync-client'
 import { SessionRouter } from '../session-router'
 
-const isExtensionMessage = (message: Message): boolean =>
+const isExtensionMessage = (
+  message: any,
+): message is AccountListMessage | LinkClientInteraction =>
   ['accountList', 'linkClient'].includes(message.discriminator)
 
 export type WalletConnectionMessageHandler = ReturnType<
@@ -76,7 +83,7 @@ export const WalletConnectionMessageHandler = (input: {
       }
 
       case messageDiscriminator.cancelWalletInteraction: {
-        const { interactionId, metadata } = message
+        const { interactionId, metadata } = message.interaction
         return dAppRequestQueue
           .cancel(interactionId)
           .andThen(() =>
