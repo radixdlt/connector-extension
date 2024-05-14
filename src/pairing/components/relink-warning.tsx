@@ -24,10 +24,7 @@ export const RelinkWarning = () => {
   }, [])
   return oldConnection ? (
     <>
-      <Warning
-        header="Your Connector has been updated"
-        subheader=" Please re-link your Radix Wallet"
-      ></Warning>
+      <Warning header="Please update your Radix Wallet to version 1.6 (or newer) and re-link"></Warning>
     </>
   ) : null
 }

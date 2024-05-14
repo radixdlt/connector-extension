@@ -31,7 +31,7 @@ export const ConnectionPassword = ({
         using it with dApps in this web browser.
       </PairingHeader>
 
-      <Box mt="xl" mb="xl" p="none">
+      <Box mt="sm" mb="sm" p="none">
         <QrCode
           value={JSON.stringify({
             password: connectionPassword,
@@ -43,7 +43,7 @@ export const ConnectionPassword = ({
         />
       </Box>
 
-      <Box textAlign="center" mb="md">
+      <Box textAlign="center" mb="lg">
         {connectionsClient.hasNoConnections() ? (
           <LinkComponent
             style={{ fontSize: '16px', color: 'white', fontWeight: 'bold' }}
