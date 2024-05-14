@@ -2,6 +2,7 @@ import { useConnectionsClient } from 'pairing/state/connections'
 import { Box, Link as LinkComponent, QrCode } from '../../components'
 import { PairingHeader } from './pairing-header'
 import { Link } from 'react-router-dom'
+import { RelinkWarning } from './relink-warning'
 
 export const ConnectionPassword = ({
   connectionPassword,
@@ -30,7 +31,7 @@ export const ConnectionPassword = ({
         using it with dApps in this web browser.
       </PairingHeader>
 
-      <Box mt="3xl" p="none">
+      <Box mt="xl" mb="xl" p="none">
         <QrCode
           value={JSON.stringify({
             password: connectionPassword,
@@ -42,7 +43,7 @@ export const ConnectionPassword = ({
         />
       </Box>
 
-      <Box textAlign="center">
+      <Box textAlign="center" mb="md">
         {connectionsClient.hasNoConnections() ? (
           <LinkComponent
             style={{ fontSize: '16px', color: 'white', fontWeight: 'bold' }}
@@ -65,6 +66,7 @@ export const ConnectionPassword = ({
           </Link>
         )}
       </Box>
+      <RelinkWarning />
     </>
   )
 }

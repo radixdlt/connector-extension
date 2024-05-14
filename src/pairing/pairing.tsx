@@ -9,6 +9,7 @@ import { Subscription, combineLatest, filter, map, switchMap, tap } from 'rxjs'
 import { useNavigate } from 'react-router-dom'
 import { ed25519 } from '@noble/curves/ed25519'
 import { getLinkingSignatureMessage } from 'crypto/get-linking-message'
+import { chromeLocalStore } from 'chrome/helpers/chrome-local-store'
 
 export const Pairing = () => {
   const [connectionPassword, setConnectionPassword] = useState<
@@ -76,6 +77,7 @@ export const Pairing = () => {
         .subscribe(([password, interaction]) => {
           connectionsClient
             .addOrUpdate(password, interaction)
+            .map(() => chromeLocalStore.removeItem('connectionPassword'))
             .map(() => connectorClient.disconnect())
             .map(() => navigate('/'))
         }),
