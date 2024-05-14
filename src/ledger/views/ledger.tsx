@@ -95,9 +95,9 @@ export const Ledger = () => {
     useState<Messages['walletToLedger']>()
   const [viewDefinition, setViewDefinition] = useState<any>()
 
-  const respond = (response: LedgerResponse) => {
-    sendMessage(createMessage.ledgerResponse(response)).map(() =>
-      window.close(),
+  const respond = (response: LedgerResponse, walletPublicKey: string) => {
+    sendMessage(createMessage.ledgerResponse(response, walletPublicKey)).map(
+      () => window.close(),
     )
   }
 
@@ -158,7 +158,10 @@ export const Ledger = () => {
         return
       }
 
-      respond(createLedgerErrorResponse(currentMessage.data, response.error))
+      respond(
+        createLedgerErrorResponse(currentMessage.data, response.error),
+        currentMessage.walletPublicKey,
+      )
       return
     }
 
@@ -169,7 +172,7 @@ export const Ledger = () => {
           response.value,
         ) as LedgerSuccessResponse
 
-        respond(ledgerResponse)
+        respond(ledgerResponse, currentMessage.walletPublicKey)
       }
     }
   }
@@ -182,6 +185,7 @@ export const Ledger = () => {
       if (event.device.productId === currentId && currentMessage) {
         respond(
           createLedgerErrorResponse(currentMessage.data, 'deviceDisconnected'),
+          currentMessage.walletPublicKey,
         )
       }
     }

@@ -214,7 +214,7 @@ export type Messages = {
   >
   [messageDiscriminator.ledgerResponse]: MessageBuilder<
     MessageDiscriminator['ledgerResponse'],
-    { data: LedgerResponse }
+    { data: LedgerResponse; walletPublicKey: string }
   >
   [messageDiscriminator.walletToExtension]: MessageBuilder<
     MessageDiscriminator['walletToExtension'],
@@ -225,7 +225,7 @@ export type Messages = {
   >
   [messageDiscriminator.walletToLedger]: MessageBuilder<
     MessageDiscriminator['walletToLedger'],
-    { data: LedgerRequest }
+    { data: LedgerRequest; walletPublicKey: string }
   >
   [messageDiscriminator.restartConnector]: MessageBuilder<
     MessageDiscriminator['restartConnector'],

@@ -144,7 +144,7 @@ export const LedgerSimulator = () => {
     }
     const response = await createResponse()
     if (response) {
-      sendMessage(createMessage.ledgerResponse(response as LedgerResponse))
+      sendMessage(createMessage.ledgerResponse(response as LedgerResponse, ''))
       sendMessage(createMessage.confirmationSuccess('any', messageId!))
       sendMessage(createMessage.closeLedgerTab())
       setMessageId(undefined)

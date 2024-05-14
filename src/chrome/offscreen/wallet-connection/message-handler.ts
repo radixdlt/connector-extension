@@ -61,10 +61,14 @@ export const WalletConnectionMessageHandler = (input: {
           logger.debug('🪪 -> 📒: walletToLedgerSubject', message.data)
 
           return sendMessageWithConfirmation(
-            createMessage.walletToLedger('offScreen', message.data),
+            createMessage.walletToLedger(
+              'offScreen',
+              message.data,
+              walletPublicKey,
+            ),
           ).map(() => ({ sendConfirmation: false }))
         } else if (isExtensionMessage(message.data)) {
-          logger.debug('wallet to extension', message.data)
+          logger.debug('Wallet to extension', message.data)
           return sendMessageWithConfirmation(
             createMessage.walletToExtension(
               'offScreen',
@@ -212,6 +216,10 @@ export const WalletConnectionMessageHandler = (input: {
           })
 
       case messageDiscriminator.ledgerResponse:
+        if (message.walletPublicKey !== walletPublicKey) {
+          return okAsync({ sendConfirmation: false })
+        }
+
         return extensionToWalletQueue
           .add(message.data, message.data.interactionId)
           .map(() => ({ sendConfirmation: false }))

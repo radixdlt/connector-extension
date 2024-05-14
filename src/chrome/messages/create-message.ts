@@ -150,9 +150,11 @@ export const createMessage = {
   walletToLedger: (
     source: MessageSource,
     message: LedgerRequest,
+    walletPublicKey: string,
   ): Messages['walletToLedger'] => ({
     source,
     discriminator: messageDiscriminator.walletToLedger,
+    walletPublicKey,
     messageId: crypto.randomUUID(),
     data: message,
   }),
@@ -167,9 +169,13 @@ export const createMessage = {
     walletPublicKey,
     data: message,
   }),
-  ledgerResponse: (message: LedgerResponse): Messages['ledgerResponse'] => ({
+  ledgerResponse: (
+    message: LedgerResponse,
+    walletPublicKey: string,
+  ): Messages['ledgerResponse'] => ({
     source: 'ledger',
     discriminator: messageDiscriminator.ledgerResponse,
+    walletPublicKey,
     messageId: crypto.randomUUID(),
     data: message,
   }),

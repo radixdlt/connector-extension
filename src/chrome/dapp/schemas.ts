@@ -50,13 +50,15 @@ export type CancelWalletInteractionExtensionInteractionOptionalOrigin = Output<
   typeof CancelWalletInteractionExtensionInteractionOptionalOrigin
 >
 
-export const CancelWalletInteractionExtensionInteractionOptionalOrigin = object({
-  interactionId: string(),
-  discriminator: literal(
-    extensionInteractionDiscriminator.cancelWalletInteraction,
-  ),
-  metadata: MetadataWithOptionalOrigin,
-})
+export const CancelWalletInteractionExtensionInteractionOptionalOrigin = object(
+  {
+    interactionId: string(),
+    discriminator: literal(
+      extensionInteractionDiscriminator.cancelWalletInteraction,
+    ),
+    metadata: MetadataWithOptionalOrigin,
+  },
+)
 
 export type ExtenstionInteractionOptionalOrigin = Output<
   typeof ExtenstionInteractionOptionalOrigin
