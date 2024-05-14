@@ -12,7 +12,10 @@ import {
   ExtensionInteraction,
   WalletInteraction,
 } from '@radixdlt/radix-dapp-toolkit'
-import { addOriginToWalletInteraction } from 'chrome/helpers/add-origin-to-wallet-interaction'
+import {
+  addOriginToCancelInteraction,
+  addOriginToWalletInteraction,
+} from 'chrome/helpers/add-origin-to-wallet-interaction'
 
 const appLogger = logger.getSubLogger({ name: 'content-script' })
 
@@ -76,7 +79,7 @@ const handleExtensionInteraction = async (
     case 'cancelWalletInteraction':
       sendMessage(
         createMessage.cancelWalletInteraction(
-          addOriginToWalletInteraction(extensionInteraction),
+          addOriginToCancelInteraction(extensionInteraction),
         ),
       )
       break

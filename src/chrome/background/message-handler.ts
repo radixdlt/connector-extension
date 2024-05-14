@@ -7,6 +7,7 @@ import {
   Message,
   SendMessageWithConfirmation,
   MessageHandlerOutput,
+  messageSource,
 } from '../messages/_types'
 import {
   getConnections as getConnectionsFn,
@@ -227,12 +228,13 @@ export const BackgroundMessageHandler =
       }
 
       case messageDiscriminator.walletToExtension:
-        if (message.data?.discriminator === 'accountList') {
+        const { data } = message
+        if (data?.discriminator === 'accountList') {
           return getConnections()
             .map((connections) =>
               ConnectionsClient(connections).updateAccounts(
                 message.walletPublicKey,
-                message.data.accounts,
+                data.accounts,
               ),
             )
             .map(() => ({ sendConfirmation: false }))
@@ -248,12 +250,12 @@ export const BackgroundMessageHandler =
             ensureTab(config.popup.pages.ledger)
               .andThen((tab) =>
                 ledgerTabWatcher
-                  .setWatchedTab(tab.id!, message.data)
+                  .setWatchedTab(tab.id!, message.data, message.walletPublicKey)
                   .map(() => tab),
               )
               .andThen((tab) =>
                 sendMessageWithConfirmation(
-                  { ...message, source: 'background' },
+                  { ...message, source: messageSource.background },
                   tab.id,
                 ),
               )

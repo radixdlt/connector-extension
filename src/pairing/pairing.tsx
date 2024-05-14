@@ -10,6 +10,7 @@ import { useNavigate } from 'react-router-dom'
 import { ed25519 } from '@noble/curves/ed25519'
 import { getLinkingSignatureMessage } from 'crypto/get-linking-message'
 import { chromeLocalStore } from 'chrome/helpers/chrome-local-store'
+import { LinkClientInteraction } from 'ledger/schemas'
 
 export const Pairing = () => {
   const [connectionPassword, setConnectionPassword] = useState<
@@ -44,7 +45,10 @@ export const Pairing = () => {
     const subscription = new Subscription()
 
     const linkClientInteraction$ = connectorClient.onMessage$.pipe(
-      filter((message) => message.discriminator === 'linkClient'),
+      filter(
+        (message): message is LinkClientInteraction =>
+          message.discriminator === 'linkClient',
+      ),
     )
 
     const hexConnectionPassword$ = connectorClient.connectionPassword$.pipe(

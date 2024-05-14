@@ -4,9 +4,10 @@ import { Box } from '../box'
 export const PopupWindow = styled(Box, {
   padding: '18px 32px',
   position: 'relative',
-  height: 'calc(100% - 28px)',
+  height: '100%',
   boxSizing: 'border-box',
   display: 'flex',
+  justifyContent: 'space-between',
   flexDirection: 'column',
   variants: {
     content: {

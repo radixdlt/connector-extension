@@ -9,10 +9,15 @@ export const LedgerTabWatcher = () => ({
     sessionStore
       .getSingleItem('watchedTab')
       .mapErr(() => ({ reason: 'failedToGetWatchedTab' })),
-  setWatchedTab: (tabId: number, request: LedgerRequest) =>
+  setWatchedTab: (
+    tabId: number,
+    request: LedgerRequest,
+    walletPublicKey: string,
+  ) =>
     sessionStore.setSingleItem('watchedTab', {
       tabId,
       request,
+      walletPublicKey,
     }),
   triggerTabRemoval: async (justRemovedTabId: number) => {
     const watchedTab = await sessionStore.getSingleItem('watchedTab')
@@ -20,7 +25,7 @@ export const LedgerTabWatcher = () => ({
       return
     }
 
-    const { tabId, request } = watchedTab.value
+    const { tabId, request, walletPublicKey } = watchedTab.value
 
     if (!tabId || justRemovedTabId !== tabId) {
       return
@@ -29,6 +34,7 @@ export const LedgerTabWatcher = () => ({
     sendMessage(
       createMessage.ledgerResponse(
         createLedgerErrorResponse(request, 'tabClosed'),
+        walletPublicKey,
       ),
     )
 

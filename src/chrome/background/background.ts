@@ -20,6 +20,7 @@ import { openRadixDevToolsPage } from './open-radix-dev-tools-page'
 import { sendMessage } from 'chrome/messages/send-message'
 import { Connections } from 'pairing/state/connections'
 import { getExtensionOptions, setConnectorExtensionOptions } from 'options'
+import { messageSource } from 'chrome/messages/_types'
 
 const logger = utilsLogger.getSubLogger({ name: 'background' })
 
@@ -63,7 +64,10 @@ const handleStorageChange = (
 
   if (changes['sessionRouter'] && area === 'local') {
     messageHandler.sendMessageAndWaitForConfirmation(
-      createMessage.setSessionRouterData(changes['sessionRouter'].newValue),
+      createMessage.setSessionRouterData(
+        changes['sessionRouter'].newValue,
+        messageSource.background,
+      ),
     )
   }
 }

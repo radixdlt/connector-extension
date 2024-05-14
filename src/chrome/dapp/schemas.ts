@@ -35,28 +35,30 @@ export const WalletInteractionWithOptionalOrigin = object({
   items: WalletInteractionItems,
 })
 
-export type WalletInteractionExtensionInteraction = Output<
-  typeof WalletInteractionExtensionInteraction
+export type WalletInteractionExtensionInteractionOptionalOrigin = Output<
+  typeof WalletInteractionExtensionInteractionOptionalOrigin
 >
 
-export const WalletInteractionExtensionInteraction = object({
+export const WalletInteractionExtensionInteractionOptionalOrigin = object({
   interactionId: string(),
   discriminator: literal(extensionInteractionDiscriminator.walletInteraction),
   interaction: WalletInteractionWithOptionalOrigin,
   sessionId: optional(string()),
 })
 
-export type CancelWalletInteractionExtensionInteraction = Output<
-  typeof CancelWalletInteractionExtensionInteraction
+export type CancelWalletInteractionExtensionInteractionOptionalOrigin = Output<
+  typeof CancelWalletInteractionExtensionInteractionOptionalOrigin
 >
 
-export const CancelWalletInteractionExtensionInteraction = object({
-  interactionId: string(),
-  discriminator: literal(
-    extensionInteractionDiscriminator.cancelWalletInteraction,
-  ),
-  metadata: MetadataWithOptionalOrigin,
-})
+export const CancelWalletInteractionExtensionInteractionOptionalOrigin = object(
+  {
+    interactionId: string(),
+    discriminator: literal(
+      extensionInteractionDiscriminator.cancelWalletInteraction,
+    ),
+    metadata: MetadataWithOptionalOrigin,
+  },
+)
 
 export type ExtenstionInteractionOptionalOrigin = Output<
   typeof ExtenstionInteractionOptionalOrigin
@@ -64,6 +66,6 @@ export type ExtenstionInteractionOptionalOrigin = Output<
 
 export const ExtenstionInteractionOptionalOrigin = union([
   ExtensionInteraction,
-  CancelWalletInteractionExtensionInteraction,
-  WalletInteractionExtensionInteraction,
+  CancelWalletInteractionExtensionInteractionOptionalOrigin,
+  WalletInteractionExtensionInteractionOptionalOrigin,
 ])
