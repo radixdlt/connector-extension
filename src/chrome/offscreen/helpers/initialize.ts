@@ -19,12 +19,12 @@ export const initialize = (messageClient: MessageClient) => {
     },
     sessionRouterData: () => {
       messageClient
-        .sendMessageAndWaitForConfirmation<Record<SessionId, WalletPublicKey>>(
-          createMessage.getSessionRouterData(),
-        )
-        .andThen((data) =>
+        .sendMessageAndWaitForConfirmation<{
+          sessionRouter: Record<SessionId, WalletPublicKey>
+        }>(createMessage.getSessionRouterData())
+        .andThen(({ sessionRouter }) =>
           messageClient.handleMessage(
-            createMessage.setSessionRouterData(data, 'offScreen'),
+            createMessage.setSessionRouterData(sessionRouter, 'offScreen'),
           ),
         )
     },
