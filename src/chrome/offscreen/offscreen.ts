@@ -1,15 +1,11 @@
 import { logger as utilsLogger } from 'utils/logger'
-import { createMessage } from 'chrome/messages/create-message'
 import { OffscreenMessageHandler } from 'chrome/offscreen/message-handler'
 import { MessageClient } from 'chrome/messages/message-client'
 import { Message } from 'chrome/messages/_types'
-import { switchMap, timer } from 'rxjs'
-import { ConnectorExtensionOptions } from 'options'
 import { LogsClient } from './logs-client'
-import { Connections } from 'pairing/state/connections'
 import { WalletConnectionClient } from './wallet-connection/wallet-connection-client'
 import { walletConnectionClientFactory } from './wallet-connection/factory'
-import { WalletPublicKey, SessionId } from './session-router'
+import { initialize } from './helpers/initialize'
 
 const logsClient = LogsClient()
 
@@ -36,47 +32,13 @@ chrome.runtime.onMessage.addListener((message: Message, sender) => {
   messageClient.onMessage(message, sender.tab?.id)
 })
 
-messageClient
-  .sendMessageAndWaitForConfirmation<{ options: ConnectorExtensionOptions }>(
-    createMessage.getExtensionOptions('offScreen'),
-  )
-  .andThen(({ options }) =>
-    messageClient.handleMessage(
-      createMessage.setConnectorExtensionOptions('offScreen', options),
-    ),
-  )
+const init = initialize(messageClient)
 
-messageClient
-  .sendMessageAndWaitForConfirmation<Record<SessionId, WalletPublicKey>>(
-    createMessage.getSessionRouterData(),
-  )
-  .andThen((data) =>
-    messageClient.handleMessage(
-      createMessage.setSessionRouterData(data, 'offScreen'),
-    ),
-  )
-
-const TWO_MINUTES = 120_000
-const everyTwoMinute$ = timer(0, TWO_MINUTES)
-
-everyTwoMinute$
-  .pipe(
-    switchMap(() =>
-      messageClient
-        .sendMessageAndWaitForConfirmation<Connections>(
-          createMessage.getConnections('offScreen'),
-        )
-        .andThen((connections) =>
-          messageClient.handleMessage(
-            createMessage.setConnections('offScreen', connections),
-          ),
-        ),
-    ),
-  )
-  .subscribe()
+init.options()
+init.sessionRouterData()
+init.connections()
 
 declare global {
-  // eslint-disable-next-line @typescript-eslint/consistent-type-definitions
   interface Window {
     radix: {
       messageClient: MessageClient
