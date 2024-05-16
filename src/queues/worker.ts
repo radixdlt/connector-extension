@@ -1,5 +1,6 @@
 import { ResultAsync } from 'neverthrow'
 import { Job } from './_types'
+import { AppLogger, logger } from 'utils/logger'
 
 export type Worker<T> = ReturnType<typeof Worker<T>>
 
@@ -12,7 +13,14 @@ export type WorkerError = {
 
 export type WorkerRunnerOutput = ResultAsync<any, WorkerError>
 
-export const Worker = <T>(fn: (job: Job<T>) => WorkerRunnerOutput) => {
-  const run = (job: Job<T>): WorkerRunnerOutput => fn(job)
+export const Worker = <T>(
+  fn: (job: Job<T>) => WorkerRunnerOutput,
+  { logger }: { logger?: AppLogger } = {},
+) => {
+  const run = (job: Job<T>): WorkerRunnerOutput =>
+    fn(job).mapErr((error) => {
+      logger?.error(error)
+      return error
+    })
   return { run }
 }

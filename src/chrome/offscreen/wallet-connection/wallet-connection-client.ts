@@ -44,46 +44,54 @@ export const WalletConnectionClient = ({
     key: 'dAppRequestQueue',
     logger,
     paused: true,
-    worker: Worker((job) =>
-      connectorClient
-        .sendMessage(job.data, { timeout: config.webRTC.confirmationTimeout })
-        .map(() =>
-          messagesRouter
-            .getByInteractionId(job.data.interactionId)
-            .andThen((metadata) =>
-              messageClient.sendMessageAndWaitForConfirmation(
-                createMessage.sendMessageEventToDapp(
-                  'offScreen',
-                  'receivedByWallet',
-                  { interactionId: job.data.interactionId, metadata },
+    worker: Worker(
+      (job) =>
+        connectorClient
+          .sendMessage(job.data, { timeout: config.webRTC.confirmationTimeout })
+          .map(() =>
+            messagesRouter
+              .getByInteractionId(job.data.interactionId)
+              .andThen((metadata) =>
+                messageClient.sendMessageAndWaitForConfirmation(
+                  createMessage.sendMessageEventToDapp(
+                    'offScreen',
+                    'receivedByWallet',
+                    { interactionId: job.data.interactionId, metadata },
+                  ),
+                  metadata.tabId,
                 ),
-                metadata.tabId,
               ),
-            ),
-        )
-        .map((result) => {
-          syncClient.addConfirmedInteractionId(job.data.interactionId)
-          return result
-        })
-        .mapErr((error) => {
-          const retryIfNotConnected = error.reason === 'notConnected'
-          const retryIfMessageFailed = job.numberOfRetries < 3
+          )
+          .map((result) => {
+            syncClient.addConfirmedInteractionId(job.data.interactionId)
+            return result
+          })
+          .mapErr((error) => {
+            const retryIfNotConnected = error.reason === 'notConnected'
+            const retryIfMessageFailed = job.numberOfRetries < 3
 
-          return {
-            ...error,
-            shouldRetry: retryIfNotConnected || retryIfMessageFailed,
-          }
-        }),
+            return {
+              ...error,
+              shouldRetry: retryIfNotConnected || retryIfMessageFailed,
+            }
+          }),
+      {
+        logger: logger.getSubLogger({ name: 'dAppRequestWorker' }),
+      },
     ),
   })
 
   const extensionToWalletQueue = Queue<LedgerResponse>({
     key: 'extensionToWalletQueue',
     logger,
-    worker: Worker((job) =>
-      connectorClient.sendMessage(job.data, {
-        timeout: config.webRTC.confirmationTimeout,
-      }),
+    worker: Worker(
+      (job) =>
+        connectorClient.sendMessage(job.data, {
+          timeout: config.webRTC.confirmationTimeout,
+        }),
+      {
+        logger: logger.getSubLogger({ name: 'ExtensionToWalletWorker' }),
+      },
     ),
   })
 
@@ -91,13 +99,22 @@ export const WalletConnectionClient = ({
     key: 'incomingWalletMessageQueue',
     logger,
     paused: false,
-    worker: Worker((job) =>
-      messageClient
-        .handleMessage(createMessage.incomingWalletMessage('wallet', job.data))
-        .mapErr((err) => ({
-          ...err,
-          shouldRetry: false,
-        })),
+    worker: Worker(
+      (job) =>
+        messageClient
+          .handleMessage(
+            createMessage.incomingWalletMessage('wallet', job.data),
+          )
+          .mapErr((err) => {
+            logger.error(err)
+            return {
+              ...err,
+              shouldRetry: false,
+            }
+          }),
+      {
+        logger: logger.getSubLogger({ name: 'incomingWalletMessageWorker' }),
+      },
     ),
   })
 
