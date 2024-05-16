@@ -16,6 +16,7 @@ import { Subscription } from 'rxjs'
 import { SyncClient } from './sync-client'
 import { SessionRouter } from '../session-router'
 import { WalletInteraction } from '@radixdlt/radix-dapp-toolkit'
+import { Connection } from 'pairing/state/connections'
 
 export type WalletConnectionClient = ReturnType<typeof WalletConnectionClient>
 
@@ -166,6 +167,12 @@ export const WalletConnectionClient = ({
       extensionToWalletQueue.destroy()
       incomingWalletMessageQueue.destroy()
       chrome.runtime.onMessage.removeListener(chromeMessageListener)
+    },
+    update: (connection: Connection) => {
+      logger.settings.name = `[WCC]:[${connection.walletName}]`
+      connectorClient.setConnectionPassword(
+        Buffer.from(connection.password, 'hex'),
+      )
     },
     setConnectionConfig: (config: ConnectionConfig) =>
       connectorClient.setConnectionConfig(config),

@@ -33,22 +33,30 @@ export const OffscreenMessageHandler = (input: {
         const { connections } = message as { connections: Connections }
         Object.entries(connections).forEach(([id, connection]) => {
           if (connectionsMap.has(id)) {
-            connectionsMap.get(id)?.destroy()
-            connectionsMap.delete(id)
+            const connectionClient = connectionsMap.get(
+              id,
+            ) as WalletConnectionClient
+            connectionClient.update(connection)
+          } else {
+            logger?.debug(
+              'Creating WalletConnectionClient',
+              connection.walletName,
+              connection.walletPublicKey,
+            )
+
+            connectionsMap.set(
+              id,
+              input.walletConnectionClientFactory({
+                connection,
+                logger: input.logger || appLogger,
+                radixConnectConfiguration,
+              }),
+            )
           }
-
-          logger?.debug('connection', connection)
-
-          connectionsMap.set(
-            id,
-            input.walletConnectionClientFactory({
-              connection,
-              logger: input.logger || appLogger,
-              radixConnectConfiguration,
-            }),
-          )
         })
 
+        // Destroy & remove "WalletConnectionClient"s which do not have corresponding entry in connections configuration
+        // This happens when user clicks "forget wallet"
         Array.from(connectionsMap.entries()).forEach(([id, connection]) => {
           if (!connections[id]) {
             connection.destroy()
