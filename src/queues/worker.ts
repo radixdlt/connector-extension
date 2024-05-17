@@ -19,7 +19,7 @@ export const Worker = <T>(
 ) => {
   const run = (job: Job<T>): WorkerRunnerOutput =>
     fn(job).mapErr((error) => {
-      logger?.error(error)
+      logger?.error({ error, jobId: job.id })
       return error
     })
   return { run }

@@ -5,7 +5,7 @@ import { Message } from 'chrome/messages/_types'
 import { LogsClient } from './logs-client'
 import { WalletConnectionClient } from './wallet-connection/wallet-connection-client'
 import { walletConnectionClientFactory } from './wallet-connection/factory'
-import { initialize } from './helpers/initialize'
+import { OffscreenInitializationMessages } from './helpers/offscreen-initialization-messages'
 
 const logsClient = LogsClient()
 
@@ -32,11 +32,11 @@ chrome.runtime.onMessage.addListener((message: Message, sender) => {
   messageClient.onMessage(message, sender.tab?.id)
 })
 
-const init = initialize(messageClient)
+const messages = OffscreenInitializationMessages(messageClient)
 
-init.options()
-init.sessionRouterData()
-init.connections()
+messages.options()
+messages.sessionRouterData()
+messages.connections()
 
 declare global {
   interface Window {
