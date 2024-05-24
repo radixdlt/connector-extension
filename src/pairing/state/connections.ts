@@ -96,31 +96,25 @@ export const ConnectionsClient = (connections?: Connections | null) => {
       }
     }
 
-    if (connections && connections[walletPublicKey]) {
-      connections[walletPublicKey] = {
-        ...connections[walletPublicKey],
-        password,
-      }
-      return chromeLocalStore.setItem({
-        connections: {
-          ...(connections || {}),
-          [walletPublicKey]: connections[walletPublicKey],
-        },
-      })
-    }
-
-    return chromeLocalStore.setItem({
+    const knownConnection = connections && connections[walletPublicKey]
+    const numberOfExistingConnections = Object.keys(connections || {}).length
+    const updatedConnections = {
       connections: {
         ...(connections || {}),
         [walletPublicKey]: {
-          walletName: `Radix Wallet ${
-            Object.keys(connections || {}).length + 1
-          }`,
+          walletName:
+            knownConnection?.walletName ||
+            `Radix Wallet ${numberOfExistingConnections + 1}`,
           walletPublicKey,
           password,
+          accounts: knownConnection?.accounts || [],
         },
       },
-    })
+    }
+
+    return chromeLocalStore.setItem(updatedConnections).map(() => ({
+      isKnownConnection: !!knownConnection,
+    }))
   }
 
   const updateAccounts = (walletPublicKey: string, accounts: Account[]) => {
