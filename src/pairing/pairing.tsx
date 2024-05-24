@@ -81,9 +81,14 @@ export const Pairing = () => {
         .subscribe(([password, interaction]) => {
           connectionsClient
             .addOrUpdate(password, interaction)
-            .map(() => chromeLocalStore.removeItem('connectionPassword'))
-            .map(() => connectorClient.disconnect())
-            .map(() => navigate('/'))
+            .map(({ isKnownConnection }) => {
+              chromeLocalStore.removeItem('connectionPassword')
+              connectorClient.disconnect()
+              navigate({
+                pathname: '/',
+                search: `?newWallet=${interaction.publicKey}&isKnownConnection=${isKnownConnection}`,
+              })
+            })
         }),
     )
 

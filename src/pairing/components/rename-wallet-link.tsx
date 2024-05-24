@@ -1,16 +1,30 @@
 import { Modal, Box, Button } from 'components'
 import { useState } from 'react'
 import InfoOutline from '../assets/info-outline.svg'
+
+const texts = {
+  initialFlow: {
+    header: 'Name Your Wallet',
+    action: 'Confirm',
+  },
+  updateFlow: {
+    header: 'Rename Wallet Link',
+    action: 'Update',
+  },
+}
+
 export const RenameWalletLink = (props: {
   initialValue: string
   cancel: () => void
+  isInitial: boolean
   updateName: (name: string) => void
 }) => {
+  const text = texts[props.isInitial ? 'initialFlow' : 'updateFlow']
   const [currentName, setCurrentName] = useState(props.initialValue)
   const [isUpdateDisabled, setIsUpdateDisabled] = useState(true)
 
   return (
-    <Modal header="Rename Wallet Link">
+    <Modal header={text.header}>
       <input
         className="rename-wallet-link__input"
         type="text"
@@ -34,11 +48,11 @@ export const RenameWalletLink = (props: {
           Cancel
         </Button>
         <Button
-          disabled={isUpdateDisabled}
+          disabled={isUpdateDisabled && !props.isInitial}
           onClick={() => props.updateName(currentName)}
           full
         >
-          Update
+          {text.action}
         </Button>
       </Box>
     </Modal>

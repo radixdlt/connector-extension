@@ -2,7 +2,7 @@ import { Box, Button } from '../../components'
 import { PairingHeader } from './pairing-header'
 import { useEffect, useState } from 'react'
 import { LinkedWallet } from 'components/linked-wallet/linked-wallet'
-import { Link, useNavigate } from 'react-router-dom'
+import { Link, useNavigate, useSearchParams } from 'react-router-dom'
 import { useConnectionsClient } from 'pairing/state/connections'
 import { ForgetThisWallet } from './forget-this-wallet'
 import { RenameWalletLink } from './rename-wallet-link'
@@ -10,11 +10,28 @@ import { RenameWalletLink } from './rename-wallet-link'
 export const ConnectionStatus = () => {
   const navigate = useNavigate()
   const connectionsClient = useConnectionsClient()
+  const [searchParams, setSearchParams] = useSearchParams()
   const connections = connectionsClient.connections
 
   const [connectionIdToForget, setConnectionIdToForget] = useState<string>('')
-  const [connectionIdToChangeName, setConnectionIdToChangeName] =
-    useState<string>('')
+  const [changingName, setChangingName] = useState<
+    { walletPublicKey: string; isInitial: boolean } | undefined
+  >(undefined)
+
+  useEffect(() => {
+    if (searchParams.has('newWallet')) {
+      const newWalletPublicKey = searchParams.get('newWallet') as string
+      const isKnownWallet = searchParams.get('isKnownConnection') === 'true'
+
+      setChangingName(
+        !isKnownWallet
+          ? { walletPublicKey: newWalletPublicKey, isInitial: true }
+          : undefined,
+      )
+
+      setSearchParams({})
+    }
+  }, [searchParams])
 
   useEffect(() => {
     if (connectionsClient.isLoading()) return
@@ -29,8 +46,10 @@ export const ConnectionStatus = () => {
   }
 
   const updateWalletName = (walletName: string) => {
-    connectionsClient.updateName(walletName, connectionIdToChangeName)
-    setConnectionIdToChangeName('')
+    if (changingName) {
+      connectionsClient.updateName(walletName, changingName.walletPublicKey)
+      setChangingName(undefined)
+    }
   }
 
   const renderForgetWalletConfirmation = () => {
@@ -45,13 +64,14 @@ export const ConnectionStatus = () => {
   }
 
   const renderChangeWalletName = () => {
-    if (!connectionIdToChangeName || !connections) return null
+    if (!changingName || !connections) return null
 
     return (
       <RenameWalletLink
-        cancel={() => setConnectionIdToChangeName('')}
+        cancel={() => setChangingName(undefined)}
         updateName={(updatedName) => updateWalletName(updatedName)}
-        initialValue={connections[connectionIdToChangeName].walletName}
+        isInitial={changingName.isInitial}
+        initialValue={connections[changingName.walletPublicKey].walletName}
       />
     )
   }
@@ -62,7 +82,7 @@ export const ConnectionStatus = () => {
         py="small"
         flex="col"
         style={{
-          ...(connectionIdToForget || connectionIdToChangeName
+          ...(connectionIdToForget || changingName
             ? { filter: `blur(10px)`, height: '100%' }
             : { height: '100%' }),
         }}
@@ -76,7 +96,9 @@ export const ConnectionStatus = () => {
                 accounts={connection.accounts}
                 name={connection.walletName}
                 onForgetWallet={() => setConnectionIdToForget(id)}
-                onRenameWalletLink={() => setConnectionIdToChangeName(id)}
+                onRenameWalletLink={() =>
+                  setChangingName({ walletPublicKey: id, isInitial: false })
+                }
               />
             ))}
           </Box>
