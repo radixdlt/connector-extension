@@ -10,10 +10,12 @@ import { Account } from '@radixdlt/radix-dapp-toolkit'
 export const LinkedWallet = ({
   name,
   accounts,
+  isJustLinked,
   onRenameWalletLink,
   onForgetWallet,
 }: {
   name: string
+  isJustLinked: boolean
   accounts: Account[]
   onRenameWalletLink: () => void
   onForgetWallet: () => void
@@ -114,7 +116,7 @@ export const LinkedWallet = ({
           </MenuItem>
         </Menu>
       </Box>
-      <SharedAccounts accounts={accounts} />
+      <SharedAccounts accounts={accounts} isJustLinked={isJustLinked} />
     </Box>
   )
 }

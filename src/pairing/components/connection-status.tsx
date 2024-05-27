@@ -17,12 +17,15 @@ export const ConnectionStatus = () => {
   const [changingName, setChangingName] = useState<
     { walletPublicKey: string; isInitial: boolean } | undefined
   >(undefined)
+  const [recentlyLinkedWallet, setRecentlyLinkedWallet] = useState<
+    string | undefined
+  >(undefined)
 
   useEffect(() => {
     if (searchParams.has('newWallet')) {
       const newWalletPublicKey = searchParams.get('newWallet') as string
       const isKnownWallet = searchParams.get('isKnownConnection') === 'true'
-
+      setRecentlyLinkedWallet(newWalletPublicKey)
       setChangingName(
         !isKnownWallet
           ? { walletPublicKey: newWalletPublicKey, isInitial: true }
@@ -93,6 +96,7 @@ export const ConnectionStatus = () => {
             {connectionsClient.entries().map(([id, connection]) => (
               <LinkedWallet
                 key={id}
+                isJustLinked={recentlyLinkedWallet === id}
                 accounts={connection.accounts}
                 name={connection.walletName}
                 onForgetWallet={() => setConnectionIdToForget(id)}
