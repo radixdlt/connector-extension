@@ -1,0 +1,7 @@
+id: 9d077c9b-7eb7-4c05-90ef-95d2a158a504
+name: connector-extension
+created_at: 2024-06-03T08:59:13.591622+02:00
+group_name: dApp-engineering
+depfiles:
+- path: ./package-lock.json
+  type: npm
