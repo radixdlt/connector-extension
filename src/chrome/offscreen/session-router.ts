@@ -1,3 +1,6 @@
+import { chromeLocalStore } from 'chrome/helpers/chrome-local-store'
+import { ResultAsync, ok } from 'neverthrow'
+
 export type SessionRouter = ReturnType<typeof SessionRouter>
 
 export type SessionId = string
@@ -22,3 +25,14 @@ export const SessionRouter = () => {
     store,
   }
 }
+
+export const sessionRouter = SessionRouter()
+
+export const getSessionRouterData = (): ResultAsync<
+  Record<string, string>,
+  never
+> =>
+  chromeLocalStore
+    .getItem('sessionRouter')
+    .map(({ sessionRouter }) => sessionRouter || {})
+    .orElse(() => ok({}))

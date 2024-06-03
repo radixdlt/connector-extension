@@ -2,7 +2,7 @@ import ChevronDown from './chevron-down.svg'
 import { Account as AccountType } from '@radixdlt/radix-dapp-toolkit'
 import { Account } from 'components/account/account'
 import { Box, Collapse } from '@mui/material'
-import { useEffect, useState } from 'react'
+import { useState } from 'react'
 
 export const SharedAccounts = (props: {
   accounts?: AccountType[]
@@ -11,7 +11,7 @@ export const SharedAccounts = (props: {
   const [isCollapsed, setIsCollapsed] = useState(!props.isJustLinked)
 
   return (
-    <Box sx={{ marginTop: '-5px', marginBottom: '5px' }}>
+    <Box>
       <Collapse in={!isCollapsed}>
         <Box display="flex" flexDirection="column" gap="8px">
           {props.accounts?.map((account) => (
