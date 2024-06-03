@@ -111,8 +111,8 @@ export const OffscreenMessageHandler = (input: {
 
       case messageDiscriminator.setSessionRouterData: {
         const { data } = message
-        sessionRouter.refreshStore(data)
-        logger?.info('setSessionRouterData', data)
+        logger?.info('setSessionRouterData', message)
+        sessionRouter.refreshStore(data || {})
         return okAsync({ sendConfirmation: true })
       }
 

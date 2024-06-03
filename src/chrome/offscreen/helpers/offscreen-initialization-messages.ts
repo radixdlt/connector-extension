@@ -33,10 +33,10 @@ export const OffscreenInitializationMessages = (
     },
     sessionRouterData: () => {
       messageClient
-        .sendMessageAndWaitForConfirmation<{
-          sessionRouter: Record<SessionId, WalletPublicKey>
-        }>(createMessage.getSessionRouterData())
-        .andThen(({ sessionRouter }) =>
+        .sendMessageAndWaitForConfirmation<Record<SessionId, WalletPublicKey>>(
+          createMessage.getSessionRouterData(),
+        )
+        .andThen((sessionRouter) =>
           messageClient.handleMessage(
             createMessage.setSessionRouterData(sessionRouter, 'offScreen'),
           ),

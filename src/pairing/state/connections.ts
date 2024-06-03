@@ -22,7 +22,7 @@ export const useConnections = () => {
   useEffect(() => {
     chromeLocalStore.getItem('connections').map((result) => {
       if (JSON.stringify(result.connections) !== JSON.stringify(connections)) {
-        setConnections(result.connections || null)
+        setConnections(result.connections || {})
       }
     })
     const listener = (
@@ -69,8 +69,8 @@ export const ConnectionsClient = (connections?: Connections | null) => {
     })
   }
 
-  const hasNoConnections = () => {
-    return connections && Object.keys(connections).length === 0
+  const hasConnections = () => {
+    return connections && Object.keys(connections).length > 0
   }
 
   const isLoading = () => {
@@ -137,7 +137,7 @@ export const ConnectionsClient = (connections?: Connections | null) => {
     entries,
     isLoading,
     updateName,
-    hasNoConnections,
+    hasConnections,
     updateAccounts,
     connections,
   }

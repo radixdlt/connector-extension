@@ -1,11 +1,12 @@
 import { Connections } from 'pairing/state/connections'
 import { chromeLocalStore } from './chrome-local-store'
-import { ResultAsync } from 'neverthrow'
+import { ResultAsync, ok } from 'neverthrow'
 
-export const getConnections = (): ResultAsync<Connections, Error> =>
+export const getConnections = (): ResultAsync<Connections, never> =>
   chromeLocalStore
     .getItem('connections')
     .map(({ connections }) => connections || {})
+    .orElse(() => ok({}))
 
 export const hasConnections = () =>
   getConnections().map(

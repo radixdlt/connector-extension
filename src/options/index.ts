@@ -1,7 +1,7 @@
 import { chromeLocalStore } from 'chrome/helpers/chrome-local-store'
 import { logger } from 'utils/logger'
 import { defaultRadixConnectConfig } from 'config'
-import { ResultAsync } from 'neverthrow'
+import { ResultAsync, ok } from 'neverthrow'
 import { ed25519 } from '@noble/curves/ed25519'
 
 const privateKey = ed25519.utils.randomPrivateKey()
@@ -10,9 +10,9 @@ const publicKey = ed25519.getPublicKey(privateKey)
 export type ConnectorExtensionOptions = {
   publicKey: string
   privateKey: string
-  showDAppRequestNotifications?: boolean
-  showTransactionResultNotifications?: boolean
   radixConnectConfiguration: string
+  showDAppRequestNotifications: boolean
+  showTransactionResultNotifications: boolean
 }
 
 export const defaultConnectorExtensionOptions: ConnectorExtensionOptions = {
@@ -23,11 +23,13 @@ export const defaultConnectorExtensionOptions: ConnectorExtensionOptions = {
   radixConnectConfiguration: defaultRadixConnectConfig,
 }
 
-export const getSingleOptionValue = (key: keyof ConnectorExtensionOptions) =>
+export const getSingleOptionValue = <T extends keyof ConnectorExtensionOptions>(
+  key: T,
+): ResultAsync<ConnectorExtensionOptions[T], never> =>
   chromeLocalStore
     .getSingleItem('options')
     .map((options) => options?.[key] || defaultConnectorExtensionOptions[key])
-    .mapErr(() => defaultConnectorExtensionOptions[key])
+    .orElse(() => ok(defaultConnectorExtensionOptions[key]))
 
 export const getShowDAppRequestNotifications = () =>
   getSingleOptionValue('showDAppRequestNotifications')
@@ -37,7 +39,7 @@ export const getShowTransactionResultNotifications = () =>
 
 export const getExtensionOptions = (): ResultAsync<
   ConnectorExtensionOptions,
-  ConnectorExtensionOptions
+  never
 > => {
   return chromeLocalStore
     .getSingleItem('options')
@@ -45,7 +47,7 @@ export const getExtensionOptions = (): ResultAsync<
       ...defaultConnectorExtensionOptions,
       ...options,
     }))
-    .mapErr(() => defaultConnectorExtensionOptions)
+    .orElse(() => ok(defaultConnectorExtensionOptions))
 }
 
 export const setConnectorExtensionOptions = (

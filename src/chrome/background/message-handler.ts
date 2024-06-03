@@ -22,8 +22,9 @@ import { notificationDispatcher } from './notification-dispatcher'
 import { getExtensionOptions } from 'options'
 import { chromeLocalStore } from 'chrome/helpers/chrome-local-store'
 import { RadixNetworkConfigById } from '@radixdlt/babylon-gateway-api-sdk'
-import { ConnectionsClient } from 'pairing/state/connections'
+import { Connections, ConnectionsClient } from 'pairing/state/connections'
 import { WalletInteraction } from '@radixdlt/radix-dapp-toolkit'
+import { getSessionRouterData } from 'chrome/offscreen/session-router'
 
 export type BackgroundMessageHandler = ReturnType<
   typeof BackgroundMessageHandler
@@ -38,7 +39,7 @@ export const BackgroundMessageHandler =
   }: Partial<{
     logger?: AppLogger
     ledgerTabWatcher: ReturnType<typeof LedgerTabWatcher>
-    getConnections: () => ResultAsync<any, Error>
+    getConnections: () => ResultAsync<Connections, never>
     closePopup: () => ResultAsync<any, Error>
     openParingPopup: () => ResultAsync<any, Error>
   }>) =>
@@ -58,25 +59,15 @@ export const BackgroundMessageHandler =
 
     switch (message?.discriminator) {
       case messageDiscriminator.getExtensionOptions:
-        return getExtensionOptions()
-          .mapErr((error) => ({
-            reason: 'failedToGetExtensionOptions',
-            jsError: Error('failedToGetExtensionOptions'),
-          }))
-          .map((options) => ({
-            sendConfirmation: true,
-            data: { options },
-          }))
+        return getExtensionOptions().map((options) => ({
+          sendConfirmation: true,
+          data: { options },
+        }))
       case messageDiscriminator.getConnections:
-        return getConnections()
-          .mapErr((error) => ({
-            reason: 'failedToGetConnections',
-            jsError: error,
-          }))
-          .map((data) => ({
-            sendConfirmation: true,
-            data,
-          }))
+        return getConnections().map((data) => ({
+          sendConfirmation: true,
+          data,
+        }))
 
       case messageDiscriminator.openParingPopup:
         return openParingPopup()
@@ -202,15 +193,10 @@ export const BackgroundMessageHandler =
       }
 
       case messageDiscriminator.getSessionRouterData: {
-        return chromeLocalStore
-          .getItem('sessionRouter')
-          .map((data) => ({
-            sendConfirmation: true,
-            data,
-          }))
-          .mapErr(() => ({
-            reason: 'failedToGetSessionRouterData',
-          }))
+        return getSessionRouterData().map((data) => ({
+          sendConfirmation: true,
+          data,
+        }))
       }
 
       case messageDiscriminator.dAppRequest: {

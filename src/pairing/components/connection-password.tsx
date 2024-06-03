@@ -22,7 +22,7 @@ export const ConnectionPassword = ({
     <>
       <PairingHeader
         header={
-          connectionsClient.hasNoConnections()
+          !connectionsClient.hasConnections()
             ? 'Radix Wallet Connector'
             : 'Link New Radix Wallet'
         }
@@ -44,15 +44,7 @@ export const ConnectionPassword = ({
       </Box>
 
       <Box textAlign="center" mb="lg">
-        {connectionsClient.hasNoConnections() ? (
-          <LinkComponent
-            style={{ fontSize: '16px', color: 'white', fontWeight: 'bold' }}
-            href="https://wallet.radixdlt.com"
-            target="_blank"
-          >
-            {`Don't have Radix Wallet?`}
-          </LinkComponent>
-        ) : (
+        {connectionsClient.hasConnections() ? (
           <Link
             style={{
               fontSize: '16px',
@@ -64,6 +56,14 @@ export const ConnectionPassword = ({
           >
             Cancel
           </Link>
+        ) : (
+          <LinkComponent
+            style={{ fontSize: '16px', color: 'white', fontWeight: 'bold' }}
+            href="https://wallet.radixdlt.com"
+            target="_blank"
+          >
+            {`Don't have Radix Wallet?`}
+          </LinkComponent>
         )}
       </Box>
       <RelinkWarning />

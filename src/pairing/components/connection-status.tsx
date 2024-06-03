@@ -38,7 +38,7 @@ export const ConnectionStatus = () => {
 
   useEffect(() => {
     if (connectionsClient.isLoading()) return
-    if (connectionsClient.hasNoConnections()) {
+    if (!connectionsClient.hasConnections()) {
       navigate('/pairing')
     }
   }, [connections])
@@ -79,7 +79,7 @@ export const ConnectionStatus = () => {
     )
   }
 
-  return (
+  return connectionsClient.hasConnections() ? (
     <>
       <Box
         py="small"
@@ -125,5 +125,5 @@ export const ConnectionStatus = () => {
       {renderForgetWalletConfirmation()}
       {renderChangeWalletName()}
     </>
-  )
+  ) : null
 }
