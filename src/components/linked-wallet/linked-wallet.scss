@@ -1,0 +1,21 @@
+button {
+  all: unset;
+  cursor: pointer;
+}
+
+.linked-wallet:not(:last-child) {
+  margin-bottom: 16px;
+}
+
+.rotate {
+  transform: rotate(180deg);
+}
+
+.shared-accounts-collapse-button {
+  display: inline-flex;
+  transition: transform 0.3s ease-in-out;
+}
+
+.shared-accounts-collapse-button.rotate {
+  margin-top: 5px;
+}

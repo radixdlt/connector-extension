@@ -6,12 +6,16 @@ import { ConfirmationMessageError, Message } from '../messages/_types'
 import { errAsync, okAsync, ResultAsync } from 'neverthrow'
 import { logger } from 'utils/logger'
 import { MessageLifeCycleEvent } from 'chrome/dapp/_types'
-import { getConnectionPassword } from 'chrome/helpers/get-connection-password'
-import {
-  WalletInteractionWithOrigin,
-  ExtensionInteraction,
-} from '@radixdlt/radix-connect-schemas'
 import { sendMessage } from 'chrome/helpers/send-message'
+import { hasConnections } from 'chrome/helpers/get-connections'
+import {
+  ExtensionInteraction,
+  WalletInteraction,
+} from '@radixdlt/radix-dapp-toolkit'
+import {
+  addOriginToCancelInteraction,
+  addOriginToWalletInteraction,
+} from 'chrome/helpers/add-origin-to-wallet-interaction'
 
 const appLogger = logger.getSubLogger({ name: 'content-script' })
 
@@ -53,7 +57,7 @@ const messageHandler = MessageClient(
 )
 
 const handleWalletInteraction = async (
-  walletInteraction: WalletInteractionWithOrigin,
+  walletInteraction: WalletInteraction,
 ) => {
   sendMessage(createMessage.dAppRequest('contentScript', walletInteraction))
 }
@@ -67,9 +71,28 @@ const handleExtensionInteraction = async (
       break
 
     case 'extensionStatus':
-      await getConnectionPassword().map((connectionPassword) => {
-        sendMessageToDapp(createMessage.extensionStatus(!!connectionPassword))
+      await hasConnections().map((hasConnections) => {
+        sendMessageToDapp(createMessage.extensionStatus(hasConnections))
       })
+      break
+
+    case 'cancelWalletInteraction':
+      sendMessage(
+        createMessage.cancelWalletInteraction(
+          addOriginToCancelInteraction(extensionInteraction),
+        ),
+      )
+      break
+
+    case 'walletInteraction':
+      sendMessage(
+        createMessage.walletInteraction({
+          ...extensionInteraction,
+          interaction: addOriginToWalletInteraction(
+            extensionInteraction.interaction,
+          ),
+        }),
+      )
       break
 
     default:
@@ -93,16 +116,15 @@ chrome.runtime.onMessage.addListener((message: Message) => {
 })
 
 chrome.storage.onChanged.addListener(
-  (changes: { [key: string]: chrome.storage.StorageChange }) => {
-    if (changes['connectionPassword'])
-      sendMessageToDapp(
-        createMessage.extensionStatus(
-          !!changes['connectionPassword']?.newValue,
-        ),
-      )
+  (changes: { [key: string]: chrome.storage.StorageChange }, area: string) => {
+    if (changes['connections'] && area === 'local') {
+      hasConnections().map((hasConnections) => {
+        sendMessageToDapp(createMessage.extensionStatus(hasConnections))
+      })
+    }
   },
 )
 
-getConnectionPassword().map((connectionPassword) => {
-  sendMessageToDapp(createMessage.extensionStatus(!!connectionPassword))
+hasConnections().map((hasConnections) => {
+  sendMessageToDapp(createMessage.extensionStatus(hasConnections))
 })

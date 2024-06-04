@@ -1,22 +1,34 @@
 import { MessageLifeCycleEvent } from 'chrome/dapp/_types'
-import { LedgerRequest, LedgerResponse } from 'ledger/schemas'
+import {
+  AccountListMessage,
+  LedgerRequest,
+  LedgerResponse,
+  LinkClientInteraction,
+} from 'ledger/schemas'
 import { ResultAsync } from 'neverthrow'
 import { ILogObjMeta } from 'tslog/dist/types/interfaces'
 import { ILogObj } from 'tslog'
-import { WalletInteractionWithOrigin } from '@radixdlt/radix-connect-schemas'
+import { Connections } from 'pairing/state/connections'
+import { Metadata, WalletInteraction } from '@radixdlt/radix-dapp-toolkit'
+import { ConnectorExtensionOptions } from 'options'
 
 export const messageDiscriminator = {
-  getConnectionPassword: 'getConnectionPassword',
-  setConnectionPassword: 'setConnectionPassword',
+  getConnections: 'getConnections',
+  setConnections: 'setConnections',
   setRadixConnectConfiguration: 'setRadixConnectConfiguration',
   getExtensionOptions: 'getExtensionOptions',
+  getSessionRouterData: 'getSessionRouterData',
+  setSessionRouterData: 'setSessionRouterData',
   dAppRequest: 'dAppRequest',
+  walletInteraction: 'walletInteraction',
+  cancelWalletInteraction: 'cancelWalletInteraction',
   closeLedgerTab: 'closeLedgerTab',
   focusLedgerTab: 'focusLedgerTab',
   closeDappTab: 'closeDappTab',
   extensionStatus: 'extensionStatus',
   ledgerResponse: 'ledgerResponse',
   walletToLedger: 'walletToLedger',
+  walletToExtension: 'walletToExtension',
   walletResponse: 'walletResponse',
   toContentScript: 'toContentScript',
   openParingPopup: 'openParingPopup',
@@ -42,6 +54,7 @@ export const messageSource = {
   ledger: 'ledger',
   wallet: 'wallet',
   any: 'any',
+  popup: 'popup',
 } as const
 
 export type MessageSource = keyof typeof messageSource
@@ -78,8 +91,34 @@ export type SendMessageWithConfirmation<T = any> = (
 export type Messages = {
   [messageDiscriminator.openParingPopup]: MessageBuilder<
     MessageDiscriminator['openParingPopup'],
-    any
+    {}
   >
+  [messageDiscriminator.walletInteraction]: MessageBuilder<
+    MessageDiscriminator['walletInteraction'],
+    {
+      interaction: {
+        interaction: WalletInteraction
+        sessionId?: string
+        interactionId: string
+      }
+    }
+  >
+
+  [messageDiscriminator.cancelWalletInteraction]: MessageBuilder<
+    MessageDiscriminator['cancelWalletInteraction'],
+    {
+      interaction: {
+        interactionId: string
+        metadata: Metadata
+      }
+    }
+  >
+
+  [messageDiscriminator.getSessionRouterData]: MessageBuilder<
+    MessageDiscriminator['getSessionRouterData'],
+    {}
+  >
+
   [messageDiscriminator.extensionStatus]: MessageBuilder<
     MessageDiscriminator['extensionStatus'],
     {
@@ -103,6 +142,16 @@ export type Messages = {
     MessageDiscriminator['log'],
     { log: ILogObjMeta & ILogObj }
   >
+  [messageDiscriminator.setRadixConnectConfiguration]: MessageBuilder<
+    MessageDiscriminator['setRadixConnectConfiguration'],
+    {
+      connectorExtensionOptions: ConnectorExtensionOptions
+    }
+  >
+  [messageDiscriminator.setSessionRouterData]: MessageBuilder<
+    MessageDiscriminator['setSessionRouterData'],
+    { data: Record<string, string> }
+  >
   [messageDiscriminator.downloadLogs]: MessageBuilder<
     MessageDiscriminator['downloadLogs'],
     {}
@@ -111,13 +160,13 @@ export type Messages = {
     MessageDiscriminator['getExtensionOptions'],
     {}
   >
-  [messageDiscriminator.getConnectionPassword]: MessageBuilder<
-    MessageDiscriminator['getConnectionPassword'],
-    {}
+  [messageDiscriminator.setConnections]: MessageBuilder<
+    MessageDiscriminator['setConnections'],
+    { connections: Connections }
   >
-  [messageDiscriminator.setConnectionPassword]: MessageBuilder<
-    MessageDiscriminator['setConnectionPassword'],
-    { connectionPassword?: string }
+  [messageDiscriminator.getConnections]: MessageBuilder<
+    MessageDiscriminator['getConnections'],
+    {}
   >
   [messageDiscriminator.sendMessageToTab]: MessageBuilder<
     MessageDiscriminator['sendMessageToTab'],
@@ -153,7 +202,7 @@ export type Messages = {
   >
   [messageDiscriminator.dAppRequest]: MessageBuilder<
     MessageDiscriminator['dAppRequest'],
-    { data: WalletInteractionWithOrigin }
+    { data: WalletInteraction }
   >
   [messageDiscriminator.walletMessage]: MessageBuilder<
     MessageDiscriminator['walletMessage'],
@@ -165,11 +214,18 @@ export type Messages = {
   >
   [messageDiscriminator.ledgerResponse]: MessageBuilder<
     MessageDiscriminator['ledgerResponse'],
-    { data: LedgerResponse }
+    { data: LedgerResponse; walletPublicKey: string }
+  >
+  [messageDiscriminator.walletToExtension]: MessageBuilder<
+    MessageDiscriminator['walletToExtension'],
+    {
+      data: AccountListMessage | LinkClientInteraction
+      walletPublicKey: string
+    }
   >
   [messageDiscriminator.walletToLedger]: MessageBuilder<
     MessageDiscriminator['walletToLedger'],
-    { data: LedgerRequest }
+    { data: LedgerRequest; walletPublicKey: string }
   >
   [messageDiscriminator.restartConnector]: MessageBuilder<
     MessageDiscriminator['restartConnector'],

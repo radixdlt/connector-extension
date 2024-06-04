@@ -1,24 +1,35 @@
-import { chromeStorageSync } from 'chrome/helpers/chrome-storage-sync'
+import { chromeLocalStore } from 'chrome/helpers/chrome-local-store'
 import { logger } from 'utils/logger'
 import { defaultRadixConnectConfig } from 'config'
+import { ResultAsync, ok } from 'neverthrow'
+import { ed25519 } from '@noble/curves/ed25519'
+
+const privateKey = ed25519.utils.randomPrivateKey()
+const publicKey = ed25519.getPublicKey(privateKey)
 
 export type ConnectorExtensionOptions = {
-  showDAppRequestNotifications?: boolean
-  showTransactionResultNotifications?: boolean
+  publicKey: string
+  privateKey: string
   radixConnectConfiguration: string
+  showDAppRequestNotifications: boolean
+  showTransactionResultNotifications: boolean
 }
 
 export const defaultConnectorExtensionOptions: ConnectorExtensionOptions = {
+  publicKey: Buffer.from(publicKey).toString('hex'),
+  privateKey: Buffer.from(privateKey).toString('hex'),
   showDAppRequestNotifications: true,
   showTransactionResultNotifications: true,
   radixConnectConfiguration: defaultRadixConnectConfig,
 }
 
-export const getSingleOptionValue = (key: keyof ConnectorExtensionOptions) =>
-  chromeStorageSync
+export const getSingleOptionValue = <T extends keyof ConnectorExtensionOptions>(
+  key: T,
+): ResultAsync<ConnectorExtensionOptions[T], never> =>
+  chromeLocalStore
     .getSingleItem('options')
     .map((options) => options?.[key] || defaultConnectorExtensionOptions[key])
-    .mapErr(() => defaultConnectorExtensionOptions[key])
+    .orElse(() => ok(defaultConnectorExtensionOptions[key]))
 
 export const getShowDAppRequestNotifications = () =>
   getSingleOptionValue('showDAppRequestNotifications')
@@ -26,19 +37,22 @@ export const getShowDAppRequestNotifications = () =>
 export const getShowTransactionResultNotifications = () =>
   getSingleOptionValue('showTransactionResultNotifications')
 
-export const getExtensionOptions = () => {
-  return chromeStorageSync
+export const getExtensionOptions = (): ResultAsync<
+  ConnectorExtensionOptions,
+  never
+> => {
+  return chromeLocalStore
     .getSingleItem('options')
     .map((options) => ({
       ...defaultConnectorExtensionOptions,
       ...options,
     }))
-    .mapErr(() => defaultConnectorExtensionOptions)
+    .orElse(() => ok(defaultConnectorExtensionOptions))
 }
 
 export const setConnectorExtensionOptions = (
   connectorExtensionOptions: ConnectorExtensionOptions,
 ) => {
   logger.debug('setConnectorExtensionOptions', connectorExtensionOptions)
-  chromeStorageSync.setSingleItem('options', connectorExtensionOptions)
+  return chromeLocalStore.setSingleItem('options', connectorExtensionOptions)
 }

@@ -143,6 +143,24 @@ export const SignatureOfSignerSchema = object({
   signature: string(),
 })
 
+export type AccountListMessage = z.infer<typeof AccountListMessage>
+export const AccountListMessage = object({
+  interactionId: string(),
+  discriminator: literal('accountList'),
+  accounts: object({
+    address: string(),
+    label: string(),
+    appearanceId: number(),
+  }).array(),
+})
+
+export type LinkClientInteraction = z.infer<typeof LinkClientInteraction>
+export const LinkClientInteraction = object({
+  discriminator: literal('linkClient'),
+  publicKey: string(),
+  signature: string().optional(),
+})
+
 export type SignatureOfSigner = z.infer<typeof SignatureOfSignerSchema>
 
 export const LedgerPublicKeyResponseSchema = object({

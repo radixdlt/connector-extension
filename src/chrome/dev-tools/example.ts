@@ -128,3 +128,23 @@ export const getSignSecp256k1ChallengePayload = () =>
       derivationPath: 'm/44H/1022H/10H/525H/1238H',
     },
   ])
+
+export const getAccountListMessage = () => {
+  return {
+    discriminator: 'accountList',
+    accounts: [
+      {
+        label: 'My Main Account',
+        address:
+          'account_rdx12y4l35lh2543nff9pyyzvsh64ssu0dv6fq20gg8suslwmjvkylejgj',
+        appearanceId: 0,
+      },
+      {
+        label: 'My Savings Account',
+        address:
+          'account_tdx_2_12y9as9p2utmxf9zc9gvsalvd6s69zump236ng3ztvfkjngm757zsa3',
+        appearanceId: 1,
+      },
+    ],
+  }
+}

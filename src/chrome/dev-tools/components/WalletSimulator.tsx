@@ -11,9 +11,10 @@ import {
   getSignEd25519TransactionPayload,
   getSignSecp256k1TransactionPayload,
   getDeriveAndDisplayPayload,
+  getAccountListMessage,
 } from '../example'
-import { getConnectionPassword } from 'chrome/helpers/get-connection-password'
 import { getExtensionOptions } from 'options'
+import { getConnections } from 'chrome/helpers/get-connections'
 
 export const WalletSimulator = () => {
   const [connector, setConnector] =
@@ -31,6 +32,7 @@ export const WalletSimulator = () => {
     'Sign TX (Curve25519)': getSignEd25519TransactionPayload(),
     'Sign Auth (Curve25519)': getSignEd222519ChallengePayload(),
     'Sign Auth (Secp256k1)': getSignSecp256k1ChallengePayload(),
+    'Account List Message': getAccountListMessage(),
   }
 
   useEffect(() => {
@@ -66,10 +68,11 @@ export const WalletSimulator = () => {
       }
     })
 
-    getConnectionPassword().map((connectionPassword) => {
-      if (connectionPassword) {
+    getConnections().map((connections) => {
+      const firstConnection = connections && Object.values(connections)[0]
+      if (firstConnection) {
         connectorClient.setConnectionPassword(
-          Buffer.from(connectionPassword, 'hex'),
+          Buffer.from(firstConnection.password, 'hex'),
         )
       }
     })

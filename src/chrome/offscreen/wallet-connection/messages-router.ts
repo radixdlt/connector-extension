@@ -2,7 +2,12 @@ import { errAsync, ok, okAsync, ResultAsync } from 'neverthrow'
 
 export type MessagesRouter = ReturnType<typeof MessagesRouter>
 
-type Item = { tabId: number; origin: string; networkId: number }
+type Item = {
+  tabId: number
+  origin: string
+  networkId: number
+  sessionId?: string
+}
 
 export const MessagesRouter = () => {
   const store = new Map<string, Item>()
@@ -10,10 +15,14 @@ export const MessagesRouter = () => {
   const add = (
     tabId: number,
     interactionId: string,
-    metadata: Record<string, any>,
+    metadata: {
+      origin: string
+      networkId: number
+      sessionId?: string
+    },
   ) => {
-    const { origin, networkId } = metadata
-    store.set(interactionId, { tabId, origin, networkId })
+    const { origin, networkId, sessionId } = metadata
+    store.set(interactionId, { tabId, origin, networkId, sessionId })
     return ok(undefined)
   }
 
@@ -54,6 +63,9 @@ export const MessagesRouter = () => {
       return interactionIds
     })
 
+  const removeByInteractionId = (interactionId: string) =>
+    store.delete(interactionId)
+
   return {
     add,
     getByInteractionId,
@@ -61,6 +73,7 @@ export const MessagesRouter = () => {
     getNetworkId,
     getInteractionIdsByTabId,
     removeByTabId,
+    removeByInteractionId,
     getAndRemoveByTabId,
   }
 }

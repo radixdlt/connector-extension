@@ -1,5 +1,10 @@
 import { ConnectorExtensionOptions } from './../../options/index'
-import { LedgerRequest, LedgerResponse } from 'ledger/schemas'
+import {
+  AccountListMessage,
+  LedgerRequest,
+  LedgerResponse,
+  LinkClientInteraction,
+} from 'ledger/schemas'
 import {
   Messages,
   ConfirmationMessageError,
@@ -7,19 +12,57 @@ import {
   MessageSource,
   Message,
   messageDiscriminator,
+  messageSource,
 } from './_types'
 import { MessageLifeCycleEvent } from 'chrome/dapp/_types'
 import { ILogObj, ILogObjMeta } from 'tslog/dist/types/interfaces'
-import { WalletInteractionWithOrigin } from '@radixdlt/radix-connect-schemas'
+import {
+  CancelWalletInteractionExtensionInteraction,
+  WalletInteraction,
+  WalletInteractionExtensionInteraction,
+} from '@radixdlt/radix-dapp-toolkit'
+import { Connections } from 'pairing/state/connections'
+import { WalletPublicKey, SessionId } from 'chrome/offscreen/session-router'
 
 export const createMessage = {
   openParingPopup: () => ({
-    discriminator: 'openParingPopup',
+    messageId: crypto.randomUUID(),
+    source: messageSource.contentScript,
+    discriminator: messageDiscriminator.openParingPopup,
+  }),
+  walletInteraction: (interaction: WalletInteractionExtensionInteraction) => ({
+    messageId: crypto.randomUUID(),
+    discriminator: messageDiscriminator.walletInteraction,
+    source: messageSource.contentScript,
+    interaction,
+  }),
+  cancelWalletInteraction: (
+    interaction: CancelWalletInteractionExtensionInteraction,
+  ) => ({
+    messageId: crypto.randomUUID(),
+    discriminator: messageDiscriminator.cancelWalletInteraction,
+    source: messageSource.contentScript,
+    interaction,
+  }),
+  getSessionRouterData: () => ({
+    messageId: crypto.randomUUID(),
+    discriminator: messageDiscriminator.getSessionRouterData,
+    source: messageSource.offScreen,
+  }),
+  setSessionRouterData: (
+    data: Record<SessionId, WalletPublicKey>,
+    source: MessageSource,
+  ) => ({
+    source,
+    messageId: crypto.randomUUID(),
+    discriminator: messageDiscriminator.setSessionRouterData,
+    data,
   }),
   extensionStatus: (isWalletLinked: boolean) => ({
     eventType: 'extensionStatus',
     isExtensionAvailable: true,
     isWalletLinked,
+    canHandleSessions: true,
   }),
   log: (log: ILogObjMeta & ILogObj): Messages['log'] => ({
     source: 'any',
@@ -32,20 +75,25 @@ export const createMessage = {
     discriminator: 'downloadLogs',
     messageId: crypto.randomUUID(),
   }),
-  setConnectionPassword: (
-    source: MessageSource,
-    connectionPassword?: string,
-  ): Messages['setConnectionPassword'] => ({
-    discriminator: 'setConnectionPassword',
+  getConnections: (source: MessageSource): Messages['getConnections'] => ({
+    discriminator: 'getConnections',
     messageId: crypto.randomUUID(),
-    connectionPassword,
+    source,
+  }),
+  setConnections: (
+    source: MessageSource,
+    connections: Connections,
+  ): Messages['setConnections'] => ({
+    discriminator: 'setConnections',
+    messageId: crypto.randomUUID(),
+    connections,
     source,
   }),
   setConnectorExtensionOptions: (
     source: MessageSource,
     connectorExtensionOptions: ConnectorExtensionOptions,
   ) => ({
-    discriminator: 'setRadixConnectConfiguration',
+    discriminator: messageDiscriminator.setRadixConnectConfiguration,
     messageId: crypto.randomUUID(),
     connectorExtensionOptions,
     source,
@@ -54,13 +102,6 @@ export const createMessage = {
     source: MessageSource,
   ): Messages['getExtensionOptions'] => ({
     discriminator: 'getExtensionOptions',
-    messageId: crypto.randomUUID(),
-    source,
-  }),
-  getConnectionPassword: (
-    source: MessageSource,
-  ): Messages['getConnectionPassword'] => ({
-    discriminator: 'getConnectionPassword',
     messageId: crypto.randomUUID(),
     source,
   }),
@@ -76,7 +117,7 @@ export const createMessage = {
   }),
   dAppRequest: (
     source: MessageSource,
-    data: WalletInteractionWithOrigin,
+    data: WalletInteraction,
   ): Messages['dAppRequest'] => ({
     source,
     discriminator: 'dAppRequest',
@@ -85,7 +126,7 @@ export const createMessage = {
   }),
   walletMessage: (
     source: MessageSource,
-    message: any,
+    message: Record<string, any>,
   ): Messages['walletMessage'] => ({
     source,
     discriminator: 'walletMessage',
@@ -109,15 +150,32 @@ export const createMessage = {
   walletToLedger: (
     source: MessageSource,
     message: LedgerRequest,
+    walletPublicKey: string,
   ): Messages['walletToLedger'] => ({
     source,
     discriminator: messageDiscriminator.walletToLedger,
+    walletPublicKey,
     messageId: crypto.randomUUID(),
     data: message,
   }),
-  ledgerResponse: (message: LedgerResponse): Messages['ledgerResponse'] => ({
+  walletToExtension: (
+    source: MessageSource,
+    message: AccountListMessage | LinkClientInteraction,
+    walletPublicKey: string,
+  ): Messages['walletToExtension'] => ({
+    source,
+    discriminator: messageDiscriminator.walletToExtension,
+    messageId: crypto.randomUUID(),
+    walletPublicKey,
+    data: message,
+  }),
+  ledgerResponse: (
+    message: LedgerResponse,
+    walletPublicKey: string,
+  ): Messages['ledgerResponse'] => ({
     source: 'ledger',
     discriminator: messageDiscriminator.ledgerResponse,
+    walletPublicKey,
     messageId: crypto.randomUUID(),
     data: message,
   }),

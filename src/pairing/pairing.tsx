@@ -1,23 +1,31 @@
 import { ConnectionPassword } from './components/connection-password'
-import { ConnectionStatus } from './components/connection-status'
-import { PopupWindow } from 'components'
 import { useEffect, useState } from 'react'
-import { chromeLocalStore } from 'chrome/helpers/chrome-local-store'
 import { ConnectorClient } from '@radixdlt/radix-connect-webrtc'
-import { ok } from 'neverthrow'
 import { logger } from 'utils/logger'
-import { getExtensionOptions } from 'options'
 import { config, radixConnectConfig } from 'config'
+import { useConnectionsClient } from './state/connections'
+import { useConnectorOptions } from './state/options'
+import { Subscription, combineLatest, filter, map, switchMap, tap } from 'rxjs'
+import { useNavigate } from 'react-router-dom'
+import { ed25519 } from '@noble/curves/ed25519'
+import { getLinkingSignatureMessage } from 'crypto/get-linking-message'
+import { chromeLocalStore } from 'chrome/helpers/chrome-local-store'
+import { LinkClientInteraction } from 'ledger/schemas'
 
-export const Paring = () => {
-  const [pairingState, setPairingState] = useState<
-    'loading' | 'notPaired' | 'paired'
-  >('loading')
+export const Pairing = () => {
   const [connectionPassword, setConnectionPassword] = useState<
     string | undefined
   >()
-
+  const connectionsClient = useConnectionsClient()
+  const connectorOptions = useConnectorOptions()
+  const navigate = useNavigate()
+  const [publicKey, setPublicKey] = useState<string>()
+  const [signature, setSignature] = useState<string>()
   useEffect(() => {
+    if (!connectorOptions) return
+
+    setPublicKey(connectorOptions.publicKey)
+
     const connectorClient = ConnectorClient({
       source: 'extension',
       target: 'wallet',
@@ -26,85 +34,80 @@ export const Paring = () => {
       negotiationTimeout: 10_000,
     })
 
-    getExtensionOptions().map((options) => {
-      connectorClient.setConnectionConfig(
-        radixConnectConfig[options.radixConnectConfiguration],
-      )
-    })
-
-    chrome.storage.onChanged.addListener((changes, area) => {
-      if (changes['options']) {
-        if (
-          changes['options'].newValue.radixConnectConfiguration !==
-          changes['options'].oldValue?.radixConnectConfiguration
-        ) {
-          connectorClient.setConnectionConfig(
-            radixConnectConfig[
-              changes['options'].newValue.radixConnectConfiguration
-            ],
-          )
-        }
-      }
-      if (area === 'local' && changes['connectionPassword']) {
-        const { newValue } = changes['connectionPassword']
-        if (!newValue) connect()
-      }
-    })
-
-    const subscription = connectorClient.connectionPassword$.subscribe(
-      (password) => {
-        setConnectionPassword(password?.toString('hex'))
-      },
+    connectorClient.setConnectionConfig(
+      radixConnectConfig[connectorOptions.radixConnectConfiguration],
     )
 
-    const connect = () =>
-      chromeLocalStore
-        .getItem('connectionPassword')
-        .andThen(({ connectionPassword }) => {
-          if (connectionPassword) {
-            connectorClient.setConnectionPassword(
-              Buffer.from(connectionPassword, 'hex'),
-            )
-            return ok(null)
-          } else {
-            connectorClient.connect()
-            setPairingState('notPaired')
-            return connectorClient
-              .generateConnectionPassword()
-              .andThen((buffer) =>
-                connectorClient.connected().andThen(() => {
-                  connectorClient.disconnect()
-                  return chromeLocalStore.setItem({
-                    connectionPassword: buffer.toString('hex'),
-                  })
-                }),
-              )
-          }
-        })
-        .map(() => {
-          setPairingState('paired')
-        })
+    connectorClient
+      .generateConnectionPassword()
+      .andThen((buffer) => connectorClient.setConnectionPassword(buffer))
 
-    connect()
+    const subscription = new Subscription()
+
+    const linkClientInteraction$ = connectorClient.onMessage$.pipe(
+      filter(
+        (message): message is LinkClientInteraction =>
+          message.discriminator === 'linkClient',
+      ),
+    )
+
+    const hexConnectionPassword$ = connectorClient.connectionPassword$.pipe(
+      filter(Boolean),
+      tap((passwordBuffer) => {
+        const message = getLinkingSignatureMessage(passwordBuffer)
+        setSignature(
+          Buffer.from(
+            ed25519.sign(message, connectorOptions.privateKey),
+          ).toString('hex'),
+        )
+      }),
+      map((buffer) => buffer.toString('hex')),
+    )
+
+    subscription.add(
+      hexConnectionPassword$.subscribe((password) => {
+        setConnectionPassword(password)
+      }),
+    )
+
+    subscription.add(
+      connectorClient.connected$
+        .pipe(
+          filter(Boolean),
+          switchMap(() =>
+            combineLatest([hexConnectionPassword$, linkClientInteraction$]),
+          ),
+        )
+        .subscribe(([password, interaction]) => {
+          connectionsClient
+            .addOrUpdate(password, interaction)
+            .map(({ isKnownConnection }) => {
+              chromeLocalStore.removeItem('connectionPassword')
+              connectorClient.disconnect()
+              navigate({
+                pathname: '/',
+                search: `?newWallet=${interaction.publicKey}&isKnownConnection=${isKnownConnection}`,
+              })
+            })
+        }),
+    )
+
+    connectorClient.connect()
 
     return () => {
       connectorClient.destroy()
       subscription.unsubscribe()
     }
-  }, [setPairingState, setConnectionPassword])
+  }, [setConnectionPassword, connectorOptions, connectionsClient])
 
   return (
-    <PopupWindow>
-      {pairingState === 'notPaired' && (
-        <ConnectionPassword connectionPassword={connectionPassword} />
-      )}
-      {pairingState === 'paired' && (
-        <ConnectionStatus
-          onForgetWallet={() => {
-            chromeLocalStore.removeItem('connectionPassword')
-          }}
-        />
-      )}
-    </PopupWindow>
+    <>
+      <ConnectionPassword
+        connectionPassword={connectionPassword}
+        purpose="general"
+        publicKey={publicKey}
+        signature={signature}
+      />
+    </>
   )
 }

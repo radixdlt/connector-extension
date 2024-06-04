@@ -44,9 +44,7 @@ const manifest = defineManifest(async () => {
       default_popup: 'src/pairing/index.html',
     },
     background: {
-      service_worker: `src/chrome/background/background${
-        isDevToolsActive ? '-with-dev-tools' : ''
-      }.ts`,
+      service_worker: `src/chrome/background/background.ts`,
       type: 'module',
     },
     content_scripts: [

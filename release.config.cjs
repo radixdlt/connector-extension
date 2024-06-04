@@ -142,6 +142,21 @@ module.exports = {
       },
     ],
     [
+      "semantic-release-replace-plugin",
+      {
+        "replacements": [
+          {
+            "files": [
+              "src/version.ts"
+            ],
+            "from": "export const __VERSION__ = '1.0.0'",
+            "to": "export const __VERSION__ = '${nextRelease.version}'",
+            "countMatches": true
+          }
+        ]
+      }
+    ],
+    [
       '@semantic-release/exec',
       {
         prepareCmd: 'npm run build:cd',
@@ -163,7 +178,7 @@ module.exports = {
       },
     ],
     [
-      'semantic-release-chrome',
+      '@owlcode/semantic-release-chrome',
       {
         extensionId: '${EXTENSION_ID}',
         asset: 'radix-connector_v${nextRelease.version}.zip',
