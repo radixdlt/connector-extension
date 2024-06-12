@@ -150,7 +150,6 @@ export const useConnectionsClient = () => {
   )
 
   useEffect(() => {
-    logger.debug('Connections updated', connections)
     setConnectionsClient(ConnectionsClient(connections))
   }, [connections])
 
