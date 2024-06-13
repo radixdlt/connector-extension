@@ -11,5 +11,9 @@ export const logger = new Logger({
 })
 
 logger.attachTransport((logObj) => {
-  sendMessage(createMessage.log(logObj))
+  try {
+    sendMessage(createMessage.log(logObj))
+  } catch (error) {
+    console.error('Error sending log message', error)
+  }
 })

@@ -25,6 +25,7 @@ const manifest = defineManifest(async () => {
     'scripting',
     'notifications',
     'contextMenus',
+    'management',
     'idle',
   ]
   const matches = ['https://*/*', 'http://localhost/*', 'http://127.0.0.1/*']

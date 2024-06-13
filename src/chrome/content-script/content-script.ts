@@ -3,7 +3,7 @@ import { ContentScriptMessageHandler } from './message-handler'
 import { createMessage } from '../messages/create-message'
 import { MessageClient } from '../messages/message-client'
 import { ConfirmationMessageError, Message } from '../messages/_types'
-import { errAsync, okAsync, ResultAsync } from 'neverthrow'
+import { err, errAsync, okAsync, ResultAsync } from 'neverthrow'
 import { logger } from 'utils/logger'
 import { MessageLifeCycleEvent } from 'chrome/dapp/_types'
 import { sendMessage } from 'chrome/helpers/send-message'
@@ -56,36 +56,30 @@ const messageHandler = MessageClient(
   { logger: appLogger },
 )
 
-const handleWalletInteraction = async (
-  walletInteraction: WalletInteraction,
-) => {
+const handleWalletInteraction = (walletInteraction: WalletInteraction) =>
   sendMessage(createMessage.dAppRequest('contentScript', walletInteraction))
-}
 
-const handleExtensionInteraction = async (
+const handleExtensionInteraction = (
   extensionInteraction: ExtensionInteraction,
 ) => {
   switch (extensionInteraction.discriminator) {
     case 'openPopup':
-      await sendMessage(createMessage.openParingPopup())
-      break
+      return sendMessage(createMessage.openParingPopup())
 
     case 'extensionStatus':
-      await hasConnections().map((hasConnections) => {
-        sendMessageToDapp(createMessage.extensionStatus(hasConnections))
-      })
-      break
+      return hasConnections().map((hasConnections) =>
+        sendMessageToDapp(createMessage.extensionStatus(hasConnections)),
+      )
 
     case 'cancelWalletInteraction':
-      sendMessage(
+      return sendMessage(
         createMessage.cancelWalletInteraction(
           addOriginToCancelInteraction(extensionInteraction),
         ),
       )
-      break
 
     case 'walletInteraction':
-      sendMessage(
+      return sendMessage(
         createMessage.walletInteraction({
           ...extensionInteraction,
           interaction: addOriginToWalletInteraction(
@@ -93,21 +87,25 @@ const handleExtensionInteraction = async (
           ),
         }),
       )
-      break
 
     default:
-      logger.error({
+      return err({
         reason: 'InvalidExtensionRequest',
         interaction: extensionInteraction,
       })
-      break
   }
 }
 
 // incoming messages from dApps
 chromeDAppClient.messageListener(
-  handleWalletInteraction,
-  handleExtensionInteraction,
+  (p) =>
+    handleWalletInteraction(p).mapErr((e) => {
+      appLogger.error('handleWalletInteraction', e)
+    }),
+  (p) =>
+    handleExtensionInteraction(p).mapErr((e) => {
+      appLogger.error('handleExtensionInteraction', e)
+    }),
 )
 
 // incoming messages from extension
