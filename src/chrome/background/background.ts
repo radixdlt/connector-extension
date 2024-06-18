@@ -130,7 +130,6 @@ chrome.storage.onChanged.addListener(handleStorageChange)
 chrome.action.onClicked.addListener(openParingPopup)
 
 chrome.runtime.onInstalled.addListener(handleOnInstallExtension)
-chrome.management.onEnabled.addListener(handleOnInstallExtension)
 
 createOffscreen()
 
