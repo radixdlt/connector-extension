@@ -116,7 +116,7 @@ export const MessageClient = (
         mergeMap(({ message, tabId }) =>
           handler(message, sendMessageAndWaitForConfirmation, tabId)
             .andThen((result) =>
-              result.sendConfirmation
+              result?.sendConfirmation
                 ? sendConfirmationSuccess({
                     origin,
                     messageId: message.messageId,

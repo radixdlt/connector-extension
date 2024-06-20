@@ -58,8 +58,6 @@ export const WalletConnectionMessageHandler = (input: {
       // Message from wallet to extension (incldues ledger, dApp and accountList message)
       case messageDiscriminator.walletMessage: {
         if (isLedgerRequest(message.data)) {
-          logger.debug('🪪 -> 📒: walletToLedgerSubject', message.data)
-
           return sendMessageWithConfirmation(
             createMessage.walletToLedger(
               'offScreen',
@@ -68,7 +66,6 @@ export const WalletConnectionMessageHandler = (input: {
             ),
           ).map(() => ({ sendConfirmation: false }))
         } else if (isExtensionMessage(message.data)) {
-          logger.debug('Wallet to extension', message.data)
           return sendMessageWithConfirmation(
             createMessage.walletToExtension(
               'offScreen',
@@ -100,6 +97,7 @@ export const WalletConnectionMessageHandler = (input: {
               tabId,
             ),
           )
+          .map(() => ({ sendConfirmation: true }))
       }
 
       // Message from dApp to wallet
