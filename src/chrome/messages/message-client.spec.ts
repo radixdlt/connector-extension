@@ -31,7 +31,7 @@ const createInput = (subjects: MessageSubjects) => ({
 })
 
 const createTestHelper = ({
-  messagesRouter = MessagesRouter(),
+  messagesRouter = MessagesRouter({ logger }),
   messageClientSubjects = MessageSubjects(),
   backgroundMessageClient = MessageClient(
     BackgroundMessageHandler({

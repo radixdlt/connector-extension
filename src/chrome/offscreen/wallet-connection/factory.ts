@@ -18,11 +18,15 @@ export const walletConnectionClientFactory = (input: {
   connectorClient?: ConnectorClient
   messagesRouter?: MessagesRouter
 }): WalletConnectionClient => {
-  const messagesRouter = input.messagesRouter || MessagesRouter()
-
   const logger = input.logger.getSubLogger({
-    name: `[WCC]:[${input.connection.walletName}]`,
+    name: `[WCC][${input.connection.walletName}]`,
   })
+
+  const messagesRouter =
+    input.messagesRouter ||
+    MessagesRouter({
+      logger,
+    })
 
   const connectorClient =
     input.connectorClient ||

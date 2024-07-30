@@ -14,6 +14,7 @@ const CreateQueue = ({
   worker = Worker((job) => okAsync(undefined)),
   paused = true,
   logger: queueLogger,
+  maxFinishedItems = 2,
 }: Partial<QueueOptions<any>>) =>
   Queue<any>({
     storage,
@@ -21,6 +22,7 @@ const CreateQueue = ({
     worker,
     logger: queueLogger,
     paused,
+    maxFinishedItems,
   })
 
 const createRandomJob = (data: any = 'test') => ({
@@ -31,6 +33,30 @@ const createJobs = (count: number) =>
   new Array(count).fill(null).map(createRandomJob)
 
 describe('Queue', () => {
+  it('should clear old completed ids', async () => {
+    const queue = CreateQueue({})
+    const jobs = createJobs(4)
+    await Promise.all(jobs.map((job) => queue.add(job, job.id)))
+    queue.start()
+    await firstValueFrom(
+      queue.subjects.queueInteractionResult.pipe(
+        filter(
+          (result) =>
+            result.isOk() &&
+            result.value.interaction === 'updateJobStatus' &&
+            result.value.jobId === jobs[3].id &&
+            result.value.status === 'completed',
+        ),
+      ),
+    )
+    const state = await queue.getState()
+    if (state.isErr()) throw state.error
+
+    expect(state.value.ids.completed.size).toEqual(2)
+    expect(state.value.ids.completed).not.toContain(jobs[0].id)
+    expect(state.value.ids.completed).not.toContain(jobs[1].id)
+  })
+
   it('should add jobs', async () => {
     const queue = CreateQueue({})
     const jobs = createJobs(5)

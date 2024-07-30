@@ -1,4 +1,5 @@
 import { errAsync, ok, okAsync, ResultAsync } from 'neverthrow'
+import { AppLogger } from 'utils/logger'
 
 export type MessagesRouter = ReturnType<typeof MessagesRouter>
 
@@ -9,7 +10,8 @@ type Item = {
   sessionId?: string
 }
 
-export const MessagesRouter = () => {
+export const MessagesRouter = ({ logger }: { logger: AppLogger }) => {
+  const sublogger = logger.getSubLogger({ name: 'MessagesRouter' })
   const store = new Map<string, Item>()
 
   const add = (
@@ -23,6 +25,12 @@ export const MessagesRouter = () => {
   ) => {
     const { origin, networkId, sessionId } = metadata
     store.set(interactionId, { tabId, origin, networkId, sessionId })
+    sublogger.debug('add', {
+      tabId,
+      interactionId,
+      origin,
+      sessionId,
+    })
     return ok(undefined)
   }
 
@@ -53,18 +61,22 @@ export const MessagesRouter = () => {
   }
 
   const removeByTabId = (tabId: number) =>
-    getInteractionIdsByTabId(tabId).map((interactionIds) =>
-      interactionIds.forEach((interactionId) => store.delete(interactionId)),
-    )
+    getInteractionIdsByTabId(tabId).map((interactionIds) => {
+      sublogger.debug('removeByTabId', { tabId, interactionIds })
+      interactionIds.forEach((interactionId) => store.delete(interactionId))
+    })
 
   const getAndRemoveByTabId = (tabId: number) =>
     getInteractionIdsByTabId(tabId).map((interactionIds) => {
+      sublogger.debug('getAndRemoveByTabId', { tabId, interactionIds })
       interactionIds.forEach((interactionId) => store.delete(interactionId))
       return interactionIds
     })
 
-  const removeByInteractionId = (interactionId: string) =>
+  const removeByInteractionId = (interactionId: string) => {
+    sublogger.debug('removeByInteractionId', { interactionId })
     store.delete(interactionId)
+  }
 
   return {
     add,

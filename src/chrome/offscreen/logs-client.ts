@@ -20,11 +20,11 @@ export const LogsClient = (
       browser = (_meta as unknown as { browser: string })?.browser
       const dateTime = new Date(_meta.date)
       const prefix = [
-        `${dateTime.toLocaleTimeString()}.${dateTime.getMilliseconds()}`,
+        `[${dateTime.toLocaleTimeString()}.${dateTime.getMilliseconds()}]`,
         _meta.name,
       ]
         .filter(Boolean)
-        .join('-')
+        .join('')
 
       const log = `[${prefix}] ${Object.values(rest)
         .map((singleLog) =>

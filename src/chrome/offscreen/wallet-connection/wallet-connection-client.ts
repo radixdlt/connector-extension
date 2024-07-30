@@ -186,7 +186,7 @@ export const WalletConnectionClient = ({
       chrome.runtime.onMessage.removeListener(chromeMessageListener)
     },
     update: (connection: Connection) => {
-      logger.settings.name = `[WCC]:[${connection.walletName}]`
+      logger.settings.name = `[WCC][${connection.walletName}]`
       connectorClient.setConnectionPassword(
         Buffer.from(connection.password, 'hex'),
       )

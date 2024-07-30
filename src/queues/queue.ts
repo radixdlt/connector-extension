@@ -34,6 +34,7 @@ export type QueueOptions<T> = {
   logger?: Logger<unknown>
   subjects?: QueueSubjects<T>
   paused?: boolean
+  maxFinishedItems?: number
 }
 
 export type Queue<T = any> = ReturnType<typeof Queue<T>>
@@ -45,6 +46,7 @@ export const Queue = <T>({
   logger,
   subjects = QueueSubjects<T>(),
   paused = false,
+  maxFinishedItems = 7,
 }: QueueOptions<T>) => {
   subjects.paused.next(paused)
   const subscriptions = new Subscription()
@@ -140,6 +142,7 @@ export const Queue = <T>({
     state.items.set(jobId, updatedJob)
     state.ids[job.status].delete(jobId)
     state.ids[status].add(jobId)
+    removeEntriesOverLimit(state, status)
 
     return okAsync(state)
   }
@@ -204,6 +207,22 @@ export const Queue = <T>({
           })
       }
     }
+
+  const removeEntriesOverLimit = (state: QueueState<T>, status: JobStatus) => {
+    if (status === 'completed' || status === 'failed') {
+      const countToRemove = state.ids[status].size - maxFinishedItems
+      if (countToRemove > 0) {
+        let i = 0
+        for (const item of state.ids[status].values()) {
+          if (i >= countToRemove) {
+            break
+          }
+          i++
+          state.ids[status].delete(item)
+        }
+      }
+    }
+  }
 
   const checkIfJobExists = (id: string) =>
     getState().map((state) => state.items.has(id))
