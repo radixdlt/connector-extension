@@ -27,8 +27,10 @@ export const ConnectionPassword = ({
             : 'Link New Radix Wallet'
         }
       >
-        Scan the QR code with the Radix Wallet app on your mobile phone to start
-        using it with dApps in this web browser.
+        <strong>To link your wallet to this web browser</strong>: In your Radix
+        Wallet app, tap the gear icon for wallet settings, then tap{' '}
+        <strong>Linked Connectors</strong> and then{' '}
+        <strong>Link New Connector</strong> to scan the QR code.
       </PairingHeader>
 
       <Box mt="sm" mb="sm" p="none">
