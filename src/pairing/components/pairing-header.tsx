@@ -1,6 +1,7 @@
+import React from 'react'
 import { Header, Text } from '../../components'
 
-type PairingHeaderProps = { header: string; children?: string }
+type PairingHeaderProps = { header: string; children?: React.ReactNode }
 
 export const PairingHeader = ({ header, children }: PairingHeaderProps) => (
   <>
