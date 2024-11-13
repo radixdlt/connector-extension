@@ -4,28 +4,20 @@ import {
   WalletInteractionItems,
   extensionInteractionDiscriminator,
 } from '@radixdlt/radix-dapp-toolkit'
-import {
-  Output,
-  literal,
-  merge,
-  object,
-  optional,
-  string,
-  union,
-} from 'valibot'
+import { InferOutput, literal, object, optional, string, union } from 'valibot'
 
-export type MetadataWithOptionalOrigin = Output<
+export type MetadataWithOptionalOrigin = InferOutput<
   typeof MetadataWithOptionalOrigin
 >
 
-export const MetadataWithOptionalOrigin = merge([
-  Metadata,
-  object({
+export const MetadataWithOptionalOrigin = object({
+  ...Metadata.entries,
+  ...object({
     origin: optional(string()),
-  }),
-])
+  }).entries,
+})
 
-export type WalletInteractionWithOptionalOrigin = Output<
+export type WalletInteractionWithOptionalOrigin = InferOutput<
   typeof WalletInteractionWithOptionalOrigin
 >
 
@@ -35,7 +27,7 @@ export const WalletInteractionWithOptionalOrigin = object({
   items: WalletInteractionItems,
 })
 
-export type WalletInteractionExtensionInteractionOptionalOrigin = Output<
+export type WalletInteractionExtensionInteractionOptionalOrigin = InferOutput<
   typeof WalletInteractionExtensionInteractionOptionalOrigin
 >
 
@@ -46,9 +38,8 @@ export const WalletInteractionExtensionInteractionOptionalOrigin = object({
   sessionId: optional(string()),
 })
 
-export type CancelWalletInteractionExtensionInteractionOptionalOrigin = Output<
-  typeof CancelWalletInteractionExtensionInteractionOptionalOrigin
->
+export type CancelWalletInteractionExtensionInteractionOptionalOrigin =
+  InferOutput<typeof CancelWalletInteractionExtensionInteractionOptionalOrigin>
 
 export const CancelWalletInteractionExtensionInteractionOptionalOrigin = object(
   {
@@ -60,7 +51,7 @@ export const CancelWalletInteractionExtensionInteractionOptionalOrigin = object(
   },
 )
 
-export type ExtenstionInteractionOptionalOrigin = Output<
+export type ExtenstionInteractionOptionalOrigin = InferOutput<
   typeof ExtenstionInteractionOptionalOrigin
 >
 

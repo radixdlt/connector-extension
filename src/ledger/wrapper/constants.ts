@@ -37,6 +37,8 @@ export const LedgerInstructionCode = {
   SignAuthSecp256k1: '71',
   DeriveAndDisplayAddressEd25519: '81',
   DeriveAndDisplayAddressSecp256k1: '91',
+  SignPreAuthHashEd25519: 'A1',
+  SignPreAuthHashSecp256k1: 'A2',
 } as const
 
 export type LedgerError = Values<typeof LedgerErrorCode>

@@ -13,6 +13,7 @@ const ledgerDiscriminator = union([
   literal('getDeviceInfo'),
   literal('derivePublicKeys'),
   literal('signTransaction'),
+  literal('signSubintentHash'),
   literal('signChallenge'),
   literal('deriveAndDisplayAddress'),
 ])
@@ -24,6 +25,7 @@ export const LedgerDiscriminator: Record<
   getDeviceInfo: 'getDeviceInfo',
   derivePublicKeys: 'derivePublicKeys',
   signTransaction: 'signTransaction',
+  signSubintentHash: 'signSubintentHash',
   signChallenge: 'signChallenge',
   deriveAndDisplayAddress: 'deriveAndDisplayAddress',
 } as const
@@ -100,10 +102,23 @@ export type LedgerSignChallengeRequest = z.infer<
   typeof LedgerSignChallengeRequestSchema
 >
 
+export const LedgerSignSubintentHashRequestSchema = object({
+  interactionId: string(),
+  discriminator: literal('signSubintentHash'),
+  signers: KeyParametersSchema.array(),
+  ledgerDevice: LedgerDeviceSchema,
+  subintentHash: string(),
+})
+
+export type LedgerSignSubintentHashRequest = z.infer<
+  typeof LedgerSignSubintentHashRequestSchema
+>
+
 export const LedgerRequestSchema = union([
   LedgerDeviceIdRequestSchema,
   LedgerPublicKeyRequestSchema,
   LedgerSignTransactionRequestSchema,
+  LedgerSignSubintentHashRequestSchema,
   LedgerSignChallengeRequestSchema,
   LedgerDeriveAndDisplayAddressRequestSchema,
 ]).describe('LedgerRequest')
@@ -208,10 +223,21 @@ export const LedgerErrorResponseSchema = object({
   }),
 })
 
+export const LedgerSignSubintentHashResponseSchema = object({
+  interactionId: string(),
+  discriminator: literal('signSubintentHash'),
+  success: SignatureOfSignerSchema.array(),
+})
+
+export type LedgerSignSubintentHashResponse = z.infer<
+  typeof LedgerSignSubintentHashResponseSchema
+>
+
 export const LedgerSuccessResponseSchema = union([
   LedgerDeviceIdResponseSchema,
   LedgerPublicKeyResponseSchema,
   LedgerSignTransactionResponseSchema,
+  LedgerSignSubintentHashResponseSchema,
   LedgerSignChallengeResponseSchema,
   LedgerDeriveAndDisplayAddressResponseSchema,
 ])
@@ -233,6 +259,7 @@ export const isLedgerRequest = (message: any): message is LedgerRequest =>
     'derivePublicKeys',
     'signTransaction',
     'signChallenge',
+    'signSubintentHash',
     'deriveAndDisplayAddress',
   ].includes(message?.discriminator)
 

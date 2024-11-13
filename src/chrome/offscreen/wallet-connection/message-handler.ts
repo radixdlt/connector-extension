@@ -222,22 +222,6 @@ export const WalletConnectionMessageHandler = (input: {
           .add(message.data, message.data.interactionId)
           .map(() => ({ sendConfirmation: false }))
 
-      case messageDiscriminator.closeDappTab: {
-        const { tabId } = message
-        return messagesRouter
-          .getAndRemoveByTabId(tabId)
-          .mapErr(() => ({ reason: 'tabIdNotFound' }))
-          .map((interactionIds) => {
-            for (const interactionId of interactionIds) {
-              ResultAsync.combine([
-                dAppRequestQueue.cancel(interactionId),
-                incomingWalletMessageQueue.cancel(interactionId),
-              ])
-            }
-          })
-          .map(() => ({ sendConfirmation: false }))
-      }
-
       default:
         return errAsync({
           reason: 'unhandledMessageDiscriminator',

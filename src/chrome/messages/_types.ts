@@ -24,7 +24,6 @@ export const messageDiscriminator = {
   cancelWalletInteraction: 'cancelWalletInteraction',
   closeLedgerTab: 'closeLedgerTab',
   focusLedgerTab: 'focusLedgerTab',
-  closeDappTab: 'closeDappTab',
   extensionStatus: 'extensionStatus',
   ledgerResponse: 'ledgerResponse',
   walletToLedger: 'walletToLedger',
@@ -191,10 +190,6 @@ export type Messages = {
   [messageDiscriminator.focusLedgerTab]: MessageBuilder<
     MessageDiscriminator['focusLedgerTab'],
     {}
-  >
-  [messageDiscriminator.closeDappTab]: MessageBuilder<
-    MessageDiscriminator['closeDappTab'],
-    { tabId: number }
   >
   [messageDiscriminator.incomingDappMessage]: MessageBuilder<
     MessageDiscriminator['incomingDappMessage'],

@@ -9,6 +9,7 @@ import {
   createLedgerSuccessResponse,
   createLedgerErrorResponse,
   LedgerSuccessResponse,
+  LedgerSignSubintentHashRequest,
 } from '../schemas'
 import { createMessage } from 'chrome/messages/create-message'
 import { Messages } from 'chrome/messages/_types'
@@ -77,6 +78,14 @@ const viewsDefinition = {
     content: LedgerDiscriminator.signChallenge,
     ledgerDevice: request.ledgerDevice,
     requestFunction: ledger.signAuth,
+  }),
+  [LedgerDiscriminator.signSubintentHash]: (
+    request: LedgerSignSubintentHashRequest,
+  ) => ({
+    header: 'Ledger Pre-Authorization Request',
+    content: LedgerDiscriminator.signSubintentHash,
+    ledgerDevice: request.ledgerDevice,
+    requestFunction: ledger.signSubintent,
   }),
   [LedgerDiscriminator.deriveAndDisplayAddress]: (
     request: LedgerPublicKeyRequest,

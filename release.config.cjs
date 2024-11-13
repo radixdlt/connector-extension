@@ -56,6 +56,10 @@ module.exports = {
             release: 'patch',
           },
           {
+            type: 'code',
+            release: 'patch',
+          },
+          {
             type: 'no-release',
             release: false,
           },
@@ -142,19 +146,17 @@ module.exports = {
       },
     ],
     [
-      "semantic-release-replace-plugin",
+      'semantic-release-replace-plugin',
       {
-        "replacements": [
+        replacements: [
           {
-            "files": [
-              "src/version.ts"
-            ],
-            "from": "export const __VERSION__ = '1.0.0'",
-            "to": "export const __VERSION__ = '${nextRelease.version}'",
-            "countMatches": true
-          }
-        ]
-      }
+            files: ['src/version.ts'],
+            from: "export const __VERSION__ = '1.0.0'",
+            to: "export const __VERSION__ = '${nextRelease.version}'",
+            countMatches: true,
+          },
+        ],
+      },
     ],
     [
       '@semantic-release/exec',

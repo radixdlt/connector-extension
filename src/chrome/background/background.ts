@@ -107,9 +107,6 @@ const handleNotificationClick = (notificationId: string) => {
 
 const tabRemovedListener = (tabId: number) => {
   ledgerTabWatcher.triggerTabRemoval(tabId)
-  messageHandler.sendMessageAndWaitForConfirmation(
-    createMessage.closeDappTab('background', tabId),
-  )
 }
 
 chrome.tabs.onUpdated.addListener((tabId, changeInfo) => {
