@@ -6,6 +6,7 @@ import {
   LedgerDeviceIdRequest,
   LedgerPublicKeyRequest,
   LedgerSignChallengeRequest,
+  LedgerSignSubintentHashRequest,
   LedgerSignTransactionRequest,
   SignatureOfSigner,
 } from 'ledger/schemas'
@@ -52,6 +53,7 @@ const getCurveConfig = ({ curve }: KeyParameters) =>
     curve25519: {
       publicKeyByteCount: 32,
       signatureByteCount: 64,
+      signPreAuth: LedgerInstructionCode.SignPreAuthHashEd25519,
       signTx: LedgerInstructionCode.SignTxEd25519,
       signAuth: LedgerInstructionCode.SignAuthEd25519,
       getPublicKey: LedgerInstructionCode.GetPubKeyEd25519,
@@ -60,6 +62,7 @@ const getCurveConfig = ({ curve }: KeyParameters) =>
     secp256k1: {
       publicKeyByteCount: 33,
       signatureByteCount: 65,
+      signPreAuth: LedgerInstructionCode.SignPreAuthHashSecp256k1,
       signTx: LedgerInstructionCode.SignTxSecp256k1,
       signAuth: LedgerInstructionCode.SignAuthSecp256k1,
       getPublicKey: LedgerInstructionCode.GetPubKeySecp256k1,
@@ -212,6 +215,7 @@ export const LedgerWrapper = ({
   const parseSignerParams = (signer: KeyParameters) => {
     const {
       signTx,
+      signPreAuth,
       signatureByteCount,
       publicKeyByteCount,
       signAuth: signAuthCommand,
@@ -219,11 +223,22 @@ export const LedgerWrapper = ({
     const encodedDerivationPath = encodeDerivationPath(signer.derivationPath)
     return {
       command: signTx,
+      signPreAuth,
       signAuthCommand,
       encodedDerivationPath,
       signatureByteCount,
       publicKeyByteCount,
     }
+  }
+
+  const parsePreAuthorizationParams = (
+    params: Omit<
+      LedgerSignSubintentHashRequest,
+      'discriminator' | 'interactionId'
+    >,
+  ) => {
+    const dataLength = getDataLength(params.subintentHash)
+    return okAsync({ hash: `${dataLength}${params.subintentHash}` })
   }
 
   const parseSignTransactionParams =
@@ -384,6 +399,62 @@ export const LedgerWrapper = ({
         ),
     )
 
+  const signSubintent = (
+    params: Omit<
+      LedgerSignSubintentHashRequest,
+      'discriminator' | 'interactionId'
+    >,
+  ): ResultAsync<SignatureOfSigner[], string> =>
+    wrapDataExchange((exchange) =>
+      exchange(LedgerInstructionCode.GetDeviceId)
+        .andThen(ensureCorrectDeviceId(params.ledgerDevice.id))
+        .andThen(() => parsePreAuthorizationParams(params))
+        .andThen(({ hash }) =>
+          params.signers.reduce(
+            (acc: ResultAsync<SignatureOfSigner[], string>, signer, index) =>
+              acc.andThen((signatures) => {
+                const {
+                  signPreAuth,
+                  signatureByteCount,
+                  publicKeyByteCount,
+                  encodedDerivationPath,
+                } = parseSignerParams(signer)
+
+                return exchange(signPreAuth, encodedDerivationPath)
+                  .andThen(() =>
+                    exchange(signPreAuth, hash, {
+                      instructionClass: LedgerInstructionClass.ac,
+                    }),
+                  )
+                  .andThen((result) => {
+                    const publicKey = result.slice(
+                      signatureByteCount * 2,
+                      signatureByteCount * 2 + publicKeyByteCount * 2,
+                    )
+
+                    const signature = result.slice(0, signatureByteCount * 2)
+
+                    return ok({
+                      signature,
+                      publicKey,
+                    })
+                  })
+                  .map(({ signature, publicKey }) => {
+                    const entry: SignatureOfSigner = {
+                      derivedPublicKey: {
+                        ...signer,
+                        publicKey,
+                      },
+                      signature,
+                    }
+                    return [...signatures, entry]
+                  })
+              }),
+            okAsync([]),
+          ),
+        ),
+    )
+
   const signTransaction = (
     params: Omit<
       LedgerSignTransactionRequest,
@@ -505,6 +576,10 @@ export const LedgerWrapper = ({
     signTransaction: (params: LedgerSignTransactionRequest) => {
       lastInteractionId = params.interactionId
       return signTransaction(params)
+    },
+    signSubintent: (params: LedgerSignSubintentHashRequest) => {
+      lastInteractionId = params.interactionId
+      return signSubintent(params)
     },
     deriveAndDisplayAddress: (params: LedgerDeriveAndDisplayAddressRequest) => {
       lastInteractionId = params.interactionId
