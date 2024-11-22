@@ -102,8 +102,8 @@ jobs:
         run: npm ci
 
       - name: Build extension
-        env: 
-          VITE_GITHUB_REF_NAME: ${{ github.ref_name }} 
+        env:
+          VITE_GITHUB_REF_NAME: ${{ github.ref_name }}
         run: npm run build
 
       - uses: RDXWorks-actions/upload-artifact@main
@@ -115,7 +115,7 @@ jobs:
         run: npm run build
         env:
           VITE_DEV_TOOLS: true
-          VITE_GITHUB_REF_NAME: ${{ github.ref_name }} 
+          VITE_GITHUB_REF_NAME: ${{ github.ref_name }}
 
       - uses: RDXWorks-actions/upload-artifact@main
         with:
@@ -126,7 +126,7 @@ jobs:
         run: npm run lint
 
       - name: Running unit tests
-        run: npm run test
+        run: npm run test:ci
 
       - name: SonarCloud Scan
         uses: RDXWorks-actions/sonarcloud-github-action@master

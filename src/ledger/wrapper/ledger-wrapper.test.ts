@@ -3,6 +3,7 @@ import { LedgerWrapper, ledger } from './ledger-wrapper'
 import TransportWebHID from '@ledgerhq/hw-transport-webhid'
 import { LedgerInstructionCode } from './constants'
 import { KeyParameters } from 'ledger/schemas'
+import { describe, it, expect } from 'vitest'
 
 const createLedgerWrapperWithMockedTransport = (
   expectedExchanges: {

@@ -1,5 +1,6 @@
 import { config, isDevMode } from 'config'
 import { closePopup } from '../helpers/close-popup'
+import { createChromeHandler } from 'trpc-chrome/adapter'
 // @ts-ignore
 import content from '../content-script/content-script?script'
 
@@ -21,6 +22,11 @@ import { sendMessage } from 'chrome/messages/send-message'
 import { Connections } from 'pairing/state/connections'
 import { getExtensionOptions, setConnectorExtensionOptions } from 'options'
 import { messageSource } from 'chrome/messages/_types'
+import { backgroundRouter } from './router/router'
+import { createBackgroundRouterContext } from './router/context'
+import { createContentScriptClient } from './router/clients/content-script'
+import { getOffscreenClient } from './router/clients/offscreen'
+import { hasConnections } from 'chrome/helpers/get-connections'
 
 const logger = utilsLogger.getSubLogger({ name: 'background' })
 
@@ -116,6 +122,10 @@ chrome.tabs.onUpdated.addListener((tabId, changeInfo) => {
   }
 })
 
+chrome.runtime.onMessage.addListener((message, sender, response) => {
+  if (message.type === 'getTabId') response(sender.tab?.id)
+})
+
 chrome.runtime.onMessage.addListener((message, sender) => {
   messageHandler.onMessage(message, sender.tab?.id)
 })
@@ -127,8 +137,6 @@ chrome.storage.onChanged.addListener(handleStorageChange)
 chrome.action.onClicked.addListener(openParingPopup)
 
 chrome.runtime.onInstalled.addListener(handleOnInstallExtension)
-
-createOffscreen()
 
 chrome.runtime.onStartup.addListener(() => {
   logger.debug('onStartup')
@@ -154,6 +162,7 @@ chrome.contextMenus.onClicked.addListener((data) => {
   switch (data.menuItemId) {
     case 'radix-dev-tools':
       openRadixDevToolsPage()
+
       return
     case 'radix-ce-logs':
       sendMessage(createMessage.downloadLogs())
@@ -164,4 +173,17 @@ chrome.contextMenus.onClicked.addListener((data) => {
 chrome.idle.onStateChanged.addListener((state) => {
   logger.debug('💻 onStateChanged:', state)
   if (state === 'active') sendMessage(createMessage.restartConnector())
+})
+
+createOffscreen()
+
+createChromeHandler({
+  router: backgroundRouter,
+  createContext: createBackgroundRouterContext({
+    contentScriptClient: createContentScriptClient({ logger }),
+    getOffscreenClient,
+    openParingPopup,
+    hasConnections,
+    logger,
+  }),
 })

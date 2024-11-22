@@ -144,6 +144,20 @@ export const WalletConnectionClient = ({
     }),
   )
 
+  const messageClient = MessageClient(
+    WalletConnectionMessageHandler({
+      dAppRequestQueue,
+      extensionToWalletQueue,
+      incomingWalletMessageQueue,
+      messagesRouter,
+      sessionRouter,
+      logger,
+      walletPublicKey,
+    }),
+    'offScreen',
+    { logger },
+  )
+
   subscription.add(
     connectorClient.onMessage$.subscribe((message) => {
       messageClient.onMessage(createMessage.walletMessage('wallet', message))
@@ -158,20 +172,6 @@ export const WalletConnectionClient = ({
   }
 
   chrome.runtime.onMessage.addListener(chromeMessageListener)
-
-  const messageClient = MessageClient(
-    WalletConnectionMessageHandler({
-      dAppRequestQueue,
-      extensionToWalletQueue,
-      incomingWalletMessageQueue,
-      messagesRouter,
-      sessionRouter,
-      logger,
-      walletPublicKey,
-    }),
-    'offScreen',
-    { logger },
-  )
 
   connectorClient.connect()
 

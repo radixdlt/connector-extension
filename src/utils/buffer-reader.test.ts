@@ -1,4 +1,5 @@
 import { readBuffer } from './buffer-reader'
+import { describe, it, expect } from 'vitest'
 
 const getArr = (length: number) => new Array(length).fill(null)
 describe('buffer reader', () => {

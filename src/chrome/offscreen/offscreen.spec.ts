@@ -8,6 +8,7 @@ import { MessageSubjects } from 'chrome/messages/subjects'
 import { Message } from 'chrome/messages/_types'
 import { okAsync } from 'neverthrow'
 import { of } from 'rxjs'
+import { describe, it, expect } from 'vitest'
 
 const logger = new Logger()
 const logsClient = LogsClient()
@@ -60,10 +61,8 @@ describe('offscreen', () => {
       },
       discriminator: 'setConnections',
     } as any)
-
     expect(connections.get('1')).toBeDefined()
   })
-
   it('should remove non-existent connections after new "setConnections" message', () => {
     const { messageClient, connections } = createTestSuite()
     messageClient.handleMessage({
@@ -79,10 +78,8 @@ describe('offscreen', () => {
       },
       discriminator: 'setConnections',
     } as any)
-
     expect(connections.get('1')).toBeDefined()
     expect(connections.get('2')).toBeDefined()
-
     messageClient.handleMessage({
       connections: {
         '1': {
@@ -92,11 +89,9 @@ describe('offscreen', () => {
       },
       discriminator: 'setConnections',
     } as any)
-
     expect(connections.get('1')).toBeDefined()
     expect(connections.get('2')).toBeUndefined()
   })
-
   it('should add new connections after new "setConnections" message', () => {
     const { messageClient, connections } = createTestSuite()
     messageClient.handleMessage({

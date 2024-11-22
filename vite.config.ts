@@ -1,3 +1,4 @@
+/// <reference types="vitest" />
 import { defineConfig, UserConfigExport } from 'vite'
 import react from '@vitejs/plugin-react'
 import { crx, defineManifest } from '@crxjs/vite-plugin'
@@ -97,4 +98,25 @@ if (!isDevToolsActive) {
   delete buildConfig.build.rollupOptions.input['devTools']
 }
 
-export default defineConfig(buildConfig)
+export default defineConfig({
+  ...buildConfig,
+  // @ts-expect-error
+  test: {
+    globals: true,
+    environment: 'jsdom',
+    setupFiles: './src/setup-tests.ts',
+    reporters: [
+      'default',
+      [
+        'vitest-sonar-reporter',
+        { outputFile: 'test-report.xml', silent: true },
+      ],
+    ],
+    coverage: {
+      reportsDirectory: './coverage',
+      provider: 'v8',
+      reporter: ['json', 'text', 'lcov', 'clover'],
+      include: ['src/**/*'],
+    },
+  },
+})

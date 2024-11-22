@@ -12,6 +12,7 @@ import { walletConnectionClientFactory } from 'chrome/offscreen/wallet-connectio
 import { WalletConnectionMessageHandler } from 'chrome/offscreen/wallet-connection/message-handler'
 import { Message } from './_types'
 import { SessionRouter } from 'chrome/offscreen/session-router'
+import { describe, it } from 'vitest'
 
 const logger = new Logger()
 
@@ -149,7 +150,7 @@ describe('message client', () => {
   it('should send wallet response to dApp', async () => {
     const testHelper = createTestHelper({})
     testHelper.messagesRouter.add(1, '456', {
-      origin: 'http://localhost',
+      origin: 'http://localhost:3000',
       networkId: 1,
     })
     testHelper.mockIncomingWalletMessage({ interactionId: '456' }, 1)

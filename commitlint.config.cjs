@@ -17,6 +17,7 @@ module.exports = {
         'style',
         'test',
         'major',
+        'code',
       ],
     ],
   },
