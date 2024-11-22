@@ -147,7 +147,7 @@ const createTestHelper = ({
 describe('message client', () => {
   // offScreenPage does not have have access to the chrome tabs API
   // so it has to proxy the message through background message handler
-  it.only('should send wallet response to dApp', async () => {
+  it('should send wallet response to dApp', async () => {
     const testHelper = createTestHelper({})
     testHelper.messagesRouter.add(1, '456', {
       origin: 'http://localhost:3000',
