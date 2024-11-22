@@ -1,9 +1,9 @@
 // @ts-nocheck
 
 import dotenv from 'dotenv'
-import { randomUUID, webcrypto } from 'node:crypto'
-import { chrome } from 'jest-chrome'
 import path from 'node:path'
+import { chrome } from 'vitest-chrome/lib/index.esm.js'
+import { vi } from 'vitest'
 
 const mode = process.env['MODE'] || 'development'
 
@@ -19,33 +19,76 @@ global.navigator.hid = {
 global.CSS = {
   supports: (k, v) => false,
 }
-global.chrome = chrome
-global.chrome.storage = {
-  onChanged: {
-    addListener: () => {},
-    removeListener: () => {},
-  },
-  local: {
-    get: () => Promise.resolve(),
-    set: () => Promise.resolve(),
-  },
-  session: {
-    get: () => Promise.resolve(),
-    set: () => Promise.resolve(),
-    remove: () => Promise.resolve(),
-    onChanged: {
-      addListener: () => {},
-      removeListener: () => {},
+
+type OnMessageListener = (message: any) => void
+type OnConnectListener = (port: any) => void
+
+const getMockChrome = vi.fn(() => {
+  const linkPortOnMessageListeners: OnMessageListener[] = []
+  const handlerPortOnMessageListeners: OnMessageListener[] = []
+  const handlerPortOnConnectListeners: OnConnectListener[] = []
+
+  return {
+    runtime: {
+      connect: vi.fn(() => {
+        const handlerPort = {
+          postMessage: vi.fn((message) => {
+            linkPortOnMessageListeners.forEach((listener) => listener(message))
+          }),
+          onMessage: {
+            addListener: vi.fn((listener) => {
+              handlerPortOnMessageListeners.push(listener)
+            }),
+            removeListener: vi.fn(),
+          },
+          onDisconnect: {
+            addListener: vi.fn(),
+            removeListener: vi.fn(),
+          },
+        }
+
+        const linkPort = {
+          postMessage: vi.fn((message) => {
+            handlerPortOnMessageListeners.forEach((listener) =>
+              listener(message),
+            )
+          }),
+          onMessage: {
+            addListener: vi.fn((listener) => {
+              linkPortOnMessageListeners.push(listener)
+            }),
+            removeListener: vi.fn(),
+          },
+          onDisconnect: {
+            addListener: vi.fn(),
+            removeListener: vi.fn(),
+          },
+        }
+
+        handlerPortOnConnectListeners.forEach((listener) =>
+          listener(handlerPort),
+        )
+
+        return linkPort
+      }),
+      onConnect: {
+        addListener: vi.fn((listener) => {
+          handlerPortOnConnectListeners.push(listener)
+        }),
+      },
     },
-  },
-}
-global.chrome.runtime = {
-  sendMessage: () => Promise.resolve(),
-  onMessage: {
-    addListener: () => {},
-    removeListener: () => {},
-  },
+  }
+})
+
+export const resetMocks = () => {
+  // @ts-expect-error mocking chrome
+  const {
+    runtime: { connect, onConnect },
+  } = getMockChrome()
+  chrome.runtime.connect = connect
+  chrome.runtime.onConnect = onConnect
 }
 
-global.crypto.subtle = webcrypto.subtle
-global.crypto.randomUUID = randomUUID
+resetMocks()
+
+global.chrome = chrome

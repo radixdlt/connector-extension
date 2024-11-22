@@ -1,4 +1,5 @@
 import { parseAddress } from './parse-address'
+import { describe, it, expect } from 'vitest'
 
 describe('parse address', () => {
   const tests: [string, { networkId: number; type: string }][] = [

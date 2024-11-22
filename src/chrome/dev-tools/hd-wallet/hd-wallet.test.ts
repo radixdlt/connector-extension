@@ -1,4 +1,5 @@
 import { BaseHdWallet, createRadixWallet } from './hd-wallet'
+import { describe, beforeAll, it, expect } from 'vitest'
 
 describe('HD Wallet', () => {
   let wallet: BaseHdWallet

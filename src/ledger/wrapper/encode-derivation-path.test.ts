@@ -1,4 +1,5 @@
 import { encodeDerivationPath } from './encode-derivation-path'
+import { describe, it, expect } from 'vitest'
 
 describe('encode derivation path', () => {
   it('should encode derivation path', () => {

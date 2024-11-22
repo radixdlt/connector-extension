@@ -12,6 +12,7 @@ import { walletConnectionClientFactory } from 'chrome/offscreen/wallet-connectio
 import { WalletConnectionMessageHandler } from 'chrome/offscreen/wallet-connection/message-handler'
 import { Message } from './_types'
 import { SessionRouter } from 'chrome/offscreen/session-router'
+import { describe, it } from 'vitest'
 
 const logger = new Logger()
 
@@ -146,10 +147,10 @@ const createTestHelper = ({
 describe('message client', () => {
   // offScreenPage does not have have access to the chrome tabs API
   // so it has to proxy the message through background message handler
-  it('should send wallet response to dApp', async () => {
+  it.only('should send wallet response to dApp', async () => {
     const testHelper = createTestHelper({})
     testHelper.messagesRouter.add(1, '456', {
-      origin: 'http://localhost',
+      origin: 'http://localhost:3000',
       networkId: 1,
     })
     testHelper.mockIncomingWalletMessage({ interactionId: '456' }, 1)
