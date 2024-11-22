@@ -94,5 +94,5 @@ resetMocks()
 
 global.chrome = chrome
 
-global.crypto.subtle = webcrypto.subtle
-global.crypto.randomUUID = randomUUID
+if (!global?.crypto?.subtle) global.crypto.subtle = webcrypto.subtle
+if (!global?.crypto?.randomUUID) global.crypto.randomUUID = randomUUID
