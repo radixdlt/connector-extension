@@ -12,3 +12,5 @@ export const hasConnections = () =>
   getConnections().map(
     (connections) => Object.keys(connections || {}).length > 0,
   )
+
+export type HasConnections = typeof hasConnections

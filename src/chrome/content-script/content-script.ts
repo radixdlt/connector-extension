@@ -5,7 +5,7 @@ import { MessageClient } from '../messages/message-client'
 import { ConfirmationMessageError, Message } from '../messages/_types'
 import { err, errAsync, okAsync, ResultAsync } from 'neverthrow'
 import { logger } from 'utils/logger'
-import { MessageLifeCycleEvent } from 'chrome/dapp/_types'
+import { dAppEvent, MessageLifeCycleEvent } from 'chrome/dapp/_types'
 import { sendMessage } from 'chrome/helpers/send-message'
 import { hasConnections } from 'chrome/helpers/get-connections'
 import {
@@ -16,10 +16,15 @@ import {
   addOriginToCancelInteraction,
   addOriginToWalletInteraction,
 } from 'chrome/helpers/add-origin-to-wallet-interaction'
+import { handleInboundMessage } from './handleInboundMessage'
+import { handleOutboundMessage } from './handleOutboundMessage'
 
 const appLogger = logger.getSubLogger({ name: 'content-script' })
 
 const chromeDAppClient = ChromeDAppClient(appLogger)
+
+window.addEventListener(dAppEvent.send, handleInboundMessage)
+chrome.runtime.onMessage.addListener(handleOutboundMessage)
 
 const sendMessageToDapp = (
   message: Record<string, any>,
@@ -63,13 +68,10 @@ const handleExtensionInteraction = (
   extensionInteraction: ExtensionInteraction,
 ) => {
   switch (extensionInteraction.discriminator) {
+    // handled by background router
     case 'openPopup':
-      return sendMessage(createMessage.openParingPopup())
-
     case 'extensionStatus':
-      return hasConnections().map((hasConnections) =>
-        sendMessageToDapp(createMessage.extensionStatus(hasConnections)),
-      )
+      return okAsync(undefined)
 
     case 'cancelWalletInteraction':
       return sendMessage(

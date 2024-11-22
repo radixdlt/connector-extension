@@ -21,12 +21,18 @@ export async function createOffscreen() {
   if (creating) {
     await creating
   } else {
-    creating = chrome.offscreen.createDocument({
-      url: offscreenUrl,
-      reasons: [chrome.offscreen.Reason.WEB_RTC],
-      justification: 'Keep WebRTC connection with mobile wallet',
-    })
-    await creating
-    creating = null
+    try {
+      creating = chrome.offscreen.createDocument({
+        url: offscreenUrl,
+        reasons: [chrome.offscreen.Reason.WEB_RTC],
+        justification: 'Keep WebRTC connection with mobile wallet',
+      })
+
+      await creating
+      creating = null
+    } catch (error) {
+      creating = null
+      return createOffscreen()
+    }
   }
 }
