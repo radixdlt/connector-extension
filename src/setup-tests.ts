@@ -4,6 +4,7 @@ import dotenv from 'dotenv'
 import path from 'node:path'
 import { chrome } from 'vitest-chrome/lib/index.esm.js'
 import { vi } from 'vitest'
+import { randomUUID, webcrypto } from 'node:crypto'
 
 const mode = process.env['MODE'] || 'development'
 
@@ -92,3 +93,6 @@ export const resetMocks = () => {
 resetMocks()
 
 global.chrome = chrome
+
+global.crypto.subtle = webcrypto.subtle
+global.crypto.randomUUID = randomUUID
