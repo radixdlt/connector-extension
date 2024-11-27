@@ -2,10 +2,10 @@ name: Build & Test
 
 on:
   push:
-    branches: 
-     - main
+    branches:
+      - develop
+      - main
   pull_request:
-  workflow_dispatch:
 
 jobs:
   phylum_analyze:
