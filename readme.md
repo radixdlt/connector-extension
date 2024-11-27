@@ -1,4 +1,4 @@
-[![License](https://img.shields.io/badge/License-Apache_2.0-blue.svg)](LICENSE)
+[![License](https://img.shields.io/badge/License-Apache_2.0-blue.svg)](LICENSE) [![Coverage](https://img.shields.io/sonar/coverage/radixdlt_babylon-browser-extension?server=https%3A%2F%2Fsonarcloud.io)](https://sonarcloud.io/project/overview?id=radixdlt_babylon-browser-extension)
 
 # Extension
 
