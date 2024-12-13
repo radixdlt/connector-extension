@@ -1,4 +1,6 @@
 import { secureRandom } from './secure-random'
+import { describe, it, expect } from 'vitest'
+
 describe('secure random byte generator', () => {
   it('should generate random bytes of various lengths', () => {
     new Array(1000).fill(null).forEach(() => {

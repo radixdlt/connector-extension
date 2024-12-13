@@ -1,5 +1,6 @@
 import { blake2b, blakeHashHexSync } from './blake2b'
 import { Buffer } from 'buffer'
+import { describe, it, expect } from 'vitest'
 
 describe('blake2b', () => {
   it('should hash a string', async () => {

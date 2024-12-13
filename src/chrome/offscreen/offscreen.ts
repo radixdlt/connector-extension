@@ -6,6 +6,9 @@ import { LogsClient } from './logs-client'
 import { WalletConnectionClient } from './wallet-connection/wallet-connection-client'
 import { walletConnectionClientFactory } from './wallet-connection/factory'
 import { OffscreenInitializationMessages } from './helpers/offscreen-initialization-messages'
+import { createChromeHandler } from 'trpc-chrome/adapter'
+import { offscreenRouter } from './router/router'
+import { backgroundClient } from './router/clients/background'
 
 const logsClient = LogsClient()
 
@@ -43,6 +46,7 @@ declare global {
     radix: {
       messageClient: MessageClient
       connections: Map<string, WalletConnectionClient>
+      backgroundClient: typeof backgroundClient
     }
   }
 }
@@ -50,4 +54,9 @@ declare global {
 window.radix = {
   messageClient,
   connections,
+  backgroundClient: backgroundClient,
 }
+
+createChromeHandler({
+  router: offscreenRouter,
+})

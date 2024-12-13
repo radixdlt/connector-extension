@@ -115,16 +115,16 @@ export const MessageClient = (
         filter(({ message }) => message.discriminator !== 'confirmation'),
         mergeMap(({ message, tabId }) =>
           handler(message, sendMessageAndWaitForConfirmation, tabId)
-            .andThen((result) =>
-              result?.sendConfirmation
+            .andThen((result) => {
+              return result?.sendConfirmation
                 ? sendConfirmationSuccess({
                     origin,
                     messageId: message.messageId,
                     tabId,
                     data: result.data,
                   })
-                : ok(undefined),
-            )
+                : ok(undefined)
+            })
             .mapErr((error) => {
               if (error.reason !== 'unhandledMessageDiscriminator')
                 sendConfirmationError({

@@ -5,6 +5,7 @@ import { Worker } from './worker'
 import { errAsync, okAsync } from 'neverthrow'
 import { Job } from './_types'
 import { filter, firstValueFrom, tap } from 'rxjs'
+import { describe, it, expect } from 'vitest'
 
 const logger = new Logger()
 

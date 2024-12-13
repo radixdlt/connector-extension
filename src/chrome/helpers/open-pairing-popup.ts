@@ -22,3 +22,5 @@ export const openParingPopup = () =>
             }).andThen((popup) => setPopupId(popup?.id)),
       ),
     )
+
+export type OpenParingPopup = typeof openParingPopup
