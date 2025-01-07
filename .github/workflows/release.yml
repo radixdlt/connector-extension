@@ -27,18 +27,18 @@ jobs:
 
       - uses: radixdlt/public-iac-resuable-artifacts/fetch-secrets@main
         with:
-          role_name: ${{ secrets.AWS_ROLE_NAME_CONNECTOR_EXTENSION_SECRETS }}
+          role_name: 'arn:aws:iam::${{ secrets.SECRETS_ACCOUNT_ID }}:role/gh-connector-extension-secrets-read-access'
           app_name: 'connector-extension'
           step_name: 'connector-extension-webchrome-store-secrets'
           secret_prefix: 'GH'
-          secret_name: ${{ secrets.AWS_CONNECTOR_EXTENSION_WEBCHROME_STORE_SECRET_ARN }}
+          secret_name: 'arn:aws:secretsmanager:eu-west-2:${{ secrets.SECRETS_ACCOUNT_ID }}:secret:github-actions/radixdlt/connector_extension/webchrome_store_secrets'
           parse_json: true
 
       - name: Github PreRelease
         if: github.ref == 'refs/heads/develop'
         env:
           VITE_GITHUB_REF_NAME: ${{ github.ref_name }}
-          GITHUB_TOKEN: ${{ secrets.SEMANTIC_RELEASE_TOKEN }}
+          GITHUB_TOKEN: ${{ env.GH_SEMANTIC_RELEASE_TOKEN }}
           GOOGLE_CLIENT_ID: ${{ env.GH_CLIENT_ID }}
           GOOGLE_CLIENT_SECRET: ${{ env.GH_CLIENT_SECRET }}
           GOOGLE_REFRESH_TOKEN: ${{ env.GH_REFRESH_TOKEN }}
@@ -56,7 +56,7 @@ jobs:
         if: github.ref == 'refs/heads/main'
         env:
           VITE_GITHUB_REF_NAME: ${{ github.ref_name }}
-          GITHUB_TOKEN: ${{ secrets.SEMANTIC_RELEASE_TOKEN }}
+          GITHUB_TOKEN: ${{ env.GH_SEMANTIC_RELEASE_TOKEN }}
           GOOGLE_CLIENT_ID: ${{ env.GH_CLIENT_ID }}
           GOOGLE_CLIENT_SECRET: ${{ env.GH_CLIENT_SECRET }}
           GOOGLE_REFRESH_TOKEN: ${{ env.GH_REFRESH_TOKEN }}
@@ -71,11 +71,11 @@ jobs:
       # Snyk SBOM
       - uses: radixdlt/public-iac-resuable-artifacts/fetch-secrets@main
         with:
-          role_name: ${{ secrets.AWS_ROLE_NAME_SNYK_SECRET }}
+          role_name: 'arn:aws:iam::${{ secrets.SECRETS_ACCOUNT_ID }}:role/gh-common-secrets-read-access'
           app_name: 'connector-extension'
           step_name: 'snyk-sbom'
           secret_prefix: 'SNYK'
-          secret_name: ${{ secrets.AWS_SECRET_NAME_SNYK }}
+          secret_name: 'arn:aws:secretsmanager:eu-west-2:${{ secrets.SECRETS_ACCOUNT_ID }}:secret:github-actions/common/snyk-credentials-rXRpuX'
           parse_json: true
       - name: Generate SBOM
         uses: RDXWorks-actions/snyk-actions/node@master
