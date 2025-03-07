@@ -271,6 +271,9 @@ Messages sent by extension to report back status on in-flight wallet interaction
 - interactionId: UUID v4
 - eventType: `receivedByWallet`
 
+# More resourcess
+- [Offscreen Page Communication with Wallet](./docs/offscreen.md)
+
 # License
 
 The Radix Connector Extension binaries are licensed under the [Radix Software EULA](http://www.radixdlt.com/terms/genericEULA).
