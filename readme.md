@@ -271,7 +271,7 @@ Messages sent by extension to report back status on in-flight wallet interaction
 - interactionId: UUID v4
 - eventType: `receivedByWallet`
 
-# More resourcess
+# More resources
 - [Offscreen Page Communication with Wallet](./docs/offscreen.md)
 
 # License
