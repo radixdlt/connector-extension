@@ -7,6 +7,9 @@ import { useConnectionsClient } from 'pairing/state/connections'
 import { ForgetThisWallet } from './forget-this-wallet'
 import { RenameWalletLink } from './rename-wallet-link'
 
+/**
+ * Main user facing interface
+ */
 export const ConnectionStatus = () => {
   const navigate = useNavigate()
   const connectionsClient = useConnectionsClient()

@@ -20,6 +20,9 @@ import { LedgerMask } from 'ledger/components/ledger-mask'
 import { Result } from 'neverthrow'
 import { LedgerErrorCode } from 'ledger/wrapper/constants'
 
+/**
+ * These errors returned from Ledger device are stopped at Connector Extension level (not passed to wallet)
+ */
 const ErrorMessages: Record<string, string> = {
   [LedgerErrorCode.MultipleLedgerConnected]: 'Multiple Devices Found',
   [LedgerErrorCode.UnlockDevice]: 'Ledger Device Locked',
@@ -47,7 +50,9 @@ const isWalletToLedgerFromBackground = (
     message?.source === 'background'
   )
 }
-
+/**
+ * There is single React view for every request type
+ */
 const viewsDefinition = {
   [LedgerDiscriminator.getDeviceInfo]: () => ({
     header: 'Ledger Connection Request',
@@ -205,6 +210,9 @@ export const Ledger = () => {
     }
   }, [currentId])
 
+  /**
+   * This effect has listener which waits for Ledger Requests
+   */
   useEffect(() => {
     const subscription = new Subscription()
     const readMessage = (message: unknown) => {

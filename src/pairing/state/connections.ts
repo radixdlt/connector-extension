@@ -45,6 +45,9 @@ export const useConnections = () => {
 
 export type ConnectionsClient = ReturnType<typeof ConnectionsClient>
 
+/**
+ * Allows manipulation and listing of wallet connections known in Connector Extension.
+ */
 export const ConnectionsClient = (connections?: Connections | null) => {
   const updateName = (walletName: string, connectionId: string) => {
     if (!connections) return
