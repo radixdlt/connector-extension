@@ -2,6 +2,10 @@
 
 # Connector Extension
 
+Chrome Web Store Links
+ - [Beta version](https://chromewebstore.google.com/detail/radix-wallet-connector-be/mllkalekmdemcgbgblidfgknmokombof) 
+ - [Prod version](https://chromewebstore.google.com/detail/radix-wallet-connector/bfeplaecgkoeckiidkgkmlllfbaeplgm)
+
 ## Prerequisites
 
 - Node.js >=18
@@ -31,7 +35,7 @@ npm start
 ## Building
 
 ```bash
-# Build with development tools
+# Build with development tools 
 npm run build:dev
 
 # Build production version (without dev tools)
@@ -46,9 +50,10 @@ The connector extension is composed of the following:
 - [background worker](https://developer.chrome.com/docs/workbox/service-worker-overview?hl=en)
 - [offscreen page](https://developer.chrome.com/docs/extensions/reference/api/offscreen?hl=en)
 - [UI](https://developer.chrome.com/docs/extensions/reference/api/windows#description)
-  - wallet pairing
-  - ledger connection
-  - options
+  - wallet pairing - [pairing](/docs/pairing.md)
+  - ledger connection - [ledger docs](/docs/ledger.md)
+  - options - [options docs](/docs/options.md)
+  - development tools [dev tools docs](/docs/dev-tools.md)
 
 ## Debug
 

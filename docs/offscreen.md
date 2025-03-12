@@ -54,8 +54,6 @@ The communication is handled through several queues:
 
 These queues are defined in the [`WalletConnectionClient`](../src/chrome/offscreen/wallet-connection/wallet-connection-client.ts).
 
-
-
 ## Message Types and Handling
 
 The [`WalletConnectionMessageHandler`](../src/chrome/offscreen/wallet-connection/message-handler.ts) processes different types of messages:
@@ -111,6 +109,25 @@ flowchart TD
     
 
 ```
+
+## Ledger Request
+
+Ledger requests are messages that the Radix Wallet sends to the Connector Extension to obtain data from a hardware Ledger device connected to the PC. Connector Extension uses WebHID (available in Chrome) to communicate with the physical device. All possible ledger request types can be found in the `LedgerRequestSchema`.
+
+A LedgerRequest is handled in one of two ways:
+1. Through a browser popup (if user intervention is required)
+2. Silently, with the request sent directly to the Ledger device
+
+> [!NOTE]
+> The Radix Wallet broadcasts LedgerRequests to all linked WebRTC clients, so users may see multiple windows if they have multiple browsers with linked wallets. The first response received is used.
+
+The main implementation of Ledger communication can be found in [LedgerWrapper](../src/ledger/wrapper/ledger-wrapper.ts). 
+
+For more detailed information, refer to the [Ledger documentation](./ledger.md).
+
+## Extension Message
+
+This message is used to link wallet or send list accounts.
 
 ## Message Routing
 

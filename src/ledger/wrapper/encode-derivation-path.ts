@@ -1,5 +1,9 @@
 import { getDataLength } from './utils'
 
+/**
+ * Converts human readable derivation path into hex encoded derivation path in `${dataLength}${data}` format.
+ * Hardens provided path by using `'` instead of `H`. Pads string to correct length.
+ */
 export const encodeDerivationPath = (derivationPath: string) => {
   const path = derivationPath.split('H').join(`'`).slice(2).split('/')
   const length = `00${(path.length & 0xff).toString(16)}`.slice(-2)

@@ -42,12 +42,19 @@ const ledgerModel: Record<string, string> = {
   '02': 'nanoX',
 }
 
+/**
+ * Send specific hex string to the Ledger device and return the response.
+ */
 export type ExchangeFn = (
   command: LedgerInstructionCode,
   data?: string,
   additionalParams?: AdditionalExchangeParams,
 ) => ResultAsync<string, string>
 
+/**
+ * Radix Wallet supports two types of curves: Curve25519 and secp256k1.
+ * This function returns the configuration which is dependent on the curve.
+ */
 const getCurveConfig = ({ curve }: KeyParameters) =>
   ({
     curve25519: {
@@ -70,6 +77,13 @@ const getCurveConfig = ({ curve }: KeyParameters) =>
     },
   })[curve]
 
+/**
+ * Main module used for interacting with the Ledger device. It initializes and keeps track
+ * of transport layer and provides highest level methods for interacting with the Ledger device.
+ *
+ * There is single communication pipe with Ledger device whereas there might be multiple
+ * (or duplicated) requests to this module. `lastInteractionId` is always saved when new requests goes in
+ */
 export const LedgerWrapper = ({
   transport = TransportWebHID,
   ledgerSubjects = LedgerSubjects(),
@@ -168,6 +182,11 @@ export const LedgerWrapper = ({
     )
   }
 
+  /**
+   *  Wraps the exchange function to ensure that the transport layer is closed after the exchange is done.
+   *  It accepts a function that takes the exchange function as an argument and returns a ResultAsync.
+   *  `exchangeFn` is a function that is capable of data to the Ledger device and returns a ResultAsync.
+   */
   const wrapDataExchange = (
     fn: (exchangeFn: ExchangeFn) => ResultAsync<any, string>,
   ) =>
@@ -186,6 +205,11 @@ export const LedgerWrapper = ({
         return error
       })
 
+  /**
+   * Each time Radix Wallet is asking for ledger data it sends specific ledger identifier with the request.
+   * This is the reason connector extension asks Ledger Babylon App for public key using `getPublicKeys`
+   * method before anything else happens
+   */
   const ensureCorrectDeviceId =
     (expectedDeviceId: string) => (ledgerDeviceId: string) => {
       if (ledgerDeviceId === expectedDeviceId) {
@@ -275,6 +299,11 @@ export const LedgerWrapper = ({
       return ok({ p1, apduChunks })
     }
 
+  /**
+   * Gets identification information from Ledger
+   *
+   * @returns ResultAsync with `deviceId` and `model` inside object
+   */
   const getDeviceInfo = (): ResultAsync<
     { deviceId: string; model: string },
     string
@@ -288,6 +317,11 @@ export const LedgerWrapper = ({
       ),
     )
 
+  /**
+   * Derives public keys for one or more provided derivation paths and curves.
+   *
+   * @returns ResultAsync with list of objects. Objects containing `publicKey`,`derivationPath`,`curve`
+   */
   const getPublicKeys = (
     params: Omit<LedgerPublicKeyRequest, 'discriminator' | 'interactionId'>,
   ): ResultAsync<DerivedPublicKey[], string> =>
@@ -346,6 +380,10 @@ export const LedgerWrapper = ({
         }),
     )
 
+  /**
+   * Signs auth challenge with provided curves and derivation paths
+   * @returns List of signatures `SignatureOfSigner`
+   */
   const signAuth = (
     params: Omit<LedgerSignChallengeRequest, 'discriminator' | 'interactionId'>,
   ): ResultAsync<SignatureOfSigner[], string> =>
@@ -399,6 +437,10 @@ export const LedgerWrapper = ({
         ),
     )
 
+  /**
+   * Signs subintent (preauthorization) with provided curves and derivation paths
+   * @returns List of signatures `SignatureOfSigner`
+   */
   const signSubintent = (
     params: Omit<
       LedgerSignSubintentHashRequest,
@@ -455,6 +497,13 @@ export const LedgerWrapper = ({
         ),
     )
 
+  /**
+   * Gathers all required signatures for a single transaction signing.
+   * If there are more then X signatures this function will send an event
+   * through `ledgerSubjects.onProgressSubject` with the current progress.
+   * @param params
+   * @returns List of signatures `SignatureOfSigner`
+   */
   const signTransaction = (
     params: Omit<
       LedgerSignTransactionRequest,
