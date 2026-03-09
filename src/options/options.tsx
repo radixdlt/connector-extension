@@ -15,6 +15,7 @@ import {
   MenuItem,
   Select,
   Switch,
+  TextField,
   ThemeProvider,
   createTheme,
 } from '@mui/material'
@@ -50,6 +51,15 @@ export const Options = () => {
     const updatedOptions = {
       ...connectorExtensionOptions,
       radixConnectConfiguration: name,
+    }
+    setOptions(updatedOptions)
+    setConnectorExtensionOptions(updatedOptions)
+  }
+
+  const handleCustomSignalingServerUrlChange = (url: string) => {
+    const updatedOptions = {
+      ...connectorExtensionOptions,
+      customSignalingServerUrl: url,
     }
     setOptions(updatedOptions)
     setConnectorExtensionOptions(updatedOptions)
@@ -120,8 +130,26 @@ export const Options = () => {
                               {name} ({config.signalingServerBaseUrl})
                             </MenuItem>
                           ))}
+                        <MenuItem value="custom">Custom</MenuItem>
                       </Select>
                     </FormControl>
+                    {connectorExtensionOptions.radixConnectConfiguration ===
+                      'custom' && (
+                      <TextField
+                        fullWidth
+                        size="small"
+                        label="Custom Signaling Server URL"
+                        placeholder="wss://your-signaling-server.example.com"
+                        value={
+                          connectorExtensionOptions.customSignalingServerUrl ||
+                          ''
+                        }
+                        onChange={(ev) =>
+                          handleCustomSignalingServerUrlChange(ev.target.value)
+                        }
+                        style={{ marginTop: 12 }}
+                      />
+                    )}
                   </>
                 )}
               </FormGroup>

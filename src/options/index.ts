@@ -11,6 +11,7 @@ export type ConnectorExtensionOptions = {
   publicKey: string
   privateKey: string
   radixConnectConfiguration: string
+  customSignalingServerUrl?: string
   showDAppRequestNotifications: boolean
   showTransactionResultNotifications: boolean
 }

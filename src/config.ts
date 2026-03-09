@@ -2,6 +2,7 @@ import { LogLevelNumbers } from 'loglevel'
 import packageJson from '../package.json'
 import './buffer-shim'
 import { ConnectionConfig } from '@radixdlt/radix-connect-webrtc'
+import type { ConnectorExtensionOptions } from 'options'
 const { version } = packageJson
 
 const developmentConfig: Required<ConnectionConfig> = {
@@ -64,6 +65,26 @@ export const defaultConnectionConfig: ConnectionConfig = {
   signalingServerBaseUrl:
     import.meta.env.VITE_APP_SIGNALING_SERVER_BASE_URL ||
     radixConnectConfig[defaultRadixConnectConfig].signalingServerBaseUrl,
+}
+
+export const getConnectionConfig = (
+  options: ConnectorExtensionOptions,
+): Required<ConnectionConfig> => {
+  if (
+    options.radixConnectConfiguration === 'custom' &&
+    options.customSignalingServerUrl
+  ) {
+    const fallback = radixConnectConfig[defaultRadixConnectConfig]
+    return {
+      signalingServerBaseUrl: options.customSignalingServerUrl,
+      turnServers: fallback.turnServers,
+      iceTransportPolicy: fallback.iceTransportPolicy,
+    }
+  }
+  return (
+    radixConnectConfig[options.radixConnectConfiguration] ??
+    radixConnectConfig[defaultRadixConnectConfig]
+  )
 }
 
 export const config = {

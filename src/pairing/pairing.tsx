@@ -2,7 +2,7 @@ import { ConnectionPassword } from './components/connection-password'
 import { useEffect, useState } from 'react'
 import { ConnectorClient } from '@radixdlt/radix-connect-webrtc'
 import { logger } from 'utils/logger'
-import { config, radixConnectConfig } from 'config'
+import { config, getConnectionConfig } from 'config'
 import { useConnectionsClient } from './state/connections'
 import { useConnectorOptions } from './state/options'
 import { Subscription, combineLatest, filter, map, switchMap, tap } from 'rxjs'
@@ -34,9 +34,7 @@ export const Pairing = () => {
       negotiationTimeout: 10_000,
     })
 
-    connectorClient.setConnectionConfig(
-      radixConnectConfig[connectorOptions.radixConnectConfiguration],
-    )
+    connectorClient.setConnectionConfig(getConnectionConfig(connectorOptions))
 
     connectorClient
       .generateConnectionPassword()
