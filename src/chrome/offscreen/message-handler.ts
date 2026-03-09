@@ -9,7 +9,8 @@ import {
   MessageHandlerOutput,
 } from '../messages/_types'
 import { WalletConnectionClient } from './wallet-connection/wallet-connection-client'
-import { radixConnectConfig } from 'config'
+import { getConnectionConfig } from 'config'
+import { ConnectorExtensionOptions } from 'options'
 import { Connection, Connections } from 'pairing/state/connections'
 import {
   sessionRouter,
@@ -23,7 +24,7 @@ export const OffscreenMessageHandler = (input: {
   walletConnectionClientFactory: walletConnectionClientFactory
   logger?: AppLogger
 }): MessageHandler => {
-  let radixConnectConfiguration: string
+  let currentExtensionOptions: ConnectorExtensionOptions | undefined
   const logsClient = input.logsClient
   const logger = input.logger
   const connectionsMap = input.connectionsMap
@@ -62,7 +63,7 @@ export const OffscreenMessageHandler = (input: {
       input.walletConnectionClientFactory({
         connection,
         logger: input.logger || appLogger,
-        radixConnectConfiguration,
+        connectorExtensionOptions: currentExtensionOptions,
       }),
     )
   }
@@ -95,14 +96,11 @@ export const OffscreenMessageHandler = (input: {
 
       case messageDiscriminator.setRadixConnectConfiguration: {
         const { connectorExtensionOptions } = message
-        radixConnectConfiguration =
-          connectorExtensionOptions.radixConnectConfiguration
+        currentExtensionOptions = connectorExtensionOptions
 
         for (const [, connection] of connectionsMap) {
           connection.setConnectionConfig(
-            radixConnectConfig[
-              connectorExtensionOptions.radixConnectConfiguration
-            ],
+            getConnectionConfig(connectorExtensionOptions),
           )
         }
 

@@ -1,11 +1,12 @@
 import { AppLogger } from 'utils/logger'
 import { WalletConnectionClient } from './wallet-connection-client'
-import { config, radixConnectConfig } from 'config'
+import { config, getConnectionConfig } from 'config'
 import { MessagesRouter } from 'chrome/offscreen/wallet-connection/messages-router'
 import { ConnectorClient } from '@radixdlt/radix-connect-webrtc'
 import { syncClient } from './sync-client'
 import { Connection } from 'pairing/state/connections'
 import { SessionRouter } from '../session-router'
+import type { ConnectorExtensionOptions } from 'options'
 
 export type walletConnectionClientFactory = typeof walletConnectionClientFactory
 
@@ -15,6 +16,7 @@ export const walletConnectionClientFactory = (input: {
   connection: Connection
   logger: AppLogger
   radixConnectConfiguration?: string
+  connectorExtensionOptions?: ConnectorExtensionOptions
   connectorClient?: ConnectorClient
   messagesRouter?: MessagesRouter
 }): WalletConnectionClient => {
@@ -44,9 +46,15 @@ export const walletConnectionClientFactory = (input: {
     logger,
   })
 
-  if (input.radixConnectConfiguration) {
+  if (input.connectorExtensionOptions) {
     client.setConnectionConfig(
-      radixConnectConfig[input.radixConnectConfiguration],
+      getConnectionConfig(input.connectorExtensionOptions),
+    )
+  } else if (input.radixConnectConfiguration) {
+    client.setConnectionConfig(
+      getConnectionConfig({
+        radixConnectConfiguration: input.radixConnectConfiguration,
+      } as ConnectorExtensionOptions),
     )
   }
   return client
