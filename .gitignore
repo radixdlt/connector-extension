@@ -27,3 +27,4 @@ test-report.xml
 .nvmrc
 coverage/
 deploy/extension/.env
+.husky/_/
