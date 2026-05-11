@@ -1,7 +1,8 @@
 import { ResultAsync } from 'neverthrow'
+import { getSessionStorageArea } from 'utils/browser-detect'
 
 export const setPopupId = (popupId: number | undefined) =>
   ResultAsync.fromPromise(
-    chrome.storage.session.set({ popupId }),
+    getSessionStorageArea().set({ popupId }),
     (error) => error as Error,
   )

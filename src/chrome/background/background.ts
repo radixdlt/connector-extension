@@ -27,6 +27,7 @@ import { createBackgroundRouterContext } from './router/context'
 import { createContentScriptClient } from './router/clients/content-script'
 import { getOffscreenClient } from './router/clients/offscreen'
 import { hasConnections } from 'chrome/helpers/get-connections'
+import { hasIdle } from 'utils/browser-detect'
 
 const logger = utilsLogger.getSubLogger({ name: 'background' })
 
@@ -170,10 +171,14 @@ chrome.contextMenus.onClicked.addListener((data) => {
   }
 })
 
-chrome.idle.onStateChanged.addListener((state) => {
-  logger.debug('💻 onStateChanged:', state)
-  if (state === 'active') sendMessage(createMessage.restartConnector())
-})
+if (hasIdle()) {
+  chrome.idle.onStateChanged.addListener((state) => {
+    logger.debug('💻 onStateChanged:', state)
+    if (state === 'active') sendMessage(createMessage.restartConnector())
+  })
+} else {
+  logger.warn('chrome.idle API not available; idle detection disabled')
+}
 
 createOffscreen()
 

@@ -9,6 +9,8 @@ const { version } = packageJson
 
 const isDevToolsActive = process.env.VITE_DEV_TOOLS === 'true'
 const versionName = process.env.GITHUB_REF_NAME || 'local'
+const browserTarget = process.env.VITE_BROWSER_TARGET || 'chrome'
+const isFirefox = browserTarget === 'firefox'
 
 // Convert from Semver (example: 0.1.0-beta6)
 const [major, minor, patch] = version
@@ -22,19 +24,22 @@ const manifest = defineManifest(async () => {
   const permissions: chrome.runtime.ManifestPermissions[] = [
     'storage',
     'tabs',
-    'offscreen',
     'scripting',
     'notifications',
     'contextMenus',
-    'idle',
   ]
+
+  if (!isFirefox) {
+    permissions.push('offscreen', 'idle')
+  }
+
   const matches = ['https://*/*', 'http://localhost/*', 'http://127.0.0.1/*']
 
   if (isDevToolsActive) {
     matches.push('http://*/*')
   }
 
-  return {
+  const baseManifest: any = {
     manifest_version: 3,
     name: 'Radix Wallet Connector',
     version: `${major}.${minor}.${patch}`,
@@ -65,7 +70,29 @@ const manifest = defineManifest(async () => {
       '128': 'radix-icon_128x128.png',
     },
   }
+
+  if (isFirefox) {
+    baseManifest.browser_specific_settings = {
+      gecko: {
+        id: 'connector-extension@radixdlt.com',
+        strict_min_version: '128.0',
+      },
+    }
+  }
+
+  return baseManifest
 })
+
+const rollupInputs: Record<string, string> = {
+  options: 'src/options/index.html',
+  ledger: 'src/ledger/index.html',
+  pairing: 'src/pairing/index.html',
+  devTools: 'src/chrome/dev-tools/dev-tools.html',
+}
+
+if (!isFirefox) {
+  rollupInputs.offscreen = 'src/chrome/offscreen/index.html'
+}
 
 const buildConfig: UserConfigExport = {
   plugins: [react(), crx({ manifest }), tsconfigPaths()],
@@ -83,13 +110,7 @@ const buildConfig: UserConfigExport = {
         }
         warn(warning)
       },
-      input: {
-        options: 'src/options/index.html',
-        ledger: 'src/ledger/index.html',
-        pairing: 'src/pairing/index.html',
-        devTools: 'src/chrome/dev-tools/dev-tools.html',
-        offscreen: 'src/chrome/offscreen/index.html',
-      },
+      input: rollupInputs,
     },
   },
 }

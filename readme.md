@@ -35,12 +35,40 @@ npm start
 ## Building
 
 ```bash
+# Build for Chrome (default)
+npm run build
+
+# Or explicitly:
+npm run build:chrome
+
+# Build for Firefox
+npm run build:firefox
+
+# Lint Firefox build
+npm run lint:firefox
+
 # Build with development tools 
 npm run build:dev
 
 # Build production version (without dev tools)
 npm run build
 ```
+
+### Firefox Development
+
+1. Build for Firefox: `npm run build:firefox`
+2. Install [web-ext](https://extensionworkshop.com/documentation/develop/getting-started-with-web-ext/): `npm install`
+3. Load in Firefox:
+   - Go to `about:debugging#/runtime/this-firefox`
+   - Click "Load Temporary Add-on..."
+   - Select the `manifest.json` in the `dist/` directory
+4. Or run with web-ext: `npx web-ext run --source-dir dist`
+
+**Limitations in Firefox:**
+- The `offscreen` API is not available; WebRTC connectivity used for mobile wallet linking will not work in Firefox.
+- `idle` detection is unavailable.
+- `chrome.storage.session` falls back to `chrome.storage.local`.
+- Display positioning via `system.display` API is unavailable; extension views may not position correctly across multiple displays.
 
 ## Internal modules
 

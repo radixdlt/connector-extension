@@ -1,8 +1,16 @@
 import { config } from 'config'
+import { hasOffscreen } from 'utils/browser-detect'
 
+const MAX_RETRIES = 3
 let creating: Promise<void> | null
+let retryCount = 0
 
 export async function createOffscreen() {
+  if (!hasOffscreen()) {
+    console.warn('chrome.offscreen is not available; offscreen document will not be created')
+    return
+  }
+
   const offscreenUrl = chrome.runtime.getURL(config.offscreen.url)
 
   // @ts-ignore: clients exists in service workers context
@@ -30,9 +38,14 @@ export async function createOffscreen() {
 
       await creating
       creating = null
+      retryCount = 0
     } catch (error) {
       creating = null
-      return createOffscreen()
+      retryCount++
+      if (retryCount <= MAX_RETRIES) {
+        return createOffscreen()
+      }
+      console.error('Failed to create offscreen document after retries:', error)
     }
   }
 }

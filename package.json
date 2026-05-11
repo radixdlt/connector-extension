@@ -15,12 +15,15 @@
   "scripts": {
     "start": "VITE_DEV_TOOLS=true vite",
     "start:local": "VITE_DEV_TOOLS=true vite --mode localhost",
-    "build": "tsc && vite build",
+    "build": "tsc && VITE_BROWSER_TARGET=chrome vite build",
+    "build:chrome": "tsc && VITE_BROWSER_TARGET=chrome vite build",
+    "build:firefox": "tsc && VITE_BROWSER_TARGET=firefox vite build && node scripts/patch-firefox-manifest.cjs",
     "build:dev": "tsc && VITE_DEV_TOOLS=true vite build",
     "build:cd": "./build.sh",
     "preview": "vite preview",
     "prettier": "prettier --write src",
     "lint": "eslint & npm run prettier & tsc",
+    "lint:firefox": "web-ext lint --source-dir dist",
     "prepare": "husky install",
     "test": "vitest --reporter=basic",
     "test:ci": "vitest run --coverage --sequence.concurrent=false",
@@ -102,7 +105,8 @@
     "vite-tsconfig-paths": "^4.0.7",
     "vitest": "^2.1.5",
     "vitest-chrome": "^0.1.0",
-    "vitest-mock-extended": "^2.0.2"
+    "vitest-mock-extended": "^2.0.2",
+    "web-ext": "^8.4.0"
   },
   "repository": {
     "type": "git",
