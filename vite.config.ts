@@ -84,15 +84,11 @@ const buildConfig: UserConfigExport = {
         options: 'src/options/index.html',
         ledger: 'src/ledger/index.html',
         pairing: 'src/pairing/index.html',
-        devTools: 'src/chrome/dev-tools/dev-tools.html',
+        ...(isDevToolsActive ? { devTools: 'src/chrome/dev-tools/dev-tools.html' } : {}),
         offscreen: 'src/chrome/offscreen/index.html',
       },
     },
   },
-}
-
-if (!isDevToolsActive) {
-  delete buildConfig.build.rollupOptions.input['devTools']
 }
 
 export default defineConfig({
