@@ -2,7 +2,6 @@
 import { defineConfig, UserConfigExport } from 'vite'
 import react from '@vitejs/plugin-react'
 import { crx, defineManifest } from '@crxjs/vite-plugin'
-import tsconfigPaths from 'vite-tsconfig-paths'
 import packageJson from './package.json'
 
 const { version } = packageJson
@@ -10,11 +9,8 @@ const { version } = packageJson
 const isDevToolsActive = process.env.VITE_DEV_TOOLS === 'true'
 const versionName = process.env.GITHUB_REF_NAME || 'local'
 
-// Convert from Semver (example: 0.1.0-beta6)
 const [major, minor, patch] = version
-  // can only contain digits, dots, or dash
   .replace(/[^\d.-]+/g, '')
-  // split into version parts
   .split(/[.-]/)
   .filter(Boolean)
 
@@ -68,8 +64,9 @@ const manifest = defineManifest(async () => {
 })
 
 const buildConfig: UserConfigExport = {
-  plugins: [react(), crx({ manifest }), tsconfigPaths()],
+  plugins: [react(), crx({ manifest })],
   resolve: {
+    tsconfigPaths: true,
     alias: {
       stream: 'vite-compatible-readable-stream',
     },
@@ -100,7 +97,6 @@ if (!isDevToolsActive) {
 
 export default defineConfig({
   ...buildConfig,
-  // @ts-expect-error
   test: {
     globals: true,
     environment: 'jsdom',

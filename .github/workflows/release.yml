@@ -20,7 +20,7 @@ jobs:
       - name: Use Node.js
         uses: RDXWorks-actions/setup-node@main
         with:
-          node-version: '18.12.0'
+          node-version: '22'
 
       - name: Install dependencies
         run: npm pkg delete scripts.prepare && npm ci

@@ -24,7 +24,6 @@ dist-ssr
 *.sw?
 test-report.xml
 
-.nvmrc
 coverage/
 deploy/extension/.env
 .husky/_/
