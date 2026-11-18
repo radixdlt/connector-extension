@@ -1,5 +1,6 @@
 import { Buffer } from 'buffer'
-import { err, ok, Result } from 'neverthrow'
+import type { Result } from 'neverthrow'
+import { err, ok } from 'neverthrow'
 
 export const secureRandom = (byteCount: number): Result<Buffer, Error> => {
   if (byteCount <= 0) {

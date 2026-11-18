@@ -5,6 +5,7 @@ import path from 'node:path'
 import { chrome } from 'vitest-chrome/lib/index.esm.js'
 import { vi } from 'vitest'
 import { randomUUID, webcrypto } from 'node:crypto'
+import { errAsync } from 'neverthrow'
 
 const mode = process.env['MODE'] || 'development'
 
@@ -18,7 +19,7 @@ global.navigator.hid = {
 }
 
 global.CSS = {
-  supports: (k, v) => false,
+  supports: () => false,
 }
 
 type OnMessageListener = (message: any) => void
@@ -93,6 +94,23 @@ export const resetMocks = () => {
 resetMocks()
 
 global.chrome = chrome
+
+// The extension's URLs: its pages tell their own messages from web pages' by them
+// (see chrome/messages/trusted-senders).
+chrome.runtime.getURL = (path: string) =>
+  `chrome-extension://test-extension/${path}`
+
+// The iroh transport runs WebAssembly, which jsdom cannot load: tests use fake
+// sessions, and any real attempt to load the module fails like a failed fetch.
+vi.mock(
+  './chrome/offscreen/wallet-connection/transport/iroh/load-iroh',
+  () => ({
+    loadIroh: () =>
+      errAsync(
+        new Error('the iroh wasm module is not available in unit tests'),
+      ),
+  }),
+)
 
 if (!global?.crypto?.subtle) global.crypto.subtle = webcrypto.subtle
 if (!global?.crypto?.randomUUID) global.crypto.randomUUID = randomUUID

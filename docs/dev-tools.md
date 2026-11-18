@@ -4,7 +4,7 @@
 > This module & UI was developed before ledger and wallet implementations were ready and not updated since. Be mindful when using it. Consider using real Radix Wallet and real ledger device with Radix Babylon app installed for e2e testing.
 
 
-The Connector Extension includes a comprehensive set of developer tools to help test and debug wallet interactions. These tools are available in a dedicated browser tab and provide simulators for various components of the system. They're only available locally when build with `npm run build:dev`
+The Connector Extension includes a comprehensive set of developer tools to help test and debug wallet interactions. These tools are available in a dedicated browser tab and provide simulators for various components of the system. They're only available locally when built with `pnpm run build:dev`
 
 In order to open dev tools, load CE from your local `dist` folder. Pin installed extension, then right click and select "Radix Dev Tools"
 

@@ -3,16 +3,21 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Radix Wallet Connector Options</title>
+    <title>Radix Wallet Connector Settings</title>
     <style>
-      html,
-      body,
-      #root {
-        height: 100%;
-        width: 100%;
-        min-height: 559px;
-        min-width: 375px;
-        overflow: hidden;
+      /* A page in a tab: the wallet's light grey settings background, scrolling. */
+      html {
+        scrollbar-width: thin;
+        background: #f4f5f9;
+      }
+      @media (prefers-color-scheme: dark) {
+        html {
+          background: #121212;
+        }
+      }
+      body {
+        margin: 0;
+        min-width: 320px;
       }
     </style>
   </head>

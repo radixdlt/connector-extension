@@ -1,5 +1,5 @@
 import { initTRPC } from '@trpc/server'
-import { createBackgroundRouterContext } from './context'
+import type { createBackgroundRouterContext } from './context'
 
 export const trpc = initTRPC
   .context<ReturnType<typeof createBackgroundRouterContext>>()

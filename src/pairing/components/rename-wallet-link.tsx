@@ -1,18 +1,23 @@
-import { Modal, Box, Button } from 'components'
 import { useState } from 'react'
-import InfoOutline from '../assets/info-outline.svg'
+import { Dialog, DialogField } from 'ui/dialog'
+import { EditIcon, PhoneIcon } from 'ui/icons'
 
 const texts = {
   initialFlow: {
     header: 'Name Your Wallet',
+    description: 'The wallet is linked. Give it a name to recognise it here.',
     action: 'Confirm',
+    icon: <PhoneIcon />,
   },
   updateFlow: {
     header: 'Rename Wallet Link',
+    description: 'The new name is only used in this browser.',
     action: 'Update',
+    icon: <EditIcon />,
   },
 }
 
+/** Names a newly linked wallet, or renames a linked one. */
 export const RenameWalletLink = (props: {
   initialValue: string
   cancel: () => void
@@ -21,40 +26,30 @@ export const RenameWalletLink = (props: {
 }) => {
   const text = texts[props.isInitial ? 'initialFlow' : 'updateFlow']
   const [currentName, setCurrentName] = useState(props.initialValue)
-  const [isUpdateDisabled, setIsUpdateDisabled] = useState(true)
+  const empty = !currentName.trim()
+  // A new link may keep its proposed name; a rename must change it.
+  const unchanged = !props.isInitial && currentName === props.initialValue
 
   return (
-    <Modal header={text.header}>
-      <input
-        className="rename-wallet-link__input"
+    <Dialog
+      title={text.header}
+      description={text.description}
+      icon={text.icon}
+      confirmLabel={text.action}
+      confirmDisabled={empty || unchanged}
+      onCancel={props.cancel}
+      onConfirm={() => props.updateName(currentName.trim())}
+    >
+      <DialogField
+        label="Wallet name"
         type="text"
         value={currentName}
-        onChange={(e) => {
-          const value = e.target.value
-          setCurrentName(value)
-          setIsUpdateDisabled(!value || value === props.initialValue)
-        }}
+        maxLength={64}
+        placeholder="e.g. My phone"
+        hint="For example, the phone it is on."
+        error={empty ? 'Name cannot be empty' : undefined}
+        onChange={(event) => setCurrentName(event.target.value)}
       />
-      <div className="rename-wallet-link__error">
-        {!currentName && (
-          <>
-            <img src={InfoOutline} />
-            <span>Name cannot be empty</span>
-          </>
-        )}
-      </div>
-      <Box items="center" style={{ gap: '8px' }}>
-        <Button secondary onClick={() => props.cancel()}>
-          Cancel
-        </Button>
-        <Button
-          disabled={isUpdateDisabled && !props.isInitial}
-          onClick={() => props.updateName(currentName)}
-          full
-        >
-          {text.action}
-        </Button>
-      </Box>
-    </Modal>
+    </Dialog>
   )
 }

@@ -2,10 +2,9 @@ import { backgroundRouter } from './router'
 import { createChromeHandler } from 'trpc-chrome/adapter'
 import { mockDeep, type DeepMockProxy } from 'vitest-mock-extended'
 import type { ContentScriptClient } from './clients/content-script'
-import type { GetOffscreenClient } from './clients/offscreen'
-import { describe, it, vi, expect, beforeEach, beforeAll } from 'vitest'
+import { describe, it, vi, expect, beforeAll } from 'vitest'
 import { getBackgroundClient } from 'chrome/content-script/router/clients/background'
-import { AppLogger } from 'utils/logger'
+import type { AppLogger } from 'utils/logger'
 import { Logger } from 'tslog'
 import { errAsync, okAsync } from 'neverthrow'
 
@@ -22,7 +21,6 @@ const mockedHasConnections = vi.fn()
 
 type MockContent = {
   contentScriptClient: DeepMockProxy<ContentScriptClient>
-  getOffscreenClient: DeepMockProxy<GetOffscreenClient>
   openParingPopup: typeof mockedOpenParingPopup
   hasConnections: typeof mockedHasConnections
   logger: AppLogger
@@ -30,7 +28,6 @@ type MockContent = {
 
 const createMockContext = (): MockContent => ({
   contentScriptClient: mockDeep<ContentScriptClient>(),
-  getOffscreenClient: mockDeep<GetOffscreenClient>(),
   openParingPopup: mockedOpenParingPopup,
   hasConnections: mockedHasConnections,
   logger: testLogger,

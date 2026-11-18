@@ -4,9 +4,11 @@ import {
   getPublicKey as computeEd25519PublicKey,
 } from 'ed25519-hd-key'
 
-import { BIP32Interface, fromSeed as bip32FromSeed } from 'bip32'
+import type { BIP32Interface } from 'bip32'
+import { fromSeed as bip32FromSeed } from 'bip32'
 
-import { Address, Curve, Path, Hex } from './models'
+import type { Address, Path, Hex } from './models'
+import { Curve } from './models'
 
 type Keys = {
   key: Buffer

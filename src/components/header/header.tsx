@@ -1,17 +1,26 @@
-import { styled } from '../../stitches.config'
-import { mb } from '../variants/mb'
+import type { HTMLAttributes } from 'react'
+import {
+  classNames,
+  modifiers,
+  withMargins,
+  type MarginProps,
+} from '../variants'
 
-export const Header = styled('h1', {
-  fontSize: '$4xl',
-  fontWeight: '$600',
-  lineHeight: '36px',
-  variants: {
-    mb,
-    dark: {
-      true: {
-        color: '$muted',
-      },
-    },
-  },
-  color: 'white',
-})
+export type HeaderProps = HTMLAttributes<HTMLHeadingElement> &
+  Pick<MarginProps, 'mb'> & { dark?: boolean }
+
+export const Header = (props: HeaderProps) => {
+  const [margins, rest] = withMargins(props)
+  const { dark, className, ...attributes } = rest
+  return (
+    <h1
+      {...attributes}
+      className={classNames(
+        'rdx-header',
+        modifiers('rdx-header', { dark }),
+        margins,
+        className,
+      )}
+    />
+  )
+}

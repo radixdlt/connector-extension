@@ -1,25 +1,32 @@
-import { z, literal, object, string, union, boolean, number } from 'zod'
+import {
+  array,
+  boolean,
+  literal,
+  number,
+  object,
+  optional,
+  picklist,
+  string,
+  union,
+  type InferOutput,
+} from 'valibot'
 import { LedgerErrorCode } from './wrapper/constants'
 
-const curve = union([literal('curve25519'), literal('secp256k1')])
+const curve = picklist(['curve25519', 'secp256k1'])
 
-const ledgerDeviceModel = union([
-  literal('nanoS'),
-  literal('nanoS+'),
-  literal('nanoX'),
-])
+const ledgerDeviceModel = picklist(['nanoS', 'nanoS+', 'nanoX'])
 
-const ledgerDiscriminator = union([
-  literal('getDeviceInfo'),
-  literal('derivePublicKeys'),
-  literal('signTransaction'),
-  literal('signSubintentHash'),
-  literal('signChallenge'),
-  literal('deriveAndDisplayAddress'),
+const ledgerDiscriminator = picklist([
+  'getDeviceInfo',
+  'derivePublicKeys',
+  'signTransaction',
+  'signSubintentHash',
+  'signChallenge',
+  'deriveAndDisplayAddress',
 ])
 
 export const LedgerDiscriminator: Record<
-  z.infer<typeof ledgerDiscriminator>,
+  InferOutput<typeof ledgerDiscriminator>,
   string
 > = {
   getDeviceInfo: 'getDeviceInfo',
@@ -31,26 +38,28 @@ export const LedgerDiscriminator: Record<
 } as const
 
 export const LedgerDeviceSchema = object({
-  name: string().optional(),
+  name: optional(string()),
   model: ledgerDeviceModel,
   id: string(),
 })
 
-export type LedgerDevice = z.infer<typeof LedgerDeviceSchema>
+export type LedgerDevice = InferOutput<typeof LedgerDeviceSchema>
 
 export const KeyParametersSchema = object({
   curve,
   derivationPath: string(),
 })
 
-export type KeyParameters = z.infer<typeof KeyParametersSchema>
+export type KeyParameters = InferOutput<typeof KeyParametersSchema>
 
 export const LedgerDeviceIdRequestSchema = object({
   interactionId: string(),
   discriminator: literal('getDeviceInfo'),
 })
 
-export type LedgerDeviceIdRequest = z.infer<typeof LedgerDeviceIdRequestSchema>
+export type LedgerDeviceIdRequest = InferOutput<
+  typeof LedgerDeviceIdRequestSchema
+>
 
 export const LedgerDeriveAndDisplayAddressRequestSchema = object({
   interactionId: string(),
@@ -59,58 +68,58 @@ export const LedgerDeriveAndDisplayAddressRequestSchema = object({
   ledgerDevice: LedgerDeviceSchema,
 })
 
-export type LedgerDeriveAndDisplayAddressRequest = z.infer<
+export type LedgerDeriveAndDisplayAddressRequest = InferOutput<
   typeof LedgerDeriveAndDisplayAddressRequestSchema
 >
 
 export const LedgerPublicKeyRequestSchema = object({
   interactionId: string(),
   discriminator: literal('derivePublicKeys'),
-  keysParameters: KeyParametersSchema.array(),
+  keysParameters: array(KeyParametersSchema),
   ledgerDevice: LedgerDeviceSchema,
 })
 
-export type LedgerPublicKeyRequest = z.infer<
+export type LedgerPublicKeyRequest = InferOutput<
   typeof LedgerPublicKeyRequestSchema
 >
 
 export const LedgerSignTransactionRequestSchema = object({
   interactionId: string(),
   discriminator: literal('signTransaction'),
-  signers: KeyParametersSchema.array(),
+  signers: array(KeyParametersSchema),
   ledgerDevice: LedgerDeviceSchema,
   displayHash: boolean(),
   compiledTransactionIntent: string(),
-  mode: union([literal('verbose'), literal('summary')]).optional(),
+  mode: optional(picklist(['verbose', 'summary'])),
 })
 
-export type LedgerSignTransactionRequest = z.infer<
+export type LedgerSignTransactionRequest = InferOutput<
   typeof LedgerSignTransactionRequestSchema
 >
 
 export const LedgerSignChallengeRequestSchema = object({
   interactionId: string(),
   discriminator: literal('signChallenge'),
-  signers: KeyParametersSchema.array(),
+  signers: array(KeyParametersSchema),
   ledgerDevice: LedgerDeviceSchema,
   challenge: string(),
   origin: string(),
   dAppDefinitionAddress: string(),
 })
 
-export type LedgerSignChallengeRequest = z.infer<
+export type LedgerSignChallengeRequest = InferOutput<
   typeof LedgerSignChallengeRequestSchema
 >
 
 export const LedgerSignSubintentHashRequestSchema = object({
   interactionId: string(),
   discriminator: literal('signSubintentHash'),
-  signers: KeyParametersSchema.array(),
+  signers: array(KeyParametersSchema),
   ledgerDevice: LedgerDeviceSchema,
   subintentHash: string(),
 })
 
-export type LedgerSignSubintentHashRequest = z.infer<
+export type LedgerSignSubintentHashRequest = InferOutput<
   typeof LedgerSignSubintentHashRequestSchema
 >
 
@@ -121,9 +130,9 @@ export const LedgerRequestSchema = union([
   LedgerSignSubintentHashRequestSchema,
   LedgerSignChallengeRequestSchema,
   LedgerDeriveAndDisplayAddressRequestSchema,
-]).describe('LedgerRequest')
+])
 
-export type LedgerRequest = z.infer<typeof LedgerRequestSchema>
+export type LedgerRequest = InferOutput<typeof LedgerRequestSchema>
 
 export const LedgerDeviceIdResponseSchema = object({
   interactionId: string(),
@@ -134,7 +143,7 @@ export const LedgerDeviceIdResponseSchema = object({
   }),
 })
 
-export type LedgerDeviceIdResponse = z.infer<
+export type LedgerDeviceIdResponse = InferOutput<
   typeof LedgerDeviceIdResponseSchema
 >
 
@@ -144,57 +153,87 @@ export const DerivedPublicKeySchema = object({
   derivationPath: string(),
 })
 
-export type DerivedPublicKey = z.infer<typeof DerivedPublicKeySchema>
+export type DerivedPublicKey = InferOutput<typeof DerivedPublicKeySchema>
 
 export const DerivedAddressSchema = object({
   derivedKey: DerivedPublicKeySchema,
   address: string(),
 })
 
-export type DerivedAddress = z.infer<typeof DerivedAddressSchema>
+export type DerivedAddress = InferOutput<typeof DerivedAddressSchema>
 
 export const SignatureOfSignerSchema = object({
   derivedPublicKey: DerivedPublicKeySchema,
   signature: string(),
 })
 
-export type AccountListMessage = z.infer<typeof AccountListMessage>
+export type AccountListMessage = InferOutput<typeof AccountListMessage>
 export const AccountListMessage = object({
   interactionId: string(),
   discriminator: literal('accountList'),
-  accounts: object({
-    address: string(),
-    label: string(),
-    appearanceId: number(),
-  }).array(),
+  accounts: array(
+    object({
+      address: string(),
+      label: string(),
+      appearanceId: number(),
+    }),
+  ),
 })
 
-export type LinkClientInteraction = z.infer<typeof LinkClientInteraction>
+export type LinkClientInteraction = InferOutput<typeof LinkClientInteraction>
 export const LinkClientInteraction = object({
   discriminator: literal('linkClient'),
   publicKey: string(),
-  signature: string().optional(),
+  signature: optional(string()),
 })
 
-export type SignatureOfSigner = z.infer<typeof SignatureOfSignerSchema>
+/**
+ * A link was removed at one end (the wallet deleted the connector, or the extension
+ * forgot the wallet): the other end forgets it too. Sent over the link itself,
+ * which authenticates it, in both directions.
+ */
+export type LinkRemovedMessage = InferOutput<typeof LinkRemovedMessage>
+export const LinkRemovedMessage = object({
+  discriminator: literal('linkRemoved'),
+})
+
+export const linkRemovedMessage: LinkRemovedMessage = {
+  discriminator: 'linkRemoved',
+}
+
+/** What a wallet sends to the extension itself, rather than to a dApp. */
+export type WalletToExtensionMessage =
+  | AccountListMessage
+  | LinkClientInteraction
+  | LinkRemovedMessage
+
+export const isWalletToExtensionMessage = (
+  message: unknown,
+): message is WalletToExtensionMessage =>
+  ['accountList', 'linkClient', 'linkRemoved'].includes(
+    (message as { discriminator?: unknown } | undefined)
+      ?.discriminator as string,
+  )
+
+export type SignatureOfSigner = InferOutput<typeof SignatureOfSignerSchema>
 
 export const LedgerPublicKeyResponseSchema = object({
   interactionId: string(),
   discriminator: literal('derivePublicKeys'),
-  success: DerivedPublicKeySchema.array(),
+  success: array(DerivedPublicKeySchema),
 })
 
-export type LedgerPublicKeyResponse = z.infer<
+export type LedgerPublicKeyResponse = InferOutput<
   typeof LedgerPublicKeyResponseSchema
 >
 
 export const LedgerSignTransactionResponseSchema = object({
   interactionId: string(),
   discriminator: literal('signTransaction'),
-  success: SignatureOfSignerSchema.array(),
+  success: array(SignatureOfSignerSchema),
 })
 
-export type LedgerSignTransactionResponse = z.infer<
+export type LedgerSignTransactionResponse = InferOutput<
   typeof LedgerSignTransactionResponseSchema
 >
 
@@ -207,10 +246,10 @@ export const LedgerDeriveAndDisplayAddressResponseSchema = object({
 export const LedgerSignChallengeResponseSchema = object({
   interactionId: string(),
   discriminator: literal('signChallenge'),
-  success: SignatureOfSignerSchema.array(),
+  success: array(SignatureOfSignerSchema),
 })
 
-export type LedgerSignChallengeResponse = z.infer<
+export type LedgerSignChallengeResponse = InferOutput<
   typeof LedgerSignChallengeResponseSchema
 >
 
@@ -226,10 +265,10 @@ export const LedgerErrorResponseSchema = object({
 export const LedgerSignSubintentHashResponseSchema = object({
   interactionId: string(),
   discriminator: literal('signSubintentHash'),
-  success: SignatureOfSignerSchema.array(),
+  success: array(SignatureOfSignerSchema),
 })
 
-export type LedgerSignSubintentHashResponse = z.infer<
+export type LedgerSignSubintentHashResponse = InferOutput<
   typeof LedgerSignSubintentHashResponseSchema
 >
 
@@ -242,26 +281,34 @@ export const LedgerSuccessResponseSchema = union([
   LedgerDeriveAndDisplayAddressResponseSchema,
 ])
 
-export type LedgerSuccessResponse = z.infer<typeof LedgerSuccessResponseSchema>
+export type LedgerSuccessResponse = InferOutput<
+  typeof LedgerSuccessResponseSchema
+>
 
-export type LedgerErrorResponse = z.infer<typeof LedgerErrorResponseSchema>
+export type LedgerErrorResponse = InferOutput<typeof LedgerErrorResponseSchema>
 
 export const LedgerResponseSchema = union([
   LedgerSuccessResponseSchema,
   LedgerErrorResponseSchema,
 ])
 
-export type LedgerResponse = z.infer<typeof LedgerResponseSchema>
+export type LedgerResponse = InferOutput<typeof LedgerResponseSchema>
 
-export const isLedgerRequest = (message: any): message is LedgerRequest =>
-  [
-    'getDeviceInfo',
-    'derivePublicKeys',
-    'signTransaction',
-    'signChallenge',
-    'signSubintentHash',
-    'deriveAndDisplayAddress',
-  ].includes(message?.discriminator)
+const ledgerRequestDiscriminators: ReadonlySet<unknown> = new Set<
+  LedgerRequest['discriminator']
+>([
+  'getDeviceInfo',
+  'derivePublicKeys',
+  'signTransaction',
+  'signChallenge',
+  'signSubintentHash',
+  'deriveAndDisplayAddress',
+])
+
+export const isLedgerRequest = (message: unknown): message is LedgerRequest =>
+  ledgerRequestDiscriminators.has(
+    (message as { discriminator?: unknown } | undefined)?.discriminator,
+  )
 
 export const isDeviceIdRequest = (
   message?: LedgerRequest,

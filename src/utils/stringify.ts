@@ -1,4 +1,5 @@
-import { err, ok, Result } from 'neverthrow'
+import type { Result } from 'neverthrow'
+import { err, ok } from 'neverthrow'
 
 export const stringify = (input: unknown): Result<string, Error> => {
   try {

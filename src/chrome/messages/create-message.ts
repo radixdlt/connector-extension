@@ -1,186 +1,97 @@
-import { ConnectorExtensionOptions } from './../../options/index'
-import {
-  AccountListMessage,
+import type { ConnectorExtensionOptions } from 'options'
+import type {
   LedgerRequest,
   LedgerResponse,
-  LinkClientInteraction,
+  WalletToExtensionMessage,
 } from 'ledger/schemas'
-import {
+import type {
   Messages,
+  MessagePayloads,
   ConfirmationMessageError,
   ConfirmationMessageSuccess,
   MessageSource,
   Message,
-  messageDiscriminator,
-  messageSource,
+  WalletResponseData,
 } from './_types'
-import { MessageLifeCycleEvent } from 'chrome/dapp/_types'
-import { ILogObj, ILogObjMeta } from 'tslog/dist/types/interfaces'
-import {
+import type { MessageLifeCycleEvent } from 'chrome/dapp/_types'
+import type { ILogObj, ILogObjMeta } from 'tslog/dist/types/interfaces'
+import type {
   CancelWalletInteractionExtensionInteraction,
   WalletInteraction,
   WalletInteractionExtensionInteraction,
 } from '@radixdlt/radix-dapp-toolkit'
-import { Connections } from 'pairing/state/connections'
-import { WalletPublicKey, SessionId } from 'chrome/offscreen/session-router'
+import type { Connections } from 'pairing/state/connections'
+import type {
+  WalletPublicKey,
+  SessionId,
+} from 'chrome/offscreen/session-router'
+import type {
+  PendingRequest,
+  RequestOutcomes,
+} from 'chrome/offscreen/requests/pending-request'
+import type { RequestNotification } from 'chrome/offscreen/requests/request-tracker'
+import type { LinkStatuses } from 'chrome/offscreen/link-statuses'
+import type { RetiredLink } from 'chrome/links/retired-links'
+
+/** A new message of `discriminator`, with a new id. */
+const message = <D extends Exclude<keyof MessagePayloads, 'confirmation'>>(
+  discriminator: D,
+  source: MessageSource,
+  payload: MessagePayloads[D],
+) =>
+  // eslint-disable-next-line @typescript-eslint/consistent-type-assertions -- TS cannot check the generic union
+  ({
+    ...payload,
+    source,
+    discriminator,
+    messageId: crypto.randomUUID(),
+  }) as Messages[D]
 
 export const createMessage = {
-  openParingPopup: () => ({
-    messageId: crypto.randomUUID(),
-    source: messageSource.contentScript,
-    discriminator: messageDiscriminator.openParingPopup,
-  }),
-  walletInteraction: (interaction: WalletInteractionExtensionInteraction) => ({
-    messageId: crypto.randomUUID(),
-    discriminator: messageDiscriminator.walletInteraction,
-    source: messageSource.contentScript,
-    interaction,
-  }),
+  walletInteraction: (interaction: WalletInteractionExtensionInteraction) =>
+    message('walletInteraction', 'contentScript', { interaction }),
   cancelWalletInteraction: (
     interaction: CancelWalletInteractionExtensionInteraction,
-  ) => ({
-    messageId: crypto.randomUUID(),
-    discriminator: messageDiscriminator.cancelWalletInteraction,
-    source: messageSource.contentScript,
-    interaction,
-  }),
-  getSessionRouterData: () => ({
-    messageId: crypto.randomUUID(),
-    discriminator: messageDiscriminator.getSessionRouterData,
-    source: messageSource.offScreen,
-  }),
+  ) => message('cancelWalletInteraction', 'contentScript', { interaction }),
+  getSessionRouterData: () => message('getSessionRouterData', 'offScreen', {}),
   setSessionRouterData: (
     data: Record<SessionId, WalletPublicKey>,
     source: MessageSource,
-  ) => ({
-    source,
-    messageId: crypto.randomUUID(),
-    discriminator: messageDiscriminator.setSessionRouterData,
-    data,
-  }),
-  extensionStatus: (isWalletLinked: boolean) => ({
-    eventType: 'extensionStatus',
-    isExtensionAvailable: true,
-    isWalletLinked,
-    canHandleSessions: true,
-  }),
-  log: (log: ILogObjMeta & ILogObj): Messages['log'] => ({
-    source: 'any',
-    discriminator: 'log',
-    messageId: crypto.randomUUID(),
-    log,
-  }),
-  downloadLogs: (): Messages['downloadLogs'] => ({
-    source: 'background',
-    discriminator: 'downloadLogs',
-    messageId: crypto.randomUUID(),
-  }),
-  getConnections: (source: MessageSource): Messages['getConnections'] => ({
-    discriminator: 'getConnections',
-    messageId: crypto.randomUUID(),
-    source,
-  }),
-  setConnections: (
-    source: MessageSource,
-    connections: Connections,
-  ): Messages['setConnections'] => ({
-    discriminator: 'setConnections',
-    messageId: crypto.randomUUID(),
-    connections,
-    source,
-  }),
+  ) => message('setSessionRouterData', source, { data }),
+  log: (log: ILogObjMeta & ILogObj) => message('log', 'any', { log }),
+  downloadLogs: () => message('downloadLogs', 'background', {}),
+  getConnections: (source: MessageSource) =>
+    message('getConnections', source, {}),
+  setConnections: (source: MessageSource, connections: Connections) =>
+    message('setConnections', source, { connections }),
   setConnectorExtensionOptions: (
     source: MessageSource,
     connectorExtensionOptions: ConnectorExtensionOptions,
-  ) => ({
-    discriminator: messageDiscriminator.setRadixConnectConfiguration,
-    messageId: crypto.randomUUID(),
-    connectorExtensionOptions,
-    source,
-  }),
-  getExtensionOptions: (
-    source: MessageSource,
-  ): Messages['getExtensionOptions'] => ({
-    discriminator: 'getExtensionOptions',
-    messageId: crypto.randomUUID(),
-    source,
-  }),
-  focusLedgerTab: (): Messages['focusLedgerTab'] => ({
-    source: 'ledger',
-    discriminator: messageDiscriminator.focusLedgerTab,
-    messageId: crypto.randomUUID(),
-  }),
-  detectWalletLink: (source: MessageSource): Messages['detectWalletLink'] => ({
-    source,
-    discriminator: 'detectWalletLink',
-    messageId: crypto.randomUUID(),
-  }),
-  dAppRequest: (
-    source: MessageSource,
-    data: WalletInteraction,
-  ): Messages['dAppRequest'] => ({
-    source,
-    discriminator: 'dAppRequest',
-    messageId: crypto.randomUUID(),
-    data,
-  }),
-  walletMessage: (
-    source: MessageSource,
-    message: Record<string, any>,
-  ): Messages['walletMessage'] => ({
-    source,
-    discriminator: 'walletMessage',
-    messageId: crypto.randomUUID(),
-    data: message,
-  }),
-  closeLedgerTab: (): Messages['closeLedgerTab'] => ({
-    source: 'any',
-    discriminator: 'closeLedgerTab',
-    messageId: crypto.randomUUID(),
-  }),
+  ) =>
+    message('setRadixConnectConfiguration', source, {
+      connectorExtensionOptions,
+    }),
+  getExtensionOptions: (source: MessageSource) =>
+    message('getExtensionOptions', source, {}),
+  focusLedgerTab: () => message('focusLedgerTab', 'ledger', {}),
+  dAppRequest: (source: MessageSource, data: WalletInteraction) =>
+    message('dAppRequest', source, { data }),
+  closeLedgerTab: () => message('closeLedgerTab', 'any', {}),
   walletToLedger: (
     source: MessageSource,
-    message: LedgerRequest,
+    data: LedgerRequest,
     walletPublicKey: string,
-  ): Messages['walletToLedger'] => ({
-    source,
-    discriminator: messageDiscriminator.walletToLedger,
-    walletPublicKey,
-    messageId: crypto.randomUUID(),
-    data: message,
-  }),
+  ) => message('walletToLedger', source, { data, walletPublicKey }),
   walletToExtension: (
     source: MessageSource,
-    message: AccountListMessage | LinkClientInteraction,
+    data: WalletToExtensionMessage,
     walletPublicKey: string,
-  ): Messages['walletToExtension'] => ({
-    source,
-    discriminator: messageDiscriminator.walletToExtension,
-    messageId: crypto.randomUUID(),
-    walletPublicKey,
-    data: message,
-  }),
-  ledgerResponse: (
-    message: LedgerResponse,
-    walletPublicKey: string,
-  ): Messages['ledgerResponse'] => ({
-    source: 'ledger',
-    discriminator: messageDiscriminator.ledgerResponse,
-    walletPublicKey,
-    messageId: crypto.randomUUID(),
-    data: message,
-  }),
-  sendMessageToTab: (
-    source: MessageSource,
-    tabId: number,
-    data: Message,
-  ): Messages['sendMessageToTab'] => ({
-    source,
-    discriminator: 'sendMessageToTab',
-    messageId: crypto.randomUUID(),
-    data,
-    tabId,
-  }),
+  ) => message('walletToExtension', source, { data, walletPublicKey }),
+  ledgerResponse: (data: LedgerResponse, walletPublicKey: string) =>
+    message('ledgerResponse', 'ledger', { data, walletPublicKey }),
+  sendMessageToTab: (source: MessageSource, tabId: number, data: Message) =>
+    message('sendMessageToTab', source, { data, tabId }),
+  // A confirmation answers a message: it keeps that message's id.
   confirmationSuccess: <T = any>(
     source: MessageSource,
     messageId: string,
@@ -203,47 +114,44 @@ export const createMessage = {
     messageId,
     error,
   }),
-  walletResponse: (
-    source: MessageSource,
-    data: Record<string, any>,
-  ): Messages['walletResponse'] => ({
-    source,
-    discriminator: 'walletResponse',
-    messageId: crypto.randomUUID(),
-    data,
-  }),
-  incomingDappMessage: (
-    source: MessageSource,
-    data: Record<string, any>,
-  ): Messages['incomingDappMessage'] => ({
-    source,
-    discriminator: 'incomingDappMessage',
-    messageId: crypto.randomUUID(),
-    data,
-  }),
-  incomingWalletMessage: (
-    source: MessageSource,
-    data: Record<string, any>,
-  ): Messages['incomingWalletMessage'] => ({
-    source,
-    discriminator: 'incomingWalletMessage',
-    messageId: crypto.randomUUID(),
-    data,
-  }),
+  walletResponse: (source: MessageSource, data: WalletResponseData) =>
+    message('walletResponse', source, { data }),
   sendMessageEventToDapp: (
     source: MessageSource,
     messageEvent: MessageLifeCycleEvent,
     data: { interactionId: string; metadata: { origin: string } },
-  ): Messages['sendMessageEventToDapp'] => ({
-    source,
-    discriminator: 'sendMessageEventToDapp',
-    messageId: crypto.randomUUID(),
-    messageEvent,
-    data,
-  }),
-  restartConnector: (): Messages['restartConnector'] => ({
-    source: 'any',
-    discriminator: 'restartConnector',
-    messageId: crypto.randomUUID(),
-  }),
+  ) => message('sendMessageEventToDapp', source, { messageEvent, data }),
+  restartConnector: () => message('restartConnector', 'any', {}),
+  // Answered by the offscreen document with a `ConnectionDiagnosticsResponse`.
+  getConnectionDiagnostics: () =>
+    message('getConnectionDiagnostics', 'any', {}),
+  // Answered by the offscreen document with a `PendingRequestsResponse`.
+  getPendingRequests: () => message('getPendingRequests', 'popup', {}),
+  // Sent by the offscreen document whenever a dApp request changes.
+  pendingRequestsChanged: (
+    requests: PendingRequest[],
+    outcomes: RequestOutcomes = {},
+  ) => message('pendingRequestsChanged', 'offScreen', { requests, outcomes }),
+  // Answered by the offscreen document with `{ cancelled: boolean }`.
+  cancelPendingRequest: (interactionId: string) =>
+    message('cancelPendingRequest', 'popup', { interactionId }),
+  // Answered by the offscreen document with `{ resent: boolean }`.
+  resendPendingRequest: (interactionId: string) =>
+    message('resendPendingRequest', 'popup', { interactionId }),
+  // Answered by the offscreen document with the status of every link.
+  getLinkStatuses: () => message('getLinkStatuses', 'popup', {}),
+  // Sent by the offscreen document whenever a link's status changes.
+  linkStatusesChanged: (statuses: LinkStatuses) =>
+    message('linkStatusesChanged', 'offScreen', { statuses }),
+  // Answered by the background with the notices still to deliver.
+  getRetiredLinks: () => message('getRetiredLinks', 'offScreen', {}),
+  setRetiredLinks: (source: MessageSource, links: RetiredLink[]) =>
+    message('setRetiredLinks', source, { links }),
+  linkRemovalDelivered: (password: string) =>
+    message('linkRemovalDelivered', 'offScreen', { password }),
+  walletRelaySeen: (walletPublicKey: string, relayUrl: string) =>
+    message('walletRelaySeen', 'offScreen', { walletPublicKey, relayUrl }),
+  // For the background, which shows the desktop notifications.
+  dAppRequestNotification: (notification: RequestNotification) =>
+    message('dAppRequestNotification', 'offScreen', { notification }),
 } as const

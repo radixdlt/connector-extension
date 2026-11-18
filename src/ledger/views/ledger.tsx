@@ -1,23 +1,23 @@
 import { Button, PopupWindow, Text } from 'components'
-import { useEffect, useState } from 'react'
-import {
+import { useEffect, useRef, useState } from 'react'
+import type {
   LedgerResponse,
+  LedgerRequest,
+  LedgerSuccessResponse,
+} from '../schemas'
+import {
   LedgerDiscriminator,
-  LedgerPublicKeyRequest,
-  LedgerSignTransactionRequest,
-  LedgerSignChallengeRequest,
   createLedgerSuccessResponse,
   createLedgerErrorResponse,
-  LedgerSuccessResponse,
-  LedgerSignSubintentHashRequest,
 } from '../schemas'
 import { createMessage } from 'chrome/messages/create-message'
-import { Messages } from 'chrome/messages/_types'
+import type { Message, Messages } from 'chrome/messages/_types'
 import { ledger, ledgerLogger } from '../wrapper/ledger-wrapper'
 import { sendMessage } from 'chrome/helpers/send-message'
+import { isExtensionPage } from 'chrome/messages/trusted-senders'
 import { Subscription } from 'rxjs'
 import { LedgerMask } from 'ledger/components/ledger-mask'
-import { Result } from 'neverthrow'
+import type { Result, ResultAsync } from 'neverthrow'
 import { LedgerErrorCode } from 'ledger/wrapper/constants'
 
 /**
@@ -43,72 +43,86 @@ const isErrorForExtension = (error: string) =>
   Object.keys(ErrorMessages).includes(error)
 
 const isWalletToLedgerFromBackground = (
-  message: any,
-): message is Messages['walletToLedger'] => {
-  return (
-    message?.discriminator === 'walletToLedger' &&
-    message?.source === 'background'
-  )
-}
+  message: unknown,
+): message is Messages['walletToLedger'] =>
+  (message as Partial<Message> | undefined)?.discriminator ===
+    'walletToLedger' &&
+  (message as Partial<Message> | undefined)?.source === 'background'
 /**
  * There is single React view for every request type
  */
-const viewsDefinition = {
-  [LedgerDiscriminator.getDeviceInfo]: () => ({
-    header: 'Ledger Connection Request',
-    content: LedgerDiscriminator.getDeviceInfo,
-    ledgerDevice: undefined,
-    requestFunction: ledger.getDeviceInfo,
-  }),
-  [LedgerDiscriminator.derivePublicKeys]: (
-    request: LedgerPublicKeyRequest,
-  ) => ({
-    header: 'Ledger Connection Request',
-    content: LedgerDiscriminator.derivePublicKeys,
-    ledgerDevice: request.ledgerDevice,
-    requestFunction: ledger.getPublicKeys,
-  }),
-  [LedgerDiscriminator.signTransaction]: (
-    request: LedgerSignTransactionRequest,
-  ) => ({
-    header: 'Ledger Signing Request',
-    content: LedgerDiscriminator.signTransaction,
-    ledgerDevice: request.ledgerDevice,
-    requestFunction: ledger.signTransaction,
-  }),
-  [LedgerDiscriminator.signChallenge]: (
-    request: LedgerSignChallengeRequest,
-  ) => ({
-    header: 'Ledger Signing Request',
-    content: LedgerDiscriminator.signChallenge,
-    ledgerDevice: request.ledgerDevice,
-    requestFunction: ledger.signAuth,
-  }),
-  [LedgerDiscriminator.signSubintentHash]: (
-    request: LedgerSignSubintentHashRequest,
-  ) => ({
-    header: 'Ledger Pre-Authorization Request',
-    content: LedgerDiscriminator.signSubintentHash,
-    ledgerDevice: request.ledgerDevice,
-    requestFunction: ledger.signSubintent,
-  }),
-  [LedgerDiscriminator.deriveAndDisplayAddress]: (
-    request: LedgerPublicKeyRequest,
-  ) => ({
-    header: 'Ledger Connection Request',
-    content: LedgerDiscriminator.deriveAndDisplayAddress,
-    ledgerDevice: request.ledgerDevice,
-    requestFunction: ledger.deriveAndDisplayAddress,
-  }),
+type LedgerView = {
+  header: string
+  content: LedgerRequest['discriminator']
+  ledgerDevice?: Extract<
+    LedgerRequest,
+    { ledgerDevice: unknown }
+  >['ledgerDevice']
+  /** Gives the request to the device. */
+  run: () => ResultAsync<unknown, string>
+}
+
+const viewOf = (request: LedgerRequest): LedgerView => {
+  switch (request.discriminator) {
+    case 'getDeviceInfo':
+      return {
+        header: 'Ledger Connection Request',
+        content: request.discriminator,
+        ledgerDevice: undefined,
+        run: () => ledger.getDeviceInfo(request),
+      }
+    case 'derivePublicKeys':
+      return {
+        header: 'Ledger Connection Request',
+        content: request.discriminator,
+        ledgerDevice: request.ledgerDevice,
+        run: () => ledger.getPublicKeys(request),
+      }
+    case 'signTransaction':
+      return {
+        header: 'Ledger Signing Request',
+        content: request.discriminator,
+        ledgerDevice: request.ledgerDevice,
+        run: () => ledger.signTransaction(request),
+      }
+    case 'signChallenge':
+      return {
+        header: 'Ledger Signing Request',
+        content: request.discriminator,
+        ledgerDevice: request.ledgerDevice,
+        run: () => ledger.signAuth(request),
+      }
+    case 'signSubintentHash':
+      return {
+        header: 'Ledger Pre-Authorization Request',
+        content: request.discriminator,
+        ledgerDevice: request.ledgerDevice,
+        run: () => ledger.signSubintent(request),
+      }
+    case 'deriveAndDisplayAddress':
+      return {
+        header: 'Ledger Connection Request',
+        content: request.discriminator,
+        ledgerDevice: request.ledgerDevice,
+        run: () => ledger.deriveAndDisplayAddress(request),
+      }
+  }
 }
 
 export const Ledger = () => {
   const [progressMessage, setProgressMessage] = useState<string | undefined>()
   const [currentId, setCurrentId] = useState<number | undefined>()
   const [error, setError] = useState<string | undefined>()
-  const [currentMessage, setCurrentMessage] =
+  const [currentMessage, setShownMessage] =
     useState<Messages['walletToLedger']>()
-  const [viewDefinition, setViewDefinition] = useState<any>()
+  // The request being handled, for the listeners added once: a value of a render
+  // would stay the first one's (none), and a request sent again was run again.
+  const handling = useRef<Messages['walletToLedger']>()
+  const setCurrentMessage = (message: Messages['walletToLedger']) => {
+    handling.current = message
+    setShownMessage(message)
+  }
+  const [viewDefinition, setViewDefinition] = useState<LedgerView>()
 
   const respond = (response: LedgerResponse, walletPublicKey: string) => {
     sendMessage(createMessage.ledgerResponse(response, walletPublicKey)).map(
@@ -131,9 +145,7 @@ export const Ledger = () => {
               mt="2xl"
               px="2xl"
               onClick={() => {
-                viewDefinition
-                  ?.requestFunction(currentMessage?.data)
-                  .then(ledgerResponseHandler)
+                viewDefinition?.run().then(ledgerResponseHandler)
               }}
             >
               Continue
@@ -161,7 +173,7 @@ export const Ledger = () => {
     }
   }
 
-  const ledgerResponseHandler = async (response: Result<any, any>) => {
+  const ledgerResponseHandler = async (response: Result<unknown, string>) => {
     if (!currentMessage?.data) {
       return
     }
@@ -197,10 +209,11 @@ export const Ledger = () => {
       ledgerLogger.debug(
         `HID device disconnected, productId: ${event.device.productId}, currentId: ${currentId}`,
       )
-      if (event.device.productId === currentId && currentMessage) {
+      const message = handling.current
+      if (event.device.productId === currentId && message) {
         respond(
-          createLedgerErrorResponse(currentMessage.data, 'deviceDisconnected'),
-          currentMessage.walletPublicKey,
+          createLedgerErrorResponse(message.data, 'deviceDisconnected'),
+          message.walletPublicKey,
         )
       }
     }
@@ -215,13 +228,21 @@ export const Ledger = () => {
    */
   useEffect(() => {
     const subscription = new Subscription()
-    const readMessage = (message: unknown) => {
+    const readMessage = (
+      message: unknown,
+      sender: chrome.runtime.MessageSender,
+    ) => {
+      // Only from the extension: a web page must never get the device to sign.
+      if (!isExtensionPage(sender)) return
       if (isWalletToLedgerFromBackground(message)) {
         setError(undefined)
         sendMessage(
           createMessage.confirmationSuccess('ledger', message.messageId),
         )
-        if (message.data.interactionId === currentMessage?.data.interactionId) {
+        // Sent again (the wallet asks once more): the device already has it.
+        if (
+          message.data.interactionId === handling.current?.data.interactionId
+        ) {
           return
         }
 
@@ -236,9 +257,7 @@ export const Ledger = () => {
         }
 
         setCurrentMessage(message)
-        setViewDefinition(
-          viewsDefinition[message.data.discriminator](message.data as any),
-        )
+        setViewDefinition(viewOf(message.data))
       }
     }
 
@@ -266,10 +285,9 @@ export const Ledger = () => {
       currentMessage &&
       currentMessage.data.discriminator !== LedgerDiscriminator.getDeviceInfo
     ) {
-      viewDefinition
-        .requestFunction(currentMessage.data)
-        .then(ledgerResponseHandler)
+      viewDefinition.run().then(ledgerResponseHandler)
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- runs per new view or message
   }, [viewDefinition, currentMessage])
 
   return (
@@ -285,16 +303,12 @@ export const Ledger = () => {
         </LedgerMask>
       ) : (
         <LedgerMask
-          header={viewDefinition?.header}
+          header={viewDefinition?.header ?? ''}
           error={error || ''}
-          onRetry={() =>
-            viewDefinition
-              ?.requestFunction(currentMessage?.data)
-              .then(ledgerResponseHandler)
-          }
+          onRetry={() => viewDefinition?.run().then(ledgerResponseHandler)}
           ledgerDevice={viewDefinition?.ledgerDevice}
         >
-          {renderContent(viewDefinition?.content)}
+          {renderContent(viewDefinition?.content ?? '')}
         </LedgerMask>
       )}
     </PopupWindow>

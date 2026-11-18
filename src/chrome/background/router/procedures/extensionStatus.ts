@@ -1,6 +1,7 @@
 import { rootProcedure } from './root'
 import * as v from 'valibot'
 import { metadataSchema } from '../schemas/metadata'
+import { extensionStatusEvent } from 'chrome/dapp/_types'
 
 export const extensionStatusProcedure = rootProcedure
   .input(
@@ -16,10 +17,8 @@ export const extensionStatusProcedure = rootProcedure
   .query(async ({ ctx, input }) => {
     const isWalletLinked = await ctx.hasConnections().unwrapOr(false)
 
-    return ctx.contentScriptClient.sendMessageToDapp(input.metadata.tabId, {
-      eventType: 'extensionStatus',
-      isExtensionAvailable: true,
-      isWalletLinked,
-      canHandleSessions: true,
-    })
+    return ctx.contentScriptClient.sendMessageToDapp(
+      input.metadata.tabId,
+      extensionStatusEvent(isWalletLinked),
+    )
   })

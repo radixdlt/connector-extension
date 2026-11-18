@@ -89,6 +89,7 @@ export const WalletSimulator = () => {
       connectorClient.destroy()
       subscription.unsubscribe()
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- creates the client once; connector is what it sets
   }, [setConnector, setResponseMessage, setConnectorStatus])
 
   const sendMessage = () => {
@@ -120,7 +121,7 @@ export const WalletSimulator = () => {
         </Button>
       </Box>
       <Box justify="between">
-        <Text css={{ minWidth: '140px' }} bold>
+        <Text style={{ minWidth: '140px' }} bold>
           Mock Requests
         </Text>
         <Box>

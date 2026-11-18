@@ -1,0 +1,26 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Radix Wallet Connector</title>
+    <style>
+      /* The side panel: as tall as the window and as wide as the user makes it,
+         unlike the fixed-size popup. Views scroll inside it. */
+      html,
+      body,
+      #root {
+        height: 100%;
+        width: 100%;
+        margin: 0;
+      }
+      #root {
+        overflow-y: auto;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/src/side-panel/main.tsx"></script>
+  </body>
+</html>

@@ -1,4 +1,8 @@
-import { BaseHdWallet, createRadixWallet } from './hd-wallet'
+// Crypto only: Node, not jsdom, whose Uint8Array is not the one of Node's Buffer
+// (tiny-secp256k1 checks keys with instanceof).
+// @vitest-environment node
+import type { BaseHdWallet } from './hd-wallet'
+import { createRadixWallet } from './hd-wallet'
 import { describe, beforeAll, it, expect } from 'vitest'
 
 describe('HD Wallet', () => {

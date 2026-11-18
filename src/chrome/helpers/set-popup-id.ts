@@ -1,7 +1,4 @@
-import { ResultAsync } from 'neverthrow'
+import { sessionStore } from './storage'
 
 export const setPopupId = (popupId: number | undefined) =>
-  ResultAsync.fromPromise(
-    chrome.storage.session.set({ popupId }),
-    (error) => error as Error,
-  )
+  sessionStore.set('popupId', popupId)

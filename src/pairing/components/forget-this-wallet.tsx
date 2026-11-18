@@ -1,29 +1,17 @@
-import { Modal, Text, Box, Button } from 'components'
+import { Dialog } from 'ui/dialog'
+import { DeleteIcon } from 'ui/icons'
 
 export const ForgetThisWallet = (props: {
   forgetWallet: () => void
   cancel: () => void
-}) => {
-  return (
-    <Modal header="Forget This Wallet">
-      <Text
-        style={{
-          color: '#8A8FA4',
-          margin: '16px 0',
-          fontSize: '14px',
-          textAlign: 'center',
-        }}
-      >
-        Are you sure you want to forget this wallet?
-      </Text>
-      <Box items="center" style={{ gap: '8px' }}>
-        <Button secondary onClick={() => props.cancel()}>
-          Cancel
-        </Button>
-        <Button onClick={() => props.forgetWallet()} full>
-          Forget
-        </Button>
-      </Box>
-    </Modal>
-  )
-}
+}) => (
+  <Dialog
+    title="Forget This Wallet"
+    description="This browser will no longer reach this wallet. You can link it again at any time with a new QR code."
+    icon={<DeleteIcon />}
+    tone="danger"
+    confirmLabel="Forget"
+    onCancel={props.cancel}
+    onConfirm={props.forgetWallet}
+  />
+)

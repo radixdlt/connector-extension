@@ -1,0 +1,39 @@
+# pnpm settings of the project (pnpm 11 reads them here, not from package.json).
+
+# Defence against compromised releases (npm worms such as Shai-Hulud/ChainDrop):
+# a version is only installed three days after it was published.
+minimumReleaseAge: 4320
+# Not on the npm registry: the Radix Connect over iroh package is vendored in vendor/
+# (a file of its GitHub release, checked by its SHA-256), so there is no publication
+# date to check.
+minimumReleaseAgeExclude:
+  - '@genkipool/radix-connect-iroh'
+
+# Install scripts run only for the packages allowed here. These are denied:
+# esbuild ships its binary as an optional package for each platform, and
+# tiny-secp256k1 (dev tools only) falls back to its JavaScript implementation.
+allowBuilds:
+  esbuild: false
+  tiny-secp256k1: false
+
+# One valibot for everything, the extension and the Radix dApp toolkit (pinned
+# to 0.42.1 there): 1.5.0 fixes GHSA-vqpr-j7v3-hqw9 and GHSA-5qjj-4xww-7phc. The
+# toolkit only uses functions that 1.x keeps as they were.
+overrides:
+  valibot: 1.5.0
+  # The dev tools' Ledger simulator (only in dev builds) signs with bip32 and elliptic:
+  # their crypto dependencies at the patch releases that fix private key extraction
+  # and signature checks (elliptic GHSA-vjh7-7g9h-fjfh, tiny-secp256k1
+  # GHSA-7mc2-6phr-23xc and GHSA-5vhg-9xg4-cv9m, sha.js GHSA-95m3-7q98-8xr5,
+  # cipher-base GHSA-cpq7-6gpm-g9rc, base-x GHSA-xq7p-g2vc-g82p, bn.js
+  # GHSA-378v-28hj-76wf). Same major versions: same API.
+  elliptic@6: 6.6.1
+  tiny-secp256k1@1: 1.1.7
+  sha.js@2: 2.4.12
+  cipher-base@1: 1.0.5
+  base-x@3: 3.0.11
+  bn.js@4: 4.12.3
+
+# New dependencies are saved with their exact version: an update is always a
+# deliberate change of package.json, never a new release picked up by a range.
+savePrefix: ''

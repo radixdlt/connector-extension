@@ -1,6 +1,6 @@
-import { Result } from 'neverthrow'
+import type { Result } from 'neverthrow'
 import { ReplaySubject, Subject } from 'rxjs'
-import { QueueInteraction, QueueInteractionError } from './_types'
+import type { QueueInteraction, QueueInteractionError } from './_types'
 
 export type QueueSubjects<T> = ReturnType<typeof QueueSubjects<T>>
 

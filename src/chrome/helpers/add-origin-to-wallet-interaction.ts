@@ -1,8 +1,8 @@
-import {
+import type {
   CancelWalletInteractionExtensionInteraction,
   WalletInteraction,
 } from '@radixdlt/radix-dapp-toolkit'
-import {
+import type {
   CancelWalletInteractionExtensionInteractionOptionalOrigin,
   WalletInteractionWithOptionalOrigin,
 } from 'chrome/dapp/schemas'

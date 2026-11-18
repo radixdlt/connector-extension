@@ -1,33 +1,33 @@
 import { createLedgerErrorResponse } from './../../ledger/schemas'
-import { sessionStore } from 'chrome/helpers/set-item'
+import { sessionStore } from 'chrome/helpers/storage'
 import { createMessage } from 'chrome/messages/create-message'
 import { sendMessage } from 'chrome/messages/send-message'
-import { LedgerRequest } from 'ledger/schemas'
+import type { LedgerRequest } from 'ledger/schemas'
 
 export const LedgerTabWatcher = () => ({
   getCurrentlyWatched: () =>
     sessionStore
-      .getSingleItem('watchedTab')
+      .get('watchedTab')
       .mapErr(() => ({ reason: 'failedToGetWatchedTab' })),
   setWatchedTab: (
     tabId: number,
     request: LedgerRequest,
     walletPublicKey: string,
   ) =>
-    sessionStore.setSingleItem('watchedTab', {
+    sessionStore.set('watchedTab', {
       tabId,
       request,
       walletPublicKey,
     }),
   triggerTabRemoval: async (justRemovedTabId: number) => {
-    const watchedTab = await sessionStore.getSingleItem('watchedTab')
+    const watchedTab = await sessionStore.get('watchedTab')
     if (watchedTab.isErr() || !watchedTab.value) {
       return
     }
 
     const { tabId, request, walletPublicKey } = watchedTab.value
 
-    if (!tabId || justRemovedTabId !== tabId) {
+    if (!tabId || justRemovedTabId !== tabId || !request || !walletPublicKey) {
       return
     }
 
@@ -38,7 +38,7 @@ export const LedgerTabWatcher = () => ({
       ),
     )
 
-    sessionStore.setSingleItem('watchedTab', {})
+    sessionStore.set('watchedTab', {})
   },
-  restoreInitial: () => sessionStore.setSingleItem('watchedTab', {}),
+  restoreInitial: () => sessionStore.set('watchedTab', {}),
 })

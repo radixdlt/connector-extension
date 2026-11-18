@@ -2,13 +2,16 @@ import { ChromeDAppClient } from '../dapp/dapp-client'
 import { ContentScriptMessageHandler } from './message-handler'
 import { createMessage } from '../messages/create-message'
 import { MessageClient } from '../messages/message-client'
-import { ConfirmationMessageError, Message } from '../messages/_types'
-import { err, errAsync, okAsync, ResultAsync } from 'neverthrow'
+import type { ConfirmationMessageError, Message } from '../messages/_types'
+import type { ResultAsync } from 'neverthrow'
+import { err, errAsync, okAsync } from 'neverthrow'
 import { logger } from 'utils/logger'
-import { dAppEvent, MessageLifeCycleEvent } from 'chrome/dapp/_types'
+import type { MessageLifeCycleEvent } from 'chrome/dapp/_types'
+import { dAppEvent, extensionStatusEvent } from 'chrome/dapp/_types'
 import { sendMessage } from 'chrome/helpers/send-message'
 import { hasConnections } from 'chrome/helpers/get-connections'
-import {
+import { localStore } from 'chrome/helpers/storage'
+import type {
   ExtensionInteraction,
   WalletInteraction,
 } from '@radixdlt/radix-dapp-toolkit'
@@ -27,7 +30,7 @@ window.addEventListener(dAppEvent.send, handleInboundMessage)
 chrome.runtime.onMessage.addListener(handleOutboundMessage)
 
 const sendMessageToDapp = (
-  message: Record<string, any>,
+  message: Record<string, unknown>,
 ): ResultAsync<undefined, ConfirmationMessageError['error']> => {
   const result = chromeDAppClient.sendMessage(message)
 
@@ -115,16 +118,12 @@ chrome.runtime.onMessage.addListener((message: Message) => {
   messageHandler.onMessage(message)
 })
 
-chrome.storage.onChanged.addListener(
-  (changes: { [key: string]: chrome.storage.StorageChange }, area: string) => {
-    if (changes['connections'] && area === 'local') {
-      hasConnections().map((hasConnections) => {
-        sendMessageToDapp(createMessage.extensionStatus(hasConnections))
-      })
-    }
-  },
+localStore.onChange('connections', () =>
+  hasConnections().map((hasConnections) => {
+    sendMessageToDapp(extensionStatusEvent(hasConnections))
+  }),
 )
 
 hasConnections().map((hasConnections) => {
-  sendMessageToDapp(createMessage.extensionStatus(hasConnections))
+  sendMessageToDapp(extensionStatusEvent(hasConnections))
 })

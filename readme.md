@@ -8,21 +8,21 @@ Chrome Web Store Links
 
 ## Prerequisites
 
-- Node.js >=18
-- npm
+- Node.js >=20
+- [pnpm](https://pnpm.io) (the version in `packageManager`; `corepack enable` installs it)
 
 ## Installation
 
 ```bash
-# Install dependencies
-npm install
+# Install dependencies (exactly those of pnpm-lock.yaml)
+pnpm install --frozen-lockfile
 ```
 
 ## Development
 
 ```bash
 # Start development server with hot module reload
-npm start
+pnpm start
 ```
 
 1. Starting the dev server will output a `dist` folder.
@@ -36,10 +36,10 @@ npm start
 
 ```bash
 # Build with development tools 
-npm run build:dev
+pnpm run build:dev
 
 # Build production version (without dev tools)
-npm run build
+pnpm run build
 ```
 
 ## Internal modules

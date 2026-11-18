@@ -1,25 +1,20 @@
-import { err, ok, Result, ResultAsync } from 'neverthrow'
-import {
-  filter,
-  first,
-  firstValueFrom,
-  map,
-  mergeMap,
-  Subscription,
-} from 'rxjs'
+import { ok } from 'neverthrow'
+import { filter, map, mergeMap, Subscription } from 'rxjs'
 import { createMessage } from './create-message'
-import {
+import type {
+  AnswerOf,
   ConfirmationMessageError,
-  ConfirmationMessageSuccess,
   Message,
-  messageDiscriminator,
   MessageHandler,
-  Messages,
   MessageSource,
+  SendMessageWithConfirmation,
 } from './_types'
 import { MessageSubjects } from './subjects'
-import { sendMessage as sendMessageFn, SendMessage } from './send-message'
-import { AppLogger } from 'utils/logger'
+import type { SendMessage } from './send-message'
+import { sendMessage as sendMessageFn } from './send-message'
+import type { AppLogger } from 'utils/logger'
+import { config } from 'config'
+import { waitForConfirmation } from './wait-for-confirmation'
 
 export type MessageClient = ReturnType<typeof MessageClient>
 
@@ -30,17 +25,22 @@ export const MessageClient = (
     subjects?: MessageSubjects
     sendMessage?: SendMessage
     logger: AppLogger
+    confirmationTimeout?: number
   },
 ) => {
+  const confirmationTimeout =
+    input.confirmationTimeout ?? config.messages.confirmationTimeout
   const subjects = input.subjects || MessageSubjects()
   const sendMessage = input.sendMessage || sendMessageFn
 
   const subscriptions = new Subscription()
 
-  const sendMessageAndWaitForConfirmation = <T = undefined>(
-    value: Message,
+  const sendMessageAndWaitForConfirmation: SendMessageWithConfirmation = <
+    M extends Message,
+  >(
+    value: M,
     tabId?: number,
-  ): ResultAsync<T, ConfirmationMessageError['error']> => {
+  ) => {
     const shouldProxyMessageThroughBackground =
       value.source !== 'background' && tabId
 
@@ -48,33 +48,13 @@ export const MessageClient = (
       ? createMessage.sendMessageToTab(value.source, tabId, value)
       : value
 
-    const confirmation$ = subjects.messageSubject.pipe(
-      filter(
-        (
-          value,
-        ): value is { message: Messages['confirmation']; tabId?: number } =>
-          value.message.discriminator === 'confirmation' &&
-          message.messageId === value.message.messageId,
-      ),
-      first(),
-      map(
-        (
-          confirmation,
-        ): Result<
-          ConfirmationMessageSuccess<T>['data'],
-          ConfirmationMessageError['error']
-        > =>
-          confirmation.message.success
-            ? ok(confirmation.message.data)
-            : err(confirmation.message.error),
-      ),
+    const confirmation = waitForConfirmation<AnswerOf<M>>(
+      subjects.messageSubject.pipe(map(({ message }) => message)),
+      message.messageId,
+      confirmationTimeout,
     )
 
-    const waitForConfirmation = ResultAsync.fromSafePromise(
-      firstValueFrom(confirmation$),
-    ).andThen((result) => result)
-
-    return sendMessage(message, tabId).andThen(() => waitForConfirmation)
+    return sendMessage(message, tabId).andThen(() => confirmation)
   }
 
   const sendConfirmationSuccess = <T = any>({
@@ -115,16 +95,16 @@ export const MessageClient = (
         filter(({ message }) => message.discriminator !== 'confirmation'),
         mergeMap(({ message, tabId }) =>
           handler(message, sendMessageAndWaitForConfirmation, tabId)
-            .andThen((result) => {
-              return result?.sendConfirmation
+            .andThen((result) =>
+              result?.sendConfirmation
                 ? sendConfirmationSuccess({
                     origin,
                     messageId: message.messageId,
                     tabId,
                     data: result.data,
                   })
-                : ok(undefined)
-            })
+                : ok(undefined),
+            )
             .mapErr((error) => {
               if (error.reason !== 'unhandledMessageDiscriminator')
                 sendConfirmationError({
@@ -132,8 +112,7 @@ export const MessageClient = (
                   messageId: message.messageId,
                   error,
                   tabId:
-                    message.discriminator ===
-                    messageDiscriminator.sendMessageToTab
+                    message.discriminator === 'sendMessageToTab'
                       ? undefined
                       : tabId,
                 })

@@ -1,10 +1,3 @@
-import { ResultAsync } from 'neverthrow'
-
-export type StorageProvider = {
-  getData: <T = any>(key: string) => ResultAsync<T | undefined, Error>
-  setData: (key: string, data: any) => ResultAsync<undefined, Error>
-}
-
 export const jobStatus = {
   pending: 'pending',
   processing: 'processing',
@@ -13,11 +6,6 @@ export const jobStatus = {
 } as const
 
 export type JobStatus = keyof typeof jobStatus
-
-export type QueueStateRaw<T> = {
-  items: Record<string, Job<T>>
-  ids: Record<JobStatus, string[]>
-}
 
 export type QueueState<T> = {
   items: Map<string, Job<T>>

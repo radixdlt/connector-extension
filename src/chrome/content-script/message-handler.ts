@@ -1,18 +1,17 @@
-import { errAsync, okAsync, ResultAsync } from 'neverthrow'
-import {
+import type { ResultAsync } from 'neverthrow'
+import { okAsync } from 'neverthrow'
+import type {
   ConfirmationMessageError,
-  Message,
-  messageDiscriminator,
   MessageHandler,
-  MessageHandlerOutput,
 } from '../messages/_types'
-import { AppLogger } from 'utils/logger'
-import { MessageLifeCycleEvent } from 'chrome/dapp/_types'
+import { handleMessages } from '../messages/_types'
+import type { AppLogger } from 'utils/logger'
+import type { MessageLifeCycleEvent } from 'chrome/dapp/_types'
 
 export type ContentScriptMessageHandlerOptions = {
   logger?: AppLogger
   sendMessageToDapp: (
-    message: any,
+    message: Record<string, unknown>,
   ) => ResultAsync<undefined, ConfirmationMessageError['error']>
   sendMessageEventToDapp: (
     data: { interactionId: string; metadata: { origin: string } },
@@ -22,38 +21,25 @@ export type ContentScriptMessageHandlerOptions = {
 export type ContentScriptMessageHandler = ReturnType<
   typeof ContentScriptMessageHandler
 >
-export const ContentScriptMessageHandler =
-  ({
-    sendMessageEventToDapp,
-    sendMessageToDapp,
-    logger,
-  }: ContentScriptMessageHandlerOptions): MessageHandler =>
-  (message: Message): MessageHandlerOutput => {
-    switch (message?.discriminator) {
-      case messageDiscriminator.sendMessageEventToDapp: {
-        return sendMessageEventToDapp(message.data, message.messageEvent).map(
-          () => ({
+export const ContentScriptMessageHandler = ({
+  sendMessageEventToDapp,
+  sendMessageToDapp,
+}: ContentScriptMessageHandlerOptions): MessageHandler =>
+  handleMessages({
+    sendMessageEventToDapp: (message) =>
+      sendMessageEventToDapp(message.data, message.messageEvent).map(() => ({
+        sendConfirmation: true,
+      })),
+    walletResponse: (message) => {
+      const walletResponse = message.data.walletResponse
+      const origin = message.data.metadata?.origin
+
+      const doesOriginMatch = window.location.origin === origin
+
+      return doesOriginMatch && walletResponse
+        ? sendMessageToDapp(walletResponse).map(() => ({
             sendConfirmation: true,
-          }),
-        )
-      }
-
-      case messageDiscriminator.walletResponse: {
-        const walletResponse = message.data.walletResponse
-        const { origin } = message.data.metadata
-
-        const doesOriginMatch = window.location.origin === origin
-
-        return doesOriginMatch
-          ? sendMessageToDapp(walletResponse).map(() => ({
-              sendConfirmation: true,
-            }))
-          : okAsync({ sendConfirmation: false })
-      }
-
-      default:
-        return errAsync({
-          reason: 'unhandledMessageDiscriminator',
-        })
-    }
-  }
+          }))
+        : okAsync({ sendConfirmation: false })
+    },
+  })

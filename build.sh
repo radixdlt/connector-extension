@@ -5,10 +5,10 @@ set -e
 NAME="radix-connector"
 DEV_NAME="radix-connector-with-dev-tools"
 
-npm run build
+pnpm run build
 mv dist $NAME
 
-VITE_DEV_TOOLS=true npm run build
+VITE_DEV_TOOLS=true pnpm run build
 mv dist $DEV_NAME
 
 zip --recurse-paths ${NAME}.zip ${NAME}

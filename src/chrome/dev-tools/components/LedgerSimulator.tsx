@@ -1,14 +1,17 @@
+import { parse } from 'valibot'
 import { generateMnemonic } from 'bip39'
 import { Box, Button, Header, Text } from 'components'
-import {
+import type {
   KeyParameters,
   LedgerDeviceIdRequest,
   LedgerPublicKeyRequest,
   LedgerRequest,
-  LedgerRequestSchema,
   LedgerResponse,
   LedgerSignChallengeRequest,
   LedgerSignTransactionRequest,
+} from 'ledger/schemas'
+import {
+  LedgerRequestSchema,
   createLedgerSuccessResponse,
   isDeviceIdRequest,
   isPublicKeyRequest,
@@ -16,14 +19,15 @@ import {
   isSignTransactionRequest,
 } from 'ledger/schemas'
 import { useEffect, useState } from 'react'
-import { BaseHdWallet, createRadixWallet } from '../hd-wallet/hd-wallet'
+import type { BaseHdWallet } from '../hd-wallet/hd-wallet'
+import { createRadixWallet } from '../hd-wallet/hd-wallet'
 import { sendMessage } from 'chrome/messages/send-message'
 import { createMessage } from 'chrome/messages/create-message'
 import { curve25519 } from 'crypto/curve25519'
 import { secp256k1 } from 'crypto/secp256k1'
 import { blakeHashHexSync } from 'crypto/blake2b'
 import { parseSignAuth } from 'ledger/wrapper/parse-sign-auth'
-import { ec, eddsa } from 'elliptic'
+import type { ec, eddsa } from 'elliptic'
 import { logger } from 'utils/logger'
 
 const DEFAULT_MNEMONIC =
@@ -104,7 +108,7 @@ export const LedgerSimulator = () => {
     const onMessage = (message: any) => {
       if (message?.discriminator !== 'walletToLedger') return
       try {
-        LedgerRequestSchema.parse(message.data)
+        parse(LedgerRequestSchema, message.data)
         const walletRequest = message.data as LedgerRequest
         setWalletRequest(walletRequest)
         setMessageId(message.messageId)
@@ -184,7 +188,7 @@ export const LedgerSimulator = () => {
     if (!keysParameters.length) return null
     return (
       <Box flex="row" items="center">
-        <Text bold css={{ minWidth: '200px' }}>
+        <Text bold style={{ minWidth: '200px' }}>
           Key Params / Signers
         </Text>
         <ul>
@@ -204,7 +208,7 @@ export const LedgerSimulator = () => {
 
     return (
       <Box flex="row">
-        <Text bold css={{ minWidth: '160px' }}>
+        <Text bold style={{ minWidth: '160px' }}>
           Intent Hash
         </Text>
         <Text>{hash}</Text>
@@ -217,25 +221,25 @@ export const LedgerSimulator = () => {
       return (
         <>
           <Box flex="row">
-            <Text bold css={{ minWidth: '160px' }}>
+            <Text bold style={{ minWidth: '160px' }}>
               dApp
             </Text>
             <Text>{walletRequest.dAppDefinitionAddress}</Text>
           </Box>
           <Box flex="row">
-            <Text bold css={{ minWidth: '160px' }}>
+            <Text bold style={{ minWidth: '160px' }}>
               Origin
             </Text>
             <Text>{walletRequest.origin}</Text>
           </Box>
           <Box flex="row">
-            <Text bold css={{ minWidth: '160px' }}>
+            <Text bold style={{ minWidth: '160px' }}>
               Nonce
             </Text>
             <Text>{walletRequest.challenge}</Text>
           </Box>
           <Box flex="row">
-            <Text bold css={{ minWidth: '160px' }}>
+            <Text bold style={{ minWidth: '160px' }}>
               Auth Hash
             </Text>
             <Text>{parseSignAuth(walletRequest).hashToSign}</Text>
@@ -275,13 +279,13 @@ export const LedgerSimulator = () => {
   const renderWalletRequest = () => (
     <>
       <Box flex="row" items="center">
-        <Text bold css={{ minWidth: '140px' }}>
+        <Text bold style={{ minWidth: '140px' }}>
           Interaction ID
         </Text>
         <Text>{walletRequest?.interactionId}</Text>
       </Box>
       <Box flex="row" items="center">
-        <Text bold css={{ minWidth: '140px' }}>
+        <Text bold style={{ minWidth: '140px' }}>
           Discriminator
         </Text>
         <Text>{walletRequest?.discriminator}</Text>
@@ -300,7 +304,7 @@ export const LedgerSimulator = () => {
 
     return (
       <Box flex="row" items="center">
-        <Text bold css={{ minWidth: '140px' }}>
+        <Text bold style={{ minWidth: '140px' }}>
           Remembered
         </Text>
         <select
@@ -331,7 +335,7 @@ export const LedgerSimulator = () => {
       <Header dark>Ledger Simulator</Header>
       {renderRememberedMnemonics()}
       <Box flex="row" items="center">
-        <Text bold css={{ minWidth: '140px' }}>
+        <Text bold style={{ minWidth: '140px' }}>
           Ledger Device
         </Text>
         <select
@@ -346,7 +350,7 @@ export const LedgerSimulator = () => {
         </select>
       </Box>
       <Box flex="row" items="center">
-        <Text bold css={{ minWidth: '140px' }}>
+        <Text bold style={{ minWidth: '140px' }}>
           Mnemonic
         </Text>
         <input

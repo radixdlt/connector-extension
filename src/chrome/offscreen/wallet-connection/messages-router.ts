@@ -1,4 +1,5 @@
-import { errAsync, ok, okAsync, ResultAsync } from 'neverthrow'
+import type { ResultAsync } from 'neverthrow'
+import { errAsync, ok, okAsync } from 'neverthrow'
 
 export type MessagesRouter = ReturnType<typeof MessagesRouter>
 

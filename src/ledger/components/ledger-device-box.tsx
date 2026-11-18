@@ -1,5 +1,5 @@
 import { Box, Text } from 'components'
-import { LedgerDevice } from '../schemas'
+import type { LedgerDevice } from '../schemas'
 import IconHardwareLedger from '../assets/icon-hardware-ledger.svg'
 const deviceName = {
   nanoS: 'Nano S',
