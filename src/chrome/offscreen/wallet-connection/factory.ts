@@ -4,6 +4,8 @@ import {
   type WalletConnectionTransport,
 } from './wallet-connection-client'
 import { getTransportConfig } from 'config'
+import { sendMessage } from 'chrome/helpers/send-message'
+import { createMessage } from 'chrome/messages/create-message'
 import { MessagesRouter } from 'chrome/offscreen/wallet-connection/messages-router'
 import { syncClient } from './sync-client'
 import { Connection } from 'pairing/state/connections'
@@ -38,7 +40,18 @@ export const walletConnectionClientFactory = (input: {
       slots: transportSlots({
         webRtc: createWebRtcTransport(logger),
         createIrohTransport: () =>
-          IrohTransport({ logger: logger.getSubLogger({ name: 'iroh' }) }),
+          IrohTransport({
+            logger: logger.getSubLogger({ name: 'iroh' }),
+            // Each iroh session knocks where the wallet was last seen.
+            walletRelay: input.connection.walletRelay,
+            onWalletRelay: (relayUrl) =>
+              sendMessage(
+                createMessage.walletRelaySeen(
+                  input.connection.walletPublicKey,
+                  relayUrl,
+                ),
+              ),
+          }),
       }),
       logger,
     })

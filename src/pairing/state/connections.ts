@@ -12,6 +12,11 @@ export type Connection = {
   password: string
   walletPublicKey: string
   accounts: Account[]
+  /**
+   * The iroh relay the wallet was last seen on: each new iroh session knocks
+   * there, so a wallet that is up connects at once. A stale one only means no knock.
+   */
+  walletRelay?: string
 }
 
 export type Connections = Record<string, Connection>
@@ -111,6 +116,10 @@ export const ConnectionsClient = (connections?: Connections | null) => {
           walletPublicKey,
           password,
           accounts: knownConnection?.accounts || [],
+          // A wallet linked again keeps the relay it was last seen on.
+          ...(knownConnection?.walletRelay
+            ? { walletRelay: knownConnection.walletRelay }
+            : {}),
         },
       },
     }
@@ -118,6 +127,19 @@ export const ConnectionsClient = (connections?: Connections | null) => {
     return chromeLocalStore.setItem(updatedConnections).map(() => ({
       isKnownConnection: !!knownConnection,
     }))
+  }
+
+  /** Keeps the iroh relay the wallet was seen on; ignored for a link that is gone. */
+  const updateWalletRelay = (walletPublicKey: string, relayUrl: string) => {
+    const connection = connections?.[walletPublicKey]
+    if (!connections || !connection || connection.walletRelay === relayUrl)
+      return
+    return chromeLocalStore.setItem({
+      connections: {
+        ...connections,
+        [walletPublicKey]: { ...connection, walletRelay: relayUrl },
+      },
+    })
   }
 
   const updateAccounts = (walletPublicKey: string, accounts: Account[]) => {
@@ -142,6 +164,7 @@ export const ConnectionsClient = (connections?: Connections | null) => {
     updateName,
     hasConnections,
     updateAccounts,
+    updateWalletRelay,
     connections,
   }
 }
