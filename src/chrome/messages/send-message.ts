@@ -1,6 +1,7 @@
-import { err, ok, ResultAsync } from 'neverthrow'
+import type { ResultAsync } from 'neverthrow'
+import { err, ok } from 'neverthrow'
 
-import { ConfirmationMessageError, Message } from './_types'
+import type { ConfirmationMessageError, Message } from './_types'
 import { getTabById } from 'chrome/helpers/get-tab-by-id'
 import { sendMessage as chromeSendMessage } from 'chrome/helpers/send-message'
 import { sendMessageToTab as chromeSendMessageToTab } from 'chrome/helpers/send-message-to-tab'
@@ -22,7 +23,7 @@ export const sendMessage = (
       }))
       .orElse((error) => {
         if (message.discriminator === 'walletResponse') {
-          const maybeOrigin: string | undefined = message.data?.metadata.origin
+          const maybeOrigin: string | undefined = message.data?.metadata?.origin
           if (maybeOrigin) {
             return getTabsByOrigin(maybeOrigin)
               .andThen((tabs) => (tabs[0] ? ok(tabs[0]) : err(error)))

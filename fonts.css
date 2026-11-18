@@ -1,27 +1,31 @@
+/* IBM Plex Sans (SIL Open Font License, assets/fonts/OFL.txt), bundled: the
+   extension pages load nothing from the network. Only the weights the pages use,
+   as WOFF2 (about a third of the TrueType size). */
+
 @font-face {
   font-family: 'IBM Plex Sans';
-  src: url('assets/fonts/IBMPlexSans-SemiBold.ttf') format('truetype');
+  src: url('assets/fonts/IBMPlexSans-Bold.woff2') format('woff2');
+  font-weight: 700;
+  font-style: normal;
+}
+
+@font-face {
+  font-family: 'IBM Plex Sans';
+  src: url('assets/fonts/IBMPlexSans-SemiBold.woff2') format('woff2');
   font-weight: 600;
   font-style: normal;
 }
 
 @font-face {
   font-family: 'IBM Plex Sans';
-  src: url('assets/fonts/IBMPlexSans-Medium.ttf') format('truetype');
+  src: url('assets/fonts/IBMPlexSans-Medium.woff2') format('woff2');
   font-weight: 500;
   font-style: normal;
 }
 
 @font-face {
   font-family: 'IBM Plex Sans';
-  src: url('assets/fonts/IBMPlexSans-Regular.ttf') format('truetype');
+  src: url('assets/fonts/IBMPlexSans-Regular.woff2') format('woff2');
   font-weight: 400;
-  font-style: normal;
-}
-
-@font-face {
-  font-family: 'IBM Plex Sans';
-  src: url('assets/fonts/IBMPlexSans-Thin.ttf') format('truetype');
-  font-weight: 200;
   font-style: normal;
 }

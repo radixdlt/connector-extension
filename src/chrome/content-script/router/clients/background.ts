@@ -1,6 +1,9 @@
 import { createTRPCProxyClient } from '@trpc/client'
-import { inferRouterInputs, inferRouterOutputs } from '@trpc/server'
-import { BackgroundRouter, publicRouter } from 'chrome/background/router/router'
+import type { inferRouterInputs, inferRouterOutputs } from '@trpc/server'
+import type {
+  BackgroundRouter,
+  publicRouter,
+} from 'chrome/background/router/router'
 import { getTabId } from '../../helpers/getTabId'
 import { chromeLink } from 'trpc-chrome/link'
 
@@ -12,6 +15,19 @@ type BackgroundClient = ReturnType<
 >
 export type BackgroundClientMethod = keyof BackgroundClient
 
+/**
+ * The background's methods for web pages, by name: every one of the public router (a
+ * check of the types, without bundling the router into the content script).
+ */
+const publicMethods = {
+  openPopup: true,
+  extensionStatus: true,
+} as const satisfies Record<keyof RouterInput, true>
+
+/** Whether a dApp's message names one of the background's public methods. */
+export const isPublicMethod = (name: string): name is keyof RouterInput =>
+  Object.hasOwn(publicMethods, name)
+
 const callMethodFactory =
   (
     backgroundClientInstance: ReturnType<
@@ -21,13 +37,12 @@ const callMethodFactory =
     origin: string,
   ) =>
   <M extends keyof RouterInput>(method: M) =>
-  (data: unknown): Promise<RouterOutput[M]> => {
+  (data: unknown): Promise<RouterOutput[M]> =>
     // @ts-expect-error
-    return backgroundClientInstance['public'][method].query({
+    backgroundClientInstance['public'][method].query({
       data,
       metadata: { tabId, origin, caller: 'contentScript' },
     })
-  }
 
 let backgroundClient: ReturnType<typeof callMethodFactory> | null = null
 

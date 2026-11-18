@@ -1,0 +1,529 @@
+.rdx-banner {
+  display: flex;
+  align-items: center;
+  gap: var(--rdx-space-s);
+  margin-bottom: var(--rdx-space-m);
+  padding: var(--rdx-space-m);
+  border-radius: var(--rdx-radius-m);
+  background: var(--rdx-warning-background);
+  color: var(--rdx-warning);
+  font: 500 14px/18px var(--rdx-font);
+}
+.rdx-banner svg {
+  flex: none;
+  width: 20px;
+  height: 20px;
+  color: var(--rdx-warning-icon);
+}
+
+.request-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--rdx-space-m);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+/* A request as a card of the page, like the wallet cards: what it is and which
+   dApp asks, with its action at the top right; its state and since when; who it
+   is for; and below, what the user has to do while it waits. */
+.request-card {
+  overflow: hidden;
+  border: 1px solid var(--rdx-tile-border);
+  border-radius: var(--rdx-radius-default);
+  background: var(--rdx-tile-background);
+  box-shadow: var(--rdx-tile-shadow);
+  color: var(--rdx-text);
+  font-family: var(--rdx-font);
+}
+.request-card__body {
+  display: flex;
+  flex-direction: column;
+  gap: var(--rdx-space-s);
+  padding: 14px var(--rdx-space-default);
+}
+/* The kind, with the action beside it; the origin below, on the whole width. */
+.request-card__header {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  column-gap: var(--rdx-space-m);
+  row-gap: var(--rdx-space-xxxs);
+  align-items: center;
+}
+.request-card__kind {
+  grid-area: 1 / 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  margin: 0;
+  font: 600 16px/22px var(--rdx-font);
+}
+/* Host names can be long: one line, the whole of it in its title. */
+.request-card__origin {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.request-card__origin {
+  grid-column: 1 / -1;
+  min-width: 0;
+  color: var(--rdx-text-secondary);
+  font: 500 14px/18px var(--rdx-font);
+}
+/* On the line of the title, its padding outside the text: the word lines up
+   with the card's edge and the line keeps its height. Scoped, as
+   rdx-text-button resets everything. */
+.request-card__header .request-card__cancel {
+  grid-area: 1 / 2;
+  align-self: center;
+  margin: calc(-1 * var(--rdx-space-xxs)) calc(-1 * var(--rdx-space-xs));
+}
+/* The status, with how long at the far right, and who it is for: every text
+   after the same icon column, so they line up. The time is right-aligned in
+   figures of one width, so as it grows it only reaches left, and the status
+   stays where it is. */
+.request-card__details {
+  display: grid;
+  grid-template-columns: 16px minmax(0, 1fr) auto;
+  align-items: center;
+  gap: var(--rdx-space-xs) var(--rdx-space-s);
+  color: var(--rdx-text-secondary);
+  font: 400 13px/18px var(--rdx-font);
+}
+.request-card__icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 16px;
+  height: 16px;
+}
+.request-card__icon svg {
+  width: 16px;
+  height: 16px;
+}
+.request-card__dot::before {
+  content: '';
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--request-tone);
+}
+.request-card {
+  --request-tone: var(--rdx-gray-2);
+}
+.request-card[data-status='waitingForWallet'],
+.request-card[data-status='walletDisconnected'] {
+  --request-tone: var(--rdx-warning-icon);
+}
+.request-card[data-status='sending'] {
+  --request-tone: var(--rdx-text-button);
+}
+.request-card[data-status='deliveredToWallet'],
+.request-card[data-status='answered'] {
+  --request-tone: var(--rdx-ok-dot);
+}
+.request-card[data-status='failed'] {
+  --request-tone: var(--rdx-error);
+}
+.request-card__status {
+  color: var(--rdx-text);
+  font-weight: 500;
+}
+.request-card[data-status='failed'] .request-card__status {
+  color: var(--rdx-error);
+}
+.request-card__time {
+  justify-self: end;
+  display: inline-flex;
+  align-items: center;
+  gap: var(--rdx-space-xxs);
+  color: var(--rdx-text-secondary);
+  font: 400 13px/18px var(--rdx-font);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+.request-card__time svg {
+  flex: none;
+  width: 14px;
+  height: 14px;
+}
+.request-card__wallet {
+  grid-column: 2 / -1;
+}
+.request-card__status,
+.request-card__wallet {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+/* Being cancelled, or sent again: its content dimmed a little, the same size. The
+   card itself stays opaque: sliding away, the next one was seen through it. */
+.request-card__body {
+  transition: opacity 0.2s ease;
+}
+/* Its words only: its footer keeps its colour (a faded footer seemed to lie under
+   the next card's as it slid away). */
+.request-card--busy > .request-card__body {
+  opacity: 0.55;
+}
+.request-card__note {
+  padding-left: calc(16px + var(--rdx-space-s));
+  color: var(--rdx-text-secondary);
+  font: 400 13px/18px var(--rdx-font);
+}
+.request-card--finished .request-card__kind,
+.request-card--finished .request-card__status {
+  color: var(--rdx-text-secondary);
+}
+/* While no wallet it is for is connected: what to do, at the bottom. */
+.request-card__footer {
+  display: flex;
+  align-items: center;
+  gap: var(--rdx-space-s);
+  margin: 0;
+  padding: 10px var(--rdx-space-default);
+  border-top: 1px solid var(--rdx-tile-divider);
+  background: var(--rdx-warning-background);
+  color: var(--rdx-warning);
+  font: 500 13px/18px var(--rdx-font);
+}
+.request-card__footer svg {
+  flex: none;
+  width: 18px;
+  height: 18px;
+  color: var(--rdx-warning-icon);
+}
+/* A notice with something to decide: what happened, what to do, and the
+   action, one under the other beside the icon. */
+.request-card__footer:has(.request-card__footer-body) {
+  align-items: flex-start;
+}
+.request-card__footer-body {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  flex: 1;
+  gap: var(--rdx-space-xs);
+  min-width: 0;
+}
+.request-card__footer-title {
+  font-weight: 600;
+}
+.request-card__footer-body > span {
+  font-weight: 400;
+}
+/* Its action, centred under the notice: a text button, like Cancel. Scoped,
+   as rdx-text-button resets everything. */
+.request-card__footer-body .request-card__resend {
+  align-self: center;
+  margin-bottom: calc(-1 * var(--rdx-space-xxs));
+  font-weight: 600;
+}
+/* A dApp's requests waiting for their turn, as a deck under its card in
+   progress. Folded, the edges of the cards beneath peek out under it, and a
+   quiet line says how many. Open, the deck lays them out below as the dApp's
+   line: one compact row each, along a thin rail, with no box of their own. */
+.request-deck__top {
+  position: relative;
+  isolation: isolate;
+  padding-bottom: 16px;
+  transition: padding-bottom 0.24s ease;
+}
+.request-deck__top > .request-card {
+  position: relative;
+  z-index: 2;
+}
+.request-deck__top::before,
+.request-deck__top::after {
+  content: '';
+  position: absolute;
+  height: 32px;
+  border: 1px solid var(--rdx-tile-divider);
+  border-radius: var(--rdx-radius-default);
+  background: var(--rdx-tile-background);
+  box-shadow: 0 2px 6px rgb(0 0 0 / 8%);
+  transition:
+    opacity 0.24s ease,
+    transform 0.24s ease;
+}
+.request-deck__top::before {
+  right: 12px;
+  bottom: 8px;
+  left: 12px;
+  z-index: 1;
+}
+.request-deck__top::after {
+  right: 24px;
+  bottom: 0;
+  left: 24px;
+  z-index: 0;
+  opacity: 0.6;
+}
+.request-deck--open .request-deck__top {
+  padding-bottom: 0;
+}
+.request-deck--open .request-deck__top::before,
+.request-deck--open .request-deck__top::after {
+  opacity: 0;
+  transform: translateY(-16px);
+}
+.request-deck__top {
+  cursor: pointer;
+}
+/* Over the spread deck: the card rising to the top passes over the cards below. */
+.request-deck--open .request-deck__top {
+  z-index: 3;
+}
+/* The click on the card, for the keyboard: out of sight until focused. */
+.request-deck__keyboard-toggle {
+  position: absolute;
+  bottom: 22px;
+  left: var(--rdx-space-default);
+  z-index: 4;
+  padding: var(--rdx-space-xxs) var(--rdx-space-s);
+  border: 0;
+  border-radius: var(--rdx-radius-m);
+  background: var(--rdx-text-button);
+  color: var(--rdx-tile-background);
+  font: 600 12px/16px var(--rdx-font);
+  clip-path: inset(50%);
+  opacity: 0;
+}
+.request-deck__keyboard-toggle:focus-visible {
+  clip-path: none;
+  opacity: 1;
+  outline: 2px solid var(--rdx-text-button);
+  outline-offset: 2px;
+}
+/* Open, the cards come out from under the top one, one after the other; closed,
+   they slide back under it the other way round. */
+.request-deck__spread {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+}
+.request-deck__card {
+  opacity: 0;
+  /* Moved only, never scaled: scaled text blurs. */
+  transform: translateY(calc(-24px - var(--deck-index, 0) * 10px));
+  transition:
+    opacity 0.3s ease,
+    transform 0.38s cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+.request-deck--open .request-deck__card {
+  opacity: 1;
+  transform: none;
+  transition-delay: calc(min(var(--deck-index, 0), 8) * 45ms);
+}
+/* The space above each card is inside its place, so that a place closing takes
+   its space with it: the cards below slide up, they never jump. */
+.request-deck__card-place {
+  padding-top: var(--rdx-space-m);
+}
+/* A card leaving the spread deck stays in its place while it goes: cancelled, it
+   slides away; whose turn came, it is shown rising to the top instead. Then its
+   place closes (its height, animated from the script), and the cards below move up
+   in the layout. */
+.request-deck__card--removed,
+.request-deck__card--promoted {
+  pointer-events: none;
+}
+.request-deck__card--removed .request-card {
+  animation: request-card-leave 0.3s cubic-bezier(0.4, 0, 0.6, 1) forwards;
+}
+.request-deck__card--promoted .request-card {
+  visibility: hidden;
+}
+/* A request joining the spread deck comes in at the end. */
+.pending-requests--settled
+  .request-deck--open
+  .request-deck__card--joining
+  .request-card {
+  animation: request-card-join 0.34s cubic-bezier(0.2, 0.8, 0.2, 1) both;
+}
+@keyframes request-card-join {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+}
+@keyframes request-card-promoted {
+  to {
+    opacity: 0;
+    transform: translateY(-16px) scale(0.97);
+  }
+}
+/* A dApp's only request: no deck under it. */
+.request-deck--single .request-deck__top {
+  padding-bottom: 0;
+  cursor: auto;
+}
+.request-deck--single .request-deck__top::before,
+.request-deck--single .request-deck__top::after {
+  display: none;
+}
+/* The card on top going (answered, cancelled), as with a real deck: it slides
+   off to the side, uncovering the next one, which was already there as the
+   first card beneath (a little lower, a little narrower) and steps up into its
+   place, while the cards behind move up one too. Nothing fades in from
+   nowhere. */
+.pending-requests--emptying {
+  /* Clipped as it closes, without changing how the margins inside it meet (as
+     hidden did): what is below moved 2px at once when the last card started off. */
+  overflow: clip;
+  overflow-clip-margin: 0;
+}
+.pending-requests {
+  position: relative;
+  overflow-x: clip;
+  overflow-clip-margin: 12px;
+}
+/* Positioned, so that each item is measured within the one around it. */
+.request-list,
+.request-list > li {
+  position: relative;
+}
+/* An entry gone with nothing in its place: in its place, it slides away; then its
+   place closes, as a card leaving a spread deck. */
+.request-list > .request-list__leaving {
+  pointer-events: none;
+}
+.request-list__leaving .request-card {
+  animation: request-card-leave 0.3s cubic-bezier(0.4, 0, 0.6, 1) forwards;
+}
+.request-deck__top {
+  position: relative;
+}
+.request-swap__leaving {
+  position: absolute;
+  inset: 0 0 auto;
+  z-index: 3;
+  pointer-events: none;
+  transform-origin: 50% 100%;
+  animation: request-card-leave 0.34s cubic-bezier(0.4, 0, 0.6, 1) forwards;
+}
+/* Opaque while it slides, as a card would be: seeing the next one through it
+   looked like a smudge. It fades only on its last stretch, nearly gone. */
+/* Approved in the wallet: it goes to the left; rejected, cancelled or failed, to
+   the right. */
+.request-swap__leaving.request-swap__leaving--accepted,
+.request-list__leaving .request-card.request-card--accepted {
+  transform-origin: 50% 100%;
+  animation-name: request-card-leave-left;
+}
+@keyframes request-card-leave-left {
+  75% {
+    opacity: 1;
+  }
+  to {
+    opacity: 0;
+    transform: translateX(-105%) translateY(-4px) rotate(-5deg);
+  }
+}
+@keyframes request-card-leave {
+  75% {
+    opacity: 1;
+  }
+  to {
+    opacity: 0;
+    transform: translateX(105%) translateY(-4px) rotate(5deg);
+  }
+}
+.request-card--arriving {
+  transform-origin: 50% 100%;
+  animation: request-card-step-up 0.42s cubic-bezier(0.2, 0.9, 0.3, 1) both;
+}
+/* From the first card beneath (lower, and narrower: clipped, not scaled, so that
+   its text stays sharp). */
+@keyframes request-card-step-up {
+  from {
+    transform: translateY(8px);
+    clip-path: inset(0 12px round var(--rdx-radius-default));
+  }
+  to {
+    clip-path: inset(0 0 round var(--rdx-radius-default));
+  }
+}
+/* Spread, the next card comes from the spread deck (see useLayoutMotion): no step
+   up from beneath (it clipped it), and the deck's edges are not shown. */
+.request-deck--open .request-card--arriving,
+.request-deck--open.request-deck--advancing .request-deck__top::before,
+.request-deck--open.request-deck--advancing .request-deck__top::after {
+  animation: none;
+}
+.request-deck--advancing .request-deck__top::before {
+  transform-origin: 50% 100%;
+  animation: request-deck-step-up 0.42s cubic-bezier(0.2, 0.9, 0.3, 1) both;
+}
+.request-deck--advancing .request-deck__top::after {
+  transform-origin: 50% 100%;
+  animation: request-deck-step-up-last 0.42s cubic-bezier(0.2, 0.9, 0.3, 1) both;
+}
+@keyframes request-deck-step-up {
+  from {
+    transform: translateY(8px) scaleX(0.93);
+  }
+}
+@keyframes request-deck-step-up-last {
+  from {
+    opacity: 0;
+    transform: translateY(8px) scaleX(0.93);
+  }
+}
+/* A footer appearing fades in, in its place at once (the cards around move to make
+   room in one motion); on a card coming up to the top, with its rise. Not when the
+   panel opens, nor when it replaces one already in sight. */
+/* A footer no longer needed, while it closes (see useLayoutMotion). */
+.request-card__reveal--leaving {
+  overflow: hidden;
+  pointer-events: none;
+}
+.pending-requests--settled .request-card--footer-new .request-card__reveal {
+  animation: request-card-footer-in 0.3s ease both;
+}
+@keyframes request-card-footer-in {
+  from {
+    opacity: 0.2;
+  }
+}
+/* A status that changes on a card in sight: the new words fade in, rather than
+   flicker through. Not on a card appearing, leaving or moving. */
+.pending-requests--settled .request-card__status-text--changed {
+  animation: request-card-status-in 0.24s ease;
+}
+/* From faint, never from blank: a blank status read as a flicker. */
+@keyframes request-card-status-in {
+  from {
+    opacity: 0.35;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .request-deck__top,
+  .request-deck__top::before,
+  .request-deck__top::after,
+  .request-deck__card {
+    transition: none;
+  }
+  .request-swap__leaving,
+  .request-card--arriving,
+  .request-deck__card--removed,
+  .request-deck__card--promoted,
+  .request-deck--open .request-deck__card--joining,
+  .request-deck--open .request-deck__card--joining .request-deck__card-place,
+  .request-deck--open .request-deck__card--joining .request-card,
+  .request-deck__card--removed .request-card,
+  .request-deck__card--promoted .request-card,
+  .request-deck__card--removed .request-deck__card-place,
+  .request-deck__card--promoted .request-deck__card-place,
+  .request-deck--advancing .request-deck__top::before,
+  .request-deck--advancing .request-deck__top::after,
+  .request-card__reveal,
+  .request-card__status-text--changed {
+    animation: none;
+  }
+  .request-swap__leaving {
+    display: none;
+  }
+}

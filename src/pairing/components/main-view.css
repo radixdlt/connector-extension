@@ -1,0 +1,273 @@
+/* The popup's and side panel's main view, like the wallet's home screen: a large
+   title, sections of tiles, and the primary button at the bottom. Its colours are
+   the page and tile roles of ui/tokens.css, set by each theme. */
+.popup-icon-button {
+  all: unset;
+  box-sizing: border-box;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  color: var(--rdx-page-icon);
+  cursor: pointer;
+}
+.popup-icon-button:hover {
+  background: color-mix(in srgb, currentColor 10%, transparent);
+}
+.popup-icon-button:focus-visible {
+  outline: 2px solid var(--rdx-page-focus-ring);
+  outline-offset: 2px;
+}
+.popup-icon-button svg {
+  width: 24px;
+  height: 24px;
+}
+.settings-button {
+  position: absolute;
+  top: 12px;
+  right: 10px;
+  z-index: 2;
+}
+
+.main-view {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  min-height: 0;
+  font-family: var(--rdx-font);
+}
+.main-view__title,
+.pairing__title {
+  margin: 2px 44px var(--rdx-space-default) 0;
+  color: var(--rdx-page-text);
+  font: var(--rdx-page-title-font);
+  /* Always one line: the theme's size while it fits, smaller in a narrow side
+     panel. The longest title is about 11.05 times as wide as its font size, and
+     has the page less its padding (32px) and the settings button (44px). */
+  font-size: min(var(--rdx-page-title-size), calc((100vw - 76px) / 11.4));
+  white-space: nowrap;
+  text-shadow: var(--rdx-page-text-shadow);
+}
+.main-view__content {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
+  /* The pending requests move themselves, smoothly: the browser's scroll anchoring
+     shifted the whole view at once whenever their heights changed while scrolled. */
+  overflow-anchor: none;
+  margin: 0 -4px;
+  padding: 0 4px var(--rdx-space-default);
+}
+.main-view__section-title {
+  margin: var(--rdx-space-l) 0 var(--rdx-space-s);
+  color: var(--rdx-page-text-secondary);
+  font: 700 14px/18px var(--rdx-font);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  text-shadow: var(--rdx-page-text-shadow);
+}
+/* How many, beside a section's title: the same badge as a dApp's queue. */
+.main-view__count {
+  display: inline-block;
+  min-width: 22px;
+  margin-left: var(--rdx-space-xs);
+  padding: 1px 7px;
+  border-radius: 11px;
+  background: var(--rdx-count-background);
+  color: var(--rdx-count-text);
+  font: 700 12px/18px var(--rdx-font);
+  letter-spacing: 0;
+  font-variant-numeric: tabular-nums;
+  text-align: center;
+  text-shadow: none;
+  vertical-align: 1px;
+}
+.pending-requests .main-view__section-title,
+.main-view__content > .main-view__section-title:first-child {
+  margin-top: 0;
+}
+/* As tall as with its count (taller than the line), also once the count is gone:
+   what is below did not move by 2px when the last request started to leave. */
+.pending-requests .main-view__section-title {
+  min-height: 20px;
+}
+/* The space between the pending requests and the next section is the requests'
+   own, so that it closes with them (useClosingSection) instead of going at once
+   when they are gone. */
+.main-view__content > .pending-requests {
+  margin-bottom: var(--rdx-space-l);
+}
+.main-view__content > .pending-requests + .main-view__section-title {
+  margin-top: 0;
+}
+
+/* The bottom of the view, outside the scrolling list: always in reach. */
+.main-view__footer {
+  flex: none;
+  padding-top: var(--rdx-space-m);
+  border-top: 1px solid var(--rdx-page-divider);
+}
+
+/* The wallet's primary button. */
+.main-view__button {
+  all: unset;
+  box-sizing: border-box;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--rdx-space-s);
+  width: 100%;
+  min-height: var(--rdx-button-height);
+  border-radius: var(--rdx-radius-m);
+  background: var(--rdx-page-button);
+  color: var(--rdx-page-button-text);
+  font: 700 16px/18px var(--rdx-font);
+  cursor: pointer;
+}
+.main-view__button:hover {
+  background: var(--rdx-page-button-hover);
+}
+.main-view__button:focus-visible {
+  outline: 2px solid var(--rdx-page-focus-ring);
+  outline-offset: 2px;
+}
+.main-view__button svg {
+  width: 20px;
+  height: 20px;
+}
+
+/* A way out that is not the main action: outlined, in the page's link colour. */
+.main-view__button--secondary {
+  background: transparent;
+  color: var(--rdx-page-link);
+  box-shadow: inset 0 0 0 1.5px currentColor;
+  text-shadow: var(--rdx-page-text-shadow);
+}
+.main-view__button--secondary:hover {
+  background: color-mix(in srgb, currentColor 10%, transparent);
+}
+
+/* The pairing view: title, one line of explanation, the QR code to scan, the
+   steps to reach the scanner in the wallet, and the way out at the bottom. */
+.pairing__intro {
+  margin: calc(var(--rdx-space-default) * -0.5) 0 var(--rdx-space-m);
+  color: var(--rdx-page-text-secondary);
+  font: 400 14px/20px var(--rdx-font);
+  text-shadow: var(--rdx-page-text-shadow);
+}
+.pairing__qr {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--rdx-space-s);
+  margin: 0 0 var(--rdx-space-m);
+}
+.pairing__qr-card {
+  display: flex;
+  padding: 12px;
+  border: 1px solid var(--rdx-tile-border);
+  border-radius: 20px;
+  background: #fff;
+  box-shadow:
+    var(--rdx-tile-shadow),
+    0 6px 20px rgba(0, 48, 87, 0.1);
+}
+.pairing__qr-card svg {
+  display: block;
+}
+/* Waiting for the wallet: a dot that breathes while the code is shown. */
+.pairing__waiting {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--rdx-space-s);
+  color: var(--rdx-page-text-secondary);
+  font: 500 13px/18px var(--rdx-font);
+  text-shadow: var(--rdx-page-text-shadow);
+}
+.pairing__waiting::before {
+  content: '';
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--rdx-ok-dot);
+  animation: pairing-waiting 1.6s ease-in-out infinite;
+}
+@keyframes pairing-waiting {
+  50% {
+    opacity: 0.25;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .pairing__waiting::before {
+    animation: none;
+  }
+}
+
+/* The steps, as the settings draw their lists (settings/settings.css): from
+   edge to edge of the page, the number where a row has its icon. */
+.pairing__steps {
+  --rdx-row-padding-y: 10px;
+  margin: 0 calc(-1 * var(--rdx-space-default));
+}
+.pairing__steps .rdx-section__header {
+  padding: 4px var(--rdx-space-default) 12px;
+}
+.pairing__steps .rdx-row {
+  min-height: 48px;
+}
+.pairing__step-number {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  font: 700 13px/1 var(--rdx-font);
+}
+.pairing__step-text {
+  flex: 1 1 auto;
+  min-width: 0;
+  font: 400 14px/20px var(--rdx-font);
+}
+.pairing__step-text strong {
+  font-weight: 600;
+}
+
+/* A short message above the wallets (e.g. a picture that could not be used). */
+.main-view__notice {
+  margin: 0 0 var(--rdx-space-m);
+  padding: var(--rdx-space-s) var(--rdx-space-m);
+  border-radius: var(--rdx-radius-s);
+  background: var(--rdx-notice-background, var(--rdx-error-background));
+  color: var(--rdx-notice-text, var(--rdx-error));
+  font: 500 13px/18px var(--rdx-font);
+}
+
+/* The window that chooses a wallet's picture (opened from the popup). */
+.wallet-picture__preview {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: var(--rdx-space-m);
+}
+.wallet-picture__avatar {
+  width: 112px;
+  height: 112px;
+  border-radius: 32px;
+}
+.wallet-picture__avatar svg {
+  width: 56px;
+  height: 56px;
+}
+.wallet-picture__name {
+  margin: 0;
+  color: var(--rdx-page-text);
+  font: 600 18px/24px var(--rdx-font);
+  text-shadow: var(--rdx-page-text-shadow);
+}
+.wallet-picture__actions {
+  display: flex;
+  flex-direction: column;
+  gap: var(--rdx-space-s);
+}

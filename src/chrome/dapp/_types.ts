@@ -14,3 +14,11 @@ export const messageLifeCycleEvent = {
 } as const
 
 export type MessageLifeCycleEvent = keyof typeof messageLifeCycleEvent
+
+/** The event that tells a dApp whether the extension has a linked wallet. */
+export const extensionStatusEvent = (isWalletLinked: boolean) => ({
+  eventType: messageLifeCycleEvent.extensionStatus,
+  isExtensionAvailable: true,
+  isWalletLinked,
+  canHandleSessions: true,
+})

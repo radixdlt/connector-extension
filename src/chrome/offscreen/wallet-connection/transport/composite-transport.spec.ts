@@ -44,6 +44,12 @@ const FakeTransport = () => {
       destroy: vi.fn(),
       shutdown: vi.fn<IrohTransport['shutdown']>(() => okAsync(undefined)),
       networkChanged: vi.fn<IrohTransport['networkChanged']>(),
+      diagnostics: vi.fn(() => ({
+        connected: connected.value,
+        signalingConnected: connected.value,
+        relayUrlValid: true,
+        startFailures: 0,
+      })),
     },
   }
 }
@@ -67,6 +73,17 @@ const createTestSuite = () => {
   )
   const logger = { warn: vi.fn(), info: vi.fn(), error: vi.fn() }
   const clock = { time: 1_000_000 }
+  // Timers that run when the test advances the clock past them.
+  const pendingTimers = new Map<number, { at: number; run: () => void }>()
+  let timerId = 0
+  const advance = (ms: number) => {
+    clock.time += ms
+    for (const [id, timer] of [...pendingTimers])
+      if (timer.at <= clock.time) {
+        pendingTimers.delete(id)
+        timer.run()
+      }
+  }
   const transport = CompositeTransport({
     slots: transportSlots({
       webRtc: webRtc.transport,
@@ -76,8 +93,18 @@ const createTestSuite = () => {
     irohHoldBackMs: 30_000,
     incomingDuplicateWindowMs: 60_000,
     now: () => clock.time,
+    timers: {
+      setTimeout: (run, ms) => {
+        timerId += 1
+        pendingTimers.set(timerId, { at: clock.time + ms, run })
+        return timerId
+      },
+      clearTimeout: (id) => pendingTimers.delete(id),
+    },
   })
   const connected: boolean[] = []
+  const sendingVia: (string | undefined)[] = []
+  transport.sendingVia$.subscribe((via) => sendingVia.push(via))
   transport.connected$.subscribe((value) => connected.push(value))
   const received: TransportMessage[] = []
   transport.onMessage$.subscribe((message) => received.push(message))
@@ -90,6 +117,8 @@ const createTestSuite = () => {
     received,
     logger,
     clock,
+    advance,
+    sendingVia,
   }
 }
 
@@ -211,6 +240,25 @@ describe('CompositeTransport', () => {
       expect(webRtc.transport.restart).toHaveBeenCalledTimes(1)
       expect(iroh.transport.restart).not.toHaveBeenCalled()
       expect(notices).toEqual([{ type: 'walletClosed' }])
+    })
+
+    it('passes on the requests the wallet lists over WebRTC only while iroh is not connected', () => {
+      const { transport, webRtc, iroh } = bothConnected()
+      const notices: WalletNotice[] = []
+      transport.walletNotices$?.subscribe((notice) => notices.push(notice))
+      const held: WalletNotice = {
+        type: 'requestsHeld',
+        interactionIds: [],
+        since: 1,
+      }
+
+      // iroh connected: it sends again what the wallet lost by itself.
+      webRtc.notices.next(held)
+      expect(notices).toEqual([])
+
+      iroh.connected.next(false)
+      webRtc.notices.next(held)
+      expect(notices).toEqual([held])
     })
 
     it('restarts no transport that is not connected when the wallet app is closed', () => {
@@ -386,6 +434,57 @@ describe('CompositeTransport', () => {
     })
   })
 
+  describe('a transport connected but delivering nothing', () => {
+    /** WebRTC alone, connected, every send timing out. */
+    const stalledWebRtc = () => {
+      const suite = createTestSuite()
+      suite.transport.setConnectionPassword(password)
+      suite.transport.connect()
+      suite.transport.setConnectionConfig(transportConfig('webrtc'))
+      suite.webRtc.connected.next(true)
+      suite.webRtc.transport.sendMessage.mockImplementation(() =>
+        failWith('timeout'),
+      )
+      return suite
+    }
+
+    it('is restarted after two sends timed out in a row', async () => {
+      const { transport, webRtc } = stalledWebRtc()
+
+      await send(transport)
+      expect(webRtc.transport.restart).not.toHaveBeenCalled()
+      await send(transport)
+
+      expect(webRtc.transport.restart).toHaveBeenCalledTimes(1)
+    })
+
+    it('is not restarted when a send in between gets through', async () => {
+      const { transport, webRtc } = stalledWebRtc()
+
+      await send(transport)
+      webRtc.transport.sendMessage.mockImplementationOnce(() =>
+        okAsync(undefined),
+      )
+      await send(transport)
+      await send(transport)
+
+      expect(webRtc.transport.restart).not.toHaveBeenCalled()
+    })
+
+    it('is not restarted for failures that say nothing was sent', async () => {
+      const { transport, webRtc } = stalledWebRtc()
+      webRtc.transport.sendMessage.mockImplementation(() =>
+        failWith('notConnected'),
+      )
+
+      await send(transport)
+      await send(transport)
+      await send(transport)
+
+      expect(webRtc.transport.restart).not.toHaveBeenCalled()
+    })
+  })
+
   describe('iroh preference', () => {
     it('uses iroh when both are connected, whichever connected first', async () => {
       const { transport, webRtc, iroh } = createTestSuite()
@@ -397,12 +496,14 @@ describe('CompositeTransport', () => {
 
       expect(iroh.transport.sendMessage).toHaveBeenCalledTimes(1)
       expect(webRtc.transport.sendMessage).not.toHaveBeenCalled()
+      expect(transport.diagnostics().sendingVia).toBe('iroh')
     })
 
     it('switches to iroh as soon as it connects', async () => {
       const { transport, webRtc, iroh } = createTestSuite()
       transport.setConnectionConfig(transportConfig('webrtcAndIroh'))
       webRtc.connected.next(true)
+      expect(transport.diagnostics().sendingVia).toBe('webrtc')
       await send(transport)
 
       iroh.connected.next(true)
@@ -410,10 +511,30 @@ describe('CompositeTransport', () => {
 
       expect(webRtc.transport.sendMessage).toHaveBeenCalledTimes(1)
       expect(iroh.transport.sendMessage).toHaveBeenCalledTimes(1)
+      expect(transport.diagnostics().sendingVia).toBe('iroh')
+    })
+
+    it('logs which transport carried each message, with its ids and size', async () => {
+      const { transport, logger } = bothConnected()
+
+      await transport.sendMessage({
+        interactionId: 'interaction-1',
+        items: { body: 'message-body' },
+      })
+
+      expect(logger.info).toHaveBeenCalledWith('sent a message to the wallet', {
+        via: 'iroh',
+        interactionId: 'interaction-1',
+        bytes: expect.any(Number),
+        durationMs: expect.any(Number),
+      })
+      expect(JSON.stringify(logger.info.mock.calls)).not.toContain(
+        'message-body',
+      )
     })
 
     it('logs a fallback with the transport that failed and why', async () => {
-      const { transport, iroh, webRtc, logger } = bothConnected()
+      const { transport, iroh, logger } = bothConnected()
       iroh.transport.sendMessage.mockReturnValue(failWith('notConnected'))
 
       await transport.sendMessage({ interactionId: 'interaction-1' })
@@ -428,7 +549,18 @@ describe('CompositeTransport', () => {
           interactionId: 'interaction-1',
         },
       )
-      expect(webRtc.transport.sendMessage).toHaveBeenCalledTimes(1)
+      expect(logger.info).toHaveBeenCalledWith(
+        'sent a message to the wallet',
+        expect.objectContaining({
+          via: 'webrtc',
+          fallbackFrom: 'iroh',
+          fallbackReason: 'notConnected',
+        }),
+      )
+      expect(transport.diagnostics().stats).toMatchObject({
+        sent: { iroh: 0, webrtc: 1 },
+        fallbacks: 1,
+      })
     })
 
     it('after iroh may have failed to deliver, sends the next messages over WebRTC', async () => {
@@ -443,6 +575,10 @@ describe('CompositeTransport', () => {
         expect.stringMatching(/^iroh did not deliver a message/),
         expect.objectContaining({ reason: 'timeout', holdBackMs: 30_000 }),
       )
+      expect(transport.diagnostics()).toMatchObject({
+        sendingVia: 'webrtc',
+        irohHeldBackForMs: 30_000,
+      })
 
       // The queue's retry, and the next messages, go over WebRTC.
       clock.time += 29_999
@@ -454,21 +590,42 @@ describe('CompositeTransport', () => {
       clock.time += 1
       await send(transport)
       expect(iroh.transport.sendMessage).toHaveBeenCalledTimes(2)
+      expect(transport.diagnostics().irohHeldBackForMs).toBeUndefined()
+    })
+
+    it('announces the transport the next message goes through, as it changes', async () => {
+      const { transport, iroh, webRtc, sendingVia, advance } = createTestSuite()
+      transport.setConnectionPassword(password)
+      transport.connect()
+      transport.setConnectionConfig(transportConfig('webrtcAndIroh'))
+      webRtc.connected.next(true)
+      iroh.connected.next(true)
+      expect(sendingVia).toEqual([undefined, 'webrtc', 'iroh'])
+
+      // Held back after a failure: WebRTC, until the hold-back ends.
+      iroh.transport.sendMessage.mockReturnValueOnce(failWith('timeout'))
+      await send(transport)
+      expect(sendingVia.at(-1)).toBe('webrtc')
+      advance(30_000)
+      expect(sendingVia.at(-1)).toBe('iroh')
+
+      iroh.connected.next(false)
+      webRtc.connected.next(false)
+      expect(sendingVia.slice(-2)).toEqual(['webrtc', undefined])
     })
 
     it('prefers iroh again as soon as it reconnects', async () => {
-      const { transport, iroh, webRtc, logger } = bothConnected()
+      const { transport, iroh, logger } = bothConnected()
       iroh.transport.sendMessage.mockReturnValueOnce(
         failWith('failedToSendMessage'),
       )
       await send(transport)
-      await send(transport)
-      expect(webRtc.transport.sendMessage).toHaveBeenCalledTimes(1)
+      expect(transport.diagnostics().sendingVia).toBe('webrtc')
 
       iroh.connected.next(false)
       iroh.connected.next(true)
-      await send(transport)
-      expect(iroh.transport.sendMessage).toHaveBeenCalledTimes(2)
+
+      expect(transport.diagnostics().sendingVia).toBe('iroh')
       expect(logger.info).toHaveBeenCalledWith(
         'iroh reconnected: preferred again for sending',
       )
@@ -485,6 +642,7 @@ describe('CompositeTransport', () => {
       await send(transport)
 
       expect(iroh.transport.sendMessage).toHaveBeenCalledTimes(2)
+      expect(transport.diagnostics().sendingVia).toBe('iroh')
     })
 
     it('never holds iroh back in iroh mode', async () => {
@@ -494,6 +652,9 @@ describe('CompositeTransport', () => {
       iroh.transport.sendMessage.mockReturnValueOnce(failWith('timeout'))
 
       await send(transport)
+
+      expect(transport.diagnostics().irohHeldBackForMs).toBeUndefined()
+      expect(transport.diagnostics().sendingVia).toBe('iroh')
     })
   })
 
@@ -501,13 +662,18 @@ describe('CompositeTransport', () => {
     const response = { discriminator: 'success', interactionId: 'abc' }
 
     it('drops a message received again over the other transport, and logs it', () => {
-      const { webRtc, iroh, received, logger, clock } = bothConnected()
+      const { webRtc, iroh, received, logger, clock, transport } =
+        bothConnected()
 
       iroh.messages.next({ ...response })
       clock.time += 1_500
       webRtc.messages.next({ ...response })
 
       expect(received).toEqual([response])
+      expect(logger.info).toHaveBeenCalledWith(
+        'received a message from the wallet',
+        expect.objectContaining({ via: 'iroh', interactionId: 'abc' }),
+      )
       expect(logger.info).toHaveBeenCalledWith(
         'dropped a duplicate message from the wallet',
         expect.objectContaining({
@@ -518,6 +684,10 @@ describe('CompositeTransport', () => {
           interactionId: 'abc',
         }),
       )
+      expect(transport.diagnostics().stats).toMatchObject({
+        received: { iroh: 1, webrtc: 0 },
+        duplicatesDropped: 1,
+      })
     })
 
     it('delivers different messages with the same interaction id', () => {
@@ -532,34 +702,10 @@ describe('CompositeTransport', () => {
       expect(received).toHaveLength(2)
     })
 
-    it('delivers a message the same transport carries twice', () => {
-      const { webRtc, received } = bothConnected()
-
-      webRtc.messages.next({ ...response })
-      webRtc.messages.next({ ...response })
-
-      expect(received).toHaveLength(2)
-    })
-
-    it('drops nothing, and logs nothing, with WebRTC alone', () => {
-      const { transport, webRtc, received, logger } = createTestSuite()
-      transport.connect()
-      transport.setConnectionConfig(transportConfig('webrtc'))
-      webRtc.connected.next(true)
-
-      webRtc.messages.next({ ...response })
-      webRtc.messages.next({ ...response })
-      webRtc.connected.next(false)
-
-      expect(received).toHaveLength(2)
-      expect(logger.info).not.toHaveBeenCalled()
-      expect(logger.warn).not.toHaveBeenCalled()
-    })
-
     it('delivers the same message again after the window', () => {
-      const { webRtc, iroh, received, clock } = bothConnected()
+      const { webRtc, received, clock } = bothConnected()
 
-      iroh.messages.next({ ...response })
+      webRtc.messages.next({ ...response })
       clock.time += 60_000
       webRtc.messages.next({ ...response })
 
@@ -574,8 +720,13 @@ describe('CompositeTransport', () => {
       transport.setConnectionConfig(transportConfig('webrtc'))
       transport.setConnectionConfig(transportConfig('webrtcAndIroh'))
 
-      // WebRTC alone logs nothing more than without iroh.
-      expect(logger.info).toHaveBeenCalledTimes(1)
+      expect(logger.info).toHaveBeenCalledWith('link transports changed', {
+        mode: 'webrtc',
+        running: 'webrtc',
+        started: 'webrtc',
+        stopped: 'none',
+        reason: 'option: webrtc',
+      })
       expect(logger.info).toHaveBeenCalledWith('link transports changed', {
         mode: 'webrtcAndIroh',
         running: 'iroh, webrtc',
@@ -584,15 +735,49 @@ describe('CompositeTransport', () => {
         reason: 'option changed: webrtc → webrtcAndIroh',
       })
     })
+
+    it('logs the merged state and keeps recent events', () => {
+      const { transport, webRtc, iroh, logger } = createTestSuite()
+      transport.setConnectionConfig(transportConfig('webrtcAndIroh'))
+
+      webRtc.connected.next(true)
+      iroh.connected.next(true)
+      iroh.connected.next(false)
+      iroh.connected.next(true)
+
+      expect(logger.info).toHaveBeenCalledWith('link state changed', {
+        state: 'connected',
+        via: 'iroh, webrtc',
+        sendingVia: 'iroh',
+        previously: 'webrtc',
+        mode: 'webrtcAndIroh',
+      })
+      const diagnostics = transport.diagnostics()
+      expect(diagnostics.connects).toEqual({ iroh: 2, webrtc: 1 })
+      expect(diagnostics.recentEvents?.map((event) => event.event)).toEqual([
+        'connected',
+        'connected via webrtc',
+        'connected',
+        'connected via iroh, webrtc',
+        'disconnected',
+        'connected via webrtc',
+        'reconnected',
+        'connected via iroh, webrtc',
+      ])
+    })
   })
 
   describe('networkChanged', () => {
-    it('has iroh check its connection', () => {
+    it('has iroh check its connection, and keeps it among the recent events', () => {
       const { transport, iroh } = bothConnected()
 
       transport.networkChanged('online')
 
       expect(iroh.transport.networkChanged).toHaveBeenCalledWith('online')
+      expect(transport.diagnostics().recentEvents?.at(-1)).toMatchObject({
+        source: 'iroh',
+        event: 'network change (online): checking the connection',
+      })
     })
 
     it('does nothing while iroh is not selected', () => {
@@ -665,5 +850,131 @@ describe('CompositeTransport', () => {
 
     expect(webRtc.transport.destroy).toHaveBeenCalled()
     expect(iroh.transport.destroy).toHaveBeenCalled()
+  })
+
+  describe('diagnostics', () => {
+    it('reports nothing selected before the first configuration', () => {
+      const { transport } = createTestSuite()
+
+      expect(transport.diagnostics()).toMatchObject({
+        transport: undefined,
+        connected: false,
+        webRtc: undefined,
+        iroh: undefined,
+        sendingVia: undefined,
+        connects: { iroh: 0, webrtc: 0 },
+        recentEvents: [],
+      })
+    })
+
+    it('reports the selected transports only', () => {
+      const { transport, webRtc } = createTestSuite()
+      transport.setConnectionConfig(transportConfig('webrtcAndIroh'))
+      webRtc.connected.next(true)
+
+      expect(transport.diagnostics()).toMatchObject({
+        transport: 'webrtcAndIroh',
+        connected: true,
+        webRtc: { connected: true },
+        iroh: { connected: false },
+      })
+
+      transport.setConnectionConfig(transportConfig('webrtc'))
+      expect(transport.diagnostics().iroh).toBeUndefined()
+    })
+
+    it('holds neither the password nor the endpoint ids of a real iroh session', async () => {
+      const session = {
+        state: () => 'disconnected' as const,
+        send: () => Promise.resolve(),
+        nextEvent: () => new Promise<undefined>(() => {}),
+        shutdown: () => Promise.resolve(),
+        free: () => undefined,
+        diagnostics: () => ({
+          role: 'connector' as const,
+          localEndpointId: 'c0ffee'.repeat(10),
+          peerEndpointId: 'beef00'.repeat(10),
+          relayUrl: 'https://relay.example.com/',
+          publicRelays: false,
+          relayConnected: true,
+          state: 'disconnected' as const,
+          failedAttempts: 0,
+          keyCollision: false,
+          summary: 'connector c0ffeec0ff → beef00beef state=disconnected',
+        }),
+      }
+      const webRtc = FakeTransport()
+      const transport = CompositeTransport({
+        slots: transportSlots({
+          webRtc: webRtc.transport,
+          createIrohTransport: () =>
+            IrohTransport({
+              loadIroh: () =>
+                okAsync({
+                  startSession: async () => session,
+                  publicRelayUrls: () => ['https://public-relay.example.com/'],
+                  validateRelayUrl: () => undefined,
+                }),
+            }),
+        }),
+      })
+      transport.setConnectionPassword(password)
+      transport.connect()
+      transport.setConnectionConfig(transportConfig('iroh'))
+
+      await vi.waitFor(() =>
+        expect(transport.diagnostics().iroh?.session).toBeDefined(),
+      )
+      const text = JSON.stringify(transport.diagnostics())
+      expect(text).not.toContain(password.toString('hex'))
+      expect(text).not.toContain('c0ffee'.repeat(10))
+      expect(text).not.toContain('beef00'.repeat(10))
+      transport.destroy()
+    })
+  })
+
+  describe('send failure logs', () => {
+    it('name the transports tried and the size', async () => {
+      const { transport, webRtc, iroh, logger } = createTestSuite()
+      transport.setConnectionConfig(transportConfig('webrtcAndIroh'))
+      iroh.connected.next(true)
+      iroh.transport.sendMessage.mockReturnValue(failWith('notConnected'))
+      webRtc.transport.sendMessage.mockReturnValue(failWith('timeout'))
+      const message = { discriminator: 'test', body: 'message-body' }
+
+      await transport.sendMessage(message)
+      await transport.sendMessage(message)
+
+      expect(logger.warn).toHaveBeenCalledTimes(1)
+      expect(logger.warn).toHaveBeenCalledWith(
+        'sending a message to the wallet failed',
+        {
+          reason: 'timeout',
+          code: undefined,
+          transports: 'iroh, webrtc',
+          discriminator: 'test',
+          bytes: JSON.stringify(message).length,
+          durationMs: expect.any(Number),
+          timeoutMs: undefined,
+        },
+      )
+      expect(JSON.stringify(logger.warn.mock.calls)).not.toContain(
+        'message-body',
+      )
+    })
+
+    it('log a missing connection as information, not as a warning', async () => {
+      const { transport, webRtc, logger } = createTestSuite()
+      transport.setConnectionConfig(transportConfig('webrtc'))
+      webRtc.transport.sendMessage.mockReturnValue(failWith('notConnected'))
+
+      await transport.sendMessage({ discriminator: 'test' })
+
+      expect(logger.warn).not.toHaveBeenCalled()
+      expect(logger.info).toHaveBeenCalledWith(
+        'sending a message to the wallet failed',
+        expect.objectContaining({ reason: 'notConnected' }),
+      )
+    })
   })
 })

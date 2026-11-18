@@ -1,6 +1,7 @@
 import { Buffer } from 'buffer'
 import blake from 'blakejs'
-import { errAsync, okAsync, ResultAsync } from 'neverthrow'
+import type { ResultAsync } from 'neverthrow'
+import { errAsync, okAsync } from 'neverthrow'
 
 export const blake2b = (input: Buffer): ResultAsync<Buffer, Error> => {
   const output = new Uint8Array(32)

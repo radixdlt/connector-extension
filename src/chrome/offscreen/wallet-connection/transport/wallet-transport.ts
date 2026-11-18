@@ -41,10 +41,27 @@ export type WalletNotice =
   /** The wallet's app went to the background, or came back. */
   | { type: 'presence'; inBackground: boolean }
   /**
+   * The requests the wallet still has, as it said when the connection opened at
+   * `since` (WebRTC; over iroh the library acts on it by itself).
+   */
+  | { type: 'requestsHeld'; interactionIds: string[]; since: number }
+  /**
    * The wallet's app was closed: it said it went to the background, then stopped
    * answering (iroh). Its other transports are dead too: it is the same app.
    */
   | { type: 'walletClosed' }
+
+/** What to do with each kind of notice: a new kind needs its handler to compile. */
+export type WalletNoticeHandlers = {
+  [Type in WalletNotice['type']]: (
+    notice: Extract<WalletNotice, { type: Type }>,
+  ) => void
+}
+
+/** Passes each notice to the handler of its kind. */
+export const handleWalletNotices =
+  (handlers: WalletNoticeHandlers) => (notice: WalletNotice) =>
+    (handlers[notice.type] as (notice: WalletNotice) => void)(notice)
 
 /**
  * A link to one wallet, identified by the link's connection password.

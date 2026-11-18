@@ -143,6 +143,7 @@ const createTestSuite = (
   )
   const bindings: IrohBindings = {
     startSession,
+    publicRelayUrls: () => ['https://public-relay.example.com/'],
     validateRelayUrl: () => undefined,
   }
   const logger = {
@@ -462,6 +463,7 @@ describe('IrohTransport', () => {
       transport.setConnectionPassword(otherPassword)
       loaded.resolve({
         startSession,
+        publicRelayUrls: () => ['https://public-relay.example.com/'],
         validateRelayUrl: () => undefined,
       })
 
@@ -592,6 +594,7 @@ describe('IrohTransport', () => {
       const fake = FakeSession()
       const bindings: IrohBindings = {
         startSession: vi.fn(async () => fake.session),
+        publicRelayUrls: () => ['https://public-relay.example.com/'],
         validateRelayUrl: () => undefined,
       }
       const loadIroh = vi
@@ -981,6 +984,7 @@ describe('IrohTransport', () => {
           loadIroh: () =>
             okAsync({
               startSession: async () => FakeSession().session,
+              publicRelayUrls: () => [],
               validateRelayUrl: () => undefined,
             }),
           runningEndpoints,

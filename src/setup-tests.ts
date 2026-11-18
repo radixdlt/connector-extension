@@ -19,7 +19,7 @@ global.navigator.hid = {
 }
 
 global.CSS = {
-  supports: (k, v) => false,
+  supports: () => false,
 }
 
 type OnMessageListener = (message: any) => void
@@ -94,6 +94,11 @@ export const resetMocks = () => {
 resetMocks()
 
 global.chrome = chrome
+
+// The extension's URLs: its pages tell their own messages from web pages' by them
+// (see chrome/messages/trusted-senders).
+chrome.runtime.getURL = (path: string) =>
+  `chrome-extension://test-extension/${path}`
 
 // The iroh transport runs WebAssembly, which jsdom cannot load: tests use fake
 // sessions, and any real attempt to load the module fails like a failed fetch.

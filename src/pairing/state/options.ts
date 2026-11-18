@@ -1,5 +1,7 @@
-import { ConnectorExtensionOptions, getExtensionOptions } from 'options'
+import type { ConnectorExtensionOptions } from 'options'
+import { getExtensionOptions } from 'options'
 import { useEffect, useState } from 'react'
+import { localStore } from 'chrome/helpers/storage'
 
 export const useConnectorOptions = () => {
   const [connectorOptions, setConnectorOptions] =
@@ -8,20 +10,10 @@ export const useConnectorOptions = () => {
   useEffect(() => {
     getExtensionOptions().map((result) => setConnectorOptions(result))
 
-    const listener = (
-      changes: Record<string, chrome.storage.StorageChange>,
-      area: string,
-    ) => {
-      if (changes['options'] && area === 'local') {
-        setConnectorOptions(changes['options'].newValue)
-      }
-    }
-
-    chrome.storage.onChanged.addListener(listener)
-
-    return () => {
-      chrome.storage.onChanged.removeListener(listener)
-    }
+    // As saved, like before: the next read merges the defaults.
+    return localStore.onChange('options', (options) =>
+      setConnectorOptions(options as ConnectorExtensionOptions | undefined),
+    )
   }, [])
 
   return connectorOptions

@@ -1,0 +1,25 @@
+.rdx-collapse {
+  display: grid;
+  grid-template-rows: 0fr;
+  transition: grid-template-rows 0.2s ease-in-out;
+}
+.rdx-collapse--open {
+  grid-template-rows: 1fr;
+}
+.rdx-collapse__content {
+  min-height: 0;
+  overflow: hidden;
+  /* Hidden once closed (after the animation), shown at once when opening. */
+  visibility: hidden;
+  transition: visibility 0s 0.2s;
+}
+.rdx-collapse--open > .rdx-collapse__content {
+  visibility: visible;
+  transition-delay: 0s;
+}
+@media (prefers-reduced-motion: reduce) {
+  .rdx-collapse,
+  .rdx-collapse__content {
+    transition: none;
+  }
+}

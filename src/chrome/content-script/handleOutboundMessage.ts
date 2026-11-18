@@ -1,7 +1,10 @@
 import { dAppEvent } from 'chrome/dapp/_types'
 
-export const handleOutboundMessage = async (message: any) => {
-  if (message.type === 'sendMessageToDapp')
+/** What the background sends a content script for its dApp's page. */
+type MessageForDapp = { type?: unknown; data?: unknown }
+
+export const handleOutboundMessage = async (message: MessageForDapp) => {
+  if (message?.type === 'sendMessageToDapp')
     window.dispatchEvent(
       new CustomEvent(dAppEvent.receive, {
         detail: message.data,

@@ -1,9 +1,18 @@
-import { LogLevelNumbers } from 'loglevel'
+import type { LogLevelNumbers } from 'loglevel'
 import packageJson from '../package.json'
 import './buffer-shim'
-import { ConnectionConfig } from '@radixdlt/radix-connect-webrtc'
+import type { ConnectionConfig } from '@radixdlt/radix-connect-webrtc'
 import type { ConnectorExtensionOptions } from 'options'
-import { parseRadixConnectTransport } from 'options/radix-connect-transport'
+
+/** The options that configure the connections: all but the key pair. */
+type ConnectionOptions = Omit<
+  ConnectorExtensionOptions,
+  'publicKey' | 'privateKey'
+>
+import {
+  migrateIrohRelayUrl,
+  parseRadixConnectTransport,
+} from 'options/radix-connect-transport'
 import { includesIroh, isPublicReleaseRef } from './release-channel'
 import type { TransportConnectionConfig } from 'chrome/offscreen/wallet-connection/transport/composite-transport'
 const { version } = packageJson
@@ -76,7 +85,7 @@ export const defaultConnectionConfig: ConnectionConfig = {
 }
 
 export const getConnectionConfig = (
-  options: ConnectorExtensionOptions,
+  options: ConnectionOptions,
 ): Required<ConnectionConfig> => {
   if (
     options.radixConnectConfiguration === 'custom' &&
@@ -100,28 +109,39 @@ export const getConnectionConfig = (
  * always use WebRTC, whatever the stored options say.
  */
 export const getTransportConfig = (
-  options: ConnectorExtensionOptions,
+  options: ConnectionOptions,
   irohAvailable = isIrohAvailable,
 ): TransportConnectionConfig => ({
   transport: irohAvailable
     ? parseRadixConnectTransport(options.radixConnectTransport)
     : 'webrtc',
   webRtc: getConnectionConfig(options),
-  // Validated by the iroh transport, which does not connect with an invalid relay.
-  iroh: { relayUrl: options.irohRelayUrl?.trim() || undefined },
+  // `undefined`: n0's public relays. A custom relay is validated by the iroh
+  // transport, which does not connect with an invalid one.
+  iroh: { relayUrl: migrateIrohRelayUrl(options.irohRelayUrl) || undefined },
 })
 
 // How long the wallet has to confirm a message, whatever the transport.
 const messageConfirmationTimeout = 10_000
 
 export const config = {
-  environment: process.env.NODE_ENV,
+  /** Of this build (git short hash and build time). */
+  buildId: typeof __BUILD_ID__ === 'string' ? __BUILD_ID__ : 'unknown',
   logLevel: (import.meta.env.VITE_APP_LOG_LEVEL || 0) as LogLevelNumbers,
   version,
   secrets: {
     connectionPasswordByteLength: 32,
   },
-  storage: { key: 'radix' },
+  links: {
+    // How long a forgotten link's notice ("linkRemoved") waits for its wallet: its
+    // password is kept until then, and forgotten after.
+    removalNoticeLifetime: 30 * 24 * 60 * 60 * 1000,
+  },
+  messages: {
+    // How long a message between the extension's parts waits for its confirmation
+    // (e.g. while the offscreen document is not running) before it fails.
+    confirmationTimeout: 30_000,
+  },
   offscreen: {
     url: 'src/chrome/offscreen/index.html',
   },
@@ -159,8 +179,15 @@ export const config = {
     incomingDuplicateWindow: 60_000,
   },
   diagnostics: {
-    // The same transport failure is logged at most once per interval.
+    // The same failure is logged at most once per interval.
     logRepeatInterval: 60_000,
+    // Recent events kept per linked wallet, and iroh library warnings kept per page.
+    recentEvents: 20,
+    irohLibraryEvents: 20,
+    // How often the options page refreshes its connection diagnostics.
+    refreshInterval: 3_000,
+    // How long it waits for the offscreen document to answer.
+    requestTimeout: 2_500,
   },
   devTools: {
     url: 'src/chrome/dev-tools/dev-tools.html',

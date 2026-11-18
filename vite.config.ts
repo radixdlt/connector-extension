@@ -1,5 +1,6 @@
-/// <reference types="vitest" />
+/// <reference types="vitest/config" />
 import { fileURLToPath } from 'node:url'
+import { execSync } from 'node:child_process'
 import { defineConfig, loadEnv, UserConfigExport } from 'vite'
 import react from '@vitejs/plugin-react'
 import { crx, defineManifest } from '@crxjs/vite-plugin'
@@ -10,6 +11,24 @@ import { includesIroh } from './src/release-channel'
 const { version } = packageJson
 
 const isDevToolsActive = process.env.VITE_DEV_TOOLS === 'true'
+
+// Tells builds apart: pages of an unpacked extension load the latest build from
+// disk, while its offscreen document keeps running the build it started with.
+const gitShortHash = () => {
+  try {
+    return execSync('git rev-parse --short HEAD', {
+      stdio: ['ignore', 'pipe', 'ignore'],
+    })
+      .toString()
+      .trim()
+  } catch (error) {
+    return 'nogit'
+  }
+}
+const buildId = `${gitShortHash()}-${new Date()
+  .toISOString()
+  .replace(/[-:]/g, '')
+  .replace(/\.\d+Z$/, 'Z')}`
 const versionName = process.env.GITHUB_REF_NAME || 'local'
 
 // Same variables, and rule, as `isIrohAvailable` in src/config.ts.
@@ -38,6 +57,8 @@ const manifest = defineManifest(async ({ mode }) => {
     'notifications',
     'contextMenus',
     'idle',
+    // The extension can run in the side panel (no permission warning).
+    'sidePanel',
   ]
   const matches = ['https://*/*', 'http://localhost/*', 'http://127.0.0.1/*']
 
@@ -47,6 +68,8 @@ const manifest = defineManifest(async ({ mode }) => {
 
   return {
     manifest_version: 3,
+    // chrome.sidePanel.open
+    minimum_chrome_version: '116',
     name: 'Radix Wallet Connector',
     version: `${major}.${minor}.${patch}`,
     description:
@@ -54,6 +77,10 @@ const manifest = defineManifest(async ({ mode }) => {
     version_name: version === '0.0.0' ? versionName : version,
     action: {
       default_popup: 'src/pairing/index.html',
+    },
+    // The popup's app, sized for the side panel.
+    side_panel: {
+      default_path: 'src/side-panel/index.html',
     },
     background: {
       service_worker: `src/chrome/background/background.ts`,
@@ -95,13 +122,15 @@ const manifest = defineManifest(async ({ mode }) => {
 
 const buildConfig: UserConfigExport = {
   plugins: [
-    // Fast refresh needs the dev server's preamble, which tests do not have.
-    react({ fastRefresh: process.env.VITEST !== 'true' }),
-    crx({ manifest }),
+    // Not in tests: fast refresh needs the dev server's preamble, and the tests
+    // build no extension (vitest compiles JSX itself, as tsconfig.json says).
+    ...(process.env.VITEST ? [] : [react(), crx({ manifest })]),
     tsconfigPaths(),
   ],
   build: {
-    sourcemap: isDevToolsActive ? 'inline' : false,
+    // Builds with dev tools get their source maps as separate files: inline, they
+    // made every script several times larger to load.
+    sourcemap: isDevToolsActive,
     rollupOptions: {
       onwarn(warning, warn) {
         if (warning.code === 'MODULE_LEVEL_DIRECTIVE') {
@@ -126,6 +155,9 @@ if (!isDevToolsActive) {
 
 export default defineConfig(({ mode }) => ({
   ...buildConfig,
+  define: {
+    __BUILD_ID__: JSON.stringify(buildId),
+  },
   resolve: {
     alias: [
       { find: 'stream', replacement: 'vite-compatible-readable-stream' },
@@ -146,7 +178,6 @@ export default defineConfig(({ mode }) => ({
           ]),
     ],
   },
-  // @ts-expect-error
   test: {
     globals: true,
     environment: 'jsdom',
@@ -156,7 +187,7 @@ export default defineConfig(({ mode }) => ({
       reportsDirectory: './coverage',
       provider: 'v8',
       reporter: ['json', 'text', 'lcov', 'clover'],
-      include: ['src/**/*'],
+      include: ['src/**/*.{ts,tsx}'],
     },
   },
 }))

@@ -73,6 +73,30 @@ export const isLocalNetworkHost = (hostname: string) => {
 }
 
 /**
+ * Earlier builds used this relay by default. A stored option equal to it meant
+ * "the default", which is now n0's public relays (empty).
+ */
+const legacyDefaultRelayHost = 'euc1-1.relay.n0.iroh.link'
+
+/** The stored relay option as it applies today (see `legacyDefaultRelayHost`). */
+export const migrateIrohRelayUrl = (value: string | undefined) => {
+  const trimmed = (value ?? '').trim()
+  try {
+    const url = new URL(trimmed)
+    const isLegacyDefault =
+      url.protocol === 'https:' &&
+      url.hostname.replace(/\.$/, '') === legacyDefaultRelayHost &&
+      !url.port &&
+      url.pathname === '/' &&
+      !url.search &&
+      !url.hash
+    return isLegacyDefault ? '' : trimmed
+  } catch (error) {
+    return trimmed
+  }
+}
+
+/**
  * Validates the iroh relay URL option. Empty means n0's public relays
  * (`undefined`): each end uses its closest one. Otherwise the relay must be an `https://` URL; plain `http://` is
  * accepted only for a relay on localhost or the local network (development).

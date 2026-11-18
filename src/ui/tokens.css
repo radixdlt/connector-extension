@@ -1,0 +1,415 @@
+/*
+ * The Radix Wallet's design system (babylon-wallet-android designsystem/theme:
+ * RadixColors, RadixTypography, RadixDimensions, RadixShapes) as CSS variables.
+ * Where the wallet's light grey text does not reach WCAG AA on its backgrounds, a
+ * darker shade of it is used (noted below).
+ */
+:root {
+  /* RadixColors */
+  --rdx-blue-1: #060f8f;
+  --rdx-blue-2: #052cc0;
+  --rdx-blue-4: #1f48e2;
+  --rdx-green-1: #00ab84;
+  --rdx-green-3: #21ffbe;
+  --rdx-cyan: #20e4ff;
+  --rdx-gray-1: #003057;
+  --rdx-gray-2: #8a8fa4;
+  --rdx-gray-3: #ced0d6;
+  --rdx-gray-4: #e2e5ed;
+  --rdx-gray-5: #f4f5f9;
+  --rdx-orange-3: #e59700;
+  --rdx-light-orange: #fff5e2;
+  --rdx-red-1: #c82020;
+  --rdx-light-red: #fcebeb;
+  --rdx-white: #fff;
+
+  /* Light palette */
+  --rdx-background: var(--rdx-white);
+  --rdx-background-secondary: var(--rdx-gray-5);
+  --rdx-card: var(--rdx-white);
+  --rdx-text: var(--rdx-gray-1);
+  /* The wallet's textSecondary is gray 2 (#8A8FA4): 2.9:1 on gray 5. This shade of
+     it reaches 4.8:1 (AA). */
+  --rdx-text-secondary: #656b80;
+  --rdx-text-button: var(--rdx-blue-2);
+  /* A count beside a title (pending requests, linked wallets): Radix blue. */
+  --rdx-count-background: var(--rdx-blue-2);
+  --rdx-count-text: var(--rdx-white);
+  --rdx-icon: var(--rdx-gray-1);
+  --rdx-divider: var(--rdx-gray-4);
+  --rdx-border: var(--rdx-gray-3);
+  --rdx-field-background: var(--rdx-gray-5);
+  --rdx-field-border: var(--rdx-gray-4);
+  --rdx-field-border-focused: var(--rdx-gray-1);
+  --rdx-toggle-active: var(--rdx-gray-1);
+  --rdx-toggle-inactive: var(--rdx-gray-3);
+  /* Outline of an unchecked switch: 3:1 against white (AA for controls). */
+  --rdx-toggle-inactive-border: var(--rdx-gray-2);
+  --rdx-ok: #007a5e;
+  --rdx-ok-dot: var(--rdx-green-1);
+  --rdx-ok-background: #e3f6f1;
+  --rdx-error: var(--rdx-red-1);
+  --rdx-error-background: var(--rdx-light-red);
+  --rdx-warning: #8a5a00;
+  --rdx-warning-icon: var(--rdx-orange-3);
+  --rdx-warning-background: var(--rdx-light-orange);
+  --rdx-pill-neutral: var(--rdx-gray-4);
+  --rdx-focus-ring: var(--rdx-blue-2);
+  /* The main view's cards and its primary button (the wallet's RadixPrimaryButton). */
+  --rdx-surface: var(--rdx-gray-5);
+  --rdx-surface-border: var(--rdx-gray-4);
+  --rdx-primary: var(--rdx-blue-2);
+  --rdx-primary-hover: var(--rdx-blue-1);
+  --rdx-on-primary: var(--rdx-white);
+  /* The chosen option of a radio group. */
+  --rdx-selected: var(--rdx-blue-2);
+  --rdx-shadow: 0 2px 8px rgba(0, 48, 87, 0.06);
+
+  /* RadixDimensions */
+  --rdx-space-xxxs: 2px;
+  --rdx-space-xxs: 4px;
+  --rdx-space-xs: 6px;
+  --rdx-space-s: 8px;
+  --rdx-space-m: 12px;
+  --rdx-space-default: 16px;
+  --rdx-space-semi-large: 20px;
+  --rdx-space-l: 24px;
+  --rdx-space-xl: 28px;
+  --rdx-space-xxl: 32px;
+  --rdx-button-height: 50px;
+
+  /* RadixShapes */
+  --rdx-radius-xs: 4px;
+  --rdx-radius-s: 8px;
+  --rdx-radius-m: 12px;
+  --rdx-radius-default: 16px;
+
+  /* RadixTypography */
+  --rdx-font: 'IBM Plex Sans', system-ui, sans-serif;
+  /* Menus that open over the page. */
+  --rdx-menu-surface: var(--rdx-white);
+  --rdx-menu-shadow-color: rgba(0, 48, 87, 0.16);
+}
+
+/* The wallet's dark palette (`data-theme` is set by ui/theme.ts). */
+:root[data-theme='dark'] {
+  --rdx-background: #1e1f1f;
+  --rdx-background-secondary: #121212;
+  --rdx-card: #1e1f1f;
+  --rdx-text: var(--rdx-gray-5);
+  /* Gray 4 in the wallet; a little darker for hierarchy, still 7:1. */
+  --rdx-text-secondary: #a9aec0;
+  /* The wallet's text, not a light blue that is no colour of Radix's. */
+  --rdx-text-button: var(--rdx-gray-5);
+  --rdx-icon: var(--rdx-gray-5);
+  --rdx-divider: #404243;
+  --rdx-border: #3f4142;
+  --rdx-field-background: #404243;
+  --rdx-field-border: #797b7f;
+  --rdx-field-border-focused: var(--rdx-gray-5);
+  --rdx-toggle-active: #00c389;
+  --rdx-toggle-inactive: #404243;
+  --rdx-toggle-inactive-border: var(--rdx-gray-2);
+  --rdx-ok: #3ddcae;
+  --rdx-ok-background: #12352c;
+  --rdx-error: #ec633e;
+  --rdx-error-background: #301212;
+  --rdx-warning: #f2d49b;
+  --rdx-warning-icon: #f2ad21;
+  --rdx-warning-background: #33270f;
+  --rdx-pill-neutral: #404243;
+  --rdx-focus-ring: var(--rdx-gray-5);
+  --rdx-surface: #2a2b2c;
+  --rdx-surface-border: #36383a;
+  --rdx-primary-hover: var(--rdx-blue-4);
+  --rdx-shadow: none;
+  --rdx-selected: #00c389;
+  /* Menus: a step lighter than the cards they open over. */
+  --rdx-menu-surface: #36383a;
+  --rdx-menu-shadow-color: rgba(0, 0, 0, 0.55);
+  --rdx-menu-focus-ring: var(--rdx-gray-5);
+}
+
+/*
+ * Roles, on top of the palette: what sits directly on the page (the main view,
+ * the pairing, the settings' background) and the tiles on it (wallet cards,
+ * pending requests). Components use these and the palette only: a theme is a
+ * set of overrides here, never a `[data-theme]` selector in a component's CSS.
+ */
+:root {
+  --rdx-page-background: var(--rdx-background);
+  --rdx-page-text: var(--rdx-text);
+  --rdx-page-text-secondary: var(--rdx-text-secondary);
+  --rdx-page-text-shadow: none;
+  --rdx-page-icon: var(--rdx-icon);
+  --rdx-page-link: var(--rdx-text-button);
+  --rdx-page-divider: var(--rdx-divider);
+  --rdx-page-focus-ring: var(--rdx-focus-ring);
+  --rdx-page-title-font: 700 26px/32px var(--rdx-font);
+  --rdx-page-title-size: 26px;
+  --rdx-tile-background: var(--rdx-surface);
+  --rdx-tile-border: var(--rdx-surface-border);
+  --rdx-tile-divider: var(--rdx-surface-border);
+  --rdx-tile-shadow: none;
+  /* Menus that open over the page (the wallet card's options). */
+  --rdx-menu-background: var(--rdx-menu-surface);
+  --rdx-menu-text: var(--rdx-text);
+  --rdx-menu-icon: var(--rdx-text-secondary);
+  --rdx-menu-border: var(--rdx-divider);
+  --rdx-menu-shadow: 0 10px 28px var(--rdx-menu-shadow-color);
+  --rdx-menu-hover: color-mix(in srgb, var(--rdx-text) 7%, transparent);
+  --rdx-menu-danger: var(--rdx-error);
+  --rdx-menu-focus-ring: var(--rdx-focus-ring);
+  --rdx-notice-background: var(--rdx-warning-background);
+  --rdx-notice-text: var(--rdx-warning);
+  --rdx-notice-shadow: none;
+  --rdx-page-button: var(--rdx-primary);
+  --rdx-page-button-hover: var(--rdx-primary-hover);
+  --rdx-page-button-text: var(--rdx-on-primary);
+  --rdx-settings-background: var(--rdx-background-secondary);
+  --rdx-top-bar-background: var(--rdx-background);
+}
+
+/*
+ * Classic: the connector's original look. White text on the blue gradient, white
+ * tiles (in the light palette) with a shadow, a white button on the page.
+ */
+:root[data-theme='classic'] {
+  --rdx-page-background: #052cc0 url('../pairing/assets/popup-bg-gradient.svg')
+    center / cover no-repeat fixed;
+  --rdx-page-text: var(--rdx-white);
+  --rdx-page-text-secondary: var(--rdx-white);
+  /* Readable where the gradient is light (cyan, pink). */
+  --rdx-page-text-shadow: 0 1px 3px rgba(0, 10, 60, 0.7);
+  --rdx-page-icon: var(--rdx-white);
+  --rdx-page-link: var(--rdx-white);
+  --rdx-page-divider: transparent;
+  --rdx-page-focus-ring: var(--rdx-white);
+  --rdx-page-title-font: 600 24px/30px var(--rdx-font);
+  --rdx-page-title-size: 24px;
+  --rdx-tile-background: var(--rdx-white);
+  --rdx-tile-border: transparent;
+  --rdx-tile-divider: var(--rdx-divider);
+  --rdx-tile-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  /* The connector's original menu: a navy bubble. */
+  --rdx-menu-background: #003057;
+  --rdx-menu-text: var(--rdx-white);
+  --rdx-menu-icon: rgba(255, 255, 255, 0.8);
+  --rdx-menu-border: transparent;
+  --rdx-menu-shadow: 0 10px 28px rgba(0, 10, 60, 0.35);
+  --rdx-menu-hover: rgba(255, 255, 255, 0.12);
+  --rdx-menu-danger: #ffb4a2;
+  --rdx-menu-focus-ring: #90caf9;
+  --rdx-notice-background: rgba(255, 255, 255, 0.25);
+  --rdx-notice-text: var(--rdx-white);
+  --rdx-notice-shadow: 0 7px 16px rgba(0, 0, 0, 0.25);
+  --rdx-page-button: var(--rdx-white);
+  --rdx-page-button-hover: var(--rdx-gray-5);
+  --rdx-page-button-text: var(--rdx-blue-2);
+  /* On the blue page: white, with the count in Radix blue. */
+  --rdx-count-background: var(--rdx-white);
+  --rdx-count-text: var(--rdx-blue-2);
+  --rdx-settings-background: var(--rdx-page-background);
+  --rdx-top-bar-background: var(--rdx-page-background);
+}
+/* Classic settings: rows of translucent navy on the gradient instead of white
+   cards, dark enough for white text where the gradient is light. Other screens
+   whose lists look like the settings take it with `rdx-settings-palette`. */
+:root[data-theme='classic'] .rdx-settings,
+:root[data-theme='classic'] .rdx-settings-palette {
+  --rdx-card: rgba(6, 15, 110, 0.42);
+  --rdx-row-hover: rgba(6, 15, 110, 0.6);
+  --rdx-surface: rgba(255, 255, 255, 0.16);
+  --rdx-text: var(--rdx-white);
+  --rdx-text-secondary: rgba(255, 255, 255, 0.82);
+  --rdx-text-button: var(--rdx-white);
+  --rdx-icon: var(--rdx-white);
+  --rdx-divider: rgba(255, 255, 255, 0.2);
+  --rdx-field-background: rgba(255, 255, 255, 0.12);
+  --rdx-field-border: rgba(255, 255, 255, 0.45);
+  --rdx-field-border-focused: var(--rdx-white);
+  --rdx-toggle-active: var(--rdx-green-1);
+  --rdx-toggle-inactive: rgba(255, 255, 255, 0.18);
+  --rdx-toggle-inactive-border: rgba(255, 255, 255, 0.75);
+  --rdx-selected: var(--rdx-green-3);
+  --rdx-selected-row: rgba(0, 110, 100, 0.55);
+  --rdx-on-selected: var(--rdx-blue-1);
+  --rdx-pill-neutral: rgba(255, 255, 255, 0.2);
+  --rdx-ok-background: rgba(33, 255, 190, 0.22);
+  --rdx-ok-dot: var(--rdx-green-3);
+  --rdx-error: #ffc4b8;
+  --rdx-focus-ring: var(--rdx-white);
+  --rdx-section-line: rgba(255, 255, 255, 0.35);
+  --rdx-top-bar-divider: rgba(255, 255, 255, 0.25);
+}
+
+/* Type scale (RadixTypography). */
+.rdx-title {
+  font: 700 32px/36px var(--rdx-font);
+}
+.rdx-header {
+  font: 600 20px/23px var(--rdx-font);
+}
+.rdx-secondary-header {
+  font: 600 18px/23px var(--rdx-font);
+}
+.rdx-body1-header {
+  font: 600 16px/23px var(--rdx-font);
+}
+.rdx-body1-high {
+  font: 500 16px/23px var(--rdx-font);
+}
+.rdx-body1 {
+  font: 400 16px/23px var(--rdx-font);
+}
+.rdx-body2-header {
+  font: 700 14px/18px var(--rdx-font);
+}
+.rdx-body2-high {
+  font: 500 14px/18px var(--rdx-font);
+}
+.rdx-body2 {
+  font: 400 14px/18px var(--rdx-font);
+}
+.rdx-body3 {
+  font: 400 12px/16px var(--rdx-font);
+}
+
+.rdx-visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+/* A text button (the wallet's textButton colour). */
+.rdx-text-button {
+  all: unset;
+  box-sizing: border-box;
+  display: inline-flex;
+  align-items: center;
+  gap: var(--rdx-space-xs);
+  padding: var(--rdx-space-xxs) var(--rdx-space-xs);
+  border-radius: var(--rdx-radius-s);
+  color: var(--rdx-text-button);
+  font: 500 14px/18px var(--rdx-font);
+  cursor: pointer;
+}
+.rdx-text-button:hover {
+  text-decoration: underline;
+}
+.rdx-text-button:focus-visible {
+  outline: 2px solid var(--rdx-focus-ring);
+  outline-offset: 2px;
+}
+.rdx-text-button:disabled {
+  cursor: default;
+  opacity: 0.5;
+  text-decoration: none;
+}
+.rdx-text-button svg {
+  width: 18px;
+  height: 18px;
+}
+
+/* Status pill: "iroh", "WebRTC", "Not connected". */
+.rdx-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--rdx-space-xs);
+  flex: none;
+  padding: 2px 10px 2px 8px;
+  border-radius: 999px;
+  background: var(--rdx-pill-neutral);
+  color: var(--rdx-text);
+  font: 500 12px/18px var(--rdx-font);
+  white-space: nowrap;
+}
+.rdx-pill::before {
+  content: '';
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--rdx-gray-2);
+}
+.rdx-pill--ok {
+  background: var(--rdx-ok-background);
+}
+.rdx-pill--ok::before {
+  background: var(--rdx-ok-dot);
+}
+
+/* The wallet's switch (Material 3, thumb always 24px). */
+.rdx-switch {
+  position: relative;
+  display: inline-flex;
+  flex: none;
+  width: 52px;
+  height: 32px;
+}
+.rdx-switch__input {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  opacity: 0;
+  cursor: pointer;
+  z-index: 1;
+}
+.rdx-switch__input:disabled {
+  cursor: default;
+}
+.rdx-switch__track {
+  box-sizing: border-box;
+  width: 100%;
+  height: 100%;
+  border-radius: 16px;
+  border: 2px solid var(--rdx-toggle-inactive-border);
+  background: var(--rdx-toggle-inactive);
+  transition:
+    background-color 0.15s ease,
+    border-color 0.15s ease;
+}
+.rdx-switch__thumb {
+  position: absolute;
+  top: 4px;
+  left: 4px;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background: var(--rdx-white);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+  transition: transform 0.15s ease;
+}
+.rdx-switch__input:checked + .rdx-switch__track {
+  background: var(--rdx-toggle-active);
+  border-color: var(--rdx-toggle-active);
+}
+.rdx-switch__input:checked ~ .rdx-switch__thumb {
+  transform: translateX(20px);
+}
+/* In a settings row, the row draws the ring instead. */
+label.rdx-row .rdx-switch__input:focus-visible + .rdx-switch__track {
+  outline: none;
+}
+.rdx-switch__input:focus-visible + .rdx-switch__track {
+  outline: 2px solid var(--rdx-focus-ring);
+  outline-offset: 2px;
+}
+.rdx-switch__input:disabled + .rdx-switch__track,
+.rdx-switch__input:disabled ~ .rdx-switch__thumb {
+  opacity: 0.5;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .rdx-switch__track,
+  .rdx-switch__thumb {
+    transition: none;
+  }
+}

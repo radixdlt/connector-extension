@@ -161,7 +161,7 @@ module.exports = {
     [
       '@semantic-release/exec',
       {
-        prepareCmd: 'npm run build:cd',
+        prepareCmd: 'pnpm run build:cd',
       },
     ],
     [

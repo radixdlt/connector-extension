@@ -29,15 +29,18 @@ jobs:
       - name: Use Node.js
         uses: RDXWorks-actions/setup-node@main
         with:
-          node-version: '18.17.0'
+          node-version: '22'
+
+      - name: Use pnpm (the version of package.json's packageManager)
+        run: corepack enable
 
       - name: Install dependencies
-        run: npm ci
+        run: pnpm install --frozen-lockfile
 
       - name: Build extension
         env:
           VITE_GITHUB_REF_NAME: ${{ github.ref_name }}
-        run: npm run build
+        run: pnpm run build
 
       - uses: RDXWorks-actions/upload-artifact@main
         with:
@@ -45,7 +48,7 @@ jobs:
           path: dist/
 
       - name: Build extension with dev tools
-        run: npm run build
+        run: pnpm run build
         env:
           VITE_DEV_TOOLS: true
           VITE_GITHUB_REF_NAME: ${{ github.ref_name }}
@@ -56,7 +59,7 @@ jobs:
           path: dist/
 
       - name: Running lint
-        run: npm run lint
+        run: pnpm run lint
 
       - name: Running unit tests
-        run: npm run test:ci
+        run: pnpm run test:ci

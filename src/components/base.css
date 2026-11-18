@@ -1,0 +1,9 @@
+/* The base text style of every page that uses the base components (it was the
+   global style of the former CSS-in-JS setup). */
+*:not(textarea, pre, strong),
+body {
+  font-family: 'IBM Plex Sans';
+  font-weight: 400;
+  margin: 0;
+  font-size: 100%;
+}

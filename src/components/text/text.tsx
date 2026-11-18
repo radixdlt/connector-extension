@@ -1,83 +1,58 @@
-import { styled } from '../../stitches.config'
-import { m } from 'components/variants'
+import type { HTMLAttributes } from 'react'
+import {
+  classNames,
+  modifiers,
+  withMargins,
+  type MarginProps,
+} from '../variants'
 
-export const Text = styled('p', {
-  variants: {
-    interactive: {
-      true: {
-        cursor: 'pointer',
-        transition: 'color .2s,border-color .2s,background-color .2s',
-        '&:hover': {
-          color: '$primaryButtonHover',
-        },
-      },
-    },
-    highlight: {
-      false: {
-        userSelect: 'none',
-      },
-    },
-    ellipsis: {
-      true: {
-        textOverflow: 'ellipsis',
-        whiteSpace: 'nowrap',
-      },
-    },
-    size: {
-      xSmall: {
-        fontSize: '$xs',
-      },
-      small: {
-        fontSize: '$sm',
-      },
-      medium: {
-        fontSize: '$md',
-      },
-      large: {
-        fontSize: '$lg',
-      },
-      '2xl': {
-        fontSize: '$2xl',
-      },
-      '4xl': {
-        fontSize: '$4xl',
-        fontWeight: '700',
-      },
-    },
-    color: {
-      radixGrey2: { color: '$radixGrey2' },
-      radixGrey1: { color: '$radixGrey1' },
-    },
-    bold: {
-      true: {
-        fontWeight: '$600',
-      },
-    },
-    italic: {
-      true: {
-        fontStyle: 'italic',
-      },
-    },
-    medium: {
-      true: {
-        fontWeight: '$500',
-      },
-    },
-    muted: {
-      true: {
-        color: '$muted',
-      },
-    },
-    inline: {
-      true: {
-        display: 'inline',
-      },
-    },
-    negativeMarginBottom: {
-      true: {
-        marginBottom: '-20px',
-      },
-    },
-    ...m,
-  },
-})
+export type TextProps = HTMLAttributes<HTMLParagraphElement> &
+  MarginProps & {
+    size?: 'xSmall' | 'small' | 'medium' | 'large' | '2xl' | '4xl'
+    color?: 'radixGrey1' | 'radixGrey2'
+    bold?: boolean
+    medium?: boolean
+    italic?: boolean
+    muted?: boolean
+    inline?: boolean
+    ellipsis?: boolean
+    negativeMarginBottom?: boolean
+  }
+
+/** A paragraph with text variants. */
+export const Text = (props: TextProps) => {
+  const [margins, rest] = withMargins(props)
+  const {
+    size,
+    color,
+    bold,
+    medium,
+    italic,
+    muted,
+    inline,
+    ellipsis,
+    negativeMarginBottom,
+    className,
+    ...attributes
+  } = rest
+  return (
+    <p
+      {...attributes}
+      className={classNames(
+        modifiers('rdx-text', {
+          size,
+          color,
+          bold,
+          medium,
+          italic,
+          muted,
+          inline,
+          ellipsis,
+          negativeMarginBottom,
+        }),
+        margins,
+        className,
+      )}
+    />
+  )
+}

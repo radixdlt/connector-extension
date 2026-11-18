@@ -2,7 +2,7 @@ import { Slip10Derivation } from './slip0010'
 
 import { mnemonicToSeedSync, validateMnemonic } from 'bip39'
 
-import { Address, CoinDetails, Curve, Keys } from './models'
+import type { Address, CoinDetails, Curve, Keys } from './models'
 
 export const createRadixWallet = ({ seed, curve }: any) =>
   new BaseHdWallet(seed, {

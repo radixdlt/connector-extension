@@ -1,8 +1,5 @@
 import { createMessage } from 'chrome/messages/create-message'
-import { MessageClient } from 'chrome/messages/message-client'
-import { ConnectorExtensionOptions } from 'options'
-import { SessionId, WalletPublicKey } from '../session-router'
-import { Connections } from 'pairing/state/connections'
+import type { MessageClient } from 'chrome/messages/message-client'
 
 /**
  * This section of code handles the retrieval of important data from the background page
@@ -18,40 +15,45 @@ import { Connections } from 'pairing/state/connections'
  */
 export const OffscreenInitializationMessages = (
   messageClient: MessageClient,
-) => {
-  return {
-    options: () => {
-      messageClient
-        .sendMessageAndWaitForConfirmation<{
-          options: ConnectorExtensionOptions
-        }>(createMessage.getExtensionOptions('offScreen'))
-        .andThen(({ options }) =>
-          messageClient.handleMessage(
-            createMessage.setConnectorExtensionOptions('offScreen', options),
-          ),
-        )
-    },
-    sessionRouterData: () => {
-      messageClient
-        .sendMessageAndWaitForConfirmation<Record<SessionId, WalletPublicKey>>(
-          createMessage.getSessionRouterData(),
-        )
-        .andThen((sessionRouter) =>
-          messageClient.handleMessage(
-            createMessage.setSessionRouterData(sessionRouter, 'offScreen'),
-          ),
-        )
-    },
-    connections: () => {
-      messageClient
-        .sendMessageAndWaitForConfirmation<Connections>(
-          createMessage.getConnections('offScreen'),
-        )
-        .andThen((connections) =>
-          messageClient.handleMessage(
-            createMessage.setConnections('offScreen', connections),
-          ),
-        )
-    },
-  }
-}
+) => ({
+  options: () => {
+    messageClient
+      .sendMessageAndWaitForConfirmation(
+        createMessage.getExtensionOptions('offScreen'),
+      )
+      .andThen(({ options }) =>
+        messageClient.handleMessage(
+          createMessage.setConnectorExtensionOptions('offScreen', options),
+        ),
+      )
+  },
+  sessionRouterData: () => {
+    messageClient
+      .sendMessageAndWaitForConfirmation(createMessage.getSessionRouterData())
+      .andThen((sessionRouter) =>
+        messageClient.handleMessage(
+          createMessage.setSessionRouterData(sessionRouter, 'offScreen'),
+        ),
+      )
+  },
+  connections: () => {
+    messageClient
+      .sendMessageAndWaitForConfirmation(
+        createMessage.getConnections('offScreen'),
+      )
+      .andThen((connections) =>
+        messageClient.handleMessage(
+          createMessage.setConnections('offScreen', connections),
+        ),
+      )
+  },
+  retiredLinks: () => {
+    messageClient
+      .sendMessageAndWaitForConfirmation(createMessage.getRetiredLinks())
+      .andThen((links) =>
+        messageClient.handleMessage(
+          createMessage.setRetiredLinks('offScreen', links),
+        ),
+      )
+  },
+})

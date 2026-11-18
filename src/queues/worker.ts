@@ -1,6 +1,6 @@
-import { ResultAsync } from 'neverthrow'
-import { Job } from './_types'
-import { AppLogger, logger } from 'utils/logger'
+import type { ResultAsync } from 'neverthrow'
+import type { Job } from './_types'
+import type { AppLogger } from 'utils/logger'
 
 export type Worker<T> = ReturnType<typeof Worker<T>>
 
@@ -19,7 +19,20 @@ export const Worker = <T>(
 ) => {
   const run = (job: Job<T>): WorkerRunnerOutput =>
     fn(job).mapErr((error) => {
-      logger?.error({ error, jobId: job.id })
+      // Technical detail: the queues' owners log what failed, at its level.
+      logger?.debug('job failed', {
+        jobId: job.id,
+        reason: error.reason,
+        shouldRetry: error.shouldRetry,
+        ...(error.jsError
+          ? {
+              error: {
+                name: error.jsError.name,
+                code: (error.jsError as Error & { code?: unknown }).code,
+              },
+            }
+          : {}),
+      })
       return error
     })
   return { run }

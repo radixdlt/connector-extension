@@ -1,10 +1,3 @@
-import { ResultAsync } from 'neverthrow'
+import { sessionStore } from './storage'
 
-export const getPopupId = () =>
-  ResultAsync.fromPromise(
-    chrome.storage.session.get('popupId'),
-    (error) => error as Error,
-  ).map((items) => {
-    const popupId: number | undefined = items['popupId']
-    return popupId
-  })
+export const getPopupId = () => sessionStore.get('popupId')

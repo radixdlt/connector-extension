@@ -3,19 +3,285 @@ button {
   cursor: pointer;
 }
 
-.linked-wallet:not(:last-child) {
-  margin-bottom: 16px;
+.linked-wallets {
+  display: flex;
+  flex-direction: column;
+  gap: var(--rdx-space-m, 12px);
 }
 
-.rotate {
+// A wallet card, like the wallet's own cards: a tile of the page (ui/tokens.css),
+// in two parts. On top, who the wallet is and how it is connected; below a fine
+// line, the accounts it shares.
+.linked-wallet {
+  box-sizing: border-box;
+  overflow: hidden;
+  border: 1px solid var(--rdx-tile-border, #e2e5ed);
+  border-radius: var(--rdx-radius-default, 16px);
+  background: var(--rdx-tile-background, #f4f5f9);
+  box-shadow: var(--rdx-tile-shadow, none);
+  font-family: var(--rdx-font, 'IBM Plex Sans');
+}
+
+.linked-wallet__header {
+  display: flex;
+  align-items: center;
+  gap: var(--rdx-space-m, 12px);
+  padding: 16px 10px 16px 16px;
+}
+
+// The phone of the linked wallet, on the wallet's blue.
+.linked-wallet__icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: none;
+  width: 44px;
+  height: 44px;
+  border-radius: 14px;
+  background: linear-gradient(
+    135deg,
+    var(--rdx-blue-4, #1f48e2),
+    var(--rdx-blue-2, #052cc0)
+  );
+  box-shadow: 0 2px 6px rgba(5, 44, 192, 0.25);
+  color: var(--rdx-white, #fff);
+
+  svg {
+    width: 24px;
+    height: 24px;
+  }
+}
+
+// The avatar as a button: it chooses the wallet's picture.
+button.linked-wallet__icon {
+  cursor: pointer;
+  transition:
+    transform 0.15s ease,
+    box-shadow 0.15s ease;
+
+  &:hover {
+    transform: scale(1.04);
+    box-shadow: 0 4px 12px rgba(5, 44, 192, 0.35);
+  }
+
+  &:focus-visible {
+    outline: 2px solid var(--rdx-focus-ring, #052cc0);
+    outline-offset: 2px;
+  }
+}
+.linked-wallet__icon {
+  overflow: hidden;
+}
+// A chosen picture shows as it is: its transparent parts show the card.
+.linked-wallet__icon--picture,
+button.linked-wallet__icon--picture:hover {
+  background: none;
+  box-shadow: none;
+}
+.linked-wallet__picture {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+// Dragging a card to another place (see useWalletDrag): it can be taken from
+// anywhere but its controls; while dragged it lifts, and the others slide.
+.linked-wallets--sortable .linked-wallet {
+  cursor: grab;
+}
+.linked-wallets__slot {
+  position: relative;
+}
+.linked-wallets__slot[data-dragging] {
+  z-index: 2;
+  will-change: transform;
+
+  .linked-wallet {
+    box-shadow:
+      0 16px 32px rgba(0, 12, 40, 0.28),
+      0 4px 10px rgba(0, 12, 40, 0.16);
+    cursor: grabbing;
+  }
+}
+// While dragging: no text selection, the grabbing hand everywhere.
+body.rdx-dragging {
+  cursor: grabbing;
+  user-select: none;
+}
+@media (prefers-reduced-motion: reduce) {
+  button.linked-wallet__icon {
+    transition: none;
+  }
+}
+
+.linked-wallet__identity {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  flex: 1;
+  min-width: 0;
+}
+
+// Names are chosen by the user: at most two lines.
+.linked-wallet__name {
+  display: -webkit-box;
+  overflow: hidden;
+  margin: 0;
+  color: var(--rdx-text, #003057);
+  font: 600 17px/22px var(--rdx-font, 'IBM Plex Sans');
+  overflow-wrap: anywhere;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+}
+
+// The connection, as a dot and its words.
+.linked-wallet__status {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 18px;
+  color: var(--rdx-text-secondary, #656b80);
+  font: 500 13px/18px var(--rdx-font, 'IBM Plex Sans');
+
+  &::before {
+    content: '';
+    flex: none;
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: var(--rdx-gray-2, #8a8fa4);
+  }
+}
+.linked-wallet__status--connected {
+  color: var(--rdx-ok, #007a5e);
+
+  &::before {
+    background: var(--rdx-ok-dot, #00ab84);
+    box-shadow: 0 0 0 3px var(--rdx-ok-background, #e3f6f1);
+  }
+}
+// Its line is kept, empty, until the status is known.
+.linked-wallet__status--unknown::before {
+  content: none;
+}
+
+.linked-wallet__menu-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: none;
+  align-self: flex-start;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  color: var(--rdx-icon, #003057);
+
+  &:hover {
+    background: color-mix(in srgb, currentColor 10%, transparent);
+  }
+
+  &:focus-visible {
+    outline: 2px solid var(--rdx-focus-ring, #052cc0);
+    outline-offset: 0;
+  }
+
+  svg {
+    width: 24px;
+    height: 24px;
+  }
+}
+
+// The accounts it shares: a row that shows or hides them, then the list.
+.linked-wallet__accounts {
+  margin: 0;
+  border-top: 1px solid var(--rdx-tile-divider, #e2e5ed);
+
+  svg {
+    flex: none;
+    width: 20px;
+    height: 20px;
+  }
+}
+.linked-wallet__accounts--none,
+.linked-wallet__accounts-toggle {
+  box-sizing: border-box;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  min-height: 48px;
+  padding: 12px 16px;
+  font: 500 14px/20px var(--rdx-font, 'IBM Plex Sans');
+}
+.linked-wallet__accounts--none {
+  color: var(--rdx-text-secondary, #656b80);
+}
+.linked-wallet__accounts-toggle {
+  color: var(--rdx-text, #003057);
+
+  > svg {
+    color: var(--rdx-text-secondary, #656b80);
+  }
+
+  &:hover {
+    background: color-mix(in srgb, currentColor 5%, transparent);
+  }
+
+  &:focus-visible {
+    outline: 2px solid var(--rdx-focus-ring, #052cc0);
+    outline-offset: -2px;
+  }
+}
+.linked-wallet__accounts-count {
+  flex: 1;
+}
+.linked-wallet__accounts-action {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  color: var(--rdx-text-button, #052cc0);
+  font-weight: 600;
+
+  svg {
+    transition: transform 0.2s ease-in-out;
+  }
+}
+.linked-wallet__accounts-toggle--open .linked-wallet__accounts-action svg {
   transform: rotate(180deg);
 }
 
-.shared-accounts-collapse-button {
-  display: inline-flex;
-  transition: transform 0.3s ease-in-out;
+// Open, the list of accounts no longer clips (it does while it opens and closes): an
+// account's "Copied!" tooltip rises above it, over the account before or the toggle.
+.linked-wallet__accounts > .rdx-collapse--open > .rdx-collapse__content {
+  overflow: visible;
+  transition:
+    visibility 0s 0s,
+    overflow 0s 0.2s;
+  transition-behavior: allow-discrete;
 }
 
-.shared-accounts-collapse-button.rotate {
-  margin-top: 5px;
+// The shared accounts: the wallet's gradient account cards.
+.shared-accounts {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 0 12px 12px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .linked-wallet__accounts-action svg {
+    transition: none;
+  }
+}
+
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+  border: 0;
 }

@@ -1,3 +1,4 @@
+import { transportSlots } from 'chrome/offscreen/wallet-connection/transport/transport-slots'
 import { ConnectionPassword } from './components/connection-password'
 import { useEffect, useRef, useState } from 'react'
 import { logger } from 'utils/logger'
@@ -16,11 +17,10 @@ import {
 import { useNavigate } from 'react-router-dom'
 import { ed25519 } from '@noble/curves/ed25519'
 import { getLinkingSignatureMessage } from 'crypto/get-linking-message'
-import { chromeLocalStore } from 'chrome/helpers/chrome-local-store'
-import { LinkClientInteraction } from 'ledger/schemas'
+import { localStore } from 'chrome/helpers/storage'
+import type { LinkClientInteraction } from 'ledger/schemas'
 import { createWebRtcTransport } from 'chrome/offscreen/wallet-connection/transport/webrtc-transport'
 import { IrohTransport } from 'chrome/offscreen/wallet-connection/transport/iroh/iroh-transport'
-import { transportSlots } from 'chrome/offscreen/wallet-connection/transport/transport-slots'
 import { CompositeTransport } from 'chrome/offscreen/wallet-connection/transport/composite-transport'
 
 export const Pairing = () => {
@@ -34,13 +34,21 @@ export const Pairing = () => {
   const [signature, setSignature] = useState<string>()
 
   // The connections client changes whenever the stored connections do. Read the
-  // latest one when a wallet links instead of restarting the pairing for it: with
-  // iroh, linking waits up to `config.iroh.linkingGracePeriod` for the wallet to
-  // close its iroh connection before storing the link, and a restart in that window
-  // would destroy the transports mid-linking (and a client captured before it would
-  // store stale connections).
+  // latest one when a wallet links instead of restarting the pairing for it: a
+  // restart draws a new password, so a QR code the wallet already scanned would
+  // stop matching the transports listening for it.
   const connectionsClientRef = useRef(connectionsClient)
   connectionsClientRef.current = connectionsClient
+
+  // Restart the pairing only when what it depends on changes, not on every update
+  // of the stored options object.
+  const pairingKey = connectorOptions
+    ? JSON.stringify([
+        connectorOptions.publicKey,
+        connectorOptions.privateKey,
+        getTransportConfig(connectorOptions),
+      ])
+    : undefined
 
   useEffect(() => {
     if (!connectorOptions) return
@@ -118,7 +126,7 @@ export const Pairing = () => {
                 connectionsClientRef.current.addOrUpdate(password, interaction),
               )
               .map(({ isKnownConnection }) => {
-                chromeLocalStore.removeItem('connectionPassword')
+                localStore.remove('connectionPassword')
                 transport.disconnect()
                 navigate({
                   pathname: '/',
@@ -143,16 +151,16 @@ export const Pairing = () => {
       transport.destroy()
       subscription.unsubscribe()
     }
-  }, [setConnectionPassword, connectorOptions])
+    // `connectorOptions` is read only when `pairingKey` changes (see above).
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [setConnectionPassword, pairingKey])
 
   return (
-    <>
-      <ConnectionPassword
-        connectionPassword={connectionPassword}
-        purpose="general"
-        publicKey={publicKey}
-        signature={signature}
-      />
-    </>
+    <ConnectionPassword
+      connectionPassword={connectionPassword}
+      purpose="general"
+      publicKey={publicKey}
+      signature={signature}
+    />
   )
 }

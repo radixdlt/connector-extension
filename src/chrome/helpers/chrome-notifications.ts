@@ -1,11 +1,13 @@
 import { ResultAsync } from 'neverthrow'
+
+/* eslint-disable max-params -- positional optional args mirror chrome.notifications */
 export const createNotification = (
   id: string = crypto.randomUUID(),
-  title: string = '',
-  message: string = '',
+  title = '',
+  message = '',
   buttons: chrome.notifications.ButtonOptions[] = [],
-) => {
-  return ResultAsync.fromPromise(
+) =>
+  ResultAsync.fromPromise(
     new Promise((resolve) => {
       chrome.notifications.create(
         id,
@@ -23,4 +25,4 @@ export const createNotification = (
     }),
     (e) => e as Error,
   )
-}
+/* eslint-enable max-params */

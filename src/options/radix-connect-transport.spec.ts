@@ -3,6 +3,7 @@ import { getTransportConfig } from 'config'
 import { defaultConnectorExtensionOptions, getExtensionOptions } from 'options'
 import { vi } from 'vitest'
 import {
+  migrateIrohRelayUrl,
   isLocalNetworkHost,
   parseIrohRelayUrl,
   parseRadixConnectTransport,
@@ -135,6 +136,50 @@ describe('getTransportConfig', () => {
     expect(transportConfig.transport).toBe('webrtcAndIroh')
     expect(transportConfig.iroh).toEqual({
       relayUrl: 'https://relay.example.com',
+    })
+  })
+})
+
+describe('migrateIrohRelayUrl', () => {
+  it.each([
+    'https://euc1-1.relay.n0.iroh.link./',
+    ' https://euc1-1.relay.n0.iroh.link. ',
+    'https://euc1-1.relay.n0.iroh.link/',
+    'https://EUC1-1.relay.n0.iroh.link./',
+  ])("turns the old default relay %j into n0's public relays", (value) => {
+    expect(migrateIrohRelayUrl(value)).toBe('')
+  })
+
+  it.each([
+    ['https://relay.example.com/', 'https://relay.example.com/'],
+    [
+      'https://euc1-1.relay.n0.iroh.link:8443/',
+      'https://euc1-1.relay.n0.iroh.link:8443/',
+    ],
+    [
+      'https://use1-1.relay.n0.iroh.link./',
+      'https://use1-1.relay.n0.iroh.link./',
+    ],
+    ['not a url', 'not a url'],
+    [undefined, ''],
+  ])('keeps %j', (value, expected) => {
+    expect(migrateIrohRelayUrl(value)).toBe(expected)
+  })
+
+  it('applies to stored options and to the transport configuration', async () => {
+    const stored = {
+      ...defaultConnectorExtensionOptions,
+      radixConnectTransport: 'iroh' as const,
+      irohRelayUrl: 'https://euc1-1.relay.n0.iroh.link./',
+    }
+    vi.mocked(chrome.storage.local.get).mockImplementation((() =>
+      Promise.resolve({ options: stored })) as any)
+
+    const options = (await getExtensionOptions())._unsafeUnwrap()
+
+    expect(options.irohRelayUrl).toBe('')
+    expect(getTransportConfig(stored, true).iroh).toEqual({
+      relayUrl: undefined,
     })
   })
 })

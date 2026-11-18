@@ -1,0 +1,67 @@
+/* The menu of MenuButton: a card below its button, pointing at it, in the theme's
+   menu colours (ui/tokens.css): white or dark grey in the wallet's themes, the
+   original navy bubble in the classic one. */
+.rdx-menu {
+  position: fixed;
+  z-index: 20;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 200px;
+  padding: 6px;
+  border: 1px solid var(--rdx-menu-border, transparent);
+  border-radius: 14px;
+  background: var(--rdx-menu-background, #003057);
+  box-shadow: var(--rdx-menu-shadow, 0 8px 24px rgba(0, 0, 0, 0.25));
+  font-family: var(--rdx-font, 'IBM Plex Sans');
+}
+/* The point towards the button: the same card, turned. */
+.rdx-menu::before {
+  content: '';
+  position: absolute;
+  top: -1px;
+  right: 15px;
+  width: 12px;
+  height: 12px;
+  border: 1px solid var(--rdx-menu-border, transparent);
+  border-right: 0;
+  border-bottom: 0;
+  border-top-left-radius: 3px;
+  background: inherit;
+  transform: translateY(-50%) rotate(45deg);
+}
+.rdx-menu__item {
+  all: unset;
+  position: relative;
+  box-sizing: border-box;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-height: 44px;
+  padding: 10px 14px 10px 12px;
+  border-radius: 10px;
+  color: var(--rdx-menu-text, #fff);
+  font: 500 15px/20px var(--rdx-font, 'IBM Plex Sans');
+  cursor: pointer;
+}
+.rdx-menu__icon {
+  display: inline-flex;
+  flex: none;
+  color: var(--rdx-menu-icon, currentColor);
+}
+.rdx-menu__icon svg {
+  width: 20px;
+  height: 20px;
+}
+.rdx-menu__item--danger,
+.rdx-menu__item--danger .rdx-menu__icon {
+  color: var(--rdx-menu-danger, #ffb4a2);
+}
+.rdx-menu__item:hover,
+.rdx-menu__item:focus-visible {
+  background: var(--rdx-menu-hover, rgba(255, 255, 255, 0.12));
+}
+.rdx-menu__item:focus-visible {
+  outline: 2px solid var(--rdx-menu-focus-ring, #90caf9);
+  outline-offset: -2px;
+}

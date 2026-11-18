@@ -4,7 +4,8 @@ import {
   WalletInteractionItems,
   extensionInteractionDiscriminator,
 } from '@radixdlt/radix-dapp-toolkit'
-import { InferOutput, literal, object, optional, string, union } from 'valibot'
+import type { InferOutput } from 'valibot'
+import { literal, object, optional, string, union } from 'valibot'
 
 export type MetadataWithOptionalOrigin = InferOutput<
   typeof MetadataWithOptionalOrigin

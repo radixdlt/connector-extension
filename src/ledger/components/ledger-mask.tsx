@@ -1,5 +1,5 @@
 import { Box, Button, Mask, Text } from 'components'
-import { LedgerDevice } from 'ledger/schemas'
+import type { LedgerDevice } from 'ledger/schemas'
 import { LedgerDeviceBox } from './ledger-device-box'
 import Retry from '../assets/retry.svg'
 export const LedgerMask = (props: {
@@ -15,7 +15,7 @@ export const LedgerMask = (props: {
 
     return (
       <Box style={{ margin: '0 auto 28px', display: 'inline-block' }}>
-        <LedgerDeviceBox {...ledgerDevice}></LedgerDeviceBox>
+        <LedgerDeviceBox {...ledgerDevice} />
       </Box>
     )
   }

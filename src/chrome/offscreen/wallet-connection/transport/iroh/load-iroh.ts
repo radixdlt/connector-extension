@@ -6,9 +6,10 @@ import type { IrohBindings, IrohLogLevel } from './iroh-bindings'
 import { createIrohLogForwarder } from './iroh-library-log'
 
 // The library's own lifecycle lines (session started, relay, peer connected or
-// gone and why) in every build; with dev tools, iroh's internals too, in more detail
-// (see `createIrohLogForwarder`). The library logs connection events and short
-// endpoint ids, never passwords or message contents.
+// gone and why) and the warnings and errors of iroh's internals in every build; iroh's
+// internals in more detail in builds with dev tools. The library logs connection
+// events and short endpoint ids, never passwords or message contents; the forwarder
+// masks IP addresses (see `createIrohLogForwarder`).
 const maxLogLevel: IrohLogLevel = isDevMode ? 'debug' : 'info'
 
 const importAndInit = async (): Promise<IrohBindings> => {
@@ -31,6 +32,7 @@ const importAndInit = async (): Promise<IrohBindings> => {
   )
   return {
     startSession: (...args) => bindings.IrohSession.start(...args),
+    publicRelayUrls: () => bindings.publicRelayUrls(),
     validateRelayUrl: (relayUrl) => bindings.validateRelayUrl(relayUrl),
   }
 }

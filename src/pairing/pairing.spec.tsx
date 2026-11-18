@@ -4,6 +4,8 @@ import { act } from 'react-dom/test-utils'
 import { MemoryRouter } from 'react-router-dom'
 import { BehaviorSubject, Subject } from 'rxjs'
 import { okAsync } from 'neverthrow'
+import { ed25519 } from '@noble/curves/ed25519'
+import { defaultConnectorExtensionOptions } from 'options'
 import { Pairing } from './pairing'
 
 const webRtc = vi.hoisted(() => ({ generatedPasswords: 0 }))
@@ -60,6 +62,16 @@ const storageChange = async (key: string, newValue: unknown) =>
     await sleep(10)
   })
 
+// As the background saves them at install: with the extension's key pair.
+const extensionPrivateKey = ed25519.utils.randomPrivateKey()
+const storedOptions = {
+  ...defaultConnectorExtensionOptions,
+  privateKey: Buffer.from(extensionPrivateKey).toString('hex'),
+  publicKey: Buffer.from(ed25519.getPublicKey(extensionPrivateKey)).toString(
+    'hex',
+  ),
+}
+
 describe('Pairing', () => {
   let container: HTMLDivElement
   let root: Root
@@ -72,7 +84,12 @@ describe('Pairing', () => {
     webRtc.generatedPasswords = 0
     vi.mocked(chrome.storage.local.get).mockImplementation(((key: string) =>
       Promise.resolve({
-        [key]: key === 'connections' ? {} : undefined,
+        [key]:
+          key === 'connections'
+            ? {}
+            : key === 'options'
+            ? storedOptions
+            : undefined,
       })) as any)
 
     container = document.createElement('div')
@@ -110,5 +127,29 @@ describe('Pairing', () => {
 
     expect(webRtc.generatedPasswords).toBe(1)
     expect(shownPassword()).toBe(password)
+  })
+
+  it('keeps the password when unrelated options change', async () => {
+    const password = shownPassword()
+
+    await storageChange('options', {
+      ...storedOptions,
+      showDAppRequestNotifications: false,
+    })
+
+    expect(webRtc.generatedPasswords).toBe(1)
+    expect(shownPassword()).toBe(password)
+  })
+
+  it('starts a new pairing when the extension key pair changes', async () => {
+    const privateKey = ed25519.utils.randomPrivateKey()
+
+    await storageChange('options', {
+      ...defaultConnectorExtensionOptions,
+      privateKey: Buffer.from(privateKey).toString('hex'),
+      publicKey: Buffer.from(ed25519.getPublicKey(privateKey)).toString('hex'),
+    })
+
+    expect(webRtc.generatedPasswords).toBe(2)
   })
 })

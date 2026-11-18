@@ -1,0 +1,340 @@
+/* The wallet's settings screens: a grouped list on the light grey background. */
+.rdx-settings {
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  min-height: 0;
+  background: var(--rdx-settings-background);
+  color: var(--rdx-text);
+  font-family: var(--rdx-font);
+  --rdx-row-padding-y: var(--rdx-space-default);
+}
+.rdx-settings *,
+.rdx-settings *::before,
+.rdx-settings *::after {
+  box-sizing: border-box;
+}
+/* The options page: a full page, the wallet's own row heights. */
+.rdx-settings--page {
+  min-height: 100vh;
+  height: auto;
+  --rdx-row-padding-y: var(--rdx-space-l);
+}
+
+/* RadixCenteredTopAppBar: back arrow, centred title, divider. */
+.rdx-top-bar {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  flex: none;
+  display: grid;
+  grid-template-columns: 48px 1fr 48px;
+  align-items: center;
+  min-height: 56px;
+  padding: 0 var(--rdx-space-xxs);
+  background: var(--rdx-top-bar-background);
+  border-bottom: 1px solid var(--rdx-top-bar-divider, var(--rdx-divider));
+}
+.rdx-top-bar__title {
+  grid-column: 2;
+  margin: 0;
+  text-align: center;
+  color: var(--rdx-text);
+  font: 600 18px/23px var(--rdx-font);
+  text-shadow: var(--rdx-page-text-shadow);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.rdx-top-bar__title:focus {
+  outline: none;
+}
+.rdx-icon-button {
+  all: unset;
+  box-sizing: border-box;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  color: var(--rdx-icon);
+  cursor: pointer;
+}
+.rdx-icon-button:hover {
+  background: color-mix(in srgb, currentColor 12%, transparent);
+}
+.rdx-icon-button:focus-visible {
+  outline: 2px solid var(--rdx-focus-ring);
+  outline-offset: 0;
+}
+.rdx-icon-button svg {
+  width: 24px;
+  height: 24px;
+}
+
+.rdx-settings__content {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
+  padding-bottom: var(--rdx-space-l);
+}
+.rdx-settings--page .rdx-settings__content {
+  overflow: visible;
+}
+.rdx-settings__column {
+  width: 100%;
+  max-width: 640px;
+  margin: 0 auto;
+}
+
+/* Sections: a clear header above full-width rows, well apart from the next
+   section, as in the wallet's settings. */
+.rdx-section {
+  margin: 0;
+  padding: 0;
+  border: 0;
+  min-width: 0;
+}
+.rdx-section__header {
+  display: flex;
+  align-items: center;
+  gap: var(--rdx-space-s);
+  margin: 0;
+  /* As much room above as below: the title sits in the middle of its band. */
+  padding: 18px var(--rdx-space-default);
+  color: var(--rdx-text-secondary);
+  font: 700 14px/18px var(--rdx-font);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  text-shadow: var(--rdx-page-text-shadow);
+}
+.rdx-section__header::after {
+  content: '';
+  flex: 1 1 auto;
+  height: 1px;
+  background: var(--rdx-section-line, var(--rdx-divider));
+}
+/* What the section is about: under its title, before its rows, as part of the
+   title's band. */
+.rdx-section__description {
+  margin: -10px 0 0;
+  padding: 0 var(--rdx-space-default) 14px;
+  color: var(--rdx-text-secondary);
+  font: 400 14px/20px var(--rdx-font);
+  text-shadow: var(--rdx-page-text-shadow);
+}
+/* A message about the section (e.g. an error), below its rows. */
+.rdx-section__footer {
+  margin: 0;
+  padding: 10px var(--rdx-space-default) 0;
+  color: var(--rdx-text-secondary);
+  font: 400 13px/18px var(--rdx-font);
+  text-shadow: var(--rdx-page-text-shadow);
+}
+
+/* Full-width rows on the card colour, divided like the wallet's lists. */
+.rdx-group {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  background: var(--rdx-card);
+  border-top: 1px solid var(--rdx-divider);
+  border-bottom: 1px solid var(--rdx-divider);
+}
+.rdx-group > li + li {
+  border-top: 1px solid var(--rdx-divider);
+}
+
+/* A row: title, optional subtitle, and a chevron, switch or value on the right. */
+.rdx-row {
+  all: unset;
+  box-sizing: border-box;
+  display: flex;
+  align-items: center;
+  gap: var(--rdx-space-m);
+  width: 100%;
+  min-height: 56px;
+  padding: var(--rdx-row-padding-y) var(--rdx-space-default);
+  background: var(--rdx-card);
+  color: var(--rdx-text);
+  font-family: var(--rdx-font);
+  text-align: left;
+}
+button.rdx-row,
+a.rdx-row,
+label.rdx-row {
+  cursor: pointer;
+}
+button.rdx-row:hover,
+a.rdx-row:hover,
+label.rdx-row:hover {
+  background: var(
+    --rdx-row-hover,
+    color-mix(in srgb, var(--rdx-card) 94%, var(--rdx-text))
+  );
+}
+/* Only for the keyboard: a click on a row's switch or radio draws no ring. */
+button.rdx-row:focus-visible,
+a.rdx-row:focus-visible,
+label.rdx-row:has(:focus-visible) {
+  outline: 2px solid var(--rdx-focus-ring);
+  outline-offset: -2px;
+}
+.rdx-row__icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: none;
+  width: 36px;
+  height: 36px;
+  border-radius: var(--rdx-radius-s);
+  background: var(--rdx-surface);
+  color: var(--rdx-icon);
+}
+.rdx-row__icon svg {
+  width: 20px;
+  height: 20px;
+}
+.rdx-row__text {
+  display: flex;
+  flex-direction: column;
+  gap: var(--rdx-space-xxxs);
+  flex: 1 1 auto;
+  min-width: 0;
+}
+.rdx-row__title {
+  font: 600 16px/23px var(--rdx-font);
+  overflow-wrap: anywhere;
+}
+.rdx-row__subtitle {
+  color: var(--rdx-text-secondary);
+  font: 400 14px/18px var(--rdx-font);
+  overflow-wrap: anywhere;
+}
+.rdx-row__value {
+  flex: none;
+  max-width: 55%;
+  color: var(--rdx-text-secondary);
+  font: 400 14px/18px var(--rdx-font);
+  text-align: right;
+  overflow-wrap: anywhere;
+}
+.rdx-row__trailing {
+  display: inline-flex;
+  flex: none;
+  color: var(--rdx-icon);
+}
+.rdx-row__trailing svg {
+  width: 24px;
+  height: 24px;
+}
+.rdx-row--disabled {
+  opacity: 0.5;
+}
+
+/* Radio rows (one choice in a group). */
+.rdx-radio {
+  appearance: none;
+  display: inline-grid;
+  place-content: center;
+  flex: none;
+  width: 24px;
+  height: 24px;
+  margin: 0;
+  border: 2px solid var(--rdx-toggle-inactive-border);
+  border-radius: 50%;
+  background: transparent;
+  cursor: pointer;
+  transition:
+    background-color 0.15s ease,
+    border-color 0.15s ease;
+}
+/* Chosen: filled with the selection colour, with a check mark. */
+.rdx-radio::before {
+  content: '';
+  width: 12px;
+  height: 7px;
+  margin-top: -3px;
+  border: solid var(--rdx-on-selected, var(--rdx-white));
+  border-width: 0 0 2.5px 2.5px;
+  transform: rotate(-45deg) scale(0);
+  transition: transform 0.15s ease;
+}
+.rdx-radio:checked {
+  border-color: var(--rdx-selected);
+  background: var(--rdx-selected);
+}
+.rdx-radio:checked::before {
+  transform: rotate(-45deg) scale(1);
+}
+.rdx-radio:focus-visible {
+  /* The row draws the ring. */
+  outline: none;
+}
+/* The chosen row: tinted, with an accent bar, its title in the selection colour. */
+label.rdx-row:has(.rdx-radio:checked) {
+  background: var(
+    --rdx-selected-row,
+    color-mix(in srgb, var(--rdx-selected) 10%, var(--rdx-card))
+  );
+  box-shadow: inset 4px 0 0 var(--rdx-selected);
+}
+label.rdx-row:has(.rdx-radio:checked) .rdx-row__icon {
+  background: var(--rdx-selected);
+  color: var(--rdx-on-selected, var(--rdx-white));
+}
+@media (prefers-reduced-motion: reduce) {
+  .rdx-radio,
+  .rdx-radio::before {
+    transition: none;
+  }
+}
+
+/* A text field in a row. */
+.rdx-field {
+  display: flex;
+  flex-direction: column;
+  gap: var(--rdx-space-xs);
+  padding: var(--rdx-row-padding-y) var(--rdx-space-default);
+  background: var(--rdx-card);
+}
+.rdx-field__label {
+  font: 600 16px/23px var(--rdx-font);
+}
+.rdx-field__input {
+  box-sizing: border-box;
+  width: 100%;
+  min-height: 48px;
+  padding: var(--rdx-space-m) var(--rdx-space-default);
+  border: 1px solid var(--rdx-field-border);
+  border-radius: var(--rdx-radius-s);
+  background: var(--rdx-field-background);
+  color: var(--rdx-text);
+  font: 400 16px/23px var(--rdx-font);
+}
+.rdx-field__input::placeholder {
+  color: var(--rdx-text-secondary);
+}
+.rdx-field__input:focus {
+  outline: none;
+  border-color: var(--rdx-field-border-focused);
+  box-shadow: 0 0 0 1px var(--rdx-field-border-focused);
+}
+.rdx-field__input[aria-invalid='true'] {
+  border-color: var(--rdx-error);
+}
+.rdx-field__help {
+  margin: 0;
+  color: var(--rdx-text-secondary);
+  font: 400 14px/18px var(--rdx-font);
+}
+.rdx-field__help--error {
+  color: var(--rdx-error);
+}
+
+/* A switch or radio button whose value is still being read (see ValuePlaceholder). */
+.rdx-value-pending {
+  visibility: hidden;
+}

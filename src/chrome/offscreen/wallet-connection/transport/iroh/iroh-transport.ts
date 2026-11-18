@@ -300,6 +300,7 @@ export const IrohTransport = (
     if (!worthRenewing(session) || renewingAfterWake) return
     wokeAt = undefined
     renewingAfterWake = true
+    // eslint-disable-next-line no-void -- fire-and-forget
     void renewOnceTheNetworkAnswers(session).finally(() => {
       renewingAfterWake = false
     })
@@ -322,10 +323,14 @@ export const IrohTransport = (
     const probe = walletRelay
       ? new URL(RELAY_PROBE_PATH, walletRelay).toString()
       : undefined
-    for (let tries = 0; probe && tries < WAKE_NETWORK_PROBES; tries++) {
-      if (await networkAnswers(probe)) break
-      if (!worthRenewing(session)) return
-      await new Promise((resolve) => setTimeout(resolve, wakeProbeIntervalMs))
+    if (probe) {
+      for (let tries = 0; tries < WAKE_NETWORK_PROBES; tries++) {
+        if (await networkAnswers(probe)) break
+        if (!worthRenewing(session)) return
+        await new Promise((resolve) => {
+          setTimeout(resolve, wakeProbeIntervalMs)
+        })
+      }
     }
     if (!worthRenewing(session)) return
     restartSession('woke without its relay')
@@ -333,14 +338,6 @@ export const IrohTransport = (
 
   /** Keeps where the wallet is, for the next session's knock. */
   const keepWalletRelay = (seen: string) => {
-    // Said by the wallet: only a relay URL this extension accepts is kept (and so
-    // stored with the link).
-    const parsed = parseIrohRelayUrl(seen)
-    if (parsed.isErr() || !parsed.value) {
-      logger?.debug('iroh: ignored a relay the wallet named that is not valid')
-      return
-    }
-    seen = parsed.value
     if (seen === walletRelay) return
     walletRelay = seen
     logger?.debug('iroh: the wallet is on another relay, kept for knocking')
@@ -377,9 +374,11 @@ export const IrohTransport = (
           ...connectionDetails(),
           summary,
         })
+        // eslint-disable-next-line no-void -- fire-and-forget
         void noteWalletRelay(session)
       } else if (wasConnected) {
         // A wallet that had just started had no relay yet when it connected.
+        // eslint-disable-next-line no-void -- fire-and-forget
         void noteWalletRelay(session)
         renewIfWokeWithoutRelay(session)
         // The session says why (the wallet closed it, replaced it with a newer
@@ -391,10 +390,7 @@ export const IrohTransport = (
           summary,
         })
         // Gone to the background, then silent: its app was closed (swiped away, or
-        // ended by the system), not merely paused. The library reports why a
-        // connection ended only as text (its diagnostics' `lastError`, no code in its
-        // JavaScript API), and a failed liveness check is the one ending that means
-        // the wallet stopped answering, so it is recognized by that text.
+        // ended by the system), not merely paused.
         if (
           peerInBackground &&
           lastSnapshot?.lastError?.includes('no answer to a liveness check')
@@ -430,6 +426,7 @@ export const IrohTransport = (
       if (current !== session) return
       peerInBackground = event.inBackground
       // Seconds after connecting: a wallet that had just started has its relay by now.
+      // eslint-disable-next-line no-void -- fire-and-forget
       void noteWalletRelay(session)
       walletNoticeSubject.next({
         type: 'presence',
@@ -779,7 +776,6 @@ export const IrohTransport = (
       forgetPassword()
       connectedSubject.complete()
       onMessageSubject.complete()
-      walletNoticeSubject.complete()
     },
   }
 }

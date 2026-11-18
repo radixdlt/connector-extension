@@ -15,13 +15,17 @@ describe('the runs of a session', () => {
 
     sessions.chain(async () => {
       order.push('first started')
-      await new Promise<void>((resolve) => (finishFirst = resolve))
+      await new Promise<void>((resolve) => {
+        finishFirst = resolve
+      })
       order.push('first finished')
     })
     const second = sessions.chain(async () => {
       order.push('second started')
     })
-    await new Promise((resolve) => setTimeout(resolve, 10))
+    await new Promise((resolve) => {
+      setTimeout(resolve, 10)
+    })
     expect(order).toEqual(['first started'])
 
     finishFirst()
@@ -33,7 +37,9 @@ describe('the runs of a session', () => {
     const sessions = runs()
     const older = sessions.next()
     let waited = false
-    const waiting = sessions.wait(60_000).then(() => (waited = true))
+    const waiting = sessions.wait(60_000).then(() => {
+      waited = true
+    })
 
     const newer = sessions.next()
     await waiting

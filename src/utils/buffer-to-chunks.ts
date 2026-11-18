@@ -1,5 +1,6 @@
 import chunk from 'lodash.chunk'
-import { err, ok, Result } from 'neverthrow'
+import type { Result } from 'neverthrow'
+import { err, ok } from 'neverthrow'
 import { errorIdentity } from './error-identity'
 import { Buffer } from 'buffer'
 

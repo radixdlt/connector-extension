@@ -26,6 +26,7 @@ export type TransportConnectionConfig = {
  */
 export type LinkTransport = CompleteTransport<
   WalletTransport<TransportConnectionConfig> & {
+    diagnostics: () => unknown
     /** Closes the transport's endpoint for good (see `releaseIroh`). */
     shutdown: () => ResultAsync<void, never>
     /** Why its connection to the wallet ended, if it knows. */
@@ -63,7 +64,7 @@ export type TransportSlot = {
  * configuration.
  */
 export const linkTransport = <Config>(
-  transport: WalletTransport<Config>,
+  transport: WalletTransport<Config> & { diagnostics: () => unknown },
   configOf: (config: TransportConnectionConfig) => Config,
   extras: Partial<Pick<LinkTransport, 'shutdown' | 'disconnectReason'>> = {},
 ): LinkTransport =>
@@ -82,6 +83,7 @@ export const linkTransport = <Config>(
     disconnect: transport.disconnect,
     restart: transport.restart,
     destroy: transport.destroy,
+    diagnostics: transport.diagnostics,
     shutdown: extras.shutdown ?? (() => okAsync(undefined)),
     disconnectReason: extras.disconnectReason ?? (() => undefined),
   })

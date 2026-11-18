@@ -1,5 +1,5 @@
-import { LedgerDeriveAndDisplayAddressRequest } from './../../ledger/schemas'
-import {
+import type { LedgerDeriveAndDisplayAddressRequest } from './../../ledger/schemas'
+import type {
   KeyParameters,
   LedgerDeviceIdRequest,
   LedgerPublicKeyRequest,
@@ -129,22 +129,20 @@ export const getSignSecp256k1ChallengePayload = () =>
     },
   ])
 
-export const getAccountListMessage = () => {
-  return {
-    discriminator: 'accountList',
-    accounts: [
-      {
-        label: 'My Main Account',
-        address:
-          'account_rdx12y4l35lh2543nff9pyyzvsh64ssu0dv6fq20gg8suslwmjvkylejgj',
-        appearanceId: 0,
-      },
-      {
-        label: 'My Savings Account',
-        address:
-          'account_tdx_2_12y9as9p2utmxf9zc9gvsalvd6s69zump236ng3ztvfkjngm757zsa3',
-        appearanceId: 1,
-      },
-    ],
-  }
-}
+export const getAccountListMessage = () => ({
+  discriminator: 'accountList',
+  accounts: [
+    {
+      label: 'My Main Account',
+      address:
+        'account_rdx12y4l35lh2543nff9pyyzvsh64ssu0dv6fq20gg8suslwmjvkylejgj',
+      appearanceId: 0,
+    },
+    {
+      label: 'My Savings Account',
+      address:
+        'account_tdx_2_12y9as9p2utmxf9zc9gvsalvd6s69zump236ng3ztvfkjngm757zsa3',
+      appearanceId: 1,
+    },
+  ],
+})

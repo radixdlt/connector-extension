@@ -13,6 +13,4 @@ export const openPopupProcedure = rootProcedure
       ]),
     ),
   )
-  .query(({ ctx }) => {
-    return ctx.openParingPopup()
-  })
+  .query(({ ctx }) => ctx.openParingPopup())

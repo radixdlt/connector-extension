@@ -60,6 +60,8 @@ export type IrohBindings = {
      */
     soleHolder?: boolean,
   ) => Promise<IrohSession>
+  /** n0's public relays, for display. */
+  publicRelayUrls: () => string[]
   /** Why the library cannot use `relayUrl`, or `undefined` if it can. */
   validateRelayUrl: (relayUrl: string) => string | undefined
 }

@@ -1,5 +1,5 @@
 import { blakeHashHexSync } from 'crypto/blake2b'
-import { LedgerSignChallengeRequest } from 'ledger/schemas'
+import type { LedgerSignChallengeRequest } from 'ledger/schemas'
 import { getDataLength } from './utils'
 
 /**

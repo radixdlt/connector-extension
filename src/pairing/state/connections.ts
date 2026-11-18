@@ -1,11 +1,12 @@
 import { getLinkingSignatureMessage } from './../../crypto/get-linking-message'
 import { ed25519 } from '@noble/curves/ed25519'
-import { Account } from '@radixdlt/radix-dapp-toolkit'
-import { chromeLocalStore } from 'chrome/helpers/chrome-local-store'
-import { LinkClientInteraction } from 'ledger/schemas'
+import type { Account } from '@radixdlt/radix-dapp-toolkit'
+import { localStore } from 'chrome/helpers/storage'
+import { forgetWalletRecords, recordWalletLinked } from './wallet-records'
+import { retireLink } from 'chrome/links/retired-links'
+import type { LinkClientInteraction } from 'ledger/schemas'
 import { errAsync } from 'neverthrow'
-import { useEffect, useState } from 'react'
-import { logger } from 'utils/logger'
+import { useEffect, useMemo, useState } from 'react'
 
 export type Connection = {
   walletName: string
@@ -21,28 +22,47 @@ export type Connection = {
 
 export type Connections = Record<string, Connection>
 
+/**
+ * The link stored when a wallet is linked. A wallet linked again (a new password)
+ * keeps its name, its accounts and the relay it was last seen on: its device has
+ * not moved, and without that relay the next iroh sessions could not knock until
+ * one of them happened to see it.
+ */
+export const linkedConnection = ({
+  walletPublicKey,
+  password,
+  knownConnection,
+  numberOfExistingConnections,
+}: {
+  walletPublicKey: string
+  password: string
+  knownConnection: Connection | null | undefined
+  numberOfExistingConnections: number
+}): Connection => ({
+  walletName:
+    knownConnection?.walletName ||
+    `Radix Wallet ${numberOfExistingConnections + 1}`,
+  walletPublicKey,
+  password,
+  accounts: knownConnection?.accounts || [],
+  ...(knownConnection?.walletRelay
+    ? { walletRelay: knownConnection.walletRelay }
+    : {}),
+})
+
 export const useConnections = () => {
   const [connections, setConnections] = useState<Connections | null>(null)
 
   useEffect(() => {
-    chromeLocalStore.getItem('connections').map((result) => {
-      if (JSON.stringify(result.connections) !== JSON.stringify(connections)) {
-        setConnections(result.connections || {})
+    localStore.get('connections').map((stored) => {
+      if (JSON.stringify(stored) !== JSON.stringify(connections)) {
+        setConnections(stored || {})
       }
     })
-    const listener = (
-      changes: Record<string, chrome.storage.StorageChange>,
-      area: string,
-    ) => {
-      if (changes['connections'] && area === 'local') {
-        setConnections(changes['connections'].newValue)
-      }
-    }
-    chrome.storage.onChanged.addListener(listener)
-
-    return () => {
-      chrome.storage.onChanged.removeListener(listener)
-    }
+    return localStore.onChange('connections', (next) =>
+      setConnections(next ?? null),
+    )
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- subscribes once, on mount
   }, [])
 
   return connections
@@ -61,33 +81,35 @@ export const ConnectionsClient = (connections?: Connections | null) => {
       walletName,
     } satisfies Connection
 
-    return chromeLocalStore.setItem({
-      connections: {
-        ...connections,
-        [connectionId]: connection,
-      },
+    return localStore.set('connections', {
+      ...connections,
+      [connectionId]: connection,
     })
   }
 
-  const remove = (connectionId: string) => {
-    if (!connections) return
+  /**
+   * Forgets a linked wallet. `tellWallet` (the default, when the user forgets it
+   * here) keeps a notice for the wallet, which then deletes its end of the link;
+   * not when the wallet itself removed the link. Only wallets that have connected
+   * over iroh (their relay is known) get it: the released wallet has no
+   * `linkRemoved` message.
+   */
+  const remove = (connectionId: string, { tellWallet = true } = {}) => {
+    const connection = connections?.[connectionId]
+    if (!connections || !connection) return
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars -- omits the key from the rest
     const { [connectionId]: _, ...rest } = connections
-    return chromeLocalStore.setItem({
-      connections: rest,
-    })
+    forgetWalletRecords(connectionId)
+    if (tellWallet && connection.walletRelay) retireLink(connection)
+    return localStore.set('connections', rest)
   }
 
-  const hasConnections = () => {
-    return connections && Object.keys(connections).length > 0
-  }
+  const hasConnections = () =>
+    connections && Object.keys(connections).length > 0
 
-  const isLoading = () => {
-    return connections === null
-  }
+  const isLoading = () => connections === null
 
-  const entries = () => {
-    return Object.entries(connections || {})
-  }
+  const entries = () => Object.entries(connections || {})
 
   const addOrUpdate = (
     password: string,
@@ -100,45 +122,26 @@ export const ConnectionsClient = (connections?: Connections | null) => {
       const validSignature = ed25519.verify(signature, message, walletPublicKey)
 
       if (!validSignature) {
+        // eslint-disable-next-line @typescript-eslint/consistent-type-assertions -- keeps the error shape callers get
         return errAsync({ cause: 'Invalid Signature' } as Error)
       }
     }
 
     const knownConnection = connections && connections[walletPublicKey]
     const numberOfExistingConnections = Object.keys(connections || {}).length
-    const updatedConnections = {
-      connections: {
-        ...(connections || {}),
-        [walletPublicKey]: {
-          walletName:
-            knownConnection?.walletName ||
-            `Radix Wallet ${numberOfExistingConnections + 1}`,
-          walletPublicKey,
-          password,
-          accounts: knownConnection?.accounts || [],
-          // A wallet linked again keeps the relay it was last seen on.
-          ...(knownConnection?.walletRelay
-            ? { walletRelay: knownConnection.walletRelay }
-            : {}),
-        },
-      },
+    const updatedConnections: Connections = {
+      ...(connections || {}),
+      [walletPublicKey]: linkedConnection({
+        walletPublicKey,
+        password,
+        knownConnection,
+        numberOfExistingConnections,
+      }),
     }
 
-    return chromeLocalStore.setItem(updatedConnections).map(() => ({
-      isKnownConnection: !!knownConnection,
-    }))
-  }
-
-  /** Keeps the iroh relay the wallet was seen on; ignored for a link that is gone. */
-  const updateWalletRelay = (walletPublicKey: string, relayUrl: string) => {
-    const connection = connections?.[walletPublicKey]
-    if (!connections || !connection || connection.walletRelay === relayUrl)
-      return
-    return chromeLocalStore.setItem({
-      connections: {
-        ...connections,
-        [walletPublicKey]: { ...connection, walletRelay: relayUrl },
-      },
+    return localStore.set('connections', updatedConnections).map(() => {
+      if (!knownConnection) recordWalletLinked(walletPublicKey)
+      return { isKnownConnection: !!knownConnection }
     })
   }
 
@@ -148,11 +151,9 @@ export const ConnectionsClient = (connections?: Connections | null) => {
       ...connections[walletPublicKey],
       accounts,
     } satisfies Connection
-    return chromeLocalStore.setItem({
-      connections: {
-        ...connections,
-        [walletPublicKey]: connection,
-      },
+    return localStore.set('connections', {
+      ...connections,
+      [walletPublicKey]: connection,
     })
   }
 
@@ -164,20 +165,12 @@ export const ConnectionsClient = (connections?: Connections | null) => {
     updateName,
     hasConnections,
     updateAccounts,
-    updateWalletRelay,
     connections,
   }
 }
 
 export const useConnectionsClient = () => {
   const connections = useConnections()
-  const [connectionsClient, setConnectionsClient] = useState<ConnectionsClient>(
-    ConnectionsClient(connections),
-  )
-
-  useEffect(() => {
-    setConnectionsClient(ConnectionsClient(connections))
-  }, [connections])
-
-  return connectionsClient
+  // Made with the connections it is rendered with: not one render behind them.
+  return useMemo(() => ConnectionsClient(connections), [connections])
 }

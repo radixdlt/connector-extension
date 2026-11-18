@@ -1,8 +1,8 @@
 import { compiledTxHex } from 'chrome/dev-tools/example'
 import { LedgerWrapper, ledger } from './ledger-wrapper'
-import TransportWebHID from '@ledgerhq/hw-transport-webhid'
+import type TransportWebHID from '@ledgerhq/hw-transport-webhid'
 import { LedgerInstructionCode } from './constants'
-import { KeyParameters } from 'ledger/schemas'
+import type { KeyParameters } from 'ledger/schemas'
 import { describe, it, expect } from 'vitest'
 
 const createLedgerWrapperWithMockedTransport = (
@@ -434,6 +434,52 @@ describe('Ledger Babylon Wrapper', () => {
           },
           signature:
             '011c38168b1071585ccef652471beac0efcce58176c5ec24cd6e1af45058ec057e2990bdd899d24ea12c745c6c58819b86891998e2d7e1374eadca1ac2920ac187',
+        },
+      ])
+    })
+  })
+
+  describe('subintent signing', () => {
+    it('should sign a subintent hash with each signer', async () => {
+      const ledger = createLedgerWrapperWithMockedTransport([
+        { input: 'aa120000', output: '305495ba9000' },
+        {
+          input: 'aaa1000019068000002c800003fe8000000c8000020d800005b480000000',
+          output: '9000',
+        },
+        {
+          input:
+            'aca100002017f3cb369f2632454f7f22c24e72b0adf7b95e36f2297467d3ff04010b2967e1',
+          output:
+            '5015423efc3ee29338df1877b7c9eaf563e894e89a327da9d5b5abbb7c2cda6ad36a66d6219d3817dba61737c0df398b7f5ae2df5b04a85c5f6985542684d80d451152a1cef7be603205086d4ebac0a0b78fda2ff4684b9dea5ca9ef003d4e7d9000',
+        },
+      ])
+
+      const result = await ledger.signSubintent({
+        ledgerDevice,
+        interactionId: 'abc',
+        discriminator: 'signSubintentHash',
+        signers: [
+          {
+            curve: 'curve25519',
+            derivationPath: `m/44H/1022H/12H/525H/1460H/0H`,
+          },
+        ],
+        subintentHash:
+          '17f3cb369f2632454f7f22c24e72b0adf7b95e36f2297467d3ff04010b2967e1',
+      })
+      if (result.isErr()) throw result.error
+
+      expect(result.value).toEqual([
+        {
+          derivedPublicKey: {
+            curve: 'curve25519',
+            derivationPath: `m/44H/1022H/12H/525H/1460H/0H`,
+            publicKey:
+              '451152a1cef7be603205086d4ebac0a0b78fda2ff4684b9dea5ca9ef003d4e7d',
+          },
+          signature:
+            '5015423efc3ee29338df1877b7c9eaf563e894e89a327da9d5b5abbb7c2cda6ad36a66d6219d3817dba61737c0df398b7f5ae2df5b04a85c5f6985542684d80d',
         },
       ])
     })

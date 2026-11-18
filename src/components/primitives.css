@@ -1,0 +1,408 @@
+/* The base components (Box, Text, Button, Header, PopupWindow) used by the ledger
+   page and the dev tools. Their variants are modifier classes:
+   `rdx-box--p-large`, `rdx-text--bold`... Values as in the design scale. */
+
+/* Margins of every base component: m, mt, mb, ml, mr. */
+.rdx-space--m-none {
+  margin: 2px;
+}
+.rdx-space--m-xs {
+  margin: 4px;
+}
+.rdx-space--m-sm {
+  margin: 8px;
+}
+.rdx-space--m-md {
+  margin: 16px;
+}
+.rdx-space--m-lg {
+  margin: 24px;
+}
+.rdx-space--m-xl {
+  margin: 32px;
+}
+.rdx-space--m-2xl {
+  margin: 40px;
+}
+.rdx-space--m-3xl {
+  margin: 48px;
+}
+.rdx-space--m-4xl {
+  margin: 64px;
+}
+.rdx-space--m-5xl {
+  margin: 80px;
+}
+.rdx-space--mt-none {
+  margin-top: 2px;
+}
+.rdx-space--mt-xs {
+  margin-top: 4px;
+}
+.rdx-space--mt-sm {
+  margin-top: 8px;
+}
+.rdx-space--mt-md {
+  margin-top: 16px;
+}
+.rdx-space--mt-lg {
+  margin-top: 24px;
+}
+.rdx-space--mt-xl {
+  margin-top: 32px;
+}
+.rdx-space--mt-2xl {
+  margin-top: 40px;
+}
+.rdx-space--mt-3xl {
+  margin-top: 48px;
+}
+.rdx-space--mt-4xl {
+  margin-top: 64px;
+}
+.rdx-space--mt-5xl {
+  margin-top: 80px;
+}
+.rdx-space--mb-none {
+  margin-bottom: 2px;
+}
+.rdx-space--mb-xs {
+  margin-bottom: 4px;
+}
+.rdx-space--mb-sm {
+  margin-bottom: 8px;
+}
+.rdx-space--mb-md {
+  margin-bottom: 16px;
+}
+.rdx-space--mb-lg {
+  margin-bottom: 24px;
+}
+.rdx-space--mb-xl {
+  margin-bottom: 32px;
+}
+.rdx-space--mb-2xl {
+  margin-bottom: 40px;
+}
+.rdx-space--mb-3xl {
+  margin-bottom: 48px;
+}
+.rdx-space--mb-4xl {
+  margin-bottom: 64px;
+}
+.rdx-space--mb-5xl {
+  margin-bottom: 80px;
+}
+.rdx-space--ml-none {
+  margin-left: 2px;
+}
+.rdx-space--ml-xs {
+  margin-left: 4px;
+}
+.rdx-space--ml-sm {
+  margin-left: 8px;
+}
+.rdx-space--ml-md {
+  margin-left: 16px;
+}
+.rdx-space--ml-lg {
+  margin-left: 24px;
+}
+.rdx-space--ml-xl {
+  margin-left: 32px;
+}
+.rdx-space--ml-2xl {
+  margin-left: 40px;
+}
+.rdx-space--ml-3xl {
+  margin-left: 48px;
+}
+.rdx-space--ml-4xl {
+  margin-left: 64px;
+}
+.rdx-space--ml-5xl {
+  margin-left: 80px;
+}
+.rdx-space--mr-none {
+  margin-right: 2px;
+}
+.rdx-space--mr-xs {
+  margin-right: 4px;
+}
+.rdx-space--mr-sm {
+  margin-right: 8px;
+}
+.rdx-space--mr-md {
+  margin-right: 16px;
+}
+.rdx-space--mr-lg {
+  margin-right: 24px;
+}
+.rdx-space--mr-xl {
+  margin-right: 32px;
+}
+.rdx-space--mr-2xl {
+  margin-right: 40px;
+}
+.rdx-space--mr-3xl {
+  margin-right: 48px;
+}
+.rdx-space--mr-4xl {
+  margin-right: 64px;
+}
+.rdx-space--mr-5xl {
+  margin-right: 80px;
+}
+
+.rdx-box {
+  box-sizing: border-box;
+}
+.rdx-box--full {
+  width: 100%;
+}
+.rdx-box--rounded {
+  border-radius: 16px;
+}
+.rdx-box--radius-small {
+  border-radius: 8px;
+}
+.rdx-box--radius-medium {
+  border-radius: 12px;
+}
+.rdx-box--radius-large {
+  border-radius: 16px;
+}
+.rdx-box--bg-white {
+  background-color: white;
+}
+.rdx-box--bg-dark {
+  background-color: rgba(0, 0, 0, 0.5);
+}
+.rdx-box--border {
+  border-color: #f4f5f9;
+  border-style: solid;
+}
+.rdx-box--flex-row {
+  display: flex;
+  flex-direction: row;
+}
+.rdx-box--flex-col {
+  display: flex;
+  flex-direction: column;
+}
+.rdx-box--items-start {
+  display: flex;
+  justify-content: flex-start;
+}
+.rdx-box--items-center {
+  display: flex;
+  align-items: center;
+}
+.rdx-box--justify-start {
+  display: flex;
+  justify-content: flex-start;
+}
+.rdx-box--justify-center {
+  display: flex;
+  justify-content: center;
+}
+.rdx-box--justify-between {
+  display: flex;
+  justify-content: space-between;
+}
+.rdx-box--position-relative {
+  position: relative;
+}
+.rdx-box--position-absolute {
+  position: absolute;
+}
+.rdx-box--textAlign-left {
+  text-align: left;
+}
+.rdx-box--textAlign-center {
+  text-align: center;
+}
+.rdx-box--textAlign-right {
+  text-align: right;
+}
+.rdx-box--maxWidth-medium {
+  max-width: 600px;
+}
+.rdx-box--p-none {
+  padding: 2px;
+}
+.rdx-box--px-none {
+  padding-left: 2px;
+  padding-right: 2px;
+}
+.rdx-box--py-none {
+  padding-top: 2px;
+  padding-bottom: 2px;
+}
+.rdx-box--p-xsmall {
+  padding: 4px;
+}
+.rdx-box--px-xsmall {
+  padding-left: 4px;
+  padding-right: 4px;
+}
+.rdx-box--py-xsmall {
+  padding-top: 4px;
+  padding-bottom: 4px;
+}
+.rdx-box--p-small {
+  padding: 8px;
+}
+.rdx-box--px-small {
+  padding-left: 8px;
+  padding-right: 8px;
+}
+.rdx-box--py-small {
+  padding-top: 8px;
+  padding-bottom: 8px;
+}
+.rdx-box--p-medium {
+  padding: 16px;
+}
+.rdx-box--px-medium {
+  padding-left: 16px;
+  padding-right: 16px;
+}
+.rdx-box--py-medium {
+  padding-top: 16px;
+  padding-bottom: 16px;
+}
+.rdx-box--p-large {
+  padding: 24px;
+}
+.rdx-box--px-large {
+  padding-left: 24px;
+  padding-right: 24px;
+}
+.rdx-box--py-large {
+  padding-top: 24px;
+  padding-bottom: 24px;
+}
+
+.rdx-text--size-xSmall {
+  font-size: 12px;
+}
+.rdx-text--size-small {
+  font-size: 14px;
+}
+.rdx-text--size-medium {
+  font-size: 16px;
+}
+.rdx-text--size-large {
+  font-size: 18px;
+}
+.rdx-text--size-2xl {
+  font-size: 24px;
+}
+.rdx-text--size-4xl {
+  font-size: 32px;
+  font-weight: 700;
+}
+.rdx-text--color-radixGrey1 {
+  color: #003057;
+}
+.rdx-text--color-radixGrey2 {
+  color: #8a8fa4;
+}
+.rdx-text--bold {
+  font-weight: 600;
+}
+.rdx-text--medium {
+  font-weight: 500;
+}
+.rdx-text--italic {
+  font-style: italic;
+}
+.rdx-text--muted {
+  color: #535353;
+}
+.rdx-text--inline {
+  display: inline;
+}
+.rdx-text--ellipsis {
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.rdx-text--negativeMarginBottom {
+  margin-bottom: -20px;
+}
+
+.rdx-button {
+  box-sizing: border-box;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  padding: 8px 24px;
+  border: 0;
+  border-radius: 12px;
+  background-color: #052cc0;
+  color: #fff;
+  font-weight: 600;
+  cursor: pointer;
+}
+.rdx-button--px-2xl {
+  padding-left: 40px;
+  padding-right: 40px;
+}
+.rdx-button--full {
+  width: 100%;
+}
+.rdx-button--size-small {
+  padding: 8px 32px;
+  font-size: 14px;
+}
+.rdx-button--size-iconSmall {
+  padding: 4px;
+  font-size: 0;
+}
+.rdx-button--secondary,
+.rdx-button--secondary:hover {
+  background-color: #e2e5ed;
+  color: #535353;
+  box-shadow: none;
+}
+.rdx-button--disabled {
+  background-color: #e2e5ed;
+  color: rgba(208, 208, 214, 1);
+  cursor: not-allowed;
+  pointer-events: none;
+}
+
+.rdx-header {
+  color: white;
+  font-size: 32px;
+  font-weight: 600;
+  line-height: 36px;
+}
+.rdx-header--dark {
+  color: #535353;
+}
+
+.rdx-popup-window {
+  box-sizing: border-box;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  height: 100%;
+  padding: 18px 32px;
+}
+.rdx-popup-window--content-start {
+  justify-content: flex-start;
+}
+.rdx-popup-window--items-center {
+  align-items: center;
+}
+/* A narrow side panel (the popup is at least 375px wide). */
+@media (max-width: 360px) {
+  .rdx-popup-window {
+    padding-left: 16px;
+    padding-right: 16px;
+  }
+}

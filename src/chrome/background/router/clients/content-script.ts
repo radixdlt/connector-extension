@@ -1,11 +1,11 @@
-import { AppLogger } from 'utils/logger'
+import type { AppLogger } from 'utils/logger'
 
 export const createContentScriptClient = ({
   logger,
 }: {
   logger: AppLogger
 }) => {
-  const sendMessageToDapp = (tabId: number, data: any) => {
+  const sendMessageToDapp = (tabId: number, data: unknown) => {
     logger
       .getSubLogger({
         name: `router.sendMessageToDapp `,

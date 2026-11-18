@@ -1,50 +1,39 @@
-import { describe, expect, it, vi, beforeEach } from 'vitest'
-import { ConnectionsClient, type Connections } from './connections'
+import { describe, expect, it } from 'vitest'
+import { linkedConnection } from './connections'
 
-const connection = {
-  walletName: 'Radix Wallet 1',
-  password: 'ab'.repeat(32),
-  walletPublicKey: 'wallet',
+const known = {
+  walletName: 'My phone',
+  walletPublicKey: 'ab'.repeat(32),
+  password: 'old',
   accounts: [],
+  walletRelay: 'https://euc1-1.relay.n0.iroh.link./',
 }
 
-describe('ConnectionsClient.updateWalletRelay', () => {
-  beforeEach(() => {
-    vi.mocked(chrome.storage.local.set).mockReset()
-    vi.mocked(chrome.storage.local.set).mockImplementation((() =>
-      Promise.resolve()) as any)
-  })
-
-  it('keeps the relay the wallet was seen on with its link', async () => {
-    const connections: Connections = { wallet: connection }
-
-    await ConnectionsClient(connections).updateWalletRelay(
-      'wallet',
-      'https://use1-1.relay.n0.iroh-canary.iroh.link./',
-    )
-
-    expect(chrome.storage.local.set).toHaveBeenCalledWith({
-      connections: {
-        wallet: {
-          ...connection,
-          walletRelay: 'https://use1-1.relay.n0.iroh-canary.iroh.link./',
-        },
-      },
+describe('linkedConnection', () => {
+  it('names a new wallet after the ones linked before', () => {
+    expect(
+      linkedConnection({
+        walletPublicKey: 'cd'.repeat(32),
+        password: 'new',
+        knownConnection: undefined,
+        numberOfExistingConnections: 2,
+      }),
+    ).toEqual({
+      walletName: 'Radix Wallet 3',
+      walletPublicKey: 'cd'.repeat(32),
+      password: 'new',
+      accounts: [],
     })
   })
 
-  it('does not bring back a link that is gone, nor store an unchanged relay', () => {
-    const connections: Connections = {
-      wallet: { ...connection, walletRelay: 'https://relay.example.com/' },
-    }
-    const client = ConnectionsClient(connections)
-
-    expect(client.updateWalletRelay('gone', 'https://relay.example.com/')).toBe(
-      undefined,
-    )
+  it('keeps the name, accounts and relay of a wallet linked again, with its new password', () => {
     expect(
-      client.updateWalletRelay('wallet', 'https://relay.example.com/'),
-    ).toBe(undefined)
-    expect(chrome.storage.local.set).not.toHaveBeenCalled()
+      linkedConnection({
+        walletPublicKey: known.walletPublicKey,
+        password: 'new',
+        knownConnection: known,
+        numberOfExistingConnections: 1,
+      }),
+    ).toEqual({ ...known, password: 'new' })
   })
 })

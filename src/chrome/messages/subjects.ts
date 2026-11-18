@@ -1,5 +1,5 @@
 import { ReplaySubject } from 'rxjs'
-import { Message } from './_types'
+import type { Message } from './_types'
 
 export type MessageSubjects = ReturnType<typeof MessageSubjects>
 export const MessageSubjects = () => ({
