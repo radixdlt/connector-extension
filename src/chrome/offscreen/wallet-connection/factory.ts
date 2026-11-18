@@ -1,12 +1,20 @@
 import { AppLogger } from 'utils/logger'
-import { WalletConnectionClient } from './wallet-connection-client'
-import { config, getConnectionConfig } from 'config'
+import {
+  WalletConnectionClient,
+  type WalletConnectionTransport,
+} from './wallet-connection-client'
+import { getTransportConfig } from 'config'
+import { sendMessage } from 'chrome/helpers/send-message'
+import { createMessage } from 'chrome/messages/create-message'
 import { MessagesRouter } from 'chrome/offscreen/wallet-connection/messages-router'
-import { ConnectorClient } from '@radixdlt/radix-connect-webrtc'
 import { syncClient } from './sync-client'
 import { Connection } from 'pairing/state/connections'
 import { SessionRouter } from '../session-router'
 import type { ConnectorExtensionOptions } from 'options'
+import { createWebRtcTransport } from './transport/webrtc-transport'
+import { IrohTransport } from './transport/iroh/iroh-transport'
+import { transportSlots } from 'chrome/offscreen/wallet-connection/transport/transport-slots'
+import { CompositeTransport } from './transport/composite-transport'
 
 export type walletConnectionClientFactory = typeof walletConnectionClientFactory
 
@@ -17,7 +25,7 @@ export const walletConnectionClientFactory = (input: {
   logger: AppLogger
   radixConnectConfiguration?: string
   connectorExtensionOptions?: ConnectorExtensionOptions
-  connectorClient?: ConnectorClient
+  transport?: WalletConnectionTransport
   messagesRouter?: MessagesRouter
 }): WalletConnectionClient => {
   const messagesRouter = input.messagesRouter || MessagesRouter()
@@ -26,19 +34,31 @@ export const walletConnectionClientFactory = (input: {
     name: `[WCC]:[${input.connection.walletName}]`,
   })
 
-  const connectorClient =
-    input.connectorClient ||
-    ConnectorClient({
-      source: 'extension',
-      target: 'wallet',
-      isInitiator: config.webRTC.isInitiator,
+  const transport =
+    input.transport ||
+    CompositeTransport({
+      slots: transportSlots({
+        webRtc: createWebRtcTransport(logger),
+        createIrohTransport: () =>
+          IrohTransport({
+            logger: logger.getSubLogger({ name: 'iroh' }),
+            // Each iroh session knocks where the wallet was last seen.
+            walletRelay: input.connection.walletRelay,
+            onWalletRelay: (relayUrl) =>
+              sendMessage(
+                createMessage.walletRelaySeen(
+                  input.connection.walletPublicKey,
+                  relayUrl,
+                ),
+              ),
+          }),
+      }),
       logger,
-      negotiationTimeout: 10_000,
     })
 
   const client = WalletConnectionClient({
     messagesRouter,
-    connectorClient,
+    transport,
     syncClient,
     connectionPassword: input.connection.password,
     walletPublicKey: input.connection.walletPublicKey,
@@ -48,11 +68,11 @@ export const walletConnectionClientFactory = (input: {
 
   if (input.connectorExtensionOptions) {
     client.setConnectionConfig(
-      getConnectionConfig(input.connectorExtensionOptions),
+      getTransportConfig(input.connectorExtensionOptions),
     )
   } else if (input.radixConnectConfiguration) {
     client.setConnectionConfig(
-      getConnectionConfig({
+      getTransportConfig({
         radixConnectConfiguration: input.radixConnectConfiguration,
       } as ConnectorExtensionOptions),
     )

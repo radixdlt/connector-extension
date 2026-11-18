@@ -229,6 +229,16 @@ export const BackgroundMessageHandler =
 
         return okAsync({ sendConfirmation: false })
 
+      case messageDiscriminator.walletRelaySeen:
+        return getConnections()
+          .map((connections) =>
+            ConnectionsClient(connections).updateWalletRelay(
+              message.walletPublicKey,
+              message.relayUrl,
+            ),
+          )
+          .map(() => ({ sendConfirmation: false }))
+
       case messageDiscriminator.walletToLedger:
         return ledgerTabWatcher
           .restoreInitial()

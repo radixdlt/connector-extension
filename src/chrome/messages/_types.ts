@@ -41,6 +41,7 @@ export const messageDiscriminator = {
   incomingWalletMessage: 'incomingWalletMessage',
   sendMessageEventToDapp: 'sendMessageEventToDapp',
   restartConnector: 'restartConnector',
+  walletRelaySeen: 'walletRelaySeen',
 } as const
 
 export type MessageDiscriminator = typeof messageDiscriminator
@@ -217,6 +218,10 @@ export type Messages = {
       data: AccountListMessage | LinkClientInteraction
       walletPublicKey: string
     }
+  >
+  [messageDiscriminator.walletRelaySeen]: MessageBuilder<
+    MessageDiscriminator['walletRelaySeen'],
+    { walletPublicKey: string; relayUrl: string }
   >
   [messageDiscriminator.walletToLedger]: MessageBuilder<
     MessageDiscriminator['walletToLedger'],

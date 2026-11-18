@@ -1,14 +1,25 @@
 /// <reference types="vitest" />
-import { defineConfig, UserConfigExport } from 'vite'
+import { fileURLToPath } from 'node:url'
+import { defineConfig, loadEnv, UserConfigExport } from 'vite'
 import react from '@vitejs/plugin-react'
 import { crx, defineManifest } from '@crxjs/vite-plugin'
 import tsconfigPaths from 'vite-tsconfig-paths'
 import packageJson from './package.json'
+import { includesIroh } from './src/release-channel'
 
 const { version } = packageJson
 
 const isDevToolsActive = process.env.VITE_DEV_TOOLS === 'true'
 const versionName = process.env.GITHUB_REF_NAME || 'local'
+
+// Same variables, and rule, as `isIrohAvailable` in src/config.ts.
+const isIrohAvailableIn = (mode: string) => {
+  const env = loadEnv(mode, process.cwd(), 'VITE_')
+  return includesIroh({
+    githubRefName: env.VITE_GITHUB_REF_NAME || '',
+    isDevMode: env.VITE_DEV_TOOLS === 'true',
+  })
+}
 
 // Convert from Semver (example: 0.1.0-beta6)
 const [major, minor, patch] = version
@@ -18,7 +29,7 @@ const [major, minor, patch] = version
   .split(/[.-]/)
   .filter(Boolean)
 
-const manifest = defineManifest(async () => {
+const manifest = defineManifest(async ({ mode }) => {
   const permissions: chrome.runtime.ManifestPermissions[] = [
     'storage',
     'tabs',
@@ -57,6 +68,21 @@ const manifest = defineManifest(async () => {
       },
     ],
     options_page: 'src/options/index.html',
+    // Radix Connect over iroh (@genkipool/radix-connect-iroh) runs as WebAssembly in
+    // the offscreen document and the pairing popup. Without a declared policy Chrome
+    // uses "script-src 'self'; object-src 'self';", which disables WebAssembly.
+    // 'wasm-unsafe-eval' only allows compiling WebAssembly: eval(), new Function()
+    // and inline scripts stay blocked, and code still loads only from the extension
+    // itself. This is Chrome's minimum policy for extension pages; content scripts
+    // are not affected. Public releases do not include iroh and keep the default.
+    ...(isIrohAvailableIn(mode)
+      ? {
+          content_security_policy: {
+            extension_pages:
+              "script-src 'self' 'wasm-unsafe-eval'; object-src 'self';",
+          },
+        }
+      : {}),
     host_permissions: matches,
     permissions,
     icons: {
@@ -68,12 +94,12 @@ const manifest = defineManifest(async () => {
 })
 
 const buildConfig: UserConfigExport = {
-  plugins: [react(), crx({ manifest }), tsconfigPaths()],
-  resolve: {
-    alias: {
-      stream: 'vite-compatible-readable-stream',
-    },
-  },
+  plugins: [
+    // Fast refresh needs the dev server's preamble, which tests do not have.
+    react({ fastRefresh: process.env.VITEST !== 'true' }),
+    crx({ manifest }),
+    tsconfigPaths(),
+  ],
   build: {
     sourcemap: isDevToolsActive ? 'inline' : false,
     rollupOptions: {
@@ -98,8 +124,28 @@ if (!isDevToolsActive) {
   delete buildConfig.build.rollupOptions.input['devTools']
 }
 
-export default defineConfig({
+export default defineConfig(({ mode }) => ({
   ...buildConfig,
+  resolve: {
+    alias: [
+      { find: 'stream', replacement: 'vite-compatible-readable-stream' },
+      // Builds without iroh never load it: bundle a stub instead of the package,
+      // so that they do not ship the wasm module.
+      ...(isIrohAvailableIn(mode)
+        ? []
+        : [
+            {
+              find: /^@genkipool\/radix-connect-iroh(\/.*)?$/,
+              replacement: fileURLToPath(
+                new URL(
+                  './src/chrome/offscreen/wallet-connection/transport/iroh/iroh-excluded.ts',
+                  import.meta.url,
+                ),
+              ),
+            },
+          ]),
+    ],
+  },
   // @ts-expect-error
   test: {
     globals: true,
@@ -113,4 +159,4 @@ export default defineConfig({
       include: ['src/**/*'],
     },
   },
-})
+}))

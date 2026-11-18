@@ -160,6 +160,16 @@ export const createMessage = {
     walletPublicKey,
     data: message,
   }),
+  walletRelaySeen: (
+    walletPublicKey: string,
+    relayUrl: string,
+  ): Messages['walletRelaySeen'] => ({
+    source: 'offScreen',
+    discriminator: messageDiscriminator.walletRelaySeen,
+    messageId: crypto.randomUUID(),
+    walletPublicKey,
+    relayUrl,
+  }),
   ledgerResponse: (
     message: LedgerResponse,
     walletPublicKey: string,

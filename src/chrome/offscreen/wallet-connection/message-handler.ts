@@ -40,6 +40,11 @@ export const WalletConnectionMessageHandler = (input: {
   sessionRouter: SessionRouter
   logger?: AppLogger
   walletPublicKey: string
+  /**
+   * The dApp request was cancelled: a transport that sends again by itself the
+   * requests the wallet lost (iroh) must not send this one.
+   */
+  forgetRequest?: (interactionId: string) => void
 }): MessageHandler => {
   const dAppRequestQueue = input.dAppRequestQueue
   const extensionToWalletQueue = input.extensionToWalletQueue
@@ -73,11 +78,21 @@ export const WalletConnectionMessageHandler = (input: {
               walletPublicKey,
             ),
           ).map(() => ({ sendConfirmation: false }))
-        } else {
+        } else if (
+          typeof message.data?.interactionId === 'string' &&
+          message.data.interactionId
+        ) {
           incomingWalletMessageQueue.add(
             message.data,
             message.data.interactionId,
           )
+        } else {
+          // Not an answer to a dApp request (e.g. a notice of a newer wallet): the
+          // queue keys its jobs by interaction id, and a job without one would hold
+          // up every answer queued after it.
+          logger.debug('dropped a wallet message without an interaction id', {
+            discriminator: message.data?.discriminator,
+          })
         }
 
         return okAsync({ sendConfirmation: false })
@@ -85,6 +100,7 @@ export const WalletConnectionMessageHandler = (input: {
 
       case messageDiscriminator.cancelWalletInteraction: {
         const { interactionId, metadata } = message.interaction
+        input.forgetRequest?.(interactionId)
         return dAppRequestQueue
           .cancel(interactionId)
           .andThen(() =>

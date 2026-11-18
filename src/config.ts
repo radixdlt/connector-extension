@@ -3,6 +3,9 @@ import packageJson from '../package.json'
 import './buffer-shim'
 import { ConnectionConfig } from '@radixdlt/radix-connect-webrtc'
 import type { ConnectorExtensionOptions } from 'options'
+import { parseRadixConnectTransport } from 'options/radix-connect-transport'
+import { includesIroh, isPublicReleaseRef } from './release-channel'
+import type { TransportConnectionConfig } from 'chrome/offscreen/wallet-connection/transport/composite-transport'
 const { version } = packageJson
 
 const developmentConfig: Required<ConnectionConfig> = {
@@ -53,8 +56,13 @@ const githubRefName = import.meta.env.VITE_GITHUB_REF_NAME || ''
 
 export const isDevMode = import.meta.env.VITE_DEV_TOOLS === 'true'
 
-export const isPublicRelease =
-  githubRefName === 'main' || githubRefName.includes('release/')
+export const isPublicRelease = isPublicReleaseRef(githubRefName)
+
+/**
+ * Whether Radix Connect over iroh is part of this build. vite.config.ts applies the
+ * same rule to the CSP and to bundling the wasm module.
+ */
+export const isIrohAvailable = includesIroh({ githubRefName, isDevMode })
 
 export const defaultRadixConnectConfig = isPublicRelease
   ? 'production'
@@ -87,6 +95,25 @@ export const getConnectionConfig = (
   )
 }
 
+/**
+ * Which transports to use and how to configure each of them. Builds without iroh
+ * always use WebRTC, whatever the stored options say.
+ */
+export const getTransportConfig = (
+  options: ConnectorExtensionOptions,
+  irohAvailable = isIrohAvailable,
+): TransportConnectionConfig => ({
+  transport: irohAvailable
+    ? parseRadixConnectTransport(options.radixConnectTransport)
+    : 'webrtc',
+  webRtc: getConnectionConfig(options),
+  // Validated by the iroh transport, which does not connect with an invalid relay.
+  iroh: { relayUrl: options.irohRelayUrl?.trim() || undefined },
+})
+
+// How long the wallet has to confirm a message, whatever the transport.
+const messageConfirmationTimeout = 10_000
+
 export const config = {
   environment: process.env.NODE_ENV,
   logLevel: (import.meta.env.VITE_APP_LOG_LEVEL || 0) as LogLevelNumbers,
@@ -100,7 +127,40 @@ export const config = {
   },
   webRTC: {
     isInitiator: true,
-    confirmationTimeout: 10_000,
+    confirmationTimeout: messageConfirmationTimeout,
+  },
+  iroh: {
+    // Applied by the session to every message it sends.
+    ackTimeout: messageConfirmationTimeout,
+    // Extra time before a send the library never settled is reported as timed out.
+    sendSafetyMargin: 5_000,
+    // Delay before retrying to start a session that failed to start.
+    startRetryDelay: { initial: 1_000, max: 30_000 },
+    // Upper bound for closing a session before the next one may start.
+    shutdownTimeout: 3_000,
+    // How long pairing waits for the wallet to close its iroh connection after
+    // linking, so that its confirmation is not cut off.
+    linkingGracePeriod: 5_000,
+    // The sessions check their connection when the network may have changed: the
+    // browser went back online, or the computer woke up (a check timer that ticks
+    // every `wakeCheckInterval` saw a real gap above `wakeGapThreshold`). At most
+    // one check per `networkChangeDebounce`.
+    wakeCheckInterval: 5_000,
+    wakeGapThreshold: 15_000,
+    networkChangeDebounce: 3_000,
+  },
+  transport: {
+    // With both transports, how long messages go over WebRTC after iroh failed to
+    // deliver one (it may still have arrived, so it is not resent at once), unless
+    // iroh reconnects first.
+    irohHoldBackAfterFailure: 30_000,
+    // A message from the wallet identical to one received within this window (e.g.
+    // resent over the other transport) is dropped.
+    incomingDuplicateWindow: 60_000,
+  },
+  diagnostics: {
+    // The same transport failure is logged at most once per interval.
+    logRepeatInterval: 60_000,
   },
   devTools: {
     url: 'src/chrome/dev-tools/dev-tools.html',

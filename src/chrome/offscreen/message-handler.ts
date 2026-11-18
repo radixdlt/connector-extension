@@ -9,7 +9,8 @@ import {
   MessageHandlerOutput,
 } from '../messages/_types'
 import { WalletConnectionClient } from './wallet-connection/wallet-connection-client'
-import { getConnectionConfig } from 'config'
+import { getTransportConfig } from 'config'
+import type { TransportConnectionConfig } from './wallet-connection/transport/composite-transport'
 import { ConnectorExtensionOptions } from 'options'
 import { Connection, Connections } from 'pairing/state/connections'
 import {
@@ -23,6 +24,8 @@ export const OffscreenMessageHandler = (input: {
   connectionsMap: Map<string, WalletConnectionClient>
   walletConnectionClientFactory: walletConnectionClientFactory
   logger?: AppLogger
+  /** The links' transport configuration, each time the options are known. */
+  onTransportConfig?: (config: TransportConnectionConfig) => void
 }): MessageHandler => {
   let currentExtensionOptions: ConnectorExtensionOptions | undefined
   const logsClient = input.logsClient
@@ -89,7 +92,7 @@ export const OffscreenMessageHandler = (input: {
 
       case messageDiscriminator.restartConnector: {
         for (const [, connection] of connectionsMap) {
-          connection.connectorClient.restart()
+          connection.transport.restart()
         }
         return okAsync({ sendConfirmation: true })
       }
@@ -98,11 +101,13 @@ export const OffscreenMessageHandler = (input: {
         const { connectorExtensionOptions } = message
         currentExtensionOptions = connectorExtensionOptions
 
+        // Also reaches clients created before the options were known: they do not
+        // connect until they get their first configuration.
+        const transportConfig = getTransportConfig(connectorExtensionOptions)
         for (const [, connection] of connectionsMap) {
-          connection.setConnectionConfig(
-            getConnectionConfig(connectorExtensionOptions),
-          )
+          connection.setConnectionConfig(transportConfig)
         }
+        input.onTransportConfig?.(transportConfig)
 
         return okAsync({ sendConfirmation: true })
       }
