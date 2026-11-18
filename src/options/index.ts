@@ -3,6 +3,10 @@ import { logger } from 'utils/logger'
 import { defaultRadixConnectConfig } from 'config'
 import { ResultAsync, ok } from 'neverthrow'
 import { ed25519 } from '@noble/curves/ed25519'
+import {
+  defaultRadixConnectTransport,
+  type RadixConnectTransport,
+} from './radix-connect-transport'
 
 const privateKey = ed25519.utils.randomPrivateKey()
 const publicKey = ed25519.getPublicKey(privateKey)
@@ -12,6 +16,9 @@ export type ConnectorExtensionOptions = {
   privateKey: string
   radixConnectConfiguration: string
   customSignalingServerUrl?: string
+  radixConnectTransport: RadixConnectTransport
+  /** Empty or missing: n0's public relays (each end uses its closest one). */
+  irohRelayUrl?: string
   showDAppRequestNotifications: boolean
   showTransactionResultNotifications: boolean
 }
@@ -22,6 +29,7 @@ export const defaultConnectorExtensionOptions: ConnectorExtensionOptions = {
   showDAppRequestNotifications: true,
   showTransactionResultNotifications: true,
   radixConnectConfiguration: defaultRadixConnectConfig,
+  radixConnectTransport: defaultRadixConnectTransport,
 }
 
 export const getSingleOptionValue = <T extends keyof ConnectorExtensionOptions>(

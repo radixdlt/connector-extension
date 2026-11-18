@@ -72,7 +72,7 @@ const createTestHelper = ({
             },
             logger,
             messagesRouter,
-            connectorClient: {
+            transport: {
               connect: () => {},
               disconnect: () => {},
               setConnectionPassword: () => okAsync(undefined),

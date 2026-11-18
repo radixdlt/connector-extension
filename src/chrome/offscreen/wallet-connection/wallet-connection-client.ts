@@ -1,7 +1,3 @@
-import {
-  ConnectionConfig,
-  ConnectorClient,
-} from '@radixdlt/radix-connect-webrtc'
 import { createMessage } from 'chrome/messages/create-message'
 import { config } from 'config'
 import { LedgerResponse } from 'ledger/schemas'
@@ -17,6 +13,11 @@ import { SyncClient } from './sync-client'
 import { SessionRouter } from '../session-router'
 import { WalletInteraction } from '@radixdlt/radix-dapp-toolkit'
 import { Connection } from 'pairing/state/connections'
+import type { WalletTransport } from './transport/wallet-transport'
+import type { TransportConnectionConfig } from './transport/composite-transport'
+
+export type WalletConnectionTransport =
+  WalletTransport<TransportConnectionConfig>
 
 export type WalletConnectionClient = ReturnType<typeof WalletConnectionClient>
 
@@ -25,7 +26,7 @@ export const WalletConnectionClient = ({
   connectionPassword,
   logger = utilsLogger,
   syncClient,
-  connectorClient,
+  transport,
   walletPublicKey,
   sessionRouter,
 }: {
@@ -33,12 +34,12 @@ export const WalletConnectionClient = ({
   messagesRouter: MessagesRouter
   logger: AppLogger
   syncClient: SyncClient
-  connectorClient: ConnectorClient
+  transport: WalletConnectionTransport
   walletPublicKey: string
   sessionRouter: SessionRouter
 }) => {
   logger.info('WalletConnectionClient created', walletPublicKey)
-  connectorClient.setConnectionPassword(Buffer.from(connectionPassword, 'hex'))
+  transport.setConnectionPassword(Buffer.from(connectionPassword, 'hex'))
 
   const dAppRequestQueue = Queue<WalletInteraction>({
     key: 'dAppRequestQueue',
@@ -46,7 +47,7 @@ export const WalletConnectionClient = ({
     paused: true,
     worker: Worker(
       (job) =>
-        connectorClient
+        transport
           .sendMessage(job.data, { timeout: config.webRTC.confirmationTimeout })
           .map(() =>
             messagesRouter
@@ -86,7 +87,7 @@ export const WalletConnectionClient = ({
     logger,
     worker: Worker(
       (job) =>
-        connectorClient.sendMessage(job.data, {
+        transport.sendMessage(job.data, {
           timeout: config.webRTC.confirmationTimeout,
         }),
       {
@@ -133,7 +134,7 @@ export const WalletConnectionClient = ({
   )
 
   subscription.add(
-    connectorClient.connected$.subscribe((connected) => {
+    transport.connected$.subscribe((connected) => {
       if (connected) {
         extensionToWalletQueue.start()
         dAppRequestQueue.start()
@@ -159,7 +160,7 @@ export const WalletConnectionClient = ({
   )
 
   subscription.add(
-    connectorClient.onMessage$.subscribe((message) => {
+    transport.onMessage$.subscribe((message) => {
       messageClient.onMessage(createMessage.walletMessage('wallet', message))
     }),
   )
@@ -173,13 +174,13 @@ export const WalletConnectionClient = ({
 
   chrome.runtime.onMessage.addListener(chromeMessageListener)
 
-  connectorClient.connect()
+  transport.connect()
 
   return {
-    connectorClient,
+    transport,
     destroy: () => {
       subscription.unsubscribe()
-      connectorClient.destroy()
+      transport.destroy()
       dAppRequestQueue.destroy()
       extensionToWalletQueue.destroy()
       incomingWalletMessageQueue.destroy()
@@ -187,11 +188,9 @@ export const WalletConnectionClient = ({
     },
     update: (connection: Connection) => {
       logger.settings.name = `[WCC]:[${connection.walletName}]`
-      connectorClient.setConnectionPassword(
-        Buffer.from(connection.password, 'hex'),
-      )
+      transport.setConnectionPassword(Buffer.from(connection.password, 'hex'))
     },
-    setConnectionConfig: (config: ConnectionConfig) =>
-      connectorClient.setConnectionConfig(config),
+    setConnectionConfig: (config: TransportConnectionConfig) =>
+      transport.setConnectionConfig(config),
   }
 }

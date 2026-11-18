@@ -9,7 +9,7 @@ import {
   MessageHandlerOutput,
 } from '../messages/_types'
 import { WalletConnectionClient } from './wallet-connection/wallet-connection-client'
-import { getConnectionConfig } from 'config'
+import { getTransportConfig } from 'config'
 import { ConnectorExtensionOptions } from 'options'
 import { Connection, Connections } from 'pairing/state/connections'
 import {
@@ -89,7 +89,7 @@ export const OffscreenMessageHandler = (input: {
 
       case messageDiscriminator.restartConnector: {
         for (const [, connection] of connectionsMap) {
-          connection.connectorClient.restart()
+          connection.transport.restart()
         }
         return okAsync({ sendConfirmation: true })
       }
@@ -98,10 +98,11 @@ export const OffscreenMessageHandler = (input: {
         const { connectorExtensionOptions } = message
         currentExtensionOptions = connectorExtensionOptions
 
+        // Also reaches clients created before the options were known: they do not
+        // connect until they get their first configuration.
+        const transportConfig = getTransportConfig(connectorExtensionOptions)
         for (const [, connection] of connectionsMap) {
-          connection.setConnectionConfig(
-            getConnectionConfig(connectorExtensionOptions),
-          )
+          connection.setConnectionConfig(transportConfig)
         }
 
         return okAsync({ sendConfirmation: true })
