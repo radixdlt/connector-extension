@@ -194,5 +194,7 @@ export const WalletConnectionClient = ({
     },
     setConnectionConfig: (config: TransportConnectionConfig) =>
       transport.setConnectionConfig(config),
+    /** `reason`: `online`, `wake after 42s`... (see `NetworkChangeWatcher`). */
+    networkChanged: (reason: string) => transport.networkChanged?.(reason),
   }
 }

@@ -10,6 +10,7 @@ import {
 } from '../messages/_types'
 import { WalletConnectionClient } from './wallet-connection/wallet-connection-client'
 import { getTransportConfig } from 'config'
+import type { TransportConnectionConfig } from './wallet-connection/transport/composite-transport'
 import { ConnectorExtensionOptions } from 'options'
 import { Connection, Connections } from 'pairing/state/connections'
 import {
@@ -23,6 +24,8 @@ export const OffscreenMessageHandler = (input: {
   connectionsMap: Map<string, WalletConnectionClient>
   walletConnectionClientFactory: walletConnectionClientFactory
   logger?: AppLogger
+  /** The links' transport configuration, each time the options are known. */
+  onTransportConfig?: (config: TransportConnectionConfig) => void
 }): MessageHandler => {
   let currentExtensionOptions: ConnectorExtensionOptions | undefined
   const logsClient = input.logsClient
@@ -104,6 +107,7 @@ export const OffscreenMessageHandler = (input: {
         for (const [, connection] of connectionsMap) {
           connection.setConnectionConfig(transportConfig)
         }
+        input.onTransportConfig?.(transportConfig)
 
         return okAsync({ sendConfirmation: true })
       }
