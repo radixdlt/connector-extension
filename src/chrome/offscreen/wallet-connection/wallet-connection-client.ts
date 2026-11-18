@@ -154,6 +154,8 @@ export const WalletConnectionClient = ({
       sessionRouter,
       logger,
       walletPublicKey,
+      forgetRequest: (interactionId) =>
+        transport.forgetRequest?.(interactionId),
     }),
     'offScreen',
     { logger },
